@@ -15,7 +15,9 @@ import {
   MapPin,
   Camera,
   IndianRupee,
+  Smartphone,
 } from "lucide-react";
+import InstallAppModal from "./InstallAppModal";
 
 const NAV_LINKS = [
   { href: "/",                   label: "Home",           Icon: Home },
@@ -30,6 +32,7 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [showInstallModal, setShowInstallModal] = useState(false);
   const pathname = usePathname();
 
   return (
@@ -76,21 +79,52 @@ export default function Navbar() {
               <Phone size={13} />
               14567
             </a>
+
+            {/* 📱 Desktop Install App Button */}
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer"
+              title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
+            >
+              <Smartphone size={13} />
+              એપ ઇન્સ્ટોલ
+            </button>
           </div>
 
           {/* ── Mobile & Tablet Toggle ── */}
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className="xl:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition"
-            aria-label="Toggle menu"
-          >
-            {isOpen ? <X size={22} /> : <Menu size={22} />}
-          </button>
+          <div className="xl:hidden flex items-center gap-2">
+            <button
+              onClick={() => setShowInstallModal(true)}
+              className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-xs active:scale-95 cursor-pointer"
+            >
+              <Smartphone size={14} />
+              ઇન્સ્ટોલ
+            </button>
+            <button
+              onClick={() => setIsOpen(!isOpen)}
+              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition"
+              aria-label="Toggle menu"
+            >
+              {isOpen ? <X size={22} /> : <Menu size={22} />}
+            </button>
+          </div>
         </div>
 
         {/* ── Mobile & Tablet Dropdown ── */}
         {isOpen && (
           <div className="xl:hidden border-t border-gray-100 py-2 space-y-0.5 max-h-[80vh] overflow-y-auto">
+            {/* Quick Install Banner in Drawer */}
+            <button
+              onClick={() => {
+                setIsOpen(false);
+                setShowInstallModal(true);
+              }}
+              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition shadow-sm mb-1.5 cursor-pointer"
+            >
+              <Smartphone size={16} />
+              📲 એપ ફોનમાં ઇન્સ્ટોલ કરો (૧-ક્લિક)
+            </button>
+
             {NAV_LINKS.map(({ href, label, Icon }) => {
               const active = pathname === href;
               return (
@@ -120,6 +154,12 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      {/* 📱 Interactive Install App Modal with QR Code Scanner */}
+      <InstallAppModal
+        isOpen={showInstallModal}
+        onClose={() => setShowInstallModal(false)}
+      />
     </nav>
   );
 }

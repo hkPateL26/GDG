@@ -1,0 +1,27 @@
+{
+  "name": "નાગરિકસેવા AI - સરકારી યોજના સહાયક",
+  "short_name": "નાગરિકસેવા",
+  "description": "ગુજરાત અને ભારત સરકારની યોજનાઓ, પાત્રતા કેલ્ક્યુલેટર અને AI સહાયક",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "lang": "gu",
+  "dir": "ltr",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["government", "productivity", "utilities"]
+}
