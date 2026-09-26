@@ -20,16 +20,24 @@ import {
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled } from "@/lib/usePwaInstall";
 import { useLanguage } from "@/context/LanguageContext";
+import { DEFAULT_LANGUAGE } from "@/lib/translation";
 import LanguageSelector from "./LanguageSelector";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
 export default function Navbar() {
   const { isInstalled } = useIsPwaInstalled();
-  const { t } = useLanguage();
+  const { currentLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const pathname = usePathname();
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (currentLang !== DEFAULT_LANGUAGE) {
+      e.preventDefault();
+      window.location.href = href;
+    }
+  };
 
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
@@ -47,7 +55,11 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between h-16">
           {/* ── Logo ── */}
-          <Link href="/" className="flex items-center gap-2 min-w-0 shrink-0">
+          <Link
+            href="/"
+            onClick={(e) => handleNavClick(e, "/")}
+            className="flex items-center gap-2 min-w-0 shrink-0"
+          >
             <span className="text-2xl leading-none select-none">🇮🇳</span>
             <div className="min-w-0">
               <p className="font-bold text-gray-800 text-base leading-tight whitespace-nowrap">
@@ -68,6 +80,7 @@ export default function Navbar() {
                 <Link
                   key={href}
                   href={href}
+                  onClick={(e) => handleNavClick(e, href)}
                   className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition ${
                     active
                       ? "bg-orange-50 text-orange-600 font-bold"
@@ -160,7 +173,10 @@ export default function Navbar() {
                 <Link
                   key={href}
                   href={href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={(e) => {
+                    setIsOpen(false);
+                    handleNavClick(e, href);
+                  }}
                   className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition ${
                     active
                       ? "bg-orange-50 text-orange-600 font-bold"

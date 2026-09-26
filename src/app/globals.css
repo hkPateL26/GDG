@@ -125,4 +125,18 @@ body {
   display: none !important;
 }
 
+/* ── Smooth Page Appearance when Translated (Zero-Jerk) ── */
+main {
+  animation: smoothPageFade 0.15s ease-out;
+}
+@keyframes smoothPageFade {
+  from {
+    opacity: 0.9;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+
 

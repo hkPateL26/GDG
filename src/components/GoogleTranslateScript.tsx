@@ -31,27 +31,35 @@ declare global {
 export default function GoogleTranslateScript() {
   const pathname = usePathname();
 
-  // Instant re-trigger on Next.js route change to prevent flash of untranslated text
+  // When a translated language is active, ensure navigation uses full clean navigation
+  // This eliminates the violent React SPA DOM swap conflict and stops the "jatko" (jolt/flash) completely!
   useEffect(() => {
-    const savedLang = getStoredLanguage();
-    if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
-      const trigger = () => {
-        const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
-        if (combo) {
-          combo.value = savedLang;
-          combo.dispatchEvent(new Event("change"));
-        }
-      };
+    const handleGlobalLinkClick = (e: MouseEvent) => {
+      const savedLang = getStoredLanguage();
+      if (savedLang === DEFAULT_LANGUAGE) return; // Gujarati is native: keep blazing fast SPA transitions
 
-      trigger();
-      const t1 = setTimeout(trigger, 100);
-      const t2 = setTimeout(trigger, 300);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
-  }, [pathname]);
+      const target = (e.target as HTMLElement).closest("a");
+      if (!target) return;
+
+      const href = target.getAttribute("href");
+      if (!href) return;
+
+      // Only handle internal application routes
+      if (
+        href.startsWith("/") &&
+        !href.startsWith("//") &&
+        !href.startsWith("/api") &&
+        !target.hasAttribute("download") &&
+        target.getAttribute("target") !== "_blank"
+      ) {
+        e.preventDefault();
+        window.location.href = href;
+      }
+    };
+
+    document.addEventListener("click", handleGlobalLinkClick, true);
+    return () => document.removeEventListener("click", handleGlobalLinkClick, true);
+  }, []);
 
   useEffect(() => {
     const savedLang = getStoredLanguage();
