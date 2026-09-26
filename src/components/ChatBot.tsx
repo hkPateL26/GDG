@@ -117,7 +117,8 @@ export default function ChatBot() {
     setLoading(true);
 
     try {
-      const history: ChatHistory[] = messages.map((m) => ({
+      const firstUserIndex = messages.findIndex((m) => m.role === "user");
+      const history: ChatHistory[] = (firstUserIndex === -1 ? [] : messages.slice(firstUserIndex)).map((m) => ({
         role: m.role,
         parts: [{ text: m.text }],
       }));

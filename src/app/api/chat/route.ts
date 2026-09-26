@@ -10,8 +10,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
     }
 
+    // Gemini requires chat history to start with 'user' and alternate properly
+    let sanitizedHistory: ChatHistory[] = [];
+    if (Array.isArray(history)) {
+      // Find the first user message
+      const firstUserIdx = history.findIndex((h) => h.role === "user");
+      if (firstUserIdx !== -1) {
+        sanitizedHistory = history.slice(firstUserIdx).filter((h, idx, arr) => {
+          // ensure no consecutive identical roles
+          if (idx === 0) return h.role === "user";
+          return h.role !== arr[idx - 1].role;
+        });
+      }
+    }
+
     const model = getChatModel();
-    const chat = model.startChat({ history: history || [] });
+    const chat = model.startChat({ history: sanitizedHistory });
     const result = await chat.sendMessage(message);
     const reply = result.response.text();
 
