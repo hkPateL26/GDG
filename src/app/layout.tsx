@@ -59,6 +59,25 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // Hide all page content (visibility can be overridden by children)
     document.documentElement.style.visibility = 'hidden';
 
+    // Map: lang code → { native name, loading text in that language }
+    var langInfo = {
+      hi: { name: 'हिंदी', loading: 'लोड हो रहा है...' },
+      en: { name: 'English', loading: 'Loading...' },
+      mr: { name: 'मराठी', loading: 'लोड होत आहे...' },
+      bn: { name: 'বাংলা', loading: 'লোড হচ্ছে...' },
+      te: { name: 'తెలుగు', loading: 'లోడ్ అవుతోంది...' },
+      ta: { name: 'தமிழ்', loading: 'ஏற்றுகிறது...' },
+      kn: { name: 'ಕನ್ನಡ', loading: 'ಲೋಡ್ ಆಗುತ್ತಿದೆ...' },
+      ml: { name: 'മലയാളം', loading: 'ലോഡ് ചെയ്യുന്നു...' },
+      pa: { name: 'ਪੰਜਾਬੀ', loading: 'ਲੋਡ ਹੋ ਰਿਹਾ ਹੈ...' },
+      or: { name: 'ଓଡ଼ିଆ', loading: 'ଲୋଡ୍ ହେଉଛି...' },
+      ur: { name: 'اردو', loading: 'لوڈ ہو رہا ہے...' },
+      as: { name: 'অসমীয়া', loading: 'লোড হৈছে...' },
+      sa: { name: 'संस्कृतम्', loading: 'लोड भवति...' },
+      ne: { name: 'नेपाली', loading: 'लोड हुँदैछ...' }
+    };
+    var info = langInfo[lang] || { name: lang.toUpperCase(), loading: 'Loading...' };
+
     // Inject spinner overlay with explicit visibility:visible (overrides parent hidden)
     function injectLoader() {
       if (document.getElementById('nagrik-preloader')) return;
@@ -73,13 +92,19 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         'flex-direction:column',
         'align-items:center',
         'justify-content:center',
-        'gap:16px',
+        'gap:14px',
         'visibility:visible'  /* override parent visibility:hidden */
       ].join(';');
       el.innerHTML = [
         '<style>@keyframes _ns{to{transform:rotate(360deg)}}</style>',
+        /* Spinner */
         '<div style="width:52px;height:52px;border:4px solid #fed7aa;border-top:4px solid #ea580c;border-radius:50%;animation:_ns 0.75s linear infinite"></div>',
-        '<div style="font-size:13px;font-weight:700;color:#9a3412;letter-spacing:0.5px;font-family:sans-serif">&#2728;&#2750;&#2711;&#2736;&#2752;&#2709;&#2744;&#2759;&#2703;&#2750; AI</div>'
+        /* Selected language name — large, bold */
+        '<div style="font-size:22px;font-weight:800;color:#ea580c;font-family:sans-serif;line-height:1">' + info.name + '</div>',
+        /* Loading text in selected language — subtle */
+        '<div style="font-size:12px;font-weight:500;color:#9a3412;font-family:sans-serif;opacity:0.8">' + info.loading + '</div>',
+        /* App name below — small */
+        '<div style="font-size:11px;font-weight:600;color:#c2410c;font-family:sans-serif;margin-top:4px;letter-spacing:0.3px">&#2728;&#2750;&#2711;&#2736;&#2752;&#2709;&#2744;&#2759;&#2703;&#2750; AI</div>'
       ].join('');
       document.body ? document.body.appendChild(el) : document.addEventListener('DOMContentLoaded', function(){ document.body.appendChild(el); });
     }
