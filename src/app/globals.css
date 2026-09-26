@@ -46,7 +46,7 @@ p, h1, h2, h3, h4, span, li {
 @media print {
   @page {
     size: A4 portrait;
-    margin: 8mm 8mm 8mm 8mm;
+    margin: 6mm 8mm 6mm 8mm;
   }
 
   html, body {
@@ -54,6 +54,9 @@ p, h1, h2, h3, h4, span, li {
     color: #111827 !important;
     margin: 0 !important;
     padding: 0 !important;
+    height: 100% !important;
+    max-height: 100% !important;
+    overflow: hidden !important;
     font-size: 11pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -68,14 +71,20 @@ p, h1, h2, h3, h4, span, li {
     display: none !important;
   }
 
-  /* Display ONLY the authentic printable certificate */
+  /* Display ONLY the authentic printable certificate filling full A4 page */
   .print-only-certificate {
-    display: block !important;
+    display: flex !important;
+    flex-direction: column !important;
     width: 100% !important;
     max-width: 100% !important;
+    height: 275mm !important;
+    max-height: 275mm !important;
+    box-sizing: border-box !important;
     margin: 0 auto !important;
+    padding: 0 !important;
     page-break-inside: avoid !important;
     page-break-after: avoid !important;
     page-break-before: avoid !important;
+    break-inside: avoid !important;
   }
 }
