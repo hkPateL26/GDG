@@ -4,6 +4,7 @@ import "./globals.css";
 
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
+import ScrollRestoration from "@/components/ScrollRestoration";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -35,6 +36,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="gu" className={inter.className} suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
+        <ScrollRestoration />
         <ServiceWorkerRegister />
         {children}
         <FloatingInstallBanner />

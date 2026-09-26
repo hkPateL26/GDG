@@ -4,8 +4,8 @@
 .scrollbar-hide::-webkit-scrollbar { display: none; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Smooth scrolling ── */
-html { scroll-behavior: smooth; }
+/* ── Default scrolling ── */
+html { scroll-behavior: auto; }
 
 /* ── Base body ── */
 body {

@@ -25,12 +25,25 @@ export default function ChatBot() {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState<number | null>(null);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<any>(null);
+  const isInitialMount = useRef<boolean>(true);
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    // Never scroll on initial page mount/load
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // Scroll ONLY the interior chat container, never the browser window
+    if (messagesContainerRef.current) {
+      messagesContainerRef.current.scrollTo({
+        top: messagesContainerRef.current.scrollHeight,
+        behavior: "smooth",
+      });
+    }
   }, [messages, loading]);
 
   // Voice Input (Speech to Text)
@@ -145,7 +158,9 @@ export default function ChatBot() {
       ]);
     } finally {
       setLoading(false);
-      inputRef.current?.focus();
+      if (typeof window !== "undefined" && window.innerWidth >= 768) {
+        inputRef.current?.focus({ preventScroll: true });
+      }
     }
   };
 
@@ -173,7 +188,10 @@ export default function ChatBot() {
       </div>
 
       {/* ── Messages ── */}
-      <div className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-gray-50 overscroll-contain">
+      <div
+        ref={messagesContainerRef}
+        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3 bg-gray-50 overscroll-contain"
+      >
         {messages.map((msg, i) => (
           <div
             key={i}
@@ -215,8 +233,6 @@ export default function ChatBot() {
 
         {/* Skeleton while loading */}
         {loading && <SkeletonChatMessage />}
-
-        <div ref={bottomRef} />
       </div>
 
       {/* ── Quick Suggestions ── */}
