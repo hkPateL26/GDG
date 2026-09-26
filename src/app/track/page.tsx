@@ -29,17 +29,27 @@ export default function TrackPage() {
   const [error, setError]     = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleTrack = () => {
+  const handleTrack = async () => {
     const id = appId.trim().toUpperCase();
     if (!id) { setError("Please enter your Application ID."); return; }
     setLoading(true); setError(""); setResult(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch(`/api/track?id=${encodeURIComponent(id)}`);
+      const data = await res.json();
+      if (data.success && data.application) {
+        setResult(data.application);
+      } else {
+        setError(data.error || `No application found for "${id}". Please check your reference number.`);
+      }
+    } catch (e) {
+      // Fallback local lookup if network fails
       const found = STATUS_MOCK[id];
       if (found) setResult(found);
       else setError(`No application found for "${id}". Please check your reference number.`);
+    } finally {
       setLoading(false);
-    }, 1200);
+    }
   };
 
   const cfg = result ? STATUS_CONFIG[result.status] : null;
