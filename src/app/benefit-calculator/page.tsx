@@ -44,20 +44,22 @@ export default function BenefitCalculatorPage() {
   const [pincode, setPincode] = useState<string>("");
   const [familyMembersList, setFamilyMembersList] = useState<VerifiedMember[]>([]);
 
-  // Step 3: Special ground conditions (Ticked by citizen)
-  const [isFarmer, setIsFarmer] = useState<boolean>(true);
+  // Step 3: Special ground conditions (Starts unchecked, enabled only after e-KYC)
+  const [isFarmer, setIsFarmer] = useState<boolean>(false);
   const [needsHouse, setNeedsHouse] = useState<boolean>(false);
-  const [hasLPG, setHasLPG] = useState<boolean>(false);
-  const [hasSeniorCitizen, setHasSeniorCitizen] = useState<boolean>(true);
+  const [needsLPG, setNeedsLPG] = useState<boolean>(false);
+  const [hasSeniorCitizen, setHasSeniorCitizen] = useState<boolean>(false);
 
-  // Dynamic calculations based on real government allocations
+  // Dynamic calculations strictly tied to real-time verification and selected checkboxes
   const familyCount = familyMembersList.length || 0;
-  const pmKisanBenefit = isFarmer ? 6000 : 0;
-  const pmAwasBenefit = needsHouse ? 120000 : 0;
-  const ujjwalaBenefit = !hasLPG ? 3600 : 0;
-  const atalPensionBenefit = hasSeniorCitizen ? 36000 : 0; // ₹3000/mo senior citizen pension
-  const directCashTotal = pmKisanBenefit + pmAwasBenefit + ujjwalaBenefit + atalPensionBenefit;
-  const healthCoverTotal = isKycVerified ? 500000 : 0; // Ayushman Bharat ₹5 Lakh
+  const pmKisanBenefit = isKycVerified && isFarmer ? 6000 : 0;
+  const pmAwasBenefit = isKycVerified && needsHouse ? 120000 : 0;
+  const ujjwalaBenefit = isKycVerified && needsLPG ? 3600 : 0;
+  const atalPensionBenefit = isKycVerified && hasSeniorCitizen ? 36000 : 0; // ₹3000/mo senior citizen pension
+  const directCashTotal = isKycVerified
+    ? pmKisanBenefit + pmAwasBenefit + ujjwalaBenefit + atalPensionBenefit
+    : 0;
+  const healthCoverTotal = isKycVerified ? 500000 : 0; // Ayushman Bharat ₹5 Lakh on valid ration card
 
   // 1-Click Demo Fill for Hackathon Judges
   const fillDemoData = () => {
@@ -79,6 +81,10 @@ export default function BenefitCalculatorPage() {
     setDistrict("");
     setPincode("");
     setFamilyMembersList([]);
+    setIsFarmer(false);
+    setNeedsHouse(false);
+    setNeedsLPG(false);
+    setHasSeniorCitizen(false);
     setKycError("");
   };
 
@@ -167,7 +173,7 @@ export default function BenefitCalculatorPage() {
       `✨ *મળવાપાત્ર યોજનાઓ:*\n` +
       (isFarmer ? `• PM કિસાન સન્માન નિધિ: ₹6,000/વર્ષ\n` : "") +
       (needsHouse ? `• PM આવાસ યોજના (મકાન સહાય): ₹1,20,000\n` : "") +
-      (!hasLPG ? `• PM ઉજ્જવલા ફ્રી ગેસ કનેક્શન: ₹3,600\n` : "") +
+      (needsLPG ? `• PM ઉજ્જવલા ફ્રી ગેસ કનેક્શન: ₹3,600\n` : "") +
       (hasSeniorCitizen ? `• વરિષ્ઠ નાગરિક પેન્શન સહાય: ₹36,000/વર્ષ\n` : "") +
       `\nજનસેવા કેન્દ્ર (CSC) પર રજૂ કરવા યોગ્ય સ્લિપ: https://nagrik-seva.vercel.app`
     );
@@ -446,8 +452,8 @@ export default function BenefitCalculatorPage() {
                     <label className="flex items-center gap-2.5 cursor-pointer text-xs text-gray-700 select-none">
                       <input
                         type="checkbox"
-                        checked={!hasLPG}
-                        onChange={(e) => setHasLPG(!e.target.checked)}
+                        checked={needsLPG}
+                        onChange={(e) => setNeedsLPG(e.target.checked)}
                         className="w-4 h-4 text-orange-500 rounded border-gray-300 focus:ring-orange-400"
                       />
                       <span>ગેસ કનેક્શન નથી (ફ્રી સિલિન્ડર જોઈએ છે)</span>
@@ -564,38 +570,50 @@ export default function BenefitCalculatorPage() {
                       મળવાપાત્ર સરકારી યોજનાઓ અને રકમ:
                     </p>
 
-                    {isFarmer && (
-                      <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-orange-50/70 border border-orange-100">
-                        <span className="font-medium text-gray-800">🌾 PM કિસાન સન્માન નિધિ</span>
-                        <span className="font-bold text-green-700">₹6,000 / વર્ષ</span>
+                    {!isKycVerified ? (
+                      <div className="py-7 px-4 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/70 space-y-1.5">
+                        <Lock size={24} className="mx-auto text-gray-300" />
+                        <p className="text-xs font-bold text-gray-600">પાત્રતા સ્લિપ હજુ ખાલી છે</p>
+                        <p className="text-[11px] text-gray-400 max-w-xs mx-auto">
+                          ડાબી બાજુએ આધાર e-KYC પૂર્ણ કરો. રેશનકાર્ડ વેરિફાય થયા પછી તમે પસંદ કરેલી શરતો મુજબ યોજનાઓ અહીં લાઈવ ગણાઈને દેખાશે.
+                        </p>
                       </div>
-                    )}
+                    ) : (
+                      <>
+                        {isFarmer && (
+                          <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-orange-50/70 border border-orange-100">
+                            <span className="font-medium text-gray-800">🌾 PM કિસાન સન્માન નિધિ</span>
+                            <span className="font-bold text-green-700">₹6,000 / વર્ષ</span>
+                          </div>
+                        )}
 
-                    {needsHouse && (
-                      <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-green-50/70 border border-green-100">
-                        <span className="font-medium text-gray-800">🏠 PM આવાસ યોજના (મકાન સહાય)</span>
-                        <span className="font-bold text-green-700">₹1,20,000 (વન-ટાઇમ)</span>
-                      </div>
-                    )}
+                        {needsHouse && (
+                          <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-green-50/70 border border-green-100">
+                            <span className="font-medium text-gray-800">🏠 PM આવાસ યોજના (મકાન સહાય)</span>
+                            <span className="font-bold text-green-700">₹1,20,000 (વન-ટાઇમ)</span>
+                          </div>
+                        )}
 
-                    {!hasLPG && (
-                      <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-red-50/70 border border-red-100">
-                        <span className="font-medium text-gray-800">🔥 PM ઉજ્જવલા યોજના (ફ્રી સિલિન્ડર)</span>
-                        <span className="font-bold text-green-700">₹3,600 સહાય</span>
-                      </div>
-                    )}
+                        {needsLPG && (
+                          <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-red-50/70 border border-red-100">
+                            <span className="font-medium text-gray-800">🔥 PM ઉજ્જવલા યોજના (ફ્રી સિલિન્ડર)</span>
+                            <span className="font-bold text-green-700">₹3,600 સહાય</span>
+                          </div>
+                        )}
 
-                    {hasSeniorCitizen && (
-                      <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-purple-50/70 border border-purple-100">
-                        <span className="font-medium text-gray-800">👴 વરિષ્ઠ નાગરિક પેન્શન કવચ</span>
-                        <span className="font-bold text-green-700">₹36,000 / વર્ષ</span>
-                      </div>
-                    )}
+                        {hasSeniorCitizen && (
+                          <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-purple-50/70 border border-purple-100">
+                            <span className="font-medium text-gray-800">👴 વરિષ્ઠ નાગરિક પેન્શન કવચ</span>
+                            <span className="font-bold text-green-700">₹36,000 / વર્ષ</span>
+                          </div>
+                        )}
 
-                    <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-blue-50/70 border border-blue-100">
-                      <span className="font-medium text-gray-800">🏥 આયુષ્માન ભારત હેલ્થ કવચ</span>
-                      <span className="font-bold text-blue-700">₹5,00,000 કેશલેસ સારવાર</span>
-                    </div>
+                        <div className="flex items-center justify-between text-xs p-2.5 rounded-xl bg-blue-50/70 border border-blue-100">
+                          <span className="font-medium text-gray-800">🏥 આયુષ્માન ભારત હેલ્થ કવચ</span>
+                          <span className="font-bold text-blue-700">₹5,00,000 કેશલેસ સારવાર</span>
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Legal Notice Footer */}
