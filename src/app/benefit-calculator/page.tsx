@@ -675,9 +675,9 @@ export default function BenefitCalculatorPage() {
               </div>
 
               {/* 📄 Official Digital Entitlement Slip */}
-              <div className="bg-white rounded-3xl border-2 border-orange-200 shadow-md overflow-hidden relative">
+              <div className="bg-white rounded-3xl border-2 border-orange-200 shadow-md relative">
                 {/* Top Tricolor Strip */}
-                <div className="h-2 bg-gradient-to-r from-orange-500 via-white to-green-600" />
+                <div className="h-2 bg-gradient-to-r from-orange-500 via-white to-green-600 rounded-t-[22px]" />
 
                 <div className="p-4 sm:p-5">
                   {/* Card Header */}
@@ -738,45 +738,40 @@ export default function BenefitCalculatorPage() {
                         {familyCount > 0 ? `${familyCount} વ્યક્તિઓ` : "—"}
                       </span>
 
-                      {/* Tooltip Card (Hover on desktop + Click on mobile) */}
+                      {/* Tooltip Card (Desktop Hover: Opens Downwards cleanly) */}
                       {isKycVerified && (
-                        <div
-                          className={`absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 w-64 bg-gray-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 ${
-                            showMembersModal
-                              ? "opacity-100 visible"
-                              : "opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-[11px]">
-                            <span className="font-bold text-orange-400 flex items-center gap-1">
+                        <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-gray-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto">
+                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-xs">
+                            <span className="font-bold text-orange-400 flex items-center gap-1.5">
                               👨‍👩‍👧‍👦 રેશનકાર્ડ પ્રમાણિત સભ્યો
                             </span>
-                            <span className="text-[9px] bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                            <span className="text-[10px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded font-mono font-bold">
                               {familyCount} સભ્યો
                             </span>
                           </div>
-                          <div className="space-y-1.5 pt-2 text-[10px]">
+                          <div className="space-y-1.5 pt-2 text-[11px]">
                             {familyMembersList.map((m, idx) => (
                               <div
                                 key={idx}
-                                className="flex items-center justify-between bg-white/5 px-2 py-1 rounded-lg"
+                                className="flex items-center justify-between bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5"
                               >
                                 <div>
                                   <span className="font-semibold text-white block">
                                     {idx + 1}. {m.name}
                                   </span>
-                                  <span className="text-gray-400 text-[9px]">{m.relation}</span>
+                                  <span className="text-gray-400 text-[10px]">{m.relation}</span>
                                 </div>
-                                <span className="font-mono text-amber-300 font-bold text-[10px]">
+                                <span className="font-mono text-amber-300 font-bold text-[11px]">
                                   {m.age} વર્ષ
                                 </span>
                               </div>
                             ))}
                           </div>
-                          <div className="mt-2 pt-1 border-t border-gray-800 text-[9px] text-gray-400 text-center">
-                            ✓ RCMS ગુજરાત રેશનકાર્ડ ડેટાબેઝ લિંક્ડ
+                          <div className="mt-2.5 pt-1.5 border-t border-gray-800 text-[10px] text-green-400 text-center font-medium flex items-center justify-center gap-1">
+                            ✓ RCMS ગુજરાત રેશનકાર્ડ ડેટાબેઝ પ્રમાણિત
                           </div>
-                          <div className="absolute top-full left-6 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-gray-900/95" />
+                          {/* Top Pointer Arrow */}
+                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-6 border-transparent border-b-gray-900/95" />
                         </div>
                       )}
                     </div>
@@ -800,36 +795,111 @@ export default function BenefitCalculatorPage() {
                         <span className="truncate">{village ? `${village}, ${district}` : "—"}</span>
                       </span>
 
-                      {/* Tooltip Card (Hover on desktop + Click on mobile) */}
+                      {/* Tooltip Card (Desktop Hover: Opens Downwards cleanly) */}
                       {isKycVerified && (
-                        <div
-                          className={`absolute right-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 w-64 bg-gray-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 ${
-                            showAddressModal
-                              ? "opacity-100 visible"
-                              : "opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto"
-                          }`}
-                        >
-                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-[11px]">
-                            <span className="font-bold text-blue-400 flex items-center gap-1">
+                        <div className="hidden sm:block absolute right-0 top-full mt-2 w-72 bg-gray-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto">
+                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-xs">
+                            <span className="font-bold text-blue-400 flex items-center gap-1.5">
                               📍 પૂર્ણ રહેઠાણ સરનામું
                             </span>
-                            <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                            <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-mono font-bold">
                               {pincode}
                             </span>
                           </div>
-                          <div className="pt-2 text-[10px] space-y-1 text-gray-200 leading-relaxed">
+                          <div className="pt-2 text-[11px] space-y-1.5 text-gray-200 leading-relaxed">
                             <p className="font-semibold text-white">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
                             <p>મુ. {village}, તાલુકો: {taluka},</p>
                             <p>જિલ્લો: {district} - પિનકોડ: {pincode}, ગુજરાત</p>
                           </div>
-                          <div className="mt-2 pt-1 border-t border-gray-800 text-[9px] text-green-400 flex items-center gap-1 justify-center">
+                          <div className="mt-2.5 pt-1.5 border-t border-gray-800 text-[10px] text-green-400 flex items-center gap-1 justify-center font-medium">
                             ✓ UIDAI & જમીન મહેસૂલ સરનામું પ્રમાણિત
                           </div>
-                          <div className="absolute top-full right-6 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-gray-900/95" />
+                          {/* Top Pointer Arrow */}
+                          <div className="absolute bottom-full right-8 border-6 border-transparent border-b-gray-900/95" />
                         </div>
                       )}
                     </div>
                   </div>
+
+                  {/* 📱 Mobile Modals for Family Members & Address */}
+                  {isKycVerified && showMembersModal && (
+                    <div
+                      className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                      onClick={() => setShowMembersModal(false)}
+                    >
+                      <div
+                        className="bg-gray-900 text-white w-full max-w-xs p-4 rounded-2xl shadow-2xl border border-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-gray-700 text-sm">
+                          <span className="font-bold text-orange-400 flex items-center gap-1.5">
+                            👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowMembersModal(false)}
+                            className="text-gray-400 hover:text-white p-1 rounded-lg bg-white/10 text-xs flex items-center gap-1 px-2 transition"
+                          >
+                            <X size={14} /> બંધ કરો
+                          </button>
+                        </div>
+                        <div className="space-y-2 pt-2.5 text-xs">
+                          {familyMembersList.map((m, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between bg-white/5 p-2 rounded-xl border border-white/5"
+                            >
+                              <div>
+                                <span className="font-semibold text-white block">
+                                  {idx + 1}. {m.name}
+                                </span>
+                                <span className="text-gray-400 text-[10px]">{m.relation}</span>
+                              </div>
+                              <span className="font-mono text-amber-300 font-bold text-xs">
+                                {m.age} વર્ષ
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                        <p className="mt-3 text-[10px] text-green-400 text-center border-t border-gray-800 pt-2">
+                          ✓ RCMS ગુજરાત રેશનકાર્ડ ડેટાબેઝ પ્રમાણિત
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {isKycVerified && showAddressModal && (
+                    <div
+                      className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+                      onClick={() => setShowAddressModal(false)}
+                    >
+                      <div
+                        className="bg-gray-900 text-white w-full max-w-xs p-4 rounded-2xl shadow-2xl border border-gray-700"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <div className="flex items-center justify-between pb-2 border-b border-gray-700 text-sm">
+                          <span className="font-bold text-blue-400 flex items-center gap-1.5">
+                            📍 પૂર્ણ સરનામું
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setShowAddressModal(false)}
+                            className="text-gray-400 hover:text-white p-1 rounded-lg bg-white/10 text-xs flex items-center gap-1 px-2 transition"
+                          >
+                            <X size={14} /> બંધ કરો
+                          </button>
+                        </div>
+                        <div className="pt-2.5 text-xs space-y-1.5 text-gray-200 leading-relaxed">
+                          <p className="font-semibold text-white text-sm">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
+                          <p>મુ. {village}, તાલુકો: {taluka},</p>
+                          <p>જિલ્લો: {district} - પિનકોડ: {pincode}, ગુજરાત</p>
+                        </div>
+                        <p className="mt-3 text-[10px] text-green-400 text-center border-t border-gray-800 pt-2">
+                          ✓ UIDAI & જમીન મહેસૂલ સરનામું પ્રમાણિત
+                        </p>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Entitlement Breakdown Items */}
                   <div className="py-3 space-y-2">
