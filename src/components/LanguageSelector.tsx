@@ -92,43 +92,43 @@ export default function LanguageSelector({
   // Variant: Mobile Bar Compact Button
   if (variant === "mobile-bar") {
     return (
-      <>
+      <div className="notranslate shrink-0" translate="no">
         <button
           onClick={() => setIsOpen(true)}
-          className="flex items-center gap-1 bg-gray-100 hover:bg-orange-50 text-gray-800 border border-gray-300 px-2 py-1.5 rounded-lg text-xs font-bold transition active:scale-95 cursor-pointer"
+          className="flex items-center gap-1 bg-gray-100 hover:bg-orange-50 text-gray-800 border border-gray-300 px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition active:scale-95 cursor-pointer"
           title="ભાષા બદલો / Change Language"
           aria-label="Change Language"
         >
           <Globe size={13} className="text-orange-600 shrink-0" />
-          <span className="truncate max-w-[50px]">{currentLang.name}</span>
-          <ChevronDown size={11} className="text-gray-500" />
+          <span className="whitespace-nowrap">{currentLang.name}</span>
+          <ChevronDown size={11} className="text-gray-500 shrink-0" />
         </button>
 
         {isOpen && renderModal()}
-      </>
+      </div>
     );
   }
 
   // Variant: Desktop Navigation Button
   return (
-    <>
+    <div className="notranslate shrink-0" translate="no">
       <button
         onClick={() => setIsOpen(true)}
-        className="flex items-center gap-1.5 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-300 text-gray-800 px-2.5 py-1.5 rounded-lg text-xs font-bold transition shadow-2xs active:scale-95 cursor-pointer"
+        className="flex items-center gap-1.5 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-300 text-gray-800 px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-2xs active:scale-95 cursor-pointer"
         title="ભાષા બદલો / Select Indian Language"
       >
         <Globe size={14} className="text-orange-600 shrink-0" />
-        <span className="font-semibold text-gray-900">{currentLang.name}</span>
+        <span className="font-semibold text-gray-900 whitespace-nowrap">{currentLang.name}</span>
         {currentLang.isDefault && (
-          <span className="text-[9px] bg-green-100 text-green-800 px-1 py-0.2 rounded font-bold">
+          <span className="text-[9px] bg-green-100 text-green-800 px-1 py-0.2 rounded font-bold whitespace-nowrap">
             મૂળ
           </span>
         )}
-        <ChevronDown size={12} className="text-gray-400" />
+        <ChevronDown size={12} className="text-gray-400 shrink-0" />
       </button>
 
       {isOpen && renderModal()}
-    </>
+    </div>
   );
 
   function renderModal() {

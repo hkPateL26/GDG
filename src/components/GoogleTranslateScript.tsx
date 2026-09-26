@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { getStoredLanguage, applyLanguage, DEFAULT_LANGUAGE } from "@/lib/translation";
 
 declare global {
@@ -28,6 +29,30 @@ declare global {
 }
 
 export default function GoogleTranslateScript() {
+  const pathname = usePathname();
+
+  // Instant re-trigger on Next.js route change to prevent flash of untranslated text
+  useEffect(() => {
+    const savedLang = getStoredLanguage();
+    if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
+      const trigger = () => {
+        const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
+        if (combo) {
+          combo.value = savedLang;
+          combo.dispatchEvent(new Event("change"));
+        }
+      };
+
+      trigger();
+      const t1 = setTimeout(trigger, 100);
+      const t2 = setTimeout(trigger, 300);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [pathname]);
+
   useEffect(() => {
     const savedLang = getStoredLanguage();
 
