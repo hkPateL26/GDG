@@ -37,6 +37,30 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="gu" className={inter.className} suppressHydrationWarning>
+      <head>
+        {/* Anti-flash: hide page immediately if a non-default language is stored.
+            This inline script runs synchronously BEFORE React hydrates, so the user
+            never sees a flash of Gujarati content before translation kicks in. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+(function() {
+  try {
+    var lang = localStorage.getItem('nagrikseva_selected_lang');
+    if (lang && lang !== 'gu') {
+      document.documentElement.style.opacity = '0';
+      document.documentElement.style.transition = 'opacity 0.25s ease';
+      // Safety net: always restore after 4s max (in case translate script fails)
+      setTimeout(function() {
+        document.documentElement.style.opacity = '1';
+      }, 4000);
+    }
+  } catch(e) {}
+})();
+`,
+          }}
+        />
+      </head>
       <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
         <LanguageProvider>
           <ScrollRestoration />

@@ -89,11 +89,23 @@ export default function GoogleTranslateScript() {
           if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
             setTimeout(() => {
               const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
-              if (combo && combo.value !== savedLang) {
-                combo.value = savedLang;
-                combo.dispatchEvent(new Event("change"));
+              if (combo) {
+                if (combo.value !== savedLang) {
+                  combo.value = savedLang;
+                  combo.dispatchEvent(new Event("change"));
+                }
+                // Restore visibility after translation applies (~500ms for Google to translate DOM)
+                setTimeout(() => {
+                  document.documentElement.style.opacity = "1";
+                }, 600);
+              } else {
+                // Fallback: show page anyway if combo not found
+                document.documentElement.style.opacity = "1";
               }
             }, 800);
+          } else {
+            // Default language (Gujarati): restore immediately
+            document.documentElement.style.opacity = "1";
           }
         }
       } catch (err) {
