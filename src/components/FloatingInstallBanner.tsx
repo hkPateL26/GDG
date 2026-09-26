@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from "react";
 import { Download, X, Sparkles } from "lucide-react";
-import InstallAppModal from "./InstallAppModal";
+import dynamic from "next/dynamic";
+
+const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
 export default function FloatingInstallBanner() {
   const [showBanner, setShowBanner] = useState<boolean>(false);

@@ -10,7 +10,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Stale-while-revalidate or network-first for seamless user experience
+  const url = new URL(event.request.url);
+  // Never intercept /_next/ (Next.js HMR/chunks) or /api/
+  if (url.pathname.startsWith('/_next/') || url.pathname.startsWith('/api/')) {
+    return;
+  }
   event.respondWith(
     fetch(event.request).catch(() => caches.match(event.request))
   );

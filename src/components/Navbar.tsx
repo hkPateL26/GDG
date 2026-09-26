@@ -17,7 +17,9 @@ import {
   IndianRupee,
   Smartphone,
 } from "lucide-react";
-import InstallAppModal from "./InstallAppModal";
+import dynamic from "next/dynamic";
+
+const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
 const NAV_LINKS = [
   { href: "/",                   label: "Home",           Icon: Home },
