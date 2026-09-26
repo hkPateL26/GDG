@@ -62,7 +62,7 @@ export default function BenefitCalculatorPage() {
   // 1-Click Demo Fill for Hackathon Judges
   const fillDemoData = () => {
     setAadhaarNumber("5489 1234 9876");
-    setMobileNumber("9876543210");
+    setMobileNumber("98765 43210");
     setKycError("");
   };
 
@@ -82,15 +82,42 @@ export default function BenefitCalculatorPage() {
     setKycError("");
   };
 
+  // Strict Digits-Only & Space Formatters
+  const handleAadhaarInput = (val: string) => {
+    // Keep digits only, max 12 digits
+    const digits = val.replace(/\D/g, "").slice(0, 12);
+    // Format as: XXXX XXXX XXXX
+    const formatted = digits.replace(/(\d{4})(?=\d)/g, "$1 ");
+    setAadhaarNumber(formatted);
+    if (kycError) setKycError("");
+  };
+
+  const handleMobileInput = (val: string) => {
+    // Keep digits only, max 10 digits
+    const digits = val.replace(/\D/g, "").slice(0, 10);
+    // Format as: XXXXX XXXXX
+    const formatted = digits.length > 5 ? `${digits.slice(0, 5)} ${digits.slice(5)}` : digits;
+    setMobileNumber(formatted);
+    if (kycError) setKycError("");
+  };
+
+  const handleOtpInput = (val: string) => {
+    const digits = val.replace(/\D/g, "").slice(0, 6);
+    setEnteredOtp(digits);
+    if (kycError) setKycError("");
+  };
+
   // Aadhaar OTP Verification Logic
   const sendAadhaarOtp = () => {
-    const rawAadhaar = aadhaarNumber.replace(/\s/g, "");
+    const rawAadhaar = aadhaarNumber.replace(/\D/g, "");
+    const rawMobile = mobileNumber.replace(/\D/g, "");
+
     if (rawAadhaar.length !== 12) {
-      setKycError("કૃપા કરીને ૧૨ અંકનો આધાર નંબર દાખલ કરો.");
+      setKycError("કૃપા કરીને ૧૨ અંકનો પૂરો આધાર નંબર દાખલ કરો.");
       return;
     }
-    if (mobileNumber.length !== 10) {
-      setKycError("કૃપા કરીને ૧૦ અંકનો મોબાઈલ નંબર દાખલ કરો.");
+    if (rawMobile.length !== 10) {
+      setKycError("કૃપા કરીને ૧૦ અંકનો પૂરો મોબાઈલ નંબર દાખલ કરો.");
       return;
     }
     setKycError("");
@@ -229,32 +256,44 @@ export default function BenefitCalculatorPage() {
 
                 <div className="space-y-3">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      ૧૨ અંકનો આધાર કાર્ડ નંબર
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-gray-700">
+                        ૧૨ અંકનો આધાર કાર્ડ નંબર
+                      </label>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        {aadhaarNumber.replace(/\D/g, "").length} / 12 અંક
+                      </span>
+                    </div>
                     <input
                       type="text"
+                      inputMode="numeric"
                       maxLength={14}
                       value={aadhaarNumber}
-                      onChange={(e) => setAadhaarNumber(e.target.value)}
-                      placeholder="દા.ત. 5489 1234 9876"
+                      onChange={(e) => handleAadhaarInput(e.target.value)}
+                      placeholder="XXXX XXXX XXXX"
                       disabled={isKycVerified}
-                      className="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50"
+                      className="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">
-                      આધાર સાથે લિંક થયેલ મોબાઈલ નંબર
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-semibold text-gray-700">
+                        આધાર સાથે લિંક થયેલ મોબાઈલ નંબર
+                      </label>
+                      <span className="text-[10px] text-gray-400 font-mono">
+                        {mobileNumber.replace(/\D/g, "").length} / 10 અંક
+                      </span>
+                    </div>
                     <input
                       type="text"
-                      maxLength={10}
+                      inputMode="numeric"
+                      maxLength={11}
                       value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
-                      placeholder="દા.ત. 9876543210"
+                      onChange={(e) => handleMobileInput(e.target.value)}
+                      placeholder="XXXXX XXXXX"
                       disabled={isKycVerified}
-                      className="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50"
+                      className="w-full border border-gray-200 rounded-xl px-3.5 py-2 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50"
                     />
                   </div>
 
@@ -276,9 +315,10 @@ export default function BenefitCalculatorPage() {
                           <div className="flex gap-2">
                             <input
                               type="text"
+                              inputMode="numeric"
                               maxLength={6}
                               value={enteredOtp}
-                              onChange={(e) => setEnteredOtp(e.target.value)}
+                              onChange={(e) => handleOtpInput(e.target.value)}
                               placeholder="123456"
                               className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-green-400"
                             />
