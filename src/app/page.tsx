@@ -15,6 +15,8 @@ import {
   Home as HomeIcon,
   Flame,
   Briefcase,
+  Camera,
+  IndianRupee,
 } from "lucide-react";
 
 const SCHEME_ICONS: Record<string, React.ElementType> = {
@@ -26,11 +28,12 @@ const SCHEME_ICONS: Record<string, React.ElementType> = {
 };
 
 const QUICK_SERVICES = [
-  { icon: Sparkles,  label: "પાત્રતા કેલ્ક્યુલેટર (Eligibility)", href: "/eligibility" },
-  { icon: MapPin,    label: "નજીકની કચેરી (Jan Seva Locator)",  href: "/locator" },
-  { icon: FileText,  label: "રેશન કાર્ડ ગાઈડ & ચેકલિસ્ટ",       href: "/documents?type=ration" },
-  { icon: FileText,  label: "આધાર કાર્ડ અપડેટ વિગતો",         href: "/documents?type=aadhar" },
-  { icon: HeartPulse, label: "આયુષ્માન કાર્ડ કેવી રીતે કઢાવવું?", href: "/documents?type=health" },
+  { icon: Sparkles,    label: "પાત્રતા કેલ્ક્યુલેટર (Eligibility)", href: "/eligibility" },
+  { icon: Camera,      label: "📸 AI દસ્તાવેજ સ્કેનર (Pre-Check)", href: "/verify-doc" },
+  { icon: IndianRupee, label: "💰 કુટુંબ લાભ કેલ્ક્યુલેટર & પાસ", href: "/benefit-calculator" },
+  { icon: MapPin,      label: "નજીકની કચેરી (Jan Seva Locator)",   href: "/locator" },
+  { icon: FileText,    label: "રેશન કાર્ડ ગાઈડ & ચેકલિસ્ટ",        href: "/documents?type=ration" },
+  { icon: HeartPulse,  label: "આયુષ્માન કાર્ડ કેવી રીતે કઢાવવું?",  href: "/documents?type=health" },
 ];
 
 const STATS = [
@@ -65,27 +68,27 @@ export default function Home() {
             <div className="flex flex-wrap gap-2.5 justify-center">
               <Link
                 href="/eligibility"
-                className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-5 py-3 rounded-xl font-bold text-sm transition shadow-lg active:scale-95"
+                className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition shadow-lg active:scale-95"
               >
-                <Sparkles size={16} /> પાત્રતા ચકાસો (Eligibility)
+                <Sparkles size={15} /> પાત્રતા ચકાસો (Eligibility)
               </Link>
               <Link
-                href="/schemes"
-                className="flex items-center gap-1.5 bg-white text-orange-600 px-4 py-3 rounded-xl font-semibold text-sm hover:bg-orange-50 active:scale-95 transition shadow"
+                href="/verify-doc"
+                className="flex items-center gap-1.5 bg-white text-orange-600 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm hover:bg-orange-50 active:scale-95 transition shadow"
               >
-                <LayoutGrid size={16} /> બધી યોજનાઓ
+                📸 AI દસ્તાવેજ સ્કેનર
+              </Link>
+              <Link
+                href="/benefit-calculator"
+                className="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition shadow active:scale-95"
+              >
+                💰 લાભ ગણો & WhatsApp પાસ
               </Link>
               <Link
                 href="/locator"
-                className="flex items-center gap-1.5 bg-orange-700/80 hover:bg-orange-800 text-white px-4 py-3 rounded-xl font-semibold text-sm transition border border-white/20 active:scale-95"
+                className="flex items-center gap-1.5 bg-orange-700/80 hover:bg-orange-800 text-white px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition border border-white/20 active:scale-95"
               >
-                <MapPin size={16} /> નજીકની કચેરી
-              </Link>
-              <Link
-                href="/track"
-                className="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-4 py-3 rounded-xl font-semibold text-sm transition shadow active:scale-95"
-              >
-                <Search size={16} /> સ્ટેટસ ટ્રેક
+                <MapPin size={15} /> કચેરી લોકેટર
               </Link>
             </div>
           </div>
