@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import Navbar from "@/components/Navbar";
 import {
   IndianRupee,
@@ -30,6 +30,8 @@ import {
   EyeOff,
   MapPin,
   X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 interface VerifiedMember {
@@ -55,6 +57,14 @@ export default function BenefitCalculatorPage() {
   const [activeDetailView, setActiveDetailView] = useState<"members" | "address" | null>(null);
   const [showMembersModal, setShowMembersModal] = useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+  const membersScrollRef = useRef<HTMLDivElement>(null);
+
+  const scrollMembers = (direction: "left" | "right") => {
+    if (membersScrollRef.current) {
+      const scrollAmount = direction === "left" ? -230 : 230;
+      membersScrollRef.current.scrollBy({ left: scrollAmount, behavior: "smooth" });
+    }
+  };
 
   // Step 2: Auto-Fetched Citizen & Family Data from Government Database
   const [citizenName, setCitizenName] = useState<string>("");
@@ -200,10 +210,11 @@ export default function BenefitCalculatorPage() {
       setPincode("360370");
 
       const verifiedMembers: VerifiedMember[] = [
-        { name: "હરિભાઈ પટેલ", relation: "કુટુંબના વડા (Self)", age: 52 },
-        { name: "મંજુલાબેન પટેલ", relation: "પત્ની (Wife)", age: 49 },
-        { name: "ચિરાગ પટેલ", relation: "પુત્ર (Son)", age: 22 },
-        { name: "ગોદાવરીબેન પટેલ", relation: "માતા (Senior Citizen)", age: 74 },
+        { name: "હરિભાઈ વિઠ્ઠલભાઈ પટેલ", relation: "કુટુંબના વડા (Self)", age: 52 },
+        { name: "મંજુલાબેન હરિભાઈ પટેલ", relation: "પત્ની (Wife)", age: 49 },
+        { name: "ચિરાગ હરિભાઈ પટેલ", relation: "પુત્ર (Son)", age: 22 },
+        { name: "દિવ્યાબેન હરિભાઈ પટેલ", relation: "પુત્રી (Daughter)", age: 18 },
+        { name: "ગોદાવરીબેન વિઠ્ઠલભાઈ પટેલ", relation: "માતા (Senior Citizen)", age: 74 },
       ];
       setFamilyMembersList(verifiedMembers);
 
@@ -796,41 +807,74 @@ export default function BenefitCalculatorPage() {
                     </div>
                   </div>
 
-                  {/* ─── Elegant Light Inline Detail Drawers for Desktop (Never covers schemes!) ─── */}
+                  {/* ─── Elegant Light Inline Detail Drawers (Responsive Carousel with Full Names & Navigation Buttons) ─── */}
                   {isKycVerified && activeDetailView === "members" && (
-                    <div className="hidden sm:block my-2.5 p-3 rounded-2xl bg-orange-50/70 border border-orange-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
-                      <div className="flex items-center justify-between pb-1.5 border-b border-orange-200/70 mb-2">
-                        <span className="font-bold text-orange-950 flex items-center gap-1.5 text-xs">
-                          👨‍👩‍👧‍👦 રેશનકાર્ડ પ્રમાણિત કુટુંબના સભ્યો ({familyCount})
-                        </span>
+                    <div className="my-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-orange-50/90 via-amber-50/70 to-orange-50/90 border border-orange-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="flex items-center justify-between pb-2 border-b border-orange-200/70 mb-2.5">
                         <div className="flex items-center gap-2">
-                          <span className="text-[10px] bg-white text-green-700 border border-green-200 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                          <span className="font-bold text-orange-950 flex items-center gap-1.5 text-xs sm:text-sm">
+                            👨‍👩‍👧‍👦 રેશનકાર્ડ પ્રમાણિત કુટુંબના સભ્યો ({familyCount})
+                          </span>
+                          <span className="hidden sm:inline-flex text-[10px] bg-white text-green-700 border border-green-200 font-semibold px-2 py-0.5 rounded-full items-center gap-1">
                             <CheckCircle2 size={11} className="text-green-600" /> RCMS ગુજરાત પ્રમાણિત
                           </span>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          {/* Carousel Navigation Buttons < and > */}
+                          <div className="flex items-center bg-white rounded-lg border border-orange-200 p-0.5 shadow-2xs">
+                            <button
+                              type="button"
+                              onClick={() => scrollMembers("left")}
+                              className="p-1 text-orange-800 hover:bg-orange-100 rounded transition active:scale-90"
+                              title="અગાઉના સભ્ય જુઓ"
+                            >
+                              <ChevronLeft size={16} />
+                            </button>
+                            <span className="text-[10px] text-gray-300 font-mono px-0.5 select-none">|</span>
+                            <button
+                              type="button"
+                              onClick={() => scrollMembers("right")}
+                              className="p-1 text-orange-800 hover:bg-orange-100 rounded transition active:scale-90"
+                              title="વધુ સભ્યો જુઓ"
+                            >
+                              <ChevronRight size={16} />
+                            </button>
+                          </div>
+
                           <button
                             type="button"
                             onClick={() => setActiveDetailView(null)}
-                            className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-orange-100 transition"
+                            className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-orange-100 transition ml-1"
                             title="બંધ કરો"
                           >
-                            <X size={14} />
+                            <X size={15} />
                           </button>
                         </div>
                       </div>
 
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                      {/* Smooth Horizontal Scroll Track (Full Names without Truncation) */}
+                      <div
+                        ref={membersScrollRef}
+                        className="flex gap-2.5 overflow-x-auto pb-1.5 pt-0.5 scroll-smooth no-scrollbar"
+                        style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                      >
                         {familyMembersList.map((m, idx) => (
                           <div
                             key={idx}
-                            className="bg-white p-2 rounded-xl border border-orange-100 shadow-xs space-y-0.5"
+                            className="w-[200px] min-w-[200px] sm:w-[220px] sm:min-w-[220px] bg-white p-2.5 rounded-xl border border-orange-200 shadow-2xs hover:border-orange-300 transition shrink-0 flex flex-col justify-between"
                           >
-                            <span className="font-bold text-gray-800 block truncate text-xs">
-                              {idx + 1}. {m.name}
-                            </span>
-                            <div className="flex items-center justify-between text-[10px] text-gray-500">
-                              <span className="truncate">{m.relation}</span>
-                              <span className="font-bold text-orange-700 bg-orange-50 px-1 py-0.2 rounded font-mono">
-                                {m.age} વ.
+                            <div>
+                              <span className="font-extrabold text-gray-900 text-xs block leading-snug break-words">
+                                {idx + 1}. {m.name}
+                              </span>
+                            </div>
+                            <div className="flex items-center justify-between text-[11px] text-gray-600 mt-2 pt-1.5 border-t border-orange-50">
+                              <span className="text-[10px] font-medium text-gray-500 truncate mr-1">
+                                {m.relation}
+                              </span>
+                              <span className="font-bold text-orange-800 bg-orange-100/90 px-2 py-0.5 rounded-full font-mono text-[10px] shrink-0 whitespace-nowrap">
+                                {m.age} વર્ષ
                               </span>
                             </div>
                           </div>
@@ -840,9 +884,9 @@ export default function BenefitCalculatorPage() {
                   )}
 
                   {isKycVerified && activeDetailView === "address" && (
-                    <div className="hidden sm:block my-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="my-2.5 p-3 sm:p-3.5 rounded-2xl bg-gradient-to-r from-blue-50/80 via-indigo-50/60 to-blue-50/80 border border-blue-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
                       <div className="flex items-center justify-between pb-1.5 border-b border-blue-200/70 mb-2">
-                        <span className="font-bold text-blue-950 flex items-center gap-1.5 text-xs">
+                        <span className="font-bold text-blue-950 flex items-center gap-1.5 text-xs sm:text-sm">
                           📍 પ્રમાણિત રહેઠાણ સરનામું (RCMS & UIDAI)
                         </span>
                         <div className="flex items-center gap-2">
@@ -852,22 +896,22 @@ export default function BenefitCalculatorPage() {
                           <button
                             type="button"
                             onClick={() => setActiveDetailView(null)}
-                            className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-blue-100 transition"
+                            className="text-gray-400 hover:text-gray-700 p-1 rounded-lg hover:bg-blue-100 transition"
                             title="બંધ કરો"
                           >
-                            <X size={14} />
+                            <X size={15} />
                           </button>
                         </div>
                       </div>
 
-                      <div className="bg-white p-2.5 rounded-xl border border-blue-100 text-xs text-gray-700 leading-relaxed shadow-xs flex items-center justify-between">
+                      <div className="bg-white p-3 rounded-xl border border-blue-100 text-xs text-gray-700 leading-relaxed shadow-xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                         <div>
-                          <p className="font-bold text-gray-900">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
-                          <p className="text-gray-600 text-[11px]">
-                            મુ. {village}, તાલુકો: {taluka}, જિલ્લો: {district} - {pincode}, ગુજરાત
+                          <p className="font-bold text-gray-900 text-xs sm:text-sm">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
+                          <p className="text-gray-600 text-xs mt-0.5">
+                            મુ. <strong>{village}</strong>, તાલુકો: <strong>{taluka}</strong>, જિલ્લો: <strong>{district}</strong> - {pincode}, ગુજરાત
                           </p>
                         </div>
-                        <span className="text-[10px] text-green-700 font-semibold bg-green-50 border border-green-200 px-2 py-1 rounded-lg shrink-0 ml-3">
+                        <span className="text-[10px] text-green-700 font-semibold bg-green-50 border border-green-200 px-2.5 py-1 rounded-lg shrink-0 self-start sm:self-center">
                           ✓ જમીન મહેસૂલ રેકોર્ડ લિંક્ડ
                         </span>
                       </div>
