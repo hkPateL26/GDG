@@ -41,9 +41,17 @@ RESPONSE FORMAT:
 
 IMPORTANT: Only provide accurate information. If unsure, direct to official government websites.`;
 
-export function getChatModel() {
+export const AVAILABLE_MODELS = [
+  "gemini-3.7-flash",
+  "gemini-3.8-flash",
+  "gemini-3.6-flash",
+  "gemini-3.5-flash",
+  "gemini-2.5-pro",
+];
+
+export function getChatModel(modelName = "gemini-3.7-flash") {
   return genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: modelName,
     systemInstruction: NAGRIK_SEVA_PROMPT,
     generationConfig: {
       maxOutputTokens: 800,
@@ -53,9 +61,9 @@ export function getChatModel() {
   });
 }
 
-export function getSchemeModel() {
+export function getSchemeModel(modelName = "gemini-3.7-flash") {
   return genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
+    model: modelName,
     generationConfig: {
       maxOutputTokens: 500,
       temperature: 0.3,

@@ -46,26 +46,40 @@ export async function POST(req: NextRequest) {
     // Clean base64 header if present
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, "");
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-1.5-flash",
-      generationConfig: {
-        temperature: 0.2,
-        responseMimeType: "application/json",
-      },
-    });
+    const visionModels = ["gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.6-flash"];
+    let parsedData = null;
 
-    const result = await model.generateContent([
-      VERIFICATION_PROMPT,
-      {
-        inlineData: {
-          data: base64Data,
-          mimeType,
-        },
-      },
-    ]);
+    for (const modelName of visionModels) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            temperature: 0.2,
+            responseMimeType: "application/json",
+          },
+        });
 
-    const responseText = result.response.text();
-    const parsedData = JSON.parse(responseText);
+        const result = await model.generateContent([
+          VERIFICATION_PROMPT,
+          {
+            inlineData: {
+              data: base64Data,
+              mimeType,
+            },
+          },
+        ]);
+
+        const responseText = result.response.text();
+        parsedData = JSON.parse(responseText);
+        if (parsedData) break;
+      } catch (mErr) {
+        // Continue to fallback model
+      }
+    }
+
+    if (!parsedData) {
+      throw new Error("All vision models currently experiencing load, triggering fallback");
+    }
 
     return NextResponse.json({
       success: true,
