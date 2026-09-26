@@ -3,8 +3,18 @@ import ChatBot from "@/components/ChatBot";
 import Link from "next/link";
 import { SCHEMES_DATA } from "@/lib/schemes-data";
 import {
-  LayoutGrid, Bot, Search, FileText, ChevronRight,
-  Wheat, HeartPulse, Home as HomeIcon, Flame, Briefcase,
+  LayoutGrid,
+  Bot,
+  Search,
+  FileText,
+  ChevronRight,
+  Sparkles,
+  MapPin,
+  Wheat,
+  HeartPulse,
+  Home as HomeIcon,
+  Flame,
+  Briefcase,
 } from "lucide-react";
 
 const SCHEME_ICONS: Record<string, React.ElementType> = {
@@ -16,17 +26,18 @@ const SCHEME_ICONS: Record<string, React.ElementType> = {
 };
 
 const QUICK_SERVICES = [
-  { icon: FileText, label: "Ration Card",    href: "/documents?type=ration" },
-  { icon: FileText, label: "Aadhaar Update", href: "/documents?type=aadhar" },
-  { icon: FileText, label: "PAN Card",       href: "/documents?type=pan" },
-  { icon: HeartPulse, label: "Health Card",  href: "/documents?type=health" },
+  { icon: Sparkles,  label: "પાત્રતા કેલ્ક્યુલેટર (Eligibility)", href: "/eligibility" },
+  { icon: MapPin,    label: "નજીકની કચેરી (Jan Seva Locator)",  href: "/locator" },
+  { icon: FileText,  label: "રેશન કાર્ડ ગાઈડ & ચેકલિસ્ટ",       href: "/documents?type=ration" },
+  { icon: FileText,  label: "આધાર કાર્ડ અપડેટ વિગતો",         href: "/documents?type=aadhar" },
+  { icon: HeartPulse, label: "આયુષ્માન કાર્ડ કેવી રીતે કઢાવવું?", href: "/documents?type=health" },
 ];
 
 const STATS = [
-  { num: "10+",  label: "Schemes",    emoji: "📋" },
-  { num: "3",    label: "Languages",  emoji: "🗣️" },
-  { num: "24/7", label: "Available",  emoji: "⏰" },
-  { num: "Free", label: "Service",    emoji: "✅" },
+  { num: "10+",  label: "સરકારી યોજનાઓ",    emoji: "📋" },
+  { num: "3",    label: "ભાષાઓ (ગુજ/હિં/અંગ્રેજી)",  emoji: "🗣️" },
+  { num: "24/7", label: "AI & વોઈસ સપોર્ટ",  emoji: "🎙️" },
+  { num: "100%", label: "મફત નાગરિક સેવા",    emoji: "✅" },
 ];
 
 export default function Home() {
@@ -47,21 +58,34 @@ export default function Home() {
             <p className="text-orange-100 text-base sm:text-lg mb-1">
               AI-Powered Digital Public Infrastructure Assistant
             </p>
-            <p className="text-orange-200 text-xs sm:text-sm mb-8">
-              સરકારી યોજનાઓ, સેવાઓ અને દસ્તાવેજો — બધું એક જ જગ્યાએ
+            <p className="text-orange-200 text-xs sm:text-sm mb-7">
+              સરકારી યોજનાઓ, દસ્તાવેજ સહાય, પાત્રતા ચકાસણી અને સ્થિતિ ટ્રેકિંગ — બધું એક જ જગ્યાએ
             </p>
-            <div className="flex flex-wrap gap-3 justify-center">
-              <Link href="/schemes"
-                className="flex items-center gap-2 bg-white text-orange-600 px-5 py-3 rounded-xl font-semibold text-sm hover:bg-orange-50 active:scale-95 transition shadow-lg">
-                <LayoutGrid size={18} /> Find Schemes
+
+            <div className="flex flex-wrap gap-2.5 justify-center">
+              <Link
+                href="/eligibility"
+                className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-5 py-3 rounded-xl font-bold text-sm transition shadow-lg active:scale-95"
+              >
+                <Sparkles size={16} /> પાત્રતા ચકાસો (Eligibility)
               </Link>
-              <Link href="/chat"
-                className="flex items-center gap-2 bg-orange-600 border-2 border-white/30 text-white px-5 py-3 rounded-xl font-semibold text-sm hover:bg-orange-700 active:scale-95 transition">
-                <Bot size={18} /> Ask AI
+              <Link
+                href="/schemes"
+                className="flex items-center gap-1.5 bg-white text-orange-600 px-4 py-3 rounded-xl font-semibold text-sm hover:bg-orange-50 active:scale-95 transition shadow"
+              >
+                <LayoutGrid size={16} /> બધી યોજનાઓ
               </Link>
-              <Link href="/track"
-                className="flex items-center gap-2 bg-green-600 text-white px-5 py-3 rounded-xl font-semibold text-sm hover:bg-green-700 active:scale-95 transition">
-                <Search size={18} /> Track Status
+              <Link
+                href="/locator"
+                className="flex items-center gap-1.5 bg-orange-700/80 hover:bg-orange-800 text-white px-4 py-3 rounded-xl font-semibold text-sm transition border border-white/20 active:scale-95"
+              >
+                <MapPin size={16} /> નજીકની કચેરી
+              </Link>
+              <Link
+                href="/track"
+                className="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-4 py-3 rounded-xl font-semibold text-sm transition shadow active:scale-95"
+              >
+                <Search size={16} /> સ્ટેટસ ટ્રેક
               </Link>
             </div>
           </div>
@@ -86,34 +110,53 @@ export default function Home() {
           {/* ── Sidebar ── */}
           <aside className="lg:col-span-1 space-y-4">
 
+            {/* Smart Eligibility Banner */}
+            <div className="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-4 text-white shadow-sm">
+              <span className="text-xs font-bold uppercase tracking-wider bg-white/25 px-2.5 py-0.5 rounded-full inline-block mb-2">
+                નવું ફીચર
+              </span>
+              <h3 className="font-bold text-base leading-snug">
+                તમે કઈ કઈ સરકારી યોજનાના હકદાર છો?
+              </h3>
+              <p className="text-xs text-orange-100 mt-1 mb-3">
+                ઉંમર, આવક અને વ્યવસાય નાખીને ૧ મિનિટમાં જાણી લો!
+              </p>
+              <Link
+                href="/eligibility"
+                className="inline-flex items-center gap-1 bg-white text-orange-600 text-xs font-bold px-3.5 py-2 rounded-xl hover:bg-orange-50 transition shadow-sm"
+              >
+                હમણાં જ ચેક કરો <ChevronRight size={13} />
+              </Link>
+            </div>
+
             {/* Popular Schemes */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="flex items-center justify-between px-4 py-3 border-b border-gray-50">
                 <h2 className="font-bold text-gray-800 text-sm flex items-center gap-2">
                   <LayoutGrid size={16} className="text-orange-500" />
-                  Popular Schemes
+                  મુખ્ય સરકારી યોજનાઓ
                 </h2>
                 <Link href="/schemes" className="text-xs text-orange-500 hover:underline flex items-center gap-0.5">
-                  View All <ChevronRight size={12} />
+                  બધી જુઓ <ChevronRight size={12} />
                 </Link>
               </div>
               <div className="divide-y divide-gray-50">
-                {featured.map((scheme) => {
-                  const Icon = SCHEME_ICONS[scheme.id] ?? LayoutGrid;
-                  return (
-                    <Link key={scheme.id} href={`/schemes/${scheme.id}`}
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition group">
-                      <span className="text-xl flex-shrink-0 w-7 text-center">{scheme.icon}</span>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-800 truncate group-hover:text-orange-600">
-                          {scheme.nameGu}
-                        </p>
-                        <p className="text-xs text-gray-400 truncate">{scheme.benefits[0]}</p>
-                      </div>
-                      <ChevronRight size={14} className="text-gray-300 group-hover:text-orange-400 flex-shrink-0" />
-                    </Link>
-                  );
-                })}
+                {featured.map((scheme) => (
+                  <Link
+                    key={scheme.id}
+                    href={`/schemes/${scheme.id}`}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition group"
+                  >
+                    <span className="text-xl flex-shrink-0 w-7 text-center">{scheme.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800 truncate group-hover:text-orange-600">
+                        {scheme.nameGu}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">{scheme.benefits[0]}</p>
+                    </div>
+                    <ChevronRight size={14} className="text-gray-300 group-hover:text-orange-400 flex-shrink-0" />
+                  </Link>
+                ))}
               </div>
             </div>
 
@@ -122,15 +165,20 @@ export default function Home() {
               <div className="px-4 py-3 border-b border-blue-100">
                 <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
                   <FileText size={15} className="text-blue-500" />
-                  Quick Services
+                  ઝડપી સેવાઓ (Quick Access)
                 </h3>
               </div>
               <div className="divide-y divide-blue-100">
                 {QUICK_SERVICES.map(({ icon: Icon, label, href }) => (
-                  <Link key={label} href={href}
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition group">
-                    <Icon size={16} className="text-blue-400 flex-shrink-0" />
-                    <span className="text-sm text-gray-700 group-hover:text-blue-600 flex-1">{label}</span>
+                  <Link
+                    key={label}
+                    href={href}
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-blue-50 transition group"
+                  >
+                    <Icon size={16} className="text-blue-500 flex-shrink-0" />
+                    <span className="text-xs font-medium text-gray-700 group-hover:text-blue-600 flex-1 truncate">
+                      {label}
+                    </span>
                     <ChevronRight size={13} className="text-gray-300 group-hover:text-blue-400 flex-shrink-0" />
                   </Link>
                 ))}
@@ -138,15 +186,15 @@ export default function Home() {
             </div>
           </aside>
 
-          {/* ── Chat ── */}
+          {/* ── ChatBot Column ── */}
           <div className="lg:col-span-2">
             <div className="flex items-center justify-between mb-3">
               <h2 className="font-bold text-gray-800 flex items-center gap-2">
                 <Bot size={18} className="text-orange-500" />
-                Ask NagrikSeva AI
+                નાગરિકસેવા AI સાથે વાત કરો
               </h2>
               <Link href="/chat" className="text-xs text-orange-500 hover:underline flex items-center gap-0.5">
-                Full Screen <ChevronRight size={12} />
+                સંપૂર્ણ સ્ક્રીનમાં ખોલો <ChevronRight size={12} />
               </Link>
             </div>
             <ChatBot />
@@ -161,13 +209,15 @@ export default function Home() {
               <span className="text-orange-400">GDG Code for Communities 2.0</span>
             </p>
             <p className="text-xs text-gray-400">
-              Powered by Google Gemini AI &nbsp;•&nbsp; NagrikSeva AI &copy; 2026
+              Powered by Google Gemini AI &bull; Cloud Firestore &bull; NagrikSeva AI &copy; 2026
             </p>
-            <div className="flex justify-center gap-4 mt-3 text-xs text-gray-500">
-              <Link href="/schemes" className="hover:text-orange-400 transition">Schemes</Link>
-              <Link href="/documents" className="hover:text-orange-400 transition">Documents</Link>
-              <Link href="/track" className="hover:text-orange-400 transition">Track</Link>
-              <Link href="/chat" className="hover:text-orange-400 transition">AI Chat</Link>
+            <div className="flex flex-wrap justify-center gap-4 mt-3 text-xs text-gray-400">
+              <Link href="/eligibility" className="hover:text-orange-400 transition">પાત્રતા કેલ્ક્યુલેટર</Link>
+              <Link href="/schemes" className="hover:text-orange-400 transition">યોજનાઓ</Link>
+              <Link href="/documents" className="hover:text-orange-400 transition">દસ્તાવેજો</Link>
+              <Link href="/locator" className="hover:text-orange-400 transition">કચેરી લાઈબ્રેરી</Link>
+              <Link href="/track" className="hover:text-orange-400 transition">ટ્રેકિંગ</Link>
+              <Link href="/chat" className="hover:text-orange-400 transition">AI ચેટ</Link>
             </div>
           </div>
         </footer>
