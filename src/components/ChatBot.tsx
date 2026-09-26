@@ -4,6 +4,25 @@ import { useState, useRef, useEffect } from "react";
 import { Message, ChatHistory } from "@/types";
 import { SkeletonChatMessage } from "@/components/Skeleton";
 import { Mic, MicOff, Volume2, VolumeX, Send, Sparkles } from "lucide-react";
+import { getStoredLanguage } from "@/lib/translation";
+
+const SPEECH_LANG_MAP: Record<string, string> = {
+  gu: "gu-IN",
+  hi: "hi-IN",
+  en: "en-IN",
+  mr: "mr-IN",
+  bn: "bn-IN",
+  te: "te-IN",
+  ta: "ta-IN",
+  kn: "kn-IN",
+  ml: "ml-IN",
+  pa: "pa-IN",
+  or: "or-IN",
+  ur: "ur-IN",
+  as: "as-IN",
+  sa: "sa-IN",
+  ne: "ne-NP",
+};
 
 const QUICK_SUGGESTIONS = [
   "PM Kisan Yojana શું છે?",
@@ -65,8 +84,8 @@ export default function ChatBot() {
     }
 
     const recognition = new SpeechRecognition();
-    recognitionRef.current = recognition;
-    recognition.lang = "gu-IN"; // Gujarati recognition
+    const currentLang = getStoredLanguage();
+    recognition.lang = SPEECH_LANG_MAP[currentLang] || "gu-IN";
     recognition.continuous = false;
     recognition.interimResults = false;
 
@@ -107,10 +126,12 @@ export default function ChatBot() {
     const cleanText = text.replace(/[*#_~]/g, ""); // strip markdown
     const utterance = new SpeechSynthesisUtterance(cleanText);
 
-    // Prefer Indian voices if available
+    // Prefer matching language voice if available
     const voices = window.speechSynthesis.getVoices();
-    const guVoice = voices.find((v) => v.lang.startsWith("gu") || v.lang.startsWith("hi"));
-    if (guVoice) utterance.voice = guVoice;
+    const currentLang = getStoredLanguage();
+    const targetTag = SPEECH_LANG_MAP[currentLang]?.slice(0, 2) || "gu";
+    const matchedVoice = voices.find((v) => v.lang.toLowerCase().startsWith(targetTag) || v.lang.includes("IN"));
+    if (matchedVoice) utterance.voice = matchedVoice;
 
     utterance.rate = 0.95;
     utterance.onend = () => setIsSpeaking(null);
@@ -136,10 +157,11 @@ export default function ChatBot() {
         parts: [{ text: m.text }],
       }));
 
+      const currentLang = getStoredLanguage();
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msg, history }),
+        body: JSON.stringify({ message: msg, history, language: currentLang }),
       });
 
       const data = await res.json();

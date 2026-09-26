@@ -52,7 +52,11 @@ function getLocalFallbackReply(query: string): string {
 
 export async function POST(req: NextRequest) {
   try {
-    const { message, history }: { message: string; history: ChatHistory[] } = await req.json();
+    const {
+      message,
+      history,
+      language,
+    }: { message: string; history: ChatHistory[]; language?: string } = await req.json();
 
     if (!message?.trim()) {
       return NextResponse.json({ error: "Message is required" }, { status: 400 });
@@ -73,12 +77,17 @@ export async function POST(req: NextRequest) {
     // Try available models with a 6-second per-model timeout
     let lastError: any = null;
     const fastModels = ["gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.6-flash"];
+    const langPrompt =
+      language && language !== "gu"
+        ? `\n\n[Instruction: Respond in '${language}' language accurately with easy-to-understand terms.]`
+        : "";
+
     for (const modelName of fastModels) {
       try {
         const model = getChatModel(modelName);
         const chat = model.startChat({ history: sanitizedHistory });
 
-        const sendPromise = chat.sendMessage(message);
+        const sendPromise = chat.sendMessage(message + langPrompt);
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error(`Timeout on model ${modelName}`)), 6000)
         );

@@ -5,6 +5,7 @@ import "./globals.css";
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import ScrollRestoration from "@/components/ScrollRestoration";
+import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 
 const inter = Inter({ subsets: ["latin"], display: "swap" });
 
@@ -40,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ServiceWorkerRegister />
         {children}
         <FloatingInstallBanner />
+        <GoogleTranslateScript />
       </body>
     </html>
   );

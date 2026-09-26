@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled } from "@/lib/usePwaInstall";
+import LanguageSelector from "./LanguageSelector";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
@@ -84,6 +85,11 @@ export default function Navbar() {
               14567
             </a>
 
+            {/* 🌐 Desktop Language Selector */}
+            <div className="ml-1.5">
+              <LanguageSelector variant="desktop" />
+            </div>
+
             {/* 📱 Desktop Install App Button */}
             {!isInstalled && (
               <button
@@ -99,7 +105,10 @@ export default function Navbar() {
           </div>
 
           {/* ── Mobile & Tablet Toggle ── */}
-          <div className="xl:hidden flex items-center gap-2">
+          <div className="xl:hidden flex items-center gap-1.5">
+            {/* 🌐 Mobile Language Switcher */}
+            <LanguageSelector variant="mobile-bar" />
+
             {!isInstalled && (
               <button
                 data-pwa-install="true"
@@ -122,7 +131,10 @@ export default function Navbar() {
 
         {/* ── Mobile & Tablet Dropdown ── */}
         {isOpen && (
-          <div className="xl:hidden border-t border-gray-100 py-2 space-y-0.5 max-h-[80vh] overflow-y-auto">
+          <div className="xl:hidden border-t border-gray-100 py-2 space-y-1 max-h-[80vh] overflow-y-auto">
+            {/* 🌐 Indian Languages Selector in Drawer */}
+            <LanguageSelector variant="drawer" />
+
             {/* Quick Install Banner in Drawer */}
             {!isInstalled && (
               <button
