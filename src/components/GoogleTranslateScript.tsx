@@ -94,18 +94,18 @@ export default function GoogleTranslateScript() {
                   combo.value = savedLang;
                   combo.dispatchEvent(new Event("change"));
                 }
-                // Restore visibility after translation applies (~500ms for Google to translate DOM)
+                // Signal PageLoader to hide after Google Translate applies (~500ms)
                 setTimeout(() => {
-                  document.documentElement.style.opacity = "1";
+                  window.dispatchEvent(new Event("nagrikseva:pageReady"));
                 }, 600);
               } else {
-                // Fallback: show page anyway if combo not found
-                document.documentElement.style.opacity = "1";
+                // Fallback: signal page ready if combo not found
+                window.dispatchEvent(new Event("nagrikseva:pageReady"));
               }
             }, 800);
           } else {
-            // Default language (Gujarati): restore immediately
-            document.documentElement.style.opacity = "1";
+            // Default language (Gujarati): page is ready immediately
+            window.dispatchEvent(new Event("nagrikseva:pageReady"));
           }
         }
       } catch (err) {
