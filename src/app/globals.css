@@ -88,3 +88,13 @@ p, h1, h2, h3, h4, span, li {
     break-inside: avoid !important;
   }
 }
+
+/* ── Standalone PWA Mode (Hide install prompts when inside installed app) ── */
+@media all and (display-mode: standalone), (display-mode: fullscreen), (display-mode: minimal-ui) {
+  .pwa-install-element,
+  .pwa-install-prompt,
+  [data-pwa-install] {
+    display: none !important;
+  }
+}
+

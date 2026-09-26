@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { Smartphone, Download, QrCode, X, CheckCircle2, Sparkles, Share2 } from "lucide-react";
 
+import { markPwaInstalled, useIsPwaInstalled } from "@/lib/usePwaInstall";
+
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
@@ -15,15 +17,15 @@ export default function InstallAppModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  const { isInstalled } = useIsPwaInstalled();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [isMobile, setIsMobile] = useState<boolean>(false);
   const [isIos, setIsIos] = useState<boolean>(false);
-  const [currentUrl, setCurrentUrl] = useState<string>("https://nagrik-seva.vercel.app");
+  const [currentUrl, setCurrentUrl] = useState<string>("https://nagrikseva-ai-one.vercel.app");
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setCurrentUrl(window.location.origin || "https://nagrik-seva.vercel.app");
+      setCurrentUrl(window.location.origin || "https://nagrikseva-ai-one.vercel.app");
 
       // Detect mobile device
       const ua = navigator.userAgent;
@@ -31,31 +33,33 @@ export default function InstallAppModal({
       setIsMobile(mobile);
       setIsIos(/iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream);
 
-      // Check if already in standalone mode
-      if (
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true
-      ) {
-        setIsInstalled(true);
-      }
-
       // Listen for PWA beforeinstallprompt
       const handleBeforeInstall = (e: Event) => {
         e.preventDefault();
         setDeferredPrompt(e as BeforeInstallPromptEvent);
       };
 
+      const handleAppInstalled = () => {
+        markPwaInstalled();
+        onClose();
+      };
+
       window.addEventListener("beforeinstallprompt", handleBeforeInstall);
-      return () => window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.addEventListener("appinstalled", handleAppInstalled);
+
+      return () => {
+        window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+        window.removeEventListener("appinstalled", handleAppInstalled);
+      };
     }
-  }, []);
+  }, [onClose]);
 
   const handleInstallClick = async () => {
     if (deferredPrompt) {
       await deferredPrompt.prompt();
       const choice = await deferredPrompt.userChoice;
       if (choice.outcome === "accepted") {
-        setIsInstalled(true);
+        markPwaInstalled();
       }
       setDeferredPrompt(null);
       onClose();
@@ -64,7 +68,7 @@ export default function InstallAppModal({
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || isInstalled) return null;
 
   return (
     <div

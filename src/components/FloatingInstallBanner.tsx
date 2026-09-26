@@ -4,39 +4,45 @@ import { useState, useEffect } from "react";
 import { Download, X, Sparkles } from "lucide-react";
 import dynamic from "next/dynamic";
 
+import { useIsPwaInstalled } from "@/lib/usePwaInstall";
+
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
 export default function FloatingInstallBanner() {
+  const { isInstalled, isMounted } = useIsPwaInstalled();
   const [showBanner, setShowBanner] = useState<boolean>(false);
   const [showModal, setShowModal] = useState<boolean>(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      // Don't show if already in standalone app mode
-      const isStandalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (!isMounted || isInstalled) return;
 
+    if (typeof window !== "undefined") {
       const isDismissed = sessionStorage.getItem("pwa_install_banner_dismissed");
 
-      if (!isStandalone && !isDismissed) {
+      if (!isDismissed) {
         const timer = setTimeout(() => {
           setShowBanner(true);
         }, 1500);
         return () => clearTimeout(timer);
       }
     }
-  }, []);
+  }, [isMounted, isInstalled]);
 
   const handleDismiss = () => {
     setShowBanner(false);
     sessionStorage.setItem("pwa_install_banner_dismissed", "true");
   };
 
+  // If already installed or in standalone app mode, hide completely
+  if (isInstalled) return null;
+
   return (
     <>
       {showBanner && (
-        <div className="fixed bottom-4 left-4 right-4 z-40 sm:max-w-md sm:left-auto sm:right-6 animate-in slide-in-from-bottom duration-300">
+        <div
+          data-pwa-install="true"
+          className="pwa-install-element fixed bottom-4 left-4 right-4 z-40 sm:max-w-md sm:left-auto sm:right-6 animate-in slide-in-from-bottom duration-300"
+        >
           <div className="bg-gray-900 text-white p-3.5 rounded-2xl shadow-2xl border border-orange-500/40 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-orange-500 to-green-600 flex items-center justify-center text-xl shrink-0 shadow-sm">

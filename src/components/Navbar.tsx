@@ -18,6 +18,7 @@ import {
   Smartphone,
 } from "lucide-react";
 import dynamic from "next/dynamic";
+import { useIsPwaInstalled } from "@/lib/usePwaInstall";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
@@ -33,6 +34,7 @@ const NAV_LINKS = [
 ];
 
 export default function Navbar() {
+  const { isInstalled } = useIsPwaInstalled();
   const [isOpen, setIsOpen] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const pathname = usePathname();
@@ -83,25 +85,31 @@ export default function Navbar() {
             </a>
 
             {/* 📱 Desktop Install App Button */}
-            <button
-              onClick={() => setShowInstallModal(true)}
-              className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer"
-              title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
-            >
-              <Smartphone size={13} />
-              એપ ઇન્સ્ટોલ
-            </button>
+            {!isInstalled && (
+              <button
+                data-pwa-install="true"
+                onClick={() => setShowInstallModal(true)}
+                className="pwa-install-element ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold transition shadow-xs active:scale-95 cursor-pointer"
+                title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
+              >
+                <Smartphone size={13} />
+                એપ ઇન્સ્ટોલ
+              </button>
+            )}
           </div>
 
           {/* ── Mobile & Tablet Toggle ── */}
           <div className="xl:hidden flex items-center gap-2">
-            <button
-              onClick={() => setShowInstallModal(true)}
-              className="flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-xs active:scale-95 cursor-pointer"
-            >
-              <Smartphone size={14} />
-              ઇન્સ્ટોલ
-            </button>
+            {!isInstalled && (
+              <button
+                data-pwa-install="true"
+                onClick={() => setShowInstallModal(true)}
+                className="pwa-install-element flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold shadow-xs active:scale-95 cursor-pointer"
+              >
+                <Smartphone size={14} />
+                ઇન્સ્ટોલ
+              </button>
+            )}
             <button
               onClick={() => setIsOpen(!isOpen)}
               className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition"
@@ -116,16 +124,19 @@ export default function Navbar() {
         {isOpen && (
           <div className="xl:hidden border-t border-gray-100 py-2 space-y-0.5 max-h-[80vh] overflow-y-auto">
             {/* Quick Install Banner in Drawer */}
-            <button
-              onClick={() => {
-                setIsOpen(false);
-                setShowInstallModal(true);
-              }}
-              className="w-full flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition shadow-sm mb-1.5 cursor-pointer"
-            >
-              <Smartphone size={16} />
-              📲 એપ ફોનમાં ઇન્સ્ટોલ કરો (૧-ક્લિક)
-            </button>
+            {!isInstalled && (
+              <button
+                data-pwa-install="true"
+                onClick={() => {
+                  setIsOpen(false);
+                  setShowInstallModal(true);
+                }}
+                className="pwa-install-element w-full flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 transition shadow-sm mb-1.5 cursor-pointer"
+              >
+                <Smartphone size={16} />
+                📲 એપ ફોનમાં ઇન્સ્ટોલ કરો (૧-ક્લિક)
+              </button>
+            )}
 
             {NAV_LINKS.map(({ href, label, Icon }) => {
               const active = pathname === href;
@@ -158,10 +169,12 @@ export default function Navbar() {
       </div>
 
       {/* 📱 Interactive Install App Modal with QR Code Scanner */}
-      <InstallAppModal
-        isOpen={showInstallModal}
-        onClose={() => setShowInstallModal(false)}
-      />
+      {!isInstalled && (
+        <InstallAppModal
+          isOpen={showInstallModal}
+          onClose={() => setShowInstallModal(false)}
+        />
+      )}
     </nav>
   );
 }
