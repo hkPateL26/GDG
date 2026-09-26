@@ -7,16 +7,18 @@ import { SCHEMES_DATA, getSchemesByCategory } from "@/lib/schemes-data";
 
 async function fetchFromFirestore(category?: string) {
   try {
-    const colRef = collection(db, "schemes");
-    let q = query(colRef, where("isActive", "==", true));
+    if (db) {
+      const colRef = collection(db, "schemes");
+      let q = query(colRef, where("isActive", "==", true));
 
-    if (category && category !== "all") {
-      q = query(colRef, where("category", "==", category), where("isActive", "==", true));
-    }
+      if (category && category !== "all") {
+        q = query(colRef, where("category", "==", category), where("isActive", "==", true));
+      }
 
-    const snapshot = await getDocs(q);
-    if (!snapshot.empty) {
-      return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        return snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      }
     }
   } catch (err) {
     console.warn("Firestore fetch error, falling back to local DB:", err);

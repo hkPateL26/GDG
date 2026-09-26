@@ -21,11 +21,13 @@ export async function GET(req: NextRequest) {
     }
 
     try {
-      const docRef = doc(db, "applications", id);
-      const snap = await getDoc(docRef);
+      if (db) {
+        const docRef = doc(db, "applications", id);
+        const snap = await getDoc(docRef);
 
-      if (snap.exists()) {
-        return NextResponse.json({ application: snap.data(), source: "cloud-firestore", success: true });
+        if (snap.exists()) {
+          return NextResponse.json({ application: snap.data(), source: "cloud-firestore", success: true });
+        }
       }
     } catch (dbErr) {
       console.warn("Firestore lookup failed, checking fallback:", dbErr);
