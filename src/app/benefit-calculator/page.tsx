@@ -52,6 +52,7 @@ export default function BenefitCalculatorPage() {
   const [maskValues, setMaskValues] = useState<boolean>(true);
 
   // Tooltip & Popover States
+  const [activeDetailView, setActiveDetailView] = useState<"members" | "address" | null>(null);
   const [showMembersModal, setShowMembersModal] = useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
 
@@ -124,6 +125,7 @@ export default function BenefitCalculatorPage() {
     setEnteredOtp("");
     setIsKycVerified(false);
     setMaskValues(true);
+    setActiveDetailView(null);
     setShowMembersModal(false);
     setShowAddressModal(false);
     setCitizenName("");
@@ -719,107 +721,158 @@ export default function BenefitCalculatorPage() {
                       </span>
                     </div>
 
-                    {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Hover & Tap Tooltip */}
+                    {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Hover & Click */}
                     <div
-                      className="relative group cursor-pointer"
-                      onClick={() => isKycVerified && setShowMembersModal(!showMembersModal)}
+                      className="cursor-pointer group select-none"
+                      onMouseEnter={() => isKycVerified && setActiveDetailView("members")}
+                      onClick={() => {
+                        if (!isKycVerified) return;
+                        setActiveDetailView(activeDetailView === "members" ? null : "members");
+                        setShowMembersModal(!showMembersModal);
+                      }}
                       title={isKycVerified ? "કુટુંબના સભ્યોની યાદી જોવા ક્લિક કરો" : ""}
                     >
                       <span className="text-gray-400 block text-[9px] flex items-center justify-between">
                         રેશનકાર્ડ સભ્યો
                         {isKycVerified && (
-                          <span className="text-orange-600 font-bold text-[8px] bg-orange-100/90 px-1 py-0.2 rounded group-hover:bg-orange-200 transition">
-                            👆 જુઓ
+                          <span
+                            className={`font-bold text-[8px] px-1 py-0.2 rounded transition ${
+                              activeDetailView === "members"
+                                ? "bg-orange-500 text-white"
+                                : "bg-orange-100 text-orange-700 group-hover:bg-orange-200"
+                            }`}
+                          >
+                            {activeDetailView === "members" ? "ખુલ્લું ▲" : "વિગત ▾"}
                           </span>
                         )}
                       </span>
-                      <span className="font-bold text-gray-800 flex items-center gap-1 group-hover:text-orange-600 transition">
+                      <span
+                        className={`font-bold flex items-center gap-1 transition ${
+                          activeDetailView === "members"
+                            ? "text-orange-600"
+                            : "text-gray-800 group-hover:text-orange-600"
+                        }`}
+                      >
                         <Users size={12} className="text-orange-500 shrink-0" />
                         {familyCount > 0 ? `${familyCount} વ્યક્તિઓ` : "—"}
                       </span>
-
-                      {/* Tooltip Card (Desktop Hover: Opens Downwards cleanly) */}
-                      {isKycVerified && (
-                        <div className="hidden sm:block absolute left-1/2 -translate-x-1/2 top-full mt-2 w-72 bg-gray-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto">
-                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-xs">
-                            <span className="font-bold text-orange-400 flex items-center gap-1.5">
-                              👨‍👩‍👧‍👦 રેશનકાર્ડ પ્રમાણિત સભ્યો
-                            </span>
-                            <span className="text-[10px] bg-orange-500/20 text-orange-300 px-2 py-0.5 rounded font-mono font-bold">
-                              {familyCount} સભ્યો
-                            </span>
-                          </div>
-                          <div className="space-y-1.5 pt-2 text-[11px]">
-                            {familyMembersList.map((m, idx) => (
-                              <div
-                                key={idx}
-                                className="flex items-center justify-between bg-white/5 px-2.5 py-1.5 rounded-xl border border-white/5"
-                              >
-                                <div>
-                                  <span className="font-semibold text-white block">
-                                    {idx + 1}. {m.name}
-                                  </span>
-                                  <span className="text-gray-400 text-[10px]">{m.relation}</span>
-                                </div>
-                                <span className="font-mono text-amber-300 font-bold text-[11px]">
-                                  {m.age} વર્ષ
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                          <div className="mt-2.5 pt-1.5 border-t border-gray-800 text-[10px] text-green-400 text-center font-medium flex items-center justify-center gap-1">
-                            ✓ RCMS ગુજરાત રેશનકાર્ડ ડેટાબેઝ પ્રમાણિત
-                          </div>
-                          {/* Top Pointer Arrow */}
-                          <div className="absolute bottom-full left-1/2 -translate-x-1/2 border-6 border-transparent border-b-gray-900/95" />
-                        </div>
-                      )}
                     </div>
 
-                    {/* 📍 ગામ & જિલ્લો - Interactive Hover & Tap Tooltip for Full Address */}
+                    {/* 📍 ગામ & જિલ્લો - Interactive Hover & Click */}
                     <div
-                      className="relative group cursor-pointer"
-                      onClick={() => isKycVerified && setShowAddressModal(!showAddressModal)}
+                      className="cursor-pointer group select-none"
+                      onMouseEnter={() => isKycVerified && setActiveDetailView("address")}
+                      onClick={() => {
+                        if (!isKycVerified) return;
+                        setActiveDetailView(activeDetailView === "address" ? null : "address");
+                        setShowAddressModal(!showAddressModal);
+                      }}
                       title={isKycVerified ? "સંપૂર્ણ રહેઠાણ સરનામું જોવા ક્લિક કરો" : ""}
                     >
                       <span className="text-gray-400 block text-[9px] flex items-center justify-between">
                         ગામ & જિલ્લો
                         {isKycVerified && (
-                          <span className="text-blue-600 font-bold text-[8px] bg-blue-100/90 px-1 py-0.2 rounded group-hover:bg-blue-200 transition">
-                            👆 સરનામું
+                          <span
+                            className={`font-bold text-[8px] px-1 py-0.2 rounded transition ${
+                              activeDetailView === "address"
+                                ? "bg-blue-600 text-white"
+                                : "bg-blue-100 text-blue-700 group-hover:bg-blue-200"
+                            }`}
+                          >
+                            {activeDetailView === "address" ? "ખુલ્લું ▲" : "સરનામું ▾"}
                           </span>
                         )}
                       </span>
-                      <span className="font-bold text-gray-800 flex items-center gap-1 group-hover:text-blue-600 transition truncate">
+                      <span
+                        className={`font-bold flex items-center gap-1 transition truncate ${
+                          activeDetailView === "address"
+                            ? "text-blue-600"
+                            : "text-gray-800 group-hover:text-blue-600"
+                        }`}
+                      >
                         <MapPin size={12} className="text-blue-500 shrink-0" />
                         <span className="truncate">{village ? `${village}, ${district}` : "—"}</span>
                       </span>
-
-                      {/* Tooltip Card (Desktop Hover: Opens Downwards cleanly) */}
-                      {isKycVerified && (
-                        <div className="hidden sm:block absolute right-0 top-full mt-2 w-72 bg-gray-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto">
-                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-xs">
-                            <span className="font-bold text-blue-400 flex items-center gap-1.5">
-                              📍 પૂર્ણ રહેઠાણ સરનામું
-                            </span>
-                            <span className="text-[10px] bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded font-mono font-bold">
-                              {pincode}
-                            </span>
-                          </div>
-                          <div className="pt-2 text-[11px] space-y-1.5 text-gray-200 leading-relaxed">
-                            <p className="font-semibold text-white">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
-                            <p>મુ. {village}, તાલુકો: {taluka},</p>
-                            <p>જિલ્લો: {district} - પિનકોડ: {pincode}, ગુજરાત</p>
-                          </div>
-                          <div className="mt-2.5 pt-1.5 border-t border-gray-800 text-[10px] text-green-400 flex items-center gap-1 justify-center font-medium">
-                            ✓ UIDAI & જમીન મહેસૂલ સરનામું પ્રમાણિત
-                          </div>
-                          {/* Top Pointer Arrow */}
-                          <div className="absolute bottom-full right-8 border-6 border-transparent border-b-gray-900/95" />
-                        </div>
-                      )}
                     </div>
                   </div>
+
+                  {/* ─── Elegant Light Inline Detail Drawers for Desktop (Never covers schemes!) ─── */}
+                  {isKycVerified && activeDetailView === "members" && (
+                    <div className="hidden sm:block my-2.5 p-3 rounded-2xl bg-orange-50/70 border border-orange-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-orange-200/70 mb-2">
+                        <span className="font-bold text-orange-950 flex items-center gap-1.5 text-xs">
+                          👨‍👩‍👧‍👦 રેશનકાર્ડ પ્રમાણિત કુટુંબના સભ્યો ({familyCount})
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-white text-green-700 border border-green-200 font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <CheckCircle2 size={11} className="text-green-600" /> RCMS ગુજરાત પ્રમાણિત
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveDetailView(null)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-orange-100 transition"
+                            title="બંધ કરો"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                        {familyMembersList.map((m, idx) => (
+                          <div
+                            key={idx}
+                            className="bg-white p-2 rounded-xl border border-orange-100 shadow-xs space-y-0.5"
+                          >
+                            <span className="font-bold text-gray-800 block truncate text-xs">
+                              {idx + 1}. {m.name}
+                            </span>
+                            <div className="flex items-center justify-between text-[10px] text-gray-500">
+                              <span className="truncate">{m.relation}</span>
+                              <span className="font-bold text-orange-700 bg-orange-50 px-1 py-0.2 rounded font-mono">
+                                {m.age} વ.
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {isKycVerified && activeDetailView === "address" && (
+                    <div className="hidden sm:block my-2.5 p-3 rounded-2xl bg-blue-50/70 border border-blue-200 shadow-xs animate-in fade-in slide-in-from-top-1 duration-150">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-blue-200/70 mb-2">
+                        <span className="font-bold text-blue-950 flex items-center gap-1.5 text-xs">
+                          📍 પ્રમાણિત રહેઠાણ સરનામું (RCMS & UIDAI)
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[10px] bg-white text-blue-800 border border-blue-200 font-semibold px-2 py-0.5 rounded-full font-mono">
+                            પિનકોડ: {pincode}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setActiveDetailView(null)}
+                            className="text-gray-400 hover:text-gray-600 p-0.5 rounded hover:bg-blue-100 transition"
+                            title="બંધ કરો"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      </div>
+
+                      <div className="bg-white p-2.5 rounded-xl border border-blue-100 text-xs text-gray-700 leading-relaxed shadow-xs flex items-center justify-between">
+                        <div>
+                          <p className="font-bold text-gray-900">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
+                          <p className="text-gray-600 text-[11px]">
+                            મુ. {village}, તાલુકો: {taluka}, જિલ્લો: {district} - {pincode}, ગુજરાત
+                          </p>
+                        </div>
+                        <span className="text-[10px] text-green-700 font-semibold bg-green-50 border border-green-200 px-2 py-1 rounded-lg shrink-0 ml-3">
+                          ✓ જમીન મહેસૂલ રેકોર્ડ લિંક્ડ
+                        </span>
+                      </div>
+                    </div>
+                  )}
 
                   {/* 📱 Mobile Modals for Family Members & Address */}
                   {isKycVerified && showMembersModal && (
