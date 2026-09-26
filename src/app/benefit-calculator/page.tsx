@@ -26,6 +26,10 @@ import {
   GraduationCap,
   Wrench,
   FileSpreadsheet,
+  Eye,
+  EyeOff,
+  MapPin,
+  X,
 } from "lucide-react";
 
 interface VerifiedMember {
@@ -45,6 +49,11 @@ export default function BenefitCalculatorPage() {
   const [enteredOtp, setEnteredOtp] = useState<string>("");
   const [isKycVerified, setIsKycVerified] = useState<boolean>(false);
   const [kycError, setKycError] = useState<string>("");
+  const [maskValues, setMaskValues] = useState<boolean>(true);
+
+  // Tooltip & Popover States
+  const [showMembersModal, setShowMembersModal] = useState<boolean>(false);
+  const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
 
   // Step 2: Auto-Fetched Citizen & Family Data from Government Database
   const [citizenName, setCitizenName] = useState<string>("");
@@ -114,6 +123,9 @@ export default function BenefitCalculatorPage() {
     setOtpSent(false);
     setEnteredOtp("");
     setIsKycVerified(false);
+    setMaskValues(true);
+    setShowMembersModal(false);
+    setShowAddressModal(false);
     setCitizenName("");
     setRationCardNumber("");
     setVillage("");
@@ -174,6 +186,7 @@ export default function BenefitCalculatorPage() {
   const verifyOtp = () => {
     if (enteredOtp === "123456" || enteredOtp.length === 6) {
       setIsKycVerified(true);
+      setMaskValues(true);
       setKycError("");
 
       // Auto-populate verified citizen data
@@ -391,44 +404,94 @@ export default function BenefitCalculatorPage() {
                 <div className="space-y-2.5">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-gray-700">
+                      <label className="text-[11px] font-semibold text-gray-700 flex items-center gap-1.5">
                         ૧૨ અંકનો આધાર કાર્ડ નંબર
+                        {isKycVerified && (
+                          <span className="text-[9px] bg-green-100 text-green-800 font-bold px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
+                            🔒 UIDAI સુરક્ષિત
+                          </span>
+                        )}
                       </label>
                       <span className="text-[10px] text-gray-400 font-mono">
-                        {aadhaarNumber.replace(/\D/g, "").length} / 12 અંક
+                        {isKycVerified ? "12 / 12 (માસ્ક્ડ)" : `${aadhaarNumber.replace(/\D/g, "").length} / 12 અંક`}
                       </span>
                     </div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={14}
-                      value={aadhaarNumber}
-                      onChange={(e) => handleAadhaarInput(e.target.value)}
-                      placeholder="XXXX XXXX XXXX"
-                      disabled={isKycVerified}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={14}
+                        value={
+                          isKycVerified && maskValues
+                            ? `XXXX XXXX ${aadhaarNumber.replace(/\D/g, "").slice(-4)}`
+                            : aadhaarNumber
+                        }
+                        onChange={(e) => handleAadhaarInput(e.target.value)}
+                        placeholder="XXXX XXXX XXXX"
+                        disabled={isKycVerified}
+                        className={`w-full border rounded-xl px-3 py-2 pr-9 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 transition ${
+                          isKycVerified
+                            ? "bg-green-50/40 border-green-200 text-gray-800 font-bold"
+                            : "border-gray-200"
+                        }`}
+                      />
+                      {isKycVerified && (
+                        <button
+                          type="button"
+                          onClick={() => setMaskValues(!maskValues)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 rounded-md transition"
+                          title={maskValues ? "નંબર દર્શાવો" : "નંબર છુપાવો"}
+                        >
+                          {maskValues ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-gray-700">
+                      <label className="text-[11px] font-semibold text-gray-700 flex items-center gap-1.5">
                         આધાર લિંક્ડ મોબાઈલ નંબર
+                        {isKycVerified && (
+                          <span className="text-[9px] bg-green-100 text-green-800 font-bold px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
+                            🔒 સુરક્ષિત
+                          </span>
+                        )}
                       </label>
                       <span className="text-[10px] text-gray-400 font-mono">
-                        {mobileNumber.replace(/\D/g, "").length} / 10 અંક
+                        {isKycVerified ? "10 / 10 (માસ્ક્ડ)" : `${mobileNumber.replace(/\D/g, "").length} / 10 અંક`}
                       </span>
                     </div>
-                    <input
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={11}
-                      value={mobileNumber}
-                      onChange={(e) => handleMobileInput(e.target.value)}
-                      placeholder="XXXXX XXXXX"
-                      disabled={isKycVerified}
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 disabled:bg-gray-50"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        maxLength={11}
+                        value={
+                          isKycVerified && maskValues
+                            ? `XXXXX ${mobileNumber.replace(/\D/g, "").slice(-5)}`
+                            : mobileNumber
+                        }
+                        onChange={(e) => handleMobileInput(e.target.value)}
+                        placeholder="XXXXX XXXXX"
+                        disabled={isKycVerified}
+                        className={`w-full border rounded-xl px-3 py-2 pr-9 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 transition ${
+                          isKycVerified
+                            ? "bg-green-50/40 border-green-200 text-gray-800 font-bold"
+                            : "border-gray-200"
+                        }`}
+                      />
+                      {isKycVerified && (
+                        <button
+                          type="button"
+                          onClick={() => setMaskValues(!maskValues)}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 rounded-md transition"
+                          title={maskValues ? "નંબર દર્શાવો" : "નંબર છુપાવો"}
+                        >
+                          {maskValues ? <EyeOff size={15} /> : <Eye size={15} />}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
                   {!isKycVerified && (
@@ -518,6 +581,12 @@ export default function BenefitCalculatorPage() {
                     <div className="flex justify-between">
                       <span className="text-gray-400">રેશનકાર્ડ નં:</span>
                       <span className="font-mono font-semibold text-gray-700">{rationCardNumber}</span>
+                    </div>
+                    <div className="flex justify-between pt-1 border-t border-gray-200/60">
+                      <span className="text-gray-400">કુટુંબના સભ્યો ({familyCount}):</span>
+                      <span className="font-medium text-gray-700 text-[11px] truncate max-w-[200px]">
+                        {familyMembersList.map((m) => m.name.split(" ")[0]).join(", ")}
+                      </span>
                     </div>
                   </div>
 
@@ -636,7 +705,7 @@ export default function BenefitCalculatorPage() {
                   </div>
 
                   {/* Citizen Meta Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-3 text-[11px] border-b border-gray-100">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 py-3 text-[11px] border-b border-gray-100 relative">
                     <div>
                       <span className="text-gray-400 block text-[9px]">નાગરિક નામ</span>
                       <span className="font-bold text-gray-800 truncate block">
@@ -646,20 +715,119 @@ export default function BenefitCalculatorPage() {
                     <div>
                       <span className="text-gray-400 block text-[9px]">આધાર નંબર</span>
                       <span className="font-bold text-gray-800 font-mono">
-                        {isKycVerified ? `XXXX-XXXX-${aadhaarNumber.slice(-4)}` : "—"}
+                        {isKycVerified ? `XXXX-XXXX-${aadhaarNumber.replace(/\D/g, "").slice(-4)}` : "—"}
                       </span>
                     </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">રેશનકાર્ડ સભ્યો</span>
-                      <span className="font-bold text-gray-800">
+
+                    {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Hover & Tap Tooltip */}
+                    <div
+                      className="relative group cursor-pointer"
+                      onClick={() => isKycVerified && setShowMembersModal(!showMembersModal)}
+                      title={isKycVerified ? "કુટુંબના સભ્યોની યાદી જોવા ક્લિક કરો" : ""}
+                    >
+                      <span className="text-gray-400 block text-[9px] flex items-center justify-between">
+                        રેશનકાર્ડ સભ્યો
+                        {isKycVerified && (
+                          <span className="text-orange-600 font-bold text-[8px] bg-orange-100/90 px-1 py-0.2 rounded group-hover:bg-orange-200 transition">
+                            👆 જુઓ
+                          </span>
+                        )}
+                      </span>
+                      <span className="font-bold text-gray-800 flex items-center gap-1 group-hover:text-orange-600 transition">
+                        <Users size={12} className="text-orange-500 shrink-0" />
                         {familyCount > 0 ? `${familyCount} વ્યક્તિઓ` : "—"}
                       </span>
+
+                      {/* Tooltip Card (Hover on desktop + Click on mobile) */}
+                      {isKycVerified && (
+                        <div
+                          className={`absolute left-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 w-64 bg-gray-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 ${
+                            showMembersModal
+                              ? "opacity-100 visible"
+                              : "opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-[11px]">
+                            <span className="font-bold text-orange-400 flex items-center gap-1">
+                              👨‍👩‍👧‍👦 રેશનકાર્ડ પ્રમાણિત સભ્યો
+                            </span>
+                            <span className="text-[9px] bg-orange-500/20 text-orange-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                              {familyCount} સભ્યો
+                            </span>
+                          </div>
+                          <div className="space-y-1.5 pt-2 text-[10px]">
+                            {familyMembersList.map((m, idx) => (
+                              <div
+                                key={idx}
+                                className="flex items-center justify-between bg-white/5 px-2 py-1 rounded-lg"
+                              >
+                                <div>
+                                  <span className="font-semibold text-white block">
+                                    {idx + 1}. {m.name}
+                                  </span>
+                                  <span className="text-gray-400 text-[9px]">{m.relation}</span>
+                                </div>
+                                <span className="font-mono text-amber-300 font-bold text-[10px]">
+                                  {m.age} વર્ષ
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2 pt-1 border-t border-gray-800 text-[9px] text-gray-400 text-center">
+                            ✓ RCMS ગુજરાત રેશનકાર્ડ ડેટાબેઝ લિંક્ડ
+                          </div>
+                          <div className="absolute top-full left-6 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-gray-900/95" />
+                        </div>
+                      )}
                     </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">ગામ & જિલ્લો</span>
-                      <span className="font-bold text-gray-800 truncate block">
-                        {village ? `${village}, ${district}` : "—"}
+
+                    {/* 📍 ગામ & જિલ્લો - Interactive Hover & Tap Tooltip for Full Address */}
+                    <div
+                      className="relative group cursor-pointer"
+                      onClick={() => isKycVerified && setShowAddressModal(!showAddressModal)}
+                      title={isKycVerified ? "સંપૂર્ણ રહેઠાણ સરનામું જોવા ક્લિક કરો" : ""}
+                    >
+                      <span className="text-gray-400 block text-[9px] flex items-center justify-between">
+                        ગામ & જિલ્લો
+                        {isKycVerified && (
+                          <span className="text-blue-600 font-bold text-[8px] bg-blue-100/90 px-1 py-0.2 rounded group-hover:bg-blue-200 transition">
+                            👆 સરનામું
+                          </span>
+                        )}
                       </span>
+                      <span className="font-bold text-gray-800 flex items-center gap-1 group-hover:text-blue-600 transition truncate">
+                        <MapPin size={12} className="text-blue-500 shrink-0" />
+                        <span className="truncate">{village ? `${village}, ${district}` : "—"}</span>
+                      </span>
+
+                      {/* Tooltip Card (Hover on desktop + Click on mobile) */}
+                      {isKycVerified && (
+                        <div
+                          className={`absolute right-0 sm:left-1/2 sm:-translate-x-1/2 bottom-full mb-2 w-64 bg-gray-900/95 backdrop-blur-md text-white p-3 rounded-2xl shadow-2xl border border-gray-700 text-left z-50 transition-all duration-200 ${
+                            showAddressModal
+                              ? "opacity-100 visible"
+                              : "opacity-0 invisible group-hover:opacity-100 group-hover:visible pointer-events-none group-hover:pointer-events-auto"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between pb-1.5 border-b border-gray-700 text-[11px]">
+                            <span className="font-bold text-blue-400 flex items-center gap-1">
+                              📍 પૂર્ણ રહેઠાણ સરનામું
+                            </span>
+                            <span className="text-[9px] bg-blue-500/20 text-blue-300 px-1.5 py-0.5 rounded font-mono font-bold">
+                              {pincode}
+                            </span>
+                          </div>
+                          <div className="pt-2 text-[10px] space-y-1 text-gray-200 leading-relaxed">
+                            <p className="font-semibold text-white">પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર,</p>
+                            <p>મુ. {village}, તાલુકો: {taluka},</p>
+                            <p>જિલ્લો: {district} - પિનકોડ: {pincode}, ગુજરાત</p>
+                          </div>
+                          <div className="mt-2 pt-1 border-t border-gray-800 text-[9px] text-green-400 flex items-center gap-1 justify-center">
+                            ✓ UIDAI & જમીન મહેસૂલ સરનામું પ્રમાણિત
+                          </div>
+                          <div className="absolute top-full right-6 sm:left-1/2 sm:-translate-x-1/2 border-4 border-transparent border-t-gray-900/95" />
+                        </div>
+                      )}
                     </div>
                   </div>
 
