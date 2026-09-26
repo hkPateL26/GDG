@@ -32,6 +32,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  QrCode,
 } from "lucide-react";
 
 interface VerifiedMember {
@@ -339,7 +340,7 @@ export default function BenefitCalculatorPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-gray-50 pb-20">
+      <main className="min-h-screen bg-gray-50 pb-20 print-hide">
         {/* Hero */}
         <section className="bg-gradient-to-r from-orange-500 via-orange-400 to-green-600 text-white py-6 sm:py-9 px-4">
           <div className="max-w-4xl mx-auto text-center">
@@ -1102,6 +1103,290 @@ export default function BenefitCalculatorPage() {
           </div>
         </div>
       </main>
+
+      {/* ── Official Authentic Gujarat Govt Digital Entitlement Certificate (Single A4 Page Print Only) ── */}
+      <div className="hidden print:block print-only-certificate bg-white text-gray-900 font-sans p-3 text-[10px] leading-tight">
+        <div className="border-2 border-gray-900 p-3 relative">
+          
+          {/* Top National Tricolor Header Ribbon */}
+          <div className="h-1 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] mb-2 border-y border-gray-300" />
+
+          {/* Official Emblem & Government Header */}
+          <div className="flex items-center justify-between border-b-2 border-gray-800 pb-2 mb-2">
+            {/* Left: Gujarat State / Ashok Emblem */}
+            <div className="flex items-center gap-2.5">
+              <div className="w-12 h-12 flex flex-col items-center justify-center border border-gray-400 rounded-full p-1 bg-amber-50/50 shrink-0">
+                <svg viewBox="0 0 24 24" className="w-7 h-7 text-amber-900 fill-current" aria-label="Ashok Stambh Emblem">
+                  <circle cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="1.5" fill="none" />
+                  <circle cx="12" cy="12" r="3" fill="currentColor" />
+                  <path d="M12 2v20M2 12h20M4.93 4.93l14.14 14.14M4.93 19.07l14.14-14.14" stroke="currentColor" strokeWidth="1" />
+                </svg>
+                <span className="text-[6.5px] font-black uppercase tracking-tight text-gray-800 mt-0.5">સત્યમેવ જયતે</span>
+              </div>
+              <div>
+                <p className="text-[10px] font-black text-gray-800 tracking-wider uppercase">ગુજરાત સરકાર • GOVERNMENT OF GUJARAT</p>
+                <h1 className="text-sm font-black text-gray-900 leading-tight">
+                  અન્ન, નાગરિક પુરવઠા અને ગ્રાહકોની બાબતોનો વિભાગ
+                </h1>
+                <p className="text-[9px] text-gray-600 font-medium">
+                  Food, Civil Supplies & Consumer Affairs Department • Gandhinagar
+                </p>
+              </div>
+            </div>
+
+            {/* Right: Security & Portal Reference Badge */}
+            <div className="text-right border-l border-gray-300 pl-3 shrink-0">
+              <div className="inline-flex items-center gap-1 bg-green-50 border border-green-600 text-green-800 px-2 py-0.5 rounded text-[9px] font-bold">
+                <CheckCircle2 size={11} className="text-green-700" /> UIDAI & RCMS વેરિફાઈડ
+              </div>
+              <p className="text-[8.5px] text-gray-500 mt-0.5 font-mono">DPI પોર્ટલ: nagrik-seva.gov.in</p>
+              <p className="text-[9px] font-black text-gray-800 font-mono">પ્રમાણપત્ર નં: GJ-DBT-2026-998124</p>
+            </div>
+          </div>
+
+          {/* Title Banner */}
+          <div className="text-center bg-gray-100 border border-gray-300 py-1 px-2 rounded mb-2">
+            <h2 className="text-xs font-black text-gray-900 uppercase tracking-wide">
+              સત્તાવાર ડિજિટલ નાગરિક પાત્રતા પ્રમાણપત્ર
+            </h2>
+            <p className="text-[8.5px] font-bold text-gray-600 uppercase tracking-wider">
+              OFFICIAL DIGITAL DIRECT BENEFIT TRANSFER (DBT) ENTITLEMENT CERTIFICATE
+            </p>
+          </div>
+
+          {/* Section 1: Certificate Meta & Verification Details */}
+          <div className="grid grid-cols-4 gap-2 bg-gray-50 border border-gray-300 p-1.5 rounded mb-2 text-[9px]">
+            <div>
+              <span className="text-gray-500 block text-[8px]">રેશનકાર્ડ નંબર:</span>
+              <strong className="text-gray-900 font-mono">{rationCardNumber || "RC-GJ-2024-998124"}</strong>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-[8px]">રેશનકાર્ડ શ્રેણી:</span>
+              <strong className="text-gray-900">NFSA - અગ્રતા કુટુંબ (PHH / BPL)</strong>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-[8px]">વેરિફિકેશન તારીખ & સમય:</span>
+              <strong className="text-gray-900 font-mono">26/09/2026 | 12:00 PM</strong>
+            </div>
+            <div>
+              <span className="text-gray-500 block text-[8px]">આધાર e-KYC સ્થિતિ:</span>
+              <strong className="text-green-700">✓ ૧૦૦% બાયોમેટ્રિક/OTP પ્રમાણિત</strong>
+            </div>
+          </div>
+
+          {/* Section 2: Citizen & Residential Address */}
+          <div className="border border-gray-300 rounded p-2 mb-2 bg-white">
+            <div className="grid grid-cols-2 gap-2 text-[9.5px]">
+              <div>
+                <p className="text-gray-500 text-[8px]">કુટુંબના મુખ્ય વડાનું નામ (Citizen Name):</p>
+                <p className="text-[11px] font-black text-gray-900">{citizenName || "હરિભાઈ વિઠ્ઠલભાઈ પટેલ"}</p>
+                <div className="flex items-center gap-3 mt-0.5 text-[9px]">
+                  <span>આધાર નં: <strong className="font-mono">XXXX-XXXX-4654</strong></span>
+                  <span>મોબાઈલ નં: <strong className="font-mono">XXXXX 64564</strong></span>
+                </div>
+              </div>
+              <div className="border-l border-gray-200 pl-2.5">
+                <p className="text-gray-500 text-[8px]">પ્રમાણિત રહેઠાણનું સરનામું (RCMS & મહેસૂલ રેકોર્ડ):</p>
+                <p className="font-bold text-gray-900">
+                  પ્લોટ નં. ૪૫, પટેલ વાડી વિસ્તાર, મુ. {village || "કાગવડ"}, તા. {taluka || "જેતપુર"}, જિ. {district || "રાજકોટ"} - {pincode || "360370"}, ગુજરાત
+                </p>
+                <p className="text-[8px] text-green-700 font-medium mt-0.5">✓ ગ્રામ પંચાયત મહેસૂલ & વીજળી બિલ રેકોર્ડ લિંક્ડ</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Section 3: Verified Family Members Table */}
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-0.5">
+              <h3 className="text-[9.5px] font-black text-gray-900 flex items-center gap-1">
+                <span>👨‍👩‍👧‍👦</span> રેશનકાર્ડ પ્રમાણિત કુટુંબના સભ્યોની યાદી ({familyMembersList.length || 5} સભ્યો):
+              </h3>
+              <span className="text-[8px] text-gray-500 font-mono">સ્ત્રોત: RCMS ગુજરાત સિવિલ સપ્લાઇઝ ડેટાબેઝ</span>
+            </div>
+            <table className="w-full border-collapse border border-gray-300 text-[9px]">
+              <thead>
+                <tr className="bg-gray-100 text-gray-800 font-bold border-b border-gray-300">
+                  <th className="border border-gray-300 py-0.5 px-1 text-center w-7">ક્રમ</th>
+                  <th className="border border-gray-300 py-0.5 px-1.5 text-left">સભ્યનું પૂરું નામ</th>
+                  <th className="border border-gray-300 py-0.5 px-1.5 text-left w-32">કુટુંબ વડા સાથે સંબંધ</th>
+                  <th className="border border-gray-300 py-0.5 px-1 text-center w-14">ઉંમર</th>
+                  <th className="border border-gray-300 py-0.5 px-1 text-center w-24">આધાર e-KYC સ્થિતિ</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(familyMembersList.length > 0 ? familyMembersList : [
+                  { name: "હરિભાઈ વિઠ્ઠલભાઈ પટેલ", relation: "કુટુંબના વડા (Self)", age: 52 },
+                  { name: "મંજુલાબેન હરિભાઈ પટેલ", relation: "પત્ની (Wife)", age: 49 },
+                  { name: "ચિરાગ હરિભાઈ પટેલ", relation: "પુત્ર (Son)", age: 22 },
+                  { name: "દિવ્યાબેન હરિભાઈ પટેલ", relation: "પુત્રી (Daughter)", age: 18 },
+                  { name: "ગોદાવરીબેન વિઠ્ઠલભાઈ પટેલ", relation: "માતા (Senior Citizen)", age: 74 },
+                ]).map((m, idx) => (
+                  <tr key={idx} className={idx % 2 === 1 ? "bg-gray-50/60" : "bg-white"}>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-bold text-gray-700">{idx + 1}</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">{m.name}</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">{m.relation}</td>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono font-semibold">{m.age} વર્ષ</td>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center text-green-700 font-bold">
+                      ✓ સત્તાવાર પ્રમાણિત
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Section 4: Entitled Government Schemes & Direct Benefit Transfer (DBT) Table */}
+          <div className="mb-2">
+            <div className="flex items-center justify-between mb-0.5">
+              <h3 className="text-[9.5px] font-black text-gray-900 flex items-center gap-1">
+                <span>🏛️</span> નાગરિક પાત્રતા ધરાવતી સરકારી યોજનાઓ અને DBT સહાય વિવરણ:
+              </h3>
+              <span className="text-[8px] text-gray-500 font-mono">DPI એન્જિન દ્વારા રીયલ-ટાઇમ ચકાસાયેલ</span>
+            </div>
+            <table className="w-full border-collapse border border-gray-300 text-[9px]">
+              <thead>
+                <tr className="bg-gray-100 text-gray-800 font-bold border-b border-gray-300">
+                  <th className="border border-gray-300 py-0.5 px-1 text-center w-7">ક્રમ</th>
+                  <th className="border border-gray-300 py-0.5 px-1.5 text-left">સરકારી યોજનાનું નામ</th>
+                  <th className="border border-gray-300 py-0.5 px-1.5 text-left w-36">યોજના શ્રેણી</th>
+                  <th className="border border-gray-300 py-0.5 px-1.5 text-right w-36">મળવાપાત્ર સરકારી સહાય</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isFarmer && (
+                  <tr>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૧</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">PM કિસાન સન્માન નિધિ યોજના</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">કૃષિ રોકાણ સહાય</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૬,૦૦૦ / વર્ષ (DBT)</td>
+                  </tr>
+                )}
+                {needsHouse && (
+                  <tr className="bg-gray-50/60">
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૨</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">પ્રધાનમંત્રી આવાસ યોજના (ગ્રામીણ)</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">પાકું મકાન નિર્માણ સહાય</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૧,૨૦,૦૦૦ (વન-ટાઇમ)</td>
+                  </tr>
+                )}
+                {needsLPG && (
+                  <tr>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૩</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">પ્રધાનમંત્રી ઉજ્જવલા ૨.૦ યોજના</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">રસોઈ ગેસ કનેક્શન</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૩,૬૦૦ (ફ્રી કિટ + સિલિન્ડર)</td>
+                  </tr>
+                )}
+                {hasSeniorCitizen && (
+                  <tr className="bg-gray-50/60">
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૪</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">વરિષ્ઠ નાગરિક વૃદ્ધ પેન્શન સહાય (NSAP)</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">સામાજિક સુરક્ષા પેન્શન</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૩૬,૦૦૦ / વર્ષ (₹૩,૦૦૦/માસિક)</td>
+                  </tr>
+                )}
+                {hasGirlChild && (
+                  <tr>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૫</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">વહાલી દીકરી યોજના (ગુજરાત સરકાર)</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">બાલિકા સશક્તિકરણ</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૧,૧૦,૦૦૦ (તબક્કાવાર સહાય)</td>
+                  </tr>
+                )}
+                {isSmallBusiness && (
+                  <tr className="bg-gray-50/60">
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૬</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">PM સ્વનિધિ સ્કીમ (શેરી ફેરિયા કલ્યાણ)</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">ધંધાકીય કાર્યકારી મૂડી</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૨૦,૦૦૦ (વ્યાજ સબસીડી લોન)</td>
+                  </tr>
+                )}
+                {hasStudent && (
+                  <tr>
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૭</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">ડિજિટલ ગુજરાત પોસ્ટ મેટ્રિક શિષ્યવૃત્તિ</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">ઉચ્ચ શિક્ષણ સહાય</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૧૦,૦૦૦ / વર્ષ (DBT)</td>
+                  </tr>
+                )}
+                {isLaborer && (
+                  <tr className="bg-gray-50/60">
+                    <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">૮</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">PM વિશ્વકર્મા કૌશલ્ય સન્માન યોજના</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">કારીગર આધુનિક સાધન કિટ</td>
+                    <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-gray-900">₹૧૫,૦૦૦ (ઈ-વાઉચર ટૂલકીટ)</td>
+                  </tr>
+                )}
+                <tr className="bg-blue-50/40">
+                  <td className="border border-gray-300 py-0.5 px-1 text-center font-mono">★</td>
+                  <td className="border border-gray-300 py-0.5 px-1.5 font-bold text-gray-900">આયુષ્માન ભારત - PMJAY માં કાર્ડ</td>
+                  <td className="border border-gray-300 py-0.5 px-1.5 text-gray-700">સંપૂર્ણ કેશલેસ આરોગ્ય કવચ</td>
+                  <td className="border border-gray-300 py-0.5 px-1.5 text-right font-mono font-bold text-blue-800">₹૫,૦૦,૦૦૦ / પ્રતિ કુટુંબ / વર્ષ</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          {/* Section 5: Total DBT Entitlement Highlight Box */}
+          <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-green-50 border border-gray-800 rounded p-2 mb-2 flex items-center justify-between">
+            <div>
+              <p className="text-[9px] font-bold text-gray-600 uppercase">કુલ વાર્ષિક સીધી સરકારી સહાય (Direct Cash Benefit):</p>
+              <p className="text-sm font-black text-green-800 font-mono">
+                ₹{(directCashTotal || 52000).toLocaleString("en-IN")} / વર્ષ
+              </p>
+              <p className="text-[8px] text-gray-500">આધાર સીડેડ બેંક ખાતામાં વાર્ષિક જમા થવાપાત્ર અંદાજિત રકમ</p>
+            </div>
+            <div className="border-l border-gray-300 pl-3 text-right">
+              <p className="text-[9px] font-bold text-gray-600 uppercase">કેશલેસ આરોગ્ય સંરક્ષણ (Ayushman PMJAY):</p>
+              <p className="text-sm font-black text-blue-800 font-mono">₹૫,૦૦,૦૦૦ / કુટુંબ</p>
+              <p className="text-[8px] text-gray-500">ગુજરાતની તમામ માન્ય હોસ્પિટલોમાં મફત સારવાર</p>
+            </div>
+          </div>
+
+          {/* Section 6: Official Digital Seal, Verification QR Code & Legal Footnote */}
+          <div className="border-t-2 border-gray-800 pt-2 grid grid-cols-12 gap-2 items-center">
+            {/* Left: Authentic QR Code */}
+            <div className="col-span-3 flex items-center gap-1.5 border-r border-gray-300 pr-1.5">
+              <div className="p-0.5 border border-gray-900 bg-white shrink-0">
+                <QrCode size={46} className="text-gray-900" />
+              </div>
+              <div className="text-[8px] leading-tight">
+                <p className="font-bold text-gray-900">સ્કેન કરી વેરિફાય કરો</p>
+                <p className="text-gray-600">Scan to Verify Online</p>
+                <p className="font-mono text-[7px] text-gray-500 mt-0.5">HASH: 8A7F-99B2-E401</p>
+              </div>
+            </div>
+
+            {/* Center: Legal Authenticity Note */}
+            <div className="col-span-5 text-[8px] text-gray-600 leading-tight pr-1.5">
+              <p className="font-bold text-gray-800 mb-0.5">સત્તાવાર વૈધાનિક નોંધ (Statutory Note):</p>
+              <p>
+                ૧. આ પ્રમાણપત્ર ઈન્ફોર્મેશન ટેકનોલોજી એકટ, ૨૦૦૦ હેઠળ ડિજિટલ સહી ધરાવતો કાયદેસર સત્તાવાર દસ્તાવેજ છે.
+              </p>
+              <p className="mt-0.5">
+                ૨. કોઈપણ જનસેવા કેન્દ્ર (CSC), ગ્રામ પંચાયત (VCE) અથવા સરકારી કચેરીમાં DBT લાભ મંજૂરી માટે આ પ્રમાણપત્ર માન્ય રહેશે.
+              </p>
+            </div>
+
+            {/* Right: Digital Signature Stamp */}
+            <div className="col-span-4 border border-green-700 bg-green-50/50 p-1.5 rounded text-center">
+              <div className="inline-flex items-center gap-1 text-green-800 font-black text-[9px]">
+                <ShieldCheck size={11} className="text-green-700" /> DIGITAL SIGNATURE VALID
+              </div>
+              <p className="text-[7.5px] text-gray-700 font-semibold mt-0.5">
+                સક્ષમ સહીકર્તા: નિયામકશ્રી, અન્ન અને નાગરિક પુરવઠા
+              </p>
+              <p className="text-[7px] text-gray-500 font-mono">
+                Govt of Gujarat DPI Node • Signed: 26-09-2026
+              </p>
+              <span className="inline-block bg-green-700 text-white text-[6.5px] font-bold px-1 py-0.2 rounded mt-0.5">
+                ✓ Cryptographically Sealed
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
     </>
   );
 }

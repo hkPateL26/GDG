@@ -41,3 +41,41 @@ p, h1, h2, h3, h4, span, li {
   word-break: break-word;
   overflow-wrap: break-word;
 }
+
+/* ── Authentic Government Certificate Print Rules ── */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #111827 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    font-size: 11pt !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide entire standard application UI during print */
+  nav,
+  header,
+  footer,
+  .print-hide,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Display ONLY the authentic printable certificate */
+  .print-only-certificate {
+    display: block !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    page-break-after: avoid !important;
+    page-break-before: avoid !important;
+  }
+}
