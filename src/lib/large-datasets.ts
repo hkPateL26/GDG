@@ -44,6 +44,7 @@ export interface CitizenApplication {
   correctionsRequested?: string[];
   oldVsNewValues?: Record<string, { oldVal: string; newVal: string }>;
   kacheriDetails?: Record<string, any>;
+  workflowStage?: 1 | 2 | 3 | 4;
 }
 
 export const GUJARAT_DISTRICTS = [
@@ -167,6 +168,7 @@ const BENCHMARK_APPLICATIONS: CitizenApplication[] = [
     remarksGu: "૭/૧૨ અને ૮-અ જમીન ચકાસણી તાલુકા મામલતદાર કચેરી દ્વારા સફળતાપૂર્વક પૂર્ણ. ₹૨,૦૦૦ હપ્તો DBT દ્વારા બેંક ખાતામાં જમા.",
     remarksEn: "7/12 land records verified by Taluka Mamlatdar. ₹2,000 installment credited directly via DBT to bank account.",
     officerDesignation: "Taluka Development Officer (TDO), Gondal",
+    workflowStage: 3,
   },
   {
     id: "APP002",
@@ -189,6 +191,7 @@ const BENCHMARK_APPLICATIONS: CitizenApplication[] = [
     remarksGu: "રેશનકાર્ડ આધારિત SECC ડેટા વેરિફિકેશન થઈ ગયેલ છે. આયુષ્માન પીવીસી કાર્ડ પ્રિન્ટિંગ પ્રક્રિયામાં છે.",
     remarksEn: "SECC household verification completed. Ayushman PVC Card generation in progress. Delivery in 5 working days.",
     officerDesignation: "Chief Medical Officer (CMO), Ahmedabad District",
+    workflowStage: 2,
   },
   {
     id: "APP003",
@@ -211,6 +214,7 @@ const BENCHMARK_APPLICATIONS: CitizenApplication[] = [
     remarksGu: "ગ્રામ પંચાયત તલાટી કમ મંત્રી દ્વારા કાચા મકાનનું જીઓ-ટેગિંગ સ્થળ તપાસ માટે પેન્ડિંગ છે.",
     remarksEn: "Awaiting physical site geo-tagging inspection by Gram Sevak and Talati-cum-Mantri.",
     officerDesignation: "Gram Sevak, Madhapar Panchayat",
+    workflowStage: 1,
   },
   {
     id: "APP004",
@@ -233,6 +237,7 @@ const BENCHMARK_APPLICATIONS: CitizenApplication[] = [
     remarksGu: "આવકનો દાખલો જૂનો હોવાથી અરજી અમાન્ય ઠરી. નવો સક્ષમ અધિકારીનો આવક દાખલો જોડી પુનઃ અરજી કરવી.",
     remarksEn: "Income certificate was expired. Please re-apply with fresh Income Certificate from Mamlatdar Office.",
     officerDesignation: "Branch Lead, Bank of Baroda, Kamrej",
+    workflowStage: 2,
   },
 ];
 
@@ -267,20 +272,25 @@ export function generateApplication(index: number): CitizenApplication {
   let remarksGu = "";
   let remarksEn = "";
   let officer = `મામલતદાર કચેરી, ${taluka}`;
+  let workflowStage: 1 | 2 | 3 | 4 = 1;
 
   if (status === "approved") {
+    workflowStage = 3;
     remarksGu = `દસ્તાવેજ ચકાસણી પૂર્ણ. ₹${scheme.amount.toLocaleString("en-IN")} ની સહાય મંજૂર કરવામાં આવી છે.`;
     remarksEn = `Document verification completed successfully. Entitlement of ₹${scheme.amount.toLocaleString("en-IN")} approved.`;
     officer = `Taluka Development Officer (TDO), ${taluka}`;
   } else if (status === "processing") {
+    workflowStage = (hash % 2 === 0) ? 2 : 1;
     remarksGu = `અરજીની ચકાસણી નાયબ મામલતદાર કક્ષાએ ચાલુ છે. આગામી ૪ દિવસમાં આખરી નિર્ણય થશે.`;
     remarksEn = `Application verification currently in progress under Deputy Mamlatdar office, ${distObj.en}.`;
     officer = `Deputy Mamlatdar, ${distObj.en}`;
   } else if (status === "pending") {
+    workflowStage = 1;
     remarksGu = `તલાટી કમ મંત્રીનો અભિપ્રાય અને આવકના દાખલાની ફિઝિકલ ખરાઈ બાકી છે.`;
     remarksEn = `Field inspection by Panchayat Talati and physical verification of documents pending.`;
     officer = `Gram Sevak / Talati, ${taluka}`;
   } else {
+    workflowStage = 2;
     remarksGu = `જરૂરી ઓળખકાર્ડ અથવા બેંક વિગતો અધૂરી હોવાના કારણે અરજી પરત કરવામાં આવેલ છે. પૂરક પુરાવા સાથે ફરી અરજી કરવી.`;
     remarksEn = `Rejected due to incomplete supporting bank or identity records. Please re-submit with correct proof.`;
     officer = `Scrutiny Officer, Jan Seva Kendra ${distObj.en}`;
@@ -307,6 +317,7 @@ export function generateApplication(index: number): CitizenApplication {
     remarksGu,
     remarksEn,
     officerDesignation: officer,
+    workflowStage,
   };
 }
 
@@ -543,6 +554,9 @@ export function lookupCitizenExistingRecord(serviceId: string, docNumber: string
 }
 
 export function addCustomApplication(app: CitizenApplication) {
+  if (app.workflowStage === undefined) {
+    app.workflowStage = 1;
+  }
   // Prepend so it appears first
   const existingIdx = CUSTOM_USER_APPLICATIONS.findIndex((a) => a.id === app.id);
   if (existingIdx >= 0) {
@@ -563,10 +577,58 @@ export function confirmApplicationPayment(id: string): CitizenApplication | null
   app.paymentStatus = "paid";
   app.operatorConfirmed = true;
   app.status = "approved";
+  app.workflowStage = 3;
   app.txnId = app.txnId || `TXN-CSH-${Math.floor(100000 + Math.random() * 899999)}`;
   app.lastUpdated = new Date().toISOString().split("T")[0];
   app.remarksGu = `જન સેવા કેન્દ્ર રોકડ કાઉન્ટર પર ચલણ નં. ${app.challanNo} મુજબ ફી ₹${app.feeAmount || 50} જમા થયેલ છે (Txn: ${app.txnId}). ઓપરેટર દ્વારા ચુકવણી પ્રમાણિત થઈ ચૂકી છે અને દસ્તાવેજ / પ્રમાણપત્ર રિલીઝ (અનલૉક) થયેલ છે.`;
   app.remarksEn = `Cash fee of ₹${app.feeAmount || 50} paid at Jan Seva Kendra cash counter against Challan ${app.challanNo} (Txn: ${app.txnId}). Verified by Operator. Document released.`;
+  return app;
+}
+
+export function advanceWorkflowStage(
+  id: string,
+  targetStage: 1 | 2 | 3 | 4,
+  officerRole?: string
+): CitizenApplication | null {
+  const cleanId = id.toUpperCase();
+  let app = CUSTOM_USER_APPLICATIONS.find(
+    (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+  );
+
+  // If not yet in custom applications cache, find from generated dataset and copy over
+  if (!app) {
+    for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
+      const gen = generateApplication(i);
+      if (gen.id.toUpperCase() === cleanId || gen.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")) {
+        app = { ...gen };
+        CUSTOM_USER_APPLICATIONS.unshift(app);
+        break;
+      }
+    }
+  }
+
+  if (!app) return null;
+
+  app.workflowStage = targetStage;
+  app.lastUpdated = new Date().toISOString().split("T")[0];
+
+  if (targetStage === 1) {
+    app.status = "processing";
+    app.officerDesignation = `નાયબ મામલતદાર (દસ્તાવેજ સ્ક્રુટિની શાખા), ${app.taluka}`;
+    app.remarksGu = `અરજદાર દ્વારા ઓનલાઇન અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. કચેરી સ્ક્રુટિની ડેસ્ક પર દસ્તાવેજો અને આધાર કાર્ડ ખરાઈની પ્રક્રિયા ચાલુ છે.`;
+    app.remarksEn = `Application submitted by citizen. Document and Aadhaar scrutiny in progress at Nayab Mamlatdar desk.`;
+  } else if (targetStage === 2) {
+    app.status = "processing";
+    app.officerDesignation = `તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ${app.taluka}`;
+    app.remarksGu = `નાયબ મામલતદાર દ્વારા તમામ દસ્તાવેજો (આધાર, આવક, રેશનકાર્ડ પુરાવા) યોગ્ય ચકાસાયેલ છે. તાલુકા મામલતદાર સાહેબની આખરી ડિજિટલ સહી (e-Sign) અર્થે અગ્રેસિત કરેલ છે.`;
+    app.remarksEn = `All documents verified by Nayab Mamlatdar. Forwarded to Taluka Mamlatdar for final digital e-Sign approval.`;
+  } else if (targetStage === 3 || targetStage === 4) {
+    app.status = "approved";
+    app.officerDesignation = `તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ${app.taluka}`;
+    app.remarksGu = `મામલતદાર કચેરી ${app.taluka} દ્વારા તમામ ચકાસણી પૂર્ણ કરી ડિજિટલ હસ્તાક્ષર (e-Sign) સાથે અરજી મંજૂર કરવામાં આવેલ છે. સત્તાવાર પ્રમાણપત્ર / સહાય માન્ય ઠરેલ છે.`;
+    app.remarksEn = `Application verified and approved with official digital e-Sign by Mamlatdar Office ${app.taluka}. Certificate / benefit authorized.`;
+  }
+
   return app;
 }
 

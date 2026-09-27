@@ -12,6 +12,7 @@ import {
   CitizenApplication,
   addCustomApplication,
   confirmApplicationPayment,
+  advanceWorkflowStage,
 } from "@/lib/large-datasets";
 
 export async function GET(req: NextRequest) {
@@ -61,6 +62,7 @@ export async function GET(req: NextRequest) {
         const item = result.records[0];
         return NextResponse.json({
           application: {
+            ...item,
             id: item.id,
             scheme: item.schemeName,
             schemeGu: item.schemeNameGu,
@@ -79,6 +81,7 @@ export async function GET(req: NextRequest) {
             remarksEn: item.remarksEn,
             benefitAmount: item.benefitAmount,
             officerDesignation: item.officerDesignation,
+            workflowStage: item.workflowStage !== undefined ? item.workflowStage : (item.status === "approved" ? 3 : 1),
           },
           source: "enterprise-dataset",
           success: true,
@@ -170,14 +173,14 @@ export async function POST(req: NextRequest) {
     let computedRemarksEn = "";
 
     if (resolvedPaymentStatus === "pending_challan") {
-      computedRemarksGu = `ઓફલાઇન રોકડ ચલણ નં. ${challanNo} ઇશ્યૂ થયેલ છે. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર નિયત ફી ₹${feeAmount} જમા કરાવવાના રહેશે. કચેરી ઓપરેટર કન્ફર્મ કર્યા બાદ જ દસ્તાવેજ રિલીઝ થશે.`;
+      computedRemarksGu = `ઓફલાઇન રોકડ ચલણ નં. ${challanNo} ઇશ્યૂ થયેલ છે. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર નિયત ફી ₹${feeAmount} જમા કરાવવાના રહેશે. સ્ક્રુટિની ચાલુ છે અને કચેરી ઓપરેટર કન્ફર્મ કર્યા બાદ જ દસ્તાવેજ રિલીઝ થશે.`;
       computedRemarksEn = `Offline Cash Challan ${challanNo} issued. Please pay fee ₹${feeAmount} at Jan Seva Kendra cash counter. Document is locked until operator confirms payment.`;
     } else if (biometricRequired) {
-      computedRemarksGu = `અરજી ઓનલાઇન સ્વીકારાઈ છે. ફી ₹${feeAmount} ભરપાઈ (Txn: ${txnId}). ફિંગરપ્રિન્ટ/બાયોમેટ્રિક માટે ટોકન નં. ${appointmentToken} ફાળવાયો છે.`;
-      computedRemarksEn = `Application accepted online. Fee ₹${feeAmount} paid (Txn: ${txnId}). Biometric appointment scheduled with Token ${appointmentToken}.`;
+      computedRemarksGu = `અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. ફી ₹${feeAmount} ભરપાઈ (Txn: ${txnId}). દસ્તાવેજોની પ્રાથમિક સ્ક્રુટિની પ્રક્રિયા હેઠળ છે. બાયોમેટ્રિક માટે ટોકન નં. ${appointmentToken} ફાળવાયો છે.`;
+      computedRemarksEn = `Application accepted online. Fee ₹${feeAmount} paid (Txn: ${txnId}). Document scrutiny in progress. Biometric appointment Token ${appointmentToken}.`;
     } else {
-      computedRemarksGu = `તમામ દસ્તાવેજો AI વેરિફાઈડ. સરકારી ફી ₹${feeAmount} સાયબર ટ્રેઝરીમાં જમા થયેલ (${paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"} - Txn: ${txnId}). મામલતદાર કચેરી ${taluka} દ્વારા પ્રમાણિત થયેલ છે.`;
-      computedRemarksEn = `All documents AI-verified. Govt fee ₹${feeAmount} paid via Cyber Treasury (${paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"} - Txn: ${txnId}). Certified by Mamlatdar Office ${taluka}.`;
+      computedRemarksGu = `અરજદાર દ્વારા ઓનલાઇન અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. ફી ₹${feeAmount} સાયબર ટ્રેઝરીમાં જમા થયેલ (${paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"} - Txn: ${txnId}). દસ્તાવેજોની પ્રાથમિક સ્ક્રુટિની નાયબ મામલતદાર કચેરીમાં ચકાસણી હેઠળ છે.`;
+      computedRemarksEn = `Application submitted successfully. Govt fee ₹${feeAmount} paid via Cyber Treasury (Txn: ${txnId}). Primary document scrutiny in progress under Nayab Mamlatdar desk.`;
     }
 
     const newApp: CitizenApplication = {
@@ -194,13 +197,14 @@ export async function POST(req: NextRequest) {
       taluka,
       village,
       aadhaarLast4: aadhaarLast4.slice(-4),
-      status: resolvedPaymentStatus === "pending_challan" ? "processing" : "processing",
+      status: "processing",
       appliedDate: today,
       lastUpdated: today,
       benefitAmount: Number(benefitAmount) || 0,
       remarksGu: computedRemarksGu,
       remarksEn: computedRemarksEn,
-      officerDesignation: `નાયબ મામલતદાર, જન સેવા કેન્દ્ર ${taluka}`,
+      officerDesignation: `નાયબ મામલતદાર (દસ્તાવેજ સ્ક્રુટિની શાખા), ${taluka}`,
+      workflowStage: 1,
       serviceType,
       biometricRequired,
       appointmentDate,
@@ -289,6 +293,37 @@ export async function PATCH(req: NextRequest) {
           success: true,
           application: updated,
           message: "ચલણ ફી રોકડમાં સ્વીકારી લેવાઈ છે. પ્રમાણપત્ર અનલૉક થઈ ગયું છે.",
+        });
+      }
+      return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
+    }
+
+    if (action === "update_workflow_stage" && id) {
+      const stage = Number(body.stage) as 1 | 2 | 3 | 4;
+      const updated = advanceWorkflowStage(id, stage, body.officerRole);
+      if (updated) {
+        if (db) {
+          try {
+            const { setDoc, doc: fsDoc } = await import("firebase/firestore");
+            await setDoc(fsDoc(db, "applications", id.toUpperCase()), updated, { merge: true });
+          } catch (fbErr) {
+            console.warn("Firestore update fallback:", fbErr);
+          }
+        }
+
+        let stageMsg = "";
+        if (stage === 2) {
+          stageMsg = "નાયબ મામલતદાર દ્વારા દસ્તાવેજ ખરાઈ મંજૂર થઈ! અરજી મામલતદાર સાહેબને ફોરવર્ડ થઈ.";
+        } else if (stage === 3) {
+          stageMsg = "તાલુકા મામલતદાર સાહેબ દ્વારા ડિજિટલ સહી (e-Sign) સાથે અરજી સંપૂર્ણપણે મંજૂર કરવામાં આવી!";
+        } else {
+          stageMsg = "અરજી સફળતાપૂર્વક તબક્કો ૧ (સ્ક્રુટિની) માં રીસેટ કરવામાં આવી.";
+        }
+
+        return NextResponse.json({
+          success: true,
+          application: updated,
+          message: stageMsg,
         });
       }
       return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });

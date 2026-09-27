@@ -101,6 +101,19 @@ export default function TrackPage() {
   const [error, setError] = useState("");
   const [isConfirmingCash, setIsConfirmingCash] = useState(false);
   const [cashConfirmedAlert, setCashConfirmedAlert] = useState(false);
+  const [isUpdatingStage, setIsUpdatingStage] = useState(false);
+  const [stageUpdateAlert, setStageUpdateAlert] = useState<string | null>(null);
+
+  // Check URL query parameters (?id=APP-...) on mount
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      const idParam = urlParams.get("id");
+      if (idParam) {
+        setSearchQuery(idParam);
+      }
+    }
+  }, []);
 
   const handleConfirmCashPayment = async () => {
     if (!selectedApp) return;
@@ -131,6 +144,39 @@ export default function TrackPage() {
       alert("સર્વર ક્ષતિ આવી.");
     } finally {
       setIsConfirmingCash(false);
+    }
+  };
+
+  const handleAdvanceStage = async (targetStage: 1 | 2 | 3 | 4, officerRole: string) => {
+    if (!selectedApp) return;
+    setIsUpdatingStage(true);
+    try {
+      const res = await fetch("/api/track", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedApp.id,
+          action: "update_workflow_stage",
+          stage: targetStage,
+          officerRole,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.application) {
+        setSelectedApp(data.application);
+        setRecords((prev) =>
+          prev.map((r) => (r.id === data.application.id ? data.application : r))
+        );
+        setStageUpdateAlert(data.message || `તબક્કો ${targetStage} સફળતાપૂર્વક અપડેટ થયો.`);
+        setTimeout(() => setStageUpdateAlert(null), 5000);
+      } else {
+        alert(data.error || "વર્કફ્લો અપડેટ કરવામાં ક્ષતિ આવી.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("સર્વર ક્ષતિ આવી.");
+    } finally {
+      setIsUpdatingStage(false);
     }
   };
 
@@ -458,78 +504,278 @@ export default function TrackPage() {
               </div>
 
               {/* Progress Stepper Timeline */}
-              <div className="space-y-2 pt-2">
-                <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
-                  <FileCheck2 size={14} className="text-orange-600" /> સરકારી ચકાસણી ટાઈમલાઈન (Audit Trail):
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
-                  <div className="p-2.5 rounded-xl border bg-emerald-50 border-emerald-200">
-                    <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
-                      <CheckCircle2 size={14} /> ૧. અરજી સબમિટ
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">ઓનલાઇન પોર્ટલ સ્વીકાર</p>
-                  </div>
+              {(() => {
+                const currentStage: number =
+                  selectedApp.workflowStage !== undefined
+                    ? selectedApp.workflowStage
+                    : selectedApp.status === "approved"
+                    ? 3
+                    : selectedApp.status === "rejected"
+                    ? 2
+                    : 1;
 
-                  <div className="p-2.5 rounded-xl border bg-emerald-50 border-emerald-200">
-                    <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
-                      <CheckCircle2 size={14} /> ૨. દસ્તાવેજ ખરાઈ
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">આધાર + આવક દાખલો</p>
-                  </div>
-
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      selectedApp.status === "approved" || selectedApp.status === "processing"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                        : "bg-slate-100 border-slate-200 text-slate-400"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 font-bold text-xs">
-                      {selectedApp.status === "approved" ? (
-                        <CheckCircle2 size={14} />
-                      ) : (
-                        <Clock size={14} className="animate-spin" />
-                      )}
-                      <span>૩. મામલતદાર મંજૂરી</span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">સ્થળ તપાસ રીપોર્ટ</p>
-                  </div>
-
-                  {selectedApp.paymentStatus === "pending_challan" ? (
-                    <div className="p-2.5 rounded-xl border bg-amber-50 border-amber-300 text-amber-900">
-                      <div className="flex items-center gap-1.5 font-bold text-xs">
-                        <span>🔒</span>
-                        <span>૪. કચેરી ફી & રિલીઝ</span>
-                      </div>
-                      <p className="text-[11px] text-amber-800 mt-1 font-bold">રોકડ ચુકવણી બાકી</p>
-                    </div>
-                  ) : (
-                    <div
-                      className={`p-2.5 rounded-xl border ${
-                        selectedApp.status === "approved"
-                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                          : selectedApp.status === "rejected"
-                          ? "bg-rose-50 border-rose-200 text-rose-800"
-                          : "bg-slate-100 border-slate-200 text-slate-400"
-                      }`}
-                    >
-                      <div className="flex items-center gap-1.5 font-bold text-xs">
-                        {selectedApp.status === "approved" ? (
-                          <CheckCircle2 size={14} />
-                        ) : selectedApp.status === "rejected" ? (
-                          <XCircle size={14} />
-                        ) : (
-                          <Clock size={14} />
-                        )}
-                        <span>૪. DBT સહાય / પ્રમાણપત્ર</span>
-                      </div>
-                      <p className="text-[11px] text-slate-500 mt-1">
-                        {selectedApp.status === "approved" ? "સફળ રિલીઝ" : "પ્રક્રિયા હેઠળ"}
+                return (
+                  <div className="space-y-2 pt-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                        <FileCheck2 size={14} className="text-orange-600" /> સરકારી ચકાસણી ટાઈમલાઈન (Audit Trail):
                       </p>
+                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        currentStage === 1
+                          ? "bg-blue-100 text-blue-800 border border-blue-200"
+                          : currentStage === 2
+                          ? "bg-amber-100 text-amber-800 border border-amber-200"
+                          : "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      }`}>
+                        {currentStage === 1
+                          ? "તબક્કો ૧: સ્ક્રુટિની ચાલુ"
+                          : currentStage === 2
+                          ? "તબક્કો ૨: મામલતદાર મંજૂરી અર્થે"
+                          : "તબક્કો ૩: ૧૦૦% મંજૂર"}
+                      </span>
                     </div>
-                  )}
+
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 pt-1">
+                      {/* Step 1: અરજી સબમિટ */}
+                      <div className="p-2.5 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs">
+                        <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
+                          <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                          <span>૧. અરજી સબમિટ</span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 mt-1">ઓનલાઇન સ્વીકાર (પૂર્ણ)</p>
+                      </div>
+
+                      {/* Step 2: દસ્તાવેજ ખરાઈ */}
+                      {currentStage >= 2 ? (
+                        <div className="p-2.5 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs">
+                          <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
+                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                            <span>૨. દસ્તાવેજ ખરાઈ</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">નાયબ મામલતદાર (પૂર્ણ)</p>
+                        </div>
+                      ) : selectedApp.status === "rejected" ? (
+                        <div className="p-2.5 rounded-xl border bg-rose-50 border-rose-300 text-rose-900 shadow-2xs">
+                          <div className="flex items-center gap-1.5 text-rose-800 font-bold text-xs">
+                            <XCircle size={14} className="text-rose-600 shrink-0" />
+                            <span>૨. દસ્તાવેજ ખરાઈ</span>
+                          </div>
+                          <p className="text-[11px] text-rose-600 mt-1 font-semibold">પૂરક પુરાવા જરૂરી</p>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl border bg-blue-50/90 border-blue-400 text-blue-950 shadow-xs ring-2 ring-blue-300/60 animate-pulse">
+                          <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
+                            <Clock size={14} className="text-blue-600 animate-spin shrink-0" />
+                            <span>૨. દસ્તાવેજ ખરાઈ</span>
+                          </div>
+                          <p className="text-[11px] text-blue-800 mt-1 font-bold">કચેરી સ્ક્રુટિની ચાલુ</p>
+                        </div>
+                      )}
+
+                      {/* Step 3: મામલતદાર મંજૂરી */}
+                      {currentStage >= 3 ? (
+                        <div className="p-2.5 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs">
+                          <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
+                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                            <span>૩. મામલતદાર મંજૂરી</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">મામલતદાર e-Sign (પૂર્ણ)</p>
+                        </div>
+                      ) : currentStage === 2 ? (
+                        <div className="p-2.5 rounded-xl border bg-amber-50/90 border-amber-400 text-amber-950 shadow-xs ring-2 ring-amber-300/60 animate-pulse">
+                          <div className="flex items-center gap-1.5 text-amber-900 font-bold text-xs">
+                            <Clock size={14} className="text-amber-600 animate-spin shrink-0" />
+                            <span>૩. મામલતદાર મંજૂરી</span>
+                          </div>
+                          <p className="text-[11px] text-amber-800 mt-1 font-bold">આખરી સહી પ્રક્રિયામાં</p>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl border bg-slate-100/90 border-slate-200 text-slate-400">
+                          <div className="flex items-center gap-1.5 font-bold text-xs text-slate-500">
+                            <Clock size={14} className="text-slate-400 shrink-0" />
+                            <span>૩. મામલતદાર મંજૂરી</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-1">મંજૂરી પ્રતીક્ષામાં</p>
+                        </div>
+                      )}
+
+                      {/* Step 4: DBT સહાય / પ્રમાણપત્ર */}
+                      {selectedApp.paymentStatus === "pending_challan" ? (
+                        <div className="p-2.5 rounded-xl border bg-amber-50 border-amber-300 text-amber-900">
+                          <div className="flex items-center gap-1.5 font-bold text-xs">
+                            <span>🔒</span>
+                            <span>૪. કચેરી ફી & રિલીઝ</span>
+                          </div>
+                          <p className="text-[11px] text-amber-800 mt-1 font-bold">રોકડ ચુકવણી બાકી</p>
+                        </div>
+                      ) : currentStage >= 3 ? (
+                        <div className="p-2.5 rounded-xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs">
+                          <div className="flex items-center gap-1.5 text-emerald-800 font-bold text-xs">
+                            <CheckCircle2 size={14} className="text-emerald-600 shrink-0" />
+                            <span>૪. DBT સહાય / પ્રમાણપત્ર</span>
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-1">સફળ રિલીઝ / ડાઉનલોડ</p>
+                        </div>
+                      ) : selectedApp.status === "rejected" ? (
+                        <div className="p-2.5 rounded-xl border bg-rose-50 border-rose-200 text-rose-800">
+                          <div className="flex items-center gap-1.5 text-rose-800 font-bold text-xs">
+                            <XCircle size={14} className="text-rose-600 shrink-0" />
+                            <span>૪. DBT સહાય / પ્રમાણપત્ર</span>
+                          </div>
+                          <p className="text-[11px] text-rose-600 mt-1 font-semibold">અરજી અમાન્ય ઠરેલ</p>
+                        </div>
+                      ) : (
+                        <div className="p-2.5 rounded-xl border bg-slate-100/90 border-slate-200 text-slate-400">
+                          <div className="flex items-center gap-1.5 font-bold text-xs text-slate-500">
+                            <Clock size={14} className="text-slate-400 shrink-0" />
+                            <span>૪. DBT સહાય / પ્રમાણપત્ર</span>
+                          </div>
+                          <p className="text-[11px] text-slate-400 mt-1">પ્રક્રિયા હેઠળ</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* Dynamic Stage Update Alert Notification */}
+              {stageUpdateAlert && (
+                <div className="bg-emerald-50 border-2 border-emerald-400 rounded-xl p-3 flex items-center justify-between text-xs text-emerald-900 animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                    <div>
+                      <strong className="block text-emerald-950 font-bold">✓ વર્કફ્લો તબક્કો અપડેટ થયો!</strong>
+                      <span>{stageUpdateAlert}</span>
+                    </div>
+                  </div>
+                  <span className="bg-emerald-600 text-white font-mono font-bold px-2 py-0.5 rounded text-[10px]">
+                    STAGE UPDATED
+                  </span>
                 </div>
-              </div>
+              )}
+
+              {/* Dynamic Officer Role Workflow Management Panel (Interactive Simulation) */}
+              {(() => {
+                const currentStage: number =
+                  selectedApp.workflowStage !== undefined
+                    ? selectedApp.workflowStage
+                    : selectedApp.status === "approved"
+                    ? 3
+                    : selectedApp.status === "rejected"
+                    ? 2
+                    : 1;
+
+                return (
+                  <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-3.5 sm:p-4 space-y-3 shadow-md border border-slate-700">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-700/80 pb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🏛️</span>
+                        <div>
+                          <h4 className="font-extrabold text-xs sm:text-sm text-amber-400 tracking-wide flex items-center gap-1.5">
+                            <span>સત્તાવાર કચેરી વર્કફ્લો મેનેજમેન્ટ (Officer Role Verification)</span>
+                          </h4>
+                          <p className="text-[11px] text-slate-300">
+                            હોદ્દાવાર તબક્કાવાર મંજૂરી: ૧. નાયબ મામલતદાર (દસ્તાવેજ ખરાઈ) ➔ ૨. મામલતદાર (આખરી e-Sign)
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] text-slate-400">વર્તમાન તબક્કો:</span>
+                        <span className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full ${
+                          currentStage === 1
+                            ? "bg-blue-500/20 text-blue-300 border border-blue-400/40"
+                            : currentStage === 2
+                            ? "bg-amber-500/20 text-amber-300 border border-amber-400/40"
+                            : "bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"
+                        }`}>
+                          {currentStage === 1
+                            ? "તબક્કો ૧: નાયબ મામલતદાર સ્ક્રુટિની ડેસ્ક"
+                            : currentStage === 2
+                            ? "તબક્કો ૨: મામલતદાર આખરી e-Sign ટેબલ"
+                            : "તબક્કો ૩: ૧૦૦% મંજૂર (Fully Approved)"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-0.5">
+                      <div className="text-xs text-slate-300 leading-relaxed max-w-xl">
+                        {currentStage === 1 && (
+                          <p>
+                            👉 <strong>તબક્કો ૧ પેન્ડિંગ:</strong> નાગરિકે અરજી ઓનલાઇન સબમિટ કરી છે. નાયબ મામલતદાર તરીકે તમામ દસ્તાવેજો (આધાર, આવક, જન્મ તારીખ) ની સ્ક્રુટિની પૂર્ણ કરી આગળ અગ્રેસિત કરો:
+                          </p>
+                        )}
+                        {currentStage === 2 && (
+                          <p>
+                            👉 <strong>તબક્કો ૨ પેન્ડિંગ:</strong> નાયબ મામલતદાર દ્વારા દસ્તાવેજ ખરાઈ પૂર્ણ થઈ ગઈ છે. હવે તાલુકા મામલતદાર (એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ) તરીકે ડિજિટલ સહી (e-Sign) સાથે આખરી મંજૂરી આપો:
+                          </p>
+                        )}
+                        {currentStage >= 3 && (
+                          <p className="text-emerald-300 font-semibold">
+                            ✓ <strong>તમામ સરકારી તબક્કા સંપન્ન:</strong> મામલતદાર કચેરી દ્વારા ડિજિટલ સહી સાથે અરજી ૧૦૦% મંજૂર થયેલ છે. પ્રમાણપત્ર/સહાય માન્ય છે.
+                          </p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 shrink-0">
+                        {currentStage === 1 && (
+                          <button
+                            type="button"
+                            onClick={() => handleAdvanceStage(2, "નાયબ મામલતદાર")}
+                            disabled={isUpdatingStage}
+                            className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                          >
+                            {isUpdatingStage ? (
+                              <>
+                                <Loader2 size={14} className="animate-spin" />
+                                <span>સ્ક્રુટિની મંજૂર થઈ રહી છે...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 size={15} className="text-blue-200" />
+                                <span>[નાયબ મામલતદાર]: દસ્તાવેજ ખરાઈ મંજૂર કરો ➔</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+
+                        {currentStage === 2 && (
+                          <button
+                            type="button"
+                            onClick={() => handleAdvanceStage(3, "મામલતદાર")}
+                            disabled={isUpdatingStage}
+                            className="w-full sm:w-auto px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+                          >
+                            {isUpdatingStage ? (
+                              <>
+                                <Loader2 size={14} className="animate-spin" />
+                                <span>e-Sign મંજૂરી થઈ રહી છે...</span>
+                              </>
+                            ) : (
+                              <>
+                                <CheckCircle2 size={15} className="text-emerald-200" />
+                                <span>[તાલુકા મામલતદાર]: આખરી e-Sign મંજૂરી આપો ✓</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+
+                        {currentStage >= 3 && (
+                          <button
+                            type="button"
+                            onClick={() => handleAdvanceStage(1, "ટેસ્ટિંગ ડેસ્ક")}
+                            disabled={isUpdatingStage}
+                            className="px-3 py-1.5 bg-slate-700 hover:bg-slate-600 text-slate-300 rounded-lg text-[11px] font-semibold transition flex items-center gap-1"
+                            title="ડેમો પુનઃપ્રારંભ કરો"
+                          >
+                            <RefreshCw size={12} />
+                            <span>ડેમો રીસેટ (Reset to Stage 1)</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Cash Confirmation Alert (Live simulated) */}
               {cashConfirmedAlert && (
@@ -755,7 +1001,11 @@ export default function TrackPage() {
                         <span
                           className={`text-[10px] px-2 py-0.5 rounded-full font-bold border shrink-0 ${cfg.badgeBg}`}
                         >
-                          {cfg.labelGu}
+                          {app.workflowStage === 1 && app.status === "processing"
+                            ? "તબક્કો ૧: સ્ક્રુટિની ચાલુ"
+                            : app.workflowStage === 2 && app.status === "processing"
+                            ? "તબક્કો ૨: મામલતદાર મંજૂરી"
+                            : cfg.labelGu}
                         </span>
                       </div>
 
