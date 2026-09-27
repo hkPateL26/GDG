@@ -73,21 +73,25 @@ p, h1, h2, h3, h4, span, li {
     visibility: visible !important;
   }
 
-  /* Anchor the receipt directly to fill Page 1 with clean margins without clipping */
+  /* Anchor the receipt directly to fill Page 1 with clean margins and full height */
   #official-receipt-print-area {
     position: fixed !important;
-    left: 3mm !important;
-    top: 3mm !important;
-    width: calc(100% - 6mm) !important;
-    max-width: calc(100% - 6mm) !important;
-    height: auto !important;
-    max-height: 288mm !important;
+    left: 4mm !important;
+    top: 4mm !important;
+    width: calc(100% - 8mm) !important;
+    max-width: calc(100% - 8mm) !important;
+    height: 282mm !important;
+    min-height: 282mm !important;
+    max-height: 282mm !important;
     margin: 0 !important;
-    padding: 2mm 2.5mm !important;
+    padding: 4mm 5mm !important;
     box-sizing: border-box !important;
-    display: block !important;
-    overflow: visible !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
     background: #ffffff !important;
+    border: 2px solid #0f172a !important;
     page-break-after: avoid !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
