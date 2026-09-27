@@ -28,6 +28,7 @@ import {
   FileText,
   Clock,
   Printer,
+  XCircle,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -114,6 +115,16 @@ export default function DocumentServicePortal() {
         const data = await res.json();
         if (data.success && data.analysis) {
           const a = data.analysis;
+          const isMismatch = a.matchesExpected === false || a.isValidForGovt === false;
+          let calculatedStatus: "valid" | "warning" | "invalid" = "valid";
+          if (isMismatch) {
+            calculatedStatus = "invalid";
+          } else if (a.needsUpdate || a.needsNewDocument) {
+            calculatedStatus = "warning";
+          } else {
+            calculatedStatus = "valid";
+          }
+
           setUploadedDocs((prev) => ({
             ...prev,
             [docId]: {
@@ -121,8 +132,8 @@ export default function DocumentServicePortal() {
               fileName: file.name,
               fileType: file.type || "image/jpeg",
               base64: base64Data,
-              status: a.isValidForGovt ? "valid" : a.needsUpdate || a.needsNewDocument ? "warning" : "invalid",
-              qualityScore: a.qualityScore || 92,
+              status: calculatedStatus,
+              qualityScore: a.qualityScore || (isMismatch ? 15 : 92),
               adviceGu: a.actionableAdviceGu || a.feedbackGu || "દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો.",
               needsUpdate: a.needsUpdate,
               needsNewDocument: a.needsNewDocument,
@@ -132,7 +143,7 @@ export default function DocumentServicePortal() {
           throw new Error("Verification failed");
         }
       } catch (err) {
-        // Fallback demo validation
+        // Strict fallback on failure: do NOT mark as valid
         setUploadedDocs((prev) => ({
           ...prev,
           [docId]: {
@@ -140,9 +151,9 @@ export default function DocumentServicePortal() {
             fileName: file.name,
             fileType: file.type || "image/jpeg",
             base64: base64Data,
-            status: "valid",
-            qualityScore: 94,
-            adviceGu: "દસ્તાવેજ સ્પષ્ટ છે અને સરકારી પોર્ટલ પર અપલોડ કરવા ૧૦૦% માન્ય છે.",
+            status: "invalid",
+            qualityScore: 15,
+            adviceGu: "❌ દસ્તાવેજ ચકાસણી સર્વર સાથે સંપર્ક થઈ શક્યો નહીં અથવા ફાઇલ અવાચ્ય છે. કૃપા કરીને સાચો સત્તાવાર દસ્તાવેજ ફરીથી અપલોડ કરો.",
             needsUpdate: false,
             needsNewDocument: false,
           },
@@ -187,6 +198,28 @@ export default function DocumentServicePortal() {
     e.preventDefault();
     if (!applicantName.trim()) {
       alert("કૃપા કરીને અરજદારનું નામ ભરો.");
+      return;
+    }
+
+    // HARD RESTRICTION: Block submission if any uploaded document is marked invalid by AI
+    const invalidDocs = requiredDocs.filter((d) => {
+      const state = uploadedDocs[d.id];
+      return state && state.status === "invalid";
+    });
+
+    if (invalidDocs.length > 0) {
+      alert(
+        `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${invalidDocs[0].nameGu}' અસ્વીકાર્ય (ખોટો દસ્તાવેજ) છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
+      );
+      return;
+    }
+
+    // Check mandatory documents
+    const missingDocs = requiredDocs.filter((d) => d.mandatory && !uploadedDocs[d.id]);
+    if (missingDocs.length > 0) {
+      alert(
+        `⚠️ કૃપા કરીને તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n- ${missingDocs.map((d) => d.nameGu).join("\n- ")}`
+      );
       return;
     }
 
@@ -746,6 +779,13 @@ export default function DocumentServicePortal() {
                             <span>ધ્યાન આપો</span>
                           </span>
                         )}
+
+                        {isInvalid && (
+                          <span className="inline-flex items-center gap-1 text-xs text-rose-800 bg-rose-100 border border-rose-300 px-2.5 py-1 rounded-full font-bold">
+                            <XCircle size={14} className="text-rose-600" />
+                            <span>અસ્વીકાર્ય (ખોટો દસ્તાવેજ)</span>
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -783,21 +823,30 @@ export default function DocumentServicePortal() {
                     {/* AI Smart Actionable Alert Message */}
                     {docState?.adviceGu && (
                       <div
-                        className={`text-xs p-2.5 rounded-xl border flex items-start gap-2 ${
+                        className={`text-xs p-3 rounded-xl border flex items-start gap-2.5 ${
                           isValid
                             ? "bg-emerald-50 border-emerald-200 text-emerald-900"
                             : isWarning
                             ? "bg-amber-100 border-amber-300 text-amber-950 font-medium"
-                            : "bg-rose-100 border-rose-300 text-rose-950"
+                            : "bg-rose-50 border-2 border-rose-300 text-rose-950"
                         }`}
                       >
                         {isValid ? (
-                          <CheckCircle2 size={15} className="text-emerald-600 shrink-0 mt-0.5" />
+                          <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                        ) : isWarning ? (
+                          <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
                         ) : (
-                          <AlertTriangle size={15} className="text-amber-600 shrink-0 mt-0.5" />
+                          <XCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
                         )}
-                        <div className="space-y-0.5">
-                          <p className="leading-relaxed">{docState.adviceGu}</p>
+                        <div className="space-y-1">
+                          <p className={`leading-relaxed ${isInvalid ? "font-bold text-rose-900 text-xs sm:text-sm" : ""}`}>
+                            {docState.adviceGu}
+                          </p>
+                          {isInvalid && (
+                            <p className="text-[11px] text-rose-700 font-medium">
+                              ⚠️ સરકારી નિયમ: માંગેલ સત્તાવાર પુરાવા સિવાય અન્ય કોઈ દસ્તાવેજ (દા.ત. માર્કશીટ, અયોગ્ય બિલ) માન્ય ગણાશે નહીં. કૃપા કરીને &apos;બદલો (Replace)&apos; પર ક્લિક કરી સાચો દસ્તાવેજ અપલોડ કરો.
+                            </p>
+                          )}
                           {docState.needsUpdate && (
                             <p className="text-[11px] text-amber-800 font-bold">
                               👉 આ દસ્તાવેજમાં સુધારો કરવો પડશે. ઉપર &apos;સુધારો&apos; ટેબ પસંદ કરીને અપડેટ રિકવેસ્ટ કરી શકો છો.
@@ -818,6 +867,19 @@ export default function DocumentServicePortal() {
 
             {/* Submission Section */}
             <div className="pt-4 border-t border-slate-200 space-y-3">
+              {/* Alert banner when any document is rejected */}
+              {requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid") && (
+                <div className="bg-rose-50 border-2 border-rose-300 rounded-xl p-3 flex items-start gap-2.5 text-xs text-rose-950">
+                  <XCircle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-extrabold block">ધ્યાન આપો: અરજીમાં અસ્વીકાર્ય દસ્તાવેજ મળ્યો છે!</span>
+                    <span className="text-[11px] text-rose-800">
+                      અપલોડ કરેલ દસ્તાવેજ (દા.ત. માર્કશીટ/અયોગ્ય કાગળ) સરકારી નિયમો મુજબ માન્ય નથી. જ્યાં સુધી સાચો સત્તાવાર પુરાવો અપલોડ નહીં થાય ત્યાં સુધી અરજી સબમિટ કરી શકાશે નહીં.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 rounded-xl border border-slate-200">
                 <div className="text-xs">
                   <p className="font-bold text-slate-800">સરકારી સેવા ફી: ₹{service.fee}</p>
@@ -826,8 +888,8 @@ export default function DocumentServicePortal() {
 
                 <button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-sm font-extrabold shadow-md transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2"
+                  disabled={submitting || requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid")}
+                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-sm font-extrabold shadow-md transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
                   {submitting ? (
                     <>

@@ -7,35 +7,60 @@ if (!process.env.GOOGLE_GENAI_API_KEY) {
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY);
 
-const VERIFICATION_PROMPT = `You are the AI Document Verification Specialist for NagrikSeva AI (Government of India / Gujarat citizen service helper).
+const STRICT_VERIFICATION_PROMPT = `You are the STRICT Chief Document Verification Officer for NagrikSeva AI (Government of Gujarat).
+Your mandate: ZERO FRAUD, ZERO MISMATCH, STRICT QUALITY CONTROL. 
 
-Analyze the provided citizen document (image or PDF) and evaluate its suitability for government applications. Check whether it matches the expected document type, is legible, official, and not expired.
+Under Government of Gujarat rules:
+- If an applicant uploads a Marksheet (ગુણપત્રક / પરિણામ / Statement of Marks) when a Birth Certificate (જન્મનો દાખલો) or School Leaving Certificate (શાળા છોડ્યાનું પ્રમાણપત્ર / LC) was requested, IT MUST BE STRICTLY REJECTED. A marksheet is NOT a proof of birth or school leaving certificate.
+- If an applicant uploads an electricity bill when photo identity is requested, IT MUST BE REJECTED.
+- If the document is blurry, fake, unreadable, or a completely different document than expected, IT MUST BE REJECTED.
 
-Return a strict JSON object with this exact structure:
+CRITICAL INSTRUCTIONS:
+1. Identify the EXACT type of document shown in this image or PDF:
+   - "Academic Marksheet / Statement of Marks" (શૈક્ષણિક માર્કશીટ / પરિણામ / ગુણપત્રક)
+   - "Birth Certificate" (જન્મનો દાખલો / જન્મ નોંધણી પ્રમાણપત્ર)
+   - "School Leaving Certificate / Transfer Certificate" (શાળા છોડ્યાનું પ્રમાણપત્ર / LC)
+   - "Aadhaar Card" (આધાર કાર્ડ)
+   - "PAN Card" (પાન કાર્ડ)
+   - "Ration Card" (રેશન કાર્ડ)
+   - "Income Certificate" (આવકનો દાખલો)
+   - "Caste Certificate" (જાતિનો દાખલો)
+   - "Electricity Bill / Utility Bill" (લાઈટ બિલ / વીજળી બિલ)
+   - "Property Tax Receipt / Index 2" (વેરા બિલ / દસ્તાવેજ)
+   - "Voter ID / Election Card" (ચૂંટણી કાર્ડ)
+   - "Driving License" (ડ્રાઇવિંગ લાયસન્સ)
+   - "Other / Invalid Document"
+
+2. Check strictly if it matches the EXPECTED DOCUMENT REQUIREMENT.
+   - If expected is "Birth Certificate / School Leaving Certificate" and the image is a Marksheet (Statement of Marks):
+     -> "matchesExpected": false
+     -> "isValidForGovt": false
+     -> "qualityScore": 15
+     -> "actionableAdviceGu": "❌ ખોટો દસ્તાવેજ: તમે માર્કશીટ (ગુણપત્રક) અપલોડ કરી છે. અહીં માત્ર 'જન્મનો દાખલો' અથવા 'શાળા છોડ્યાનું પ્રમાણપત્ર (LC)' જ માન્ય છે. માર્કશીટ જન્મના પુરાવા તરીકે ચાલશે નહીં."
+     -> "feedbackGu": "આ દસ્તાવેજ ધોરણ ૧૦ કે ૧૨ ની માર્કશીટ છે, જે સરકારી નિયમો મુજબ જન્મ અથવા શાળા છોડ્યાના પ્રમાણપત્ર તરીકે અસ્વીકાર્ય છે."
+
+3. Return ONLY a valid JSON object matching this schema:
 {
-  "documentType": "Aadhaar Card" | "Ration Card" | "PAN Card" | "7/12 Land Record" | "Income Certificate" | "Birth Certificate / School Leaving Certificate" | "Electricity Bill / Tax Receipt" | "Other / Unknown",
-  "documentNameGu": "ગુજરાતીમાં દસ્તાવેજનું નામ (દા.ત. આધાર કાર્ડ)",
-  "qualityScore": number (0 to 100, based on image clarity, readability, edge detection),
-  "isValidForGovt": boolean (true if legible and valid for government upload, false if too blurry, expired, or wrong document),
-  "matchesExpected": boolean (true if matches expectedDocType, false otherwise),
-  "needsUpdate": boolean (true if the document is valid but needs correction/update like address or name),
-  "needsNewDocument": boolean (true if expired or missing, requiring a brand new document),
-  "actionableAdviceGu": "ગુજરાતીમાં ચોક્કસ સલાહ: દા.ત. 'દસ્તાવેજ સંપૂર્ણ માન્ય છે' અથવા 'આવકનો દાખલો ૩ વર્ષથી જૂનો છે, નવો કઢાવો' અથવા 'આધાર કાર્ડમાં સરનામું અસ્પષ્ટ છે, આધાર અપડેટ કરો'",
+  "documentType": string,
+  "documentNameGu": string,
+  "qualityScore": number (0 to 100, if document does not match requirement return <= 20),
+  "isValidForGovt": boolean (MUST be false if wrong document, blurry, or expired),
+  "matchesExpected": boolean (MUST be false if different from expectedDocType),
+  "needsUpdate": boolean,
+  "needsNewDocument": boolean,
+  "actionableAdviceGu": string,
+  "feedbackGu": string,
   "extractedInfo": {
     "detectedName": string | null,
-    "documentNumberMasked": string | null (mask all but last 4 digits for privacy, e.g. XXXX-XXXX-1234),
+    "documentNumberMasked": string | null,
     "yearOrDate": string | null
   },
-  "feedbackGu": "ગુજરાતીમાં વિગતવાર સલાહ",
-  "applicableSchemes": ["PM Kisan Samman Nidhi", "Ayushman Bharat PM-JAY", ...],
   "verificationPoints": [
-    { "point": "દસ્તાવેજની પ્રકાર ઓળખ", "status": "pass" | "warn" | "fail", "note": "સાચો દસ્તાવેજ છે" },
-    { "point": "ફોટો અને અક્ષરોની ગુણવત્તા", "status": "pass" | "warn" | "fail", "note": "સ્પષ્ટ વંચાય છે" },
-    { "point": "સરકારી સીલ / હોલોગ્રામ", "status": "pass" | "warn" | "fail", "note": "પ્રમાણિત" }
+    { "point": string, "status": "pass" | "fail", "note": string }
   ]
 }
 
-Only return valid JSON. Do not include markdown code block quotes.`;
+DO NOT include any markdown quotes or code blocks outside the JSON. Return only parseable JSON.`;
 
 export async function POST(req: NextRequest) {
   try {
@@ -51,17 +76,18 @@ export async function POST(req: NextRequest) {
     // Clean base64 header if present
     const base64Data = imageBase64.replace(/^data:(image|application)\/\w+;base64,/, "");
 
-    const customPrompt = `${VERIFICATION_PROMPT}\n\nExpected Document Requirement: ${expectedDocType || "Any official government identity/income/residence document"}`;
+    const customPrompt = `${STRICT_VERIFICATION_PROMPT}\n\n====================\nEXPECTED DOCUMENT REQUIREMENT FOR THIS SLOT: "${expectedDocType}"\n====================`;
 
-    const visionModels = ["gemini-1.5-flash", "gemini-1.5-pro", "gemini-2.0-flash"];
-    let parsedData = null;
+    // Try modern Gemini vision models with high availability
+    const visionModels = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash"];
+    let parsedData: any = null;
 
     for (const modelName of visionModels) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
           generationConfig: {
-            temperature: 0.2,
+            temperature: 0.1,
             responseMimeType: "application/json",
           },
         });
@@ -78,34 +104,39 @@ export async function POST(req: NextRequest) {
 
         const responseText = result.response.text();
         parsedData = JSON.parse(responseText);
-        if (parsedData) break;
-      } catch (mErr) {
-        // Continue to fallback model
+        if (parsedData && parsedData.documentType) {
+          // Double safeguard: if matchesExpected is false, ensure isValidForGovt is strictly false
+          if (!parsedData.matchesExpected) {
+            parsedData.isValidForGovt = false;
+            if (parsedData.qualityScore > 30) parsedData.qualityScore = 15;
+          }
+          break;
+        }
+      } catch (mErr: any) {
+        console.warn(`Vision model ${modelName} failed or unavailable:`, mErr?.message || mErr);
       }
     }
 
+    // Fallback if all Gemini models fail (e.g. temporary API quota issue)
     if (!parsedData) {
-      // Deterministic realistic analysis fallback for reliable hackathon demo
+      const isBirthOrLCExpected = expectedDocType.toLowerCase().includes("birth") || expectedDocType.includes("જન્મ");
       parsedData = {
-        documentType: expectedDocType || "Aadhaar Card",
-        documentNameGu: expectedDocType || "આધાર કાર્ડ",
-        qualityScore: 94,
-        isValidForGovt: true,
-        matchesExpected: true,
+        documentType: "Document Verification Pending",
+        documentNameGu: "ચકાસણી પેન્ડિંગ",
+        qualityScore: 50,
+        isValidForGovt: false,
+        matchesExpected: false,
         needsUpdate: false,
         needsNewDocument: false,
-        actionableAdviceGu: "દસ્તાવેજ સંપૂર્ણ માન્ય અને પ્રમાણિત છે. સરકારી પોર્ટલ માટે ૧૦૦% યોગ્ય છે.",
+        actionableAdviceGu: "⚠️ નેટવર્ક અથવા સર્વર વ્યસ્ત હોવાથી AI ચકાસણી થઈ શકી નથી. કૃપા કરીને ખાતરી કરો કે તમે યોગ્ય દસ્તાવેજ અપલોડ કર્યો છે.",
         extractedInfo: {
-          detectedName: "નાગરિક અરજદાર",
-          documentNumberMasked: "XXXX-XXXX-4829",
-          yearOrDate: "2026",
+          detectedName: null,
+          documentNumberMasked: null,
+          yearOrDate: null,
         },
-        feedbackGu: "દસ્તાવેજની ગુણવત્તા ઉત્તમ છે. તમામ અક્ષરો અને સરકારી સીલ સ્પષ્ટપણે વંચાય છે.",
-        applicableSchemes: ["PM Kisan Samman Nidhi", "Ayushman Bharat PM-JAY", "PM Awas Yojana Gramin"],
+        feedbackGu: "કૃપા કરીને માંગેલ સત્તાવાર દસ્તાવેજ જ અપલોડ કરો.",
         verificationPoints: [
-          { point: "દસ્તાવેજ પ્રકાર ચકાસણી", status: "pass", note: "માંગેલ દસ્તાવેજ સાથે મેળ ખાય છે" },
-          { point: "ફોટો અને અક્ષરોની ગુણવત્તા", status: "pass", note: "૯૪% સ્કોર - ખૂબ જ સ્પષ્ટ" },
-          { point: "સરકારી સીલ અને હોલોગ્રામ", status: "pass", note: "માન્ય સરકારી માર્ક મળ્યો" },
+          { point: "દસ્તાવેજ પ્રકાર", status: "fail", note: "ચકાસણી ફરીથી કરો" },
         ],
       };
     }
@@ -117,30 +148,25 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("AI Document Verification Error:", error);
 
-    // Guaranteed fallback response
     return NextResponse.json({
       success: true,
-      fallback: true,
       analysis: {
-        documentType: "Aadhaar Card",
-        documentNameGu: "આધાર કાર્ડ",
-        qualityScore: 91,
-        isValidForGovt: true,
-        matchesExpected: true,
+        documentType: "Unknown",
+        documentNameGu: "અજ્ઞાત દસ્તાવેજ",
+        qualityScore: 10,
+        isValidForGovt: false,
+        matchesExpected: false,
         needsUpdate: false,
         needsNewDocument: false,
-        actionableAdviceGu: "દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો છે. આગળની પ્રોસેસ કરી શકો છો.",
+        actionableAdviceGu: "❌ દસ્તાવેજ ચકાસણી નિષ્ફળ. કૃપા કરીને સ્પષ્ટ અને સાચો દસ્તાવેજ અપલોડ કરો.",
         extractedInfo: {
-          detectedName: "નાગરિક",
-          documentNumberMasked: "XXXX-XXXX-8921",
-          yearOrDate: "2026",
+          detectedName: null,
+          documentNumberMasked: null,
+          yearOrDate: null,
         },
-        feedbackGu: "દસ્તાવેજ સંપૂર્ણ સ્પષ્ટ છે. સરકારી પોર્ટલ પર અપલોડ કરવા યોગ્ય છે.",
-        applicableSchemes: ["PM Kisan Samman Nidhi", "Ayushman Bharat PM-JAY", "PM Awas Yojana"],
+        feedbackGu: "દસ્તાવેજ વાંચી શકાયો નથી.",
         verificationPoints: [
-          { point: "દસ્તાવેજ પ્રકાર", status: "pass", note: "યોગ્ય દસ્તાવેજ" },
-          { point: "ફોટોની ગુણવત્તા", status: "pass", note: "બધા અક્ષરો સ્પષ્ટ છે" },
-          { point: "QR કોડ / બારકોડ", status: "pass", note: "સ્કેનેબલ છે" },
+          { point: "દસ્તાવેજ ચકાસણી", status: "fail", note: "અમાન્ય ફાઇલ" },
         ],
       },
     });
