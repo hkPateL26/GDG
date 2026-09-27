@@ -22,7 +22,9 @@ import {
   RefreshCw,
   Sparkles,
   Printer,
+  Fingerprint,
 } from "lucide-react";
+import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 
 type StatusType = "approved" | "processing" | "pending" | "rejected";
@@ -177,6 +179,15 @@ export default function TrackPage() {
                 <p className="text-orange-100 text-xs sm:text-sm md:text-base max-w-2xl leading-relaxed break-words">
                   ૫,૪૦૦+ થી વધુ સરકારી સહાય અરજીઓની લાઈવ સ્થિતિ અને જિલ્લાવાર ડેટાબેઝ ચકાસો.
                 </p>
+                <div className="pt-2">
+                  <Link
+                    href="/documents"
+                    className="inline-flex items-center gap-2 bg-white text-orange-700 hover:bg-orange-50 px-4 py-2 rounded-xl text-xs font-black shadow-md transition active:scale-95"
+                  >
+                    <Sparkles size={14} />
+                    <span>+ નવા દસ્તાવેજ માટે અરજી / સુધારો કરો (Apply Online)</span>
+                  </Link>
+                </div>
               </div>
 
               {/* Live Count Pill */}
@@ -473,6 +484,50 @@ export default function TrackPage() {
                   </div>
                 </div>
               </div>
+
+              {/* Biometric Appointment Slot if applicable */}
+              {selectedApp.biometricRequired && selectedApp.appointmentToken && (
+                <div className="bg-blue-50 border-2 border-blue-200 rounded-xl p-3.5 space-y-1.5">
+                  <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
+                    <Fingerprint size={16} className="text-blue-600" />
+                    <span>બાયોમેટ્રિક / રૂબરૂ ખરાઈ એપોઇન્ટમેન્ટ સ્લોટ (Fast-Track Token):</span>
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs pt-0.5">
+                    <div className="bg-white p-2 rounded-lg border border-blue-100">
+                      <span className="text-slate-400 text-[10px] block">ટોકન ક્રમાંક:</span>
+                      <strong className="text-blue-700 font-mono text-sm">{selectedApp.appointmentToken}</strong>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-blue-100">
+                      <span className="text-slate-400 text-[10px] block">તારીખ & સમય:</span>
+                      <strong className="text-slate-800">{selectedApp.appointmentDate} • {selectedApp.appointmentTime}</strong>
+                    </div>
+                    <div className="bg-white p-2 rounded-lg border border-blue-100 col-span-2 sm:col-span-1">
+                      <span className="text-slate-400 text-[10px] block">કેન્દ્ર:</span>
+                      <strong className="text-slate-800 truncate block">{selectedApp.appointmentCenter}</strong>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* AI Verified Documents Checklist */}
+              {selectedApp.documentsVerified && selectedApp.documentsVerified.length > 0 && (
+                <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-3 space-y-1.5">
+                  <p className="text-xs font-bold text-emerald-900 flex items-center gap-1">
+                    <FileCheck2 size={13} className="text-emerald-700" /> AI પૂર્વ-ચકાસાયેલ દસ્તાવેજો (Verified Documents):
+                  </p>
+                  <div className="flex flex-wrap gap-2 pt-0.5">
+                    {selectedApp.documentsVerified.map((doc, idx) => (
+                      <span
+                        key={idx}
+                        className="inline-flex items-center gap-1 text-[11px] bg-white border border-emerald-300 text-emerald-800 px-2.5 py-1 rounded-md font-semibold"
+                      >
+                        <CheckCircle2 size={12} className="text-emerald-600" />
+                        <span>{doc.name} ({doc.qualityScore}%)</span>
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               {/* Departmental Remarks */}
               <div className="bg-amber-50/80 border border-amber-200 p-3.5 rounded-xl space-y-1">

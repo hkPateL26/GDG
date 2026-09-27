@@ -24,6 +24,16 @@ export interface CitizenApplication {
   remarksGu: string;
   remarksEn: string;
   officerDesignation: string;
+  serviceType?: "new" | "update";
+  biometricRequired?: boolean;
+  appointmentDate?: string;
+  appointmentTime?: string;
+  appointmentCenter?: string;
+  appointmentToken?: string;
+  signatureType?: "aadhaar-esign" | "physical-declaration";
+  mobile?: string;
+  email?: string;
+  documentsVerified?: { name: string; verified: boolean; qualityScore: number }[];
 }
 
 export const GUJARAT_DISTRICTS = [
@@ -292,7 +302,160 @@ export function generateApplication(index: number): CitizenApplication {
 
 export const TOTAL_SYSTEM_RECORDS = 5420;
 
-// High-performance search and pagination across 5,420 records
+export interface DocumentServiceConfig {
+  id: string;
+  nameEn: string;
+  nameGu: string;
+  departmentEn: string;
+  departmentGu: string;
+  emoji: string;
+  supportsNew: boolean;
+  supportsUpdate: boolean;
+  updateFields?: string[];
+  requiredDocsNew: { id: string; nameEn: string; nameGu: string; mandatory: boolean }[];
+  requiredDocsUpdate: { id: string; nameEn: string; nameGu: string; mandatory: boolean }[];
+  biometricRequiredNew: boolean;
+  biometricRequiredUpdate: boolean;
+  fee: number;
+}
+
+export const DOCUMENT_SERVICES: DocumentServiceConfig[] = [
+  {
+    id: "aadhaar",
+    nameEn: "Aadhaar Card (UIDAI)",
+    nameGu: "આધાર કાર્ડ સેવા",
+    departmentEn: "Unique Identification Authority of India (UIDAI)",
+    departmentGu: "યુનિક આઇડેન્ટિફિકેશન ઓથોરિટી ઓફ ઈન્ડિયા (UIDAI)",
+    emoji: "🪪",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["સરનામું (Address)", "મોબાઈલ નંબર (Mobile No)", "નામ (Name)", "જન્મતારીખ (Date of Birth)"],
+    requiredDocsNew: [
+      { id: "birth_proof", nameEn: "Birth Certificate / School Leaving Certificate", nameGu: "જન્મનો દાખલો / શાળા છોડ્યાનું પ્રમાણપત્ર", mandatory: true },
+      { id: "address_proof", nameEn: "Electricity Bill / Ration Card", nameGu: "લાઈટ બિલ / રેશનકાર્ડ", mandatory: true },
+      { id: "photo_id", nameEn: "Identity Proof (PAN / Voter ID)", nameGu: "ઓળખનો પુરાવો (PAN / ચૂંટણી કાર્ડ)", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "current_aadhaar", nameEn: "Current Aadhaar Card Copy", nameGu: "હાલના આધાર કાર્ડની નકલ", mandatory: true },
+      { id: "update_proof", nameEn: "Supporting Document for Change (Address/DOB)", nameGu: "સુધારા માટેનો પુરાવો (લાઈટબિલ / એલસી)", mandatory: true },
+    ],
+    biometricRequiredNew: true,
+    biometricRequiredUpdate: true, // for iris/fingerprint refresh
+    fee: 50,
+  },
+  {
+    id: "ration",
+    nameEn: "Digital Ration Card (NFSA/RCMS)",
+    nameGu: "ડિજિટલ રેશનકાર્ડ સેવા",
+    departmentEn: "Food, Civil Supplies & Consumer Affairs Department",
+    departmentGu: "અન્ન અને નાગરિક પુરવઠા વિભાગ, ગુજરાત સરકાર",
+    emoji: "🛒",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["નવા સભ્યનું નામ ઉમેરવું (Add Member)", "નામ કમી કરવું (Delete Member)", "સરનામું બદલવું (Change Address)", "રેશનકાર્ડ વિભાજન (Split)"],
+    requiredDocsNew: [
+      { id: "family_aadhaar", nameEn: "Aadhaar Cards of All Family Members", nameGu: "કુટુંબના તમામ સભ્યોના આધાર કાર્ડ", mandatory: true },
+      { id: "income_proof", nameEn: "Income Certificate from Mamlatdar", nameGu: "મામલતદારનો આવકનો દાખલો", mandatory: true },
+      { id: "residence_proof", nameEn: "Electricity Bill / Tax Receipt", nameGu: "લાઈટ બિલ / વેરા પાવતી", mandatory: true },
+      { id: "gas_proof", nameEn: "LPG Gas Connection Consumer Receipt", nameGu: "ગેસ કનેક્શન પાસબુક/રસીદ", mandatory: false },
+    ],
+    requiredDocsUpdate: [
+      { id: "current_ration", nameEn: "Current Ration Card Booklet / Digital Copy", nameGu: "હાલનું રેશનકાર્ડ", mandatory: true },
+      { id: "member_proof", nameEn: "Birth / Marriage Certificate for New Member", nameGu: "નવા સભ્યનું જન્મ પ્રમાણપત્ર / લગ્ન નોંધણી", mandatory: true },
+      { id: "member_aadhaar", nameEn: "Aadhaar Card of Person to Add/Update", nameGu: "ઉમેરવાના સભ્યનું આધાર કાર્ડ", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+  {
+    id: "income",
+    nameEn: "Income Certificate (આવકનો દાખલો)",
+    nameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
+    departmentEn: "Revenue Department, Government of Gujarat",
+    departmentGu: "મહેસૂલ વિભાગ, ગુજરાત સરકાર (મામલતદાર કચેરી)",
+    emoji: "📜",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["નવીકરણ / રિન્યુઅલ (Renewal)", "આવક સુધારો (Income Correction)"],
+    requiredDocsNew: [
+      { id: "ration_card", nameEn: "Ration Card (All Pages)", nameGu: "રેશનકાર્ડ (તમામ પાના)", mandatory: true },
+      { id: "applicant_aadhaar", nameEn: "Applicant Aadhaar Card", nameGu: "અરજદારનું આધાર કાર્ડ", mandatory: true },
+      { id: "talati_report", nameEn: "Talati Income Assessment Report / Salary Slip", nameGu: "તલાટી કમ મંત્રીનો આવક પંચનામું રિપોર્ટ", mandatory: true },
+      { id: "electricity_bill", nameEn: "Recent Electricity Bill", nameGu: "છેલ્લા મહિનાનું લાઈટ બિલ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "old_income", nameEn: "Expired Income Certificate", nameGu: "જૂનો આવકનો દાખલો", mandatory: true },
+      { id: "current_electricity", nameEn: "Current Electricity Bill", nameGu: "તાજેતરનું લાઈટ બિલ", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+  {
+    id: "pan",
+    nameEn: "PAN Card (Income Tax Dept)",
+    nameGu: "PAN કાર્ડ સેવા",
+    departmentEn: "Income Tax Department, Government of India",
+    departmentGu: "આવકવેરા વિભાગ, ભારત સરકાર (NSDL/UTI)",
+    emoji: "💳",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["નામ સુધારો (Name Correction)", "જન્મતારીખ સુધારો (DOB Correction)", "ફોટો/સહી અપડેટ (Photo/Sign Update)"],
+    requiredDocsNew: [
+      { id: "pan_aadhaar", nameEn: "Aadhaar Card (Linked with Mobile)", nameGu: "આધાર કાર્ડ (મોબાઈલ લિંક્ડ)", mandatory: true },
+      { id: "passport_photo", nameEn: "Passport Size Photograph", nameGu: "પાસપોર્ટ સાઇઝ રંગીન ફોટો", mandatory: true },
+      { id: "dob_proof", nameEn: "Proof of Date of Birth (Birth Certificate / School LC)", nameGu: "જન્મતારીખનો પુરાવો (LC / જન્મ દાખલો)", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "current_pan", nameEn: "Existing PAN Card Copy", nameGu: "હાલના PAN કાર્ડની નકલ", mandatory: true },
+      { id: "aadhaar_card", nameEn: "Aadhaar Card with Correct Details", nameGu: "સાચી વિગતો વાળું આધાર કાર્ડ", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 107,
+  },
+  {
+    id: "caste",
+    nameEn: "Caste & Non-Creamy Layer Certificate",
+    nameGu: "જાતિ પ્રમાણપત્ર & નોન-ક્રીમીલેયર દાખલો",
+    departmentEn: "Social Justice & Empowerment Department",
+    departmentGu: "સામાજિક ન્યાય અને અધિકારિતા વિભાગ, ગુજરાત સરકાર",
+    emoji: "⚖️",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["નોન-ક્રીમીલેયર રિન્યુઅલ (Renewal)", "નામ સુધારો (Correction)"],
+    requiredDocsNew: [
+      { id: "applicant_lc", nameEn: "School Leaving Certificate of Applicant", nameGu: "અરજદારનું શાળા છોડ્યાનું પ્રમાણપત્ર (LC)", mandatory: true },
+      { id: "father_lc", nameEn: "Father / Paternal Relative's LC or Pedhinamu", nameGu: "પિતાનું LC અથવા પેઢીનામું / જાતિ પુરાવો", mandatory: true },
+      { id: "income_cert", nameEn: "Valid Income Certificate from Mamlatdar", nameGu: "સક્ષમ અધિકારીનો આવકનો દાખલો", mandatory: true },
+      { id: "ration_card", nameEn: "Ration Card", nameGu: "રેશનકાર્ડ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "old_caste", nameEn: "Previous Caste / NCL Certificate", nameGu: "અગાઉનો જાતિનો / NCL દાખલો", mandatory: true },
+      { id: "fresh_income", nameEn: "Fresh Income Certificate", nameGu: "તાજો આવકનો દાખલો", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+];
+
+// Global in-memory cache for newly created citizen applications
+export const CUSTOM_USER_APPLICATIONS: CitizenApplication[] = [];
+
+export function addCustomApplication(app: CitizenApplication) {
+  // Prepend so it appears first
+  const existingIdx = CUSTOM_USER_APPLICATIONS.findIndex((a) => a.id === app.id);
+  if (existingIdx >= 0) {
+    CUSTOM_USER_APPLICATIONS[existingIdx] = app;
+  } else {
+    CUSTOM_USER_APPLICATIONS.unshift(app);
+  }
+  return app;
+}
+
+// High-performance search and pagination across 5,420+ records
 export function queryApplications(params: {
   search?: string;
   district?: string;
@@ -319,9 +482,22 @@ export function queryApplications(params: {
   const district = (params.district || "").trim().toLowerCase();
   const status = (params.status || "").trim().toLowerCase();
 
-  // If exact search by ID (like APP001 or APP-GUJ-1045), handle instantly
+  // 1. Check custom user-submitted applications first (for instant live tracking!)
   if (search.startsWith("app")) {
     const cleanId = search.toUpperCase();
+    const foundCustom = CUSTOM_USER_APPLICATIONS.find(
+      (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+    );
+    if (foundCustom) {
+      return {
+        records: [foundCustom],
+        total: 1,
+        page: 1,
+        totalPages: 1,
+        stats: calculateSystemStats(),
+      };
+    }
+
     for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
       const app = generateApplication(i);
       if (app.id.toUpperCase() === cleanId || app.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")) {
@@ -337,6 +513,29 @@ export function queryApplications(params: {
   }
 
   const matches: CitizenApplication[] = [];
+
+  // Match custom user applications first
+  for (const customApp of CUSTOM_USER_APPLICATIONS) {
+    if (district && district !== "all" && customApp.district.toLowerCase() !== district && customApp.districtGu !== district) {
+      continue;
+    }
+    if (status && status !== "all" && customApp.status.toLowerCase() !== status) {
+      continue;
+    }
+    if (search) {
+      const matchesSearch =
+        customApp.id.toLowerCase().includes(search) ||
+        customApp.citizenName.toLowerCase().includes(search) ||
+        customApp.citizenNameGu.toLowerCase().includes(search) ||
+        customApp.schemeName.toLowerCase().includes(search) ||
+        customApp.schemeNameGu.toLowerCase().includes(search) ||
+        customApp.district.toLowerCase().includes(search) ||
+        customApp.taluka.toLowerCase().includes(search) ||
+        customApp.aadhaarLast4.includes(search);
+      if (!matchesSearch) continue;
+    }
+    matches.push(customApp);
+  }
 
   // Stream through the deterministic dataset
   for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
@@ -372,7 +571,7 @@ export function queryApplications(params: {
     }
   }
 
-  const effectiveTotal = (search || district || status) ? matches.length : TOTAL_SYSTEM_RECORDS;
+  const effectiveTotal = (search || district || status) ? matches.length : TOTAL_SYSTEM_RECORDS + CUSTOM_USER_APPLICATIONS.length;
   const start = (page - 1) * limit;
   const paginated = matches.slice(start, start + limit);
 
@@ -386,12 +585,14 @@ export function queryApplications(params: {
 }
 
 export function calculateSystemStats() {
+  const customCount = CUSTOM_USER_APPLICATIONS.length;
   return {
-    total: TOTAL_SYSTEM_RECORDS,
+    total: TOTAL_SYSTEM_RECORDS + customCount,
     approved: 3845,
-    processing: 1120,
+    processing: 1120 + customCount,
     pending: 290,
     rejected: 165,
     disbursedCr: "₹ 14.85 Cr",
   };
 }
+
