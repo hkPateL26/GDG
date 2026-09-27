@@ -23,12 +23,16 @@ interface CitizenPortalHeaderProps {
     taluka?: string;
     village?: string;
   };
+  activeTab?: "track" | "documents" | "eligibility";
+  onTabChange?: (tab: "track" | "documents" | "eligibility") => void;
   onLogout: () => void;
   onOfficerClick?: () => void;
 }
 
 export default function CitizenPortalHeader({
   citizen,
+  activeTab,
+  onTabChange,
   onLogout,
   onOfficerClick,
 }: CitizenPortalHeaderProps) {
@@ -37,27 +41,27 @@ export default function CitizenPortalHeader({
   const tabs = [
     {
       href: "/track",
-      id: "track",
+      id: "track" as const,
       titleGu: "૧. મારી અરજીઓ & ટ્રેકિંગ",
       subGu: "લાઈવ સ્ટેટસ, પહોંચ & ચલણ",
       icon: FileText,
-      active: pathname === "/track",
+      active: activeTab ? activeTab === "track" : pathname === "/track",
     },
     {
       href: "/documents",
-      id: "documents",
+      id: "documents" as const,
       titleGu: "૨. નવી સેવા / દસ્તાવેજ અરજી",
       subGu: "આધાર, રેશન, આવક, જાતિ",
       icon: Sparkles,
-      active: pathname === "/documents",
+      active: activeTab ? activeTab === "documents" : pathname === "/documents",
     },
     {
       href: "/eligibility",
-      id: "eligibility",
+      id: "eligibility" as const,
       titleGu: "૩. પાત્રતા & DBT લાભ લેજર",
       subGu: "અગાઉ મળેલ સહાય & નવી યોજનાઓ",
       icon: IndianRupee,
-      active: pathname === "/eligibility",
+      active: activeTab ? activeTab === "eligibility" : pathname === "/eligibility",
     },
   ];
 
@@ -117,16 +121,14 @@ export default function CitizenPortalHeader({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-200">
         {tabs.map((tab) => {
           const Icon = tab.icon;
-          return (
-            <Link
-              key={tab.id}
-              href={tab.href}
-              className={`flex items-center gap-3 p-3 rounded-xl transition text-left ${
-                tab.active
-                  ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md font-black"
-                  : "bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-orange-700 font-bold border border-slate-100"
-              }`}
-            >
+          const commonClasses = `flex items-center gap-3 p-3 rounded-xl transition text-left cursor-pointer w-full ${
+            tab.active
+              ? "bg-gradient-to-r from-orange-600 to-amber-600 text-white shadow-md font-black"
+              : "bg-slate-50 hover:bg-orange-50 text-slate-700 hover:text-orange-700 font-bold border border-slate-100"
+          }`;
+
+          const innerContent = (
+            <>
               <span
                 className={`p-2 rounded-lg shrink-0 ${
                   tab.active ? "bg-white/20 text-white" : "bg-white text-orange-600 shadow-2xs"
@@ -144,6 +146,29 @@ export default function CitizenPortalHeader({
                   {tab.subGu}
                 </p>
               </div>
+            </>
+          );
+
+          if (onTabChange) {
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => onTabChange(tab.id)}
+                className={commonClasses}
+              >
+                {innerContent}
+              </button>
+            );
+          }
+
+          return (
+            <Link
+              key={tab.id}
+              href={tab.href}
+              className={commonClasses}
+            >
+              {innerContent}
             </Link>
           );
         })}
