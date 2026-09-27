@@ -70,13 +70,10 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
-    { href: "/documents",           label: "દસ્તાવેજ સેવા",   Icon: FileText },
-    { href: "/eligibility",         label: t.nav.eligibility, Icon: Sparkles },
+    { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
     { href: "/verify-doc",          label: t.nav.scanner,     Icon: Camera },
     { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
-    { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
-    { href: "/track",              label: t.nav.track,       Icon: Search },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },
   ];
 
@@ -103,7 +100,7 @@ export default function Navbar() {
           </Link>
 
           {/* ── Desktop Nav ── */}
-          <div className="hidden xl:flex items-center gap-1 shrink-0">
+          <div className="hidden xl:flex items-center gap-1.5 shrink-0">
             {navLinks.map(({ href, label, Icon }) => {
               const active = pathname === href;
               return (
@@ -111,7 +108,7 @@ export default function Navbar() {
                   key={href}
                   href={href}
                   onClick={(e) => handleNavClick(e, href)}
-                  className={`flex items-center gap-1.5 px-2 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition ${
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap shrink-0 transition ${
                     active
                       ? "bg-orange-50 text-orange-600 font-bold"
                       : "text-gray-600 hover:bg-gray-50 hover:text-orange-500"
@@ -125,7 +122,7 @@ export default function Navbar() {
 
             <a
               href="tel:14567"
-              className="ml-1 flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition"
+              className="ml-1 flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs"
               title="24/7 Helpline"
             >
               <Phone size={13} className="shrink-0" />
@@ -137,24 +134,24 @@ export default function Navbar() {
               <LanguageSelector variant="desktop" />
             </div>
 
-            {/* 🔐 Citizen 2FA Session / Login Badge */}
+            {/* 🔐 Single Unified Citizen Entry (Login / Dashboard) */}
             {citizenSession ? (
               <Link
-                href="/track"
-                className="ml-1 flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition"
-                title="તમારું નાગરિક વોલ્ટ ખોલો"
+                href="/portal"
+                className="ml-1.5 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
+                title="તમારું નાગરિક પોર્ટલ અને વોલ્ટ ખોલો"
               >
-                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                <span className="max-w-[100px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "વોલ્ટ"}</span>
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="max-w-[130px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)</span>
               </Link>
             ) : (
               <Link
-                href="/track"
-                className="ml-1 flex items-center gap-1 bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border border-slate-200 hover:border-orange-300 px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition"
-                title="નાગરિક 2FA લૉગિન"
+                href="/portal"
+                className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap shrink-0 transition shadow-sm hover:shadow active:scale-95"
+                title="નાગરિક 2FA લૉગિન અને સેવા પોર્ટલ"
               >
-                <Lock size={12} className="shrink-0" />
-                <span>લૉગિન</span>
+                <Lock size={13} className="shrink-0" />
+                <span>🔐 નાગરિક લૉગિન</span>
               </Link>
             )}
 
@@ -218,27 +215,27 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* 🔐 Citizen 2FA Session / Login Banner in Mobile Drawer */}
+            {/* 🔐 Single Citizen 2FA Session / Login Banner in Mobile Drawer */}
             {citizenSession ? (
               <Link
-                href="/track"
+                href="/portal"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-300 mb-2 shadow-xs"
+                className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-900 border-2 border-emerald-400 mb-2 shadow-xs"
               >
                 <span className="flex items-center gap-2">
-                  <ShieldCheck size={16} className="text-emerald-600" />
+                  <ShieldCheck size={18} className="text-emerald-600 shrink-0" />
                   <span>પ્રમાણિત સત્ર: {citizenSession.citizenNameGu || citizenSession.citizenName}</span>
                 </span>
-                <span className="text-[11px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">વોલ્ટ જુઓ →</span>
+                <span className="text-[11px] bg-emerald-600 text-white px-2.5 py-1 rounded-full font-black">વોલ્ટ જુઓ →</span>
               </Link>
             ) : (
               <Link
-                href="/track"
+                href="/portal"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-bold bg-orange-50 text-orange-800 border border-orange-200 mb-2 shadow-xs"
+                className="flex items-center justify-center gap-2 p-3 rounded-2xl text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white mb-2 shadow-sm active:scale-95"
               >
-                <Lock size={14} className="text-orange-600" />
-                <span>નાગરિક 2FA લૉગિન (સુરક્ષિત વોલ્ટ)</span>
+                <Lock size={15} className="shrink-0" />
+                <span>🔐 નાગરિક લૉગિન (અરજીઓ, સેવા & પાત્રતા)</span>
               </Link>
             )}
 
