@@ -50,6 +50,7 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
+import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 
 interface UploadedDocState {
   file: File | null;
@@ -159,6 +160,8 @@ export default function DocumentServicePortal() {
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
   const [activeTxnId, setActiveTxnId] = useState<string>("");
   const [activeChallanNo, setActiveChallanNo] = useState<string>("");
+  const [showSlipModal, setShowSlipModal] = useState<boolean>(false);
+  const [copiedVpa, setCopiedVpa] = useState<boolean>(false);
 
   // 8. Submission & Notification Alert Simulation
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -592,70 +595,124 @@ export default function DocumentServicePortal() {
 
             {/* Payment Method Tabs */}
             <div className="space-y-3">
-              <label className="block text-xs font-bold text-slate-700">ચુકવણી પદ્ધતિ પસંદ કરો:</label>
-              <div className="grid grid-cols-3 gap-2">
+              <label className="block text-xs font-bold text-slate-700">ચુકવણી પદ્ધતિ પસંદ કરો (Payment Mode):</label>
+              <div className="grid grid-cols-3 gap-2 sm:gap-2.5">
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("upi")}
-                  className={`p-2.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] ${
                     paymentMethod === "upi"
-                      ? "bg-orange-50 border-orange-500 text-orange-800 ring-2 ring-orange-500/20 shadow-xs"
+                      ? "bg-orange-50 border-orange-500 text-orange-900 ring-2 ring-orange-500/20 shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  <QrCode size={18} className="text-orange-600" />
-                  <span>UPI / Bharat QR</span>
+                  <QrCode size={18} className="text-orange-600 shrink-0" />
+                  <span className="leading-tight text-center">UPI / Bharat QR</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("card")}
-                  className={`p-2.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] ${
                     paymentMethod === "card"
-                      ? "bg-orange-50 border-orange-500 text-orange-800 ring-2 ring-orange-500/20 shadow-xs"
+                      ? "bg-orange-50 border-orange-500 text-orange-900 ring-2 ring-orange-500/20 shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  <CreditCard size={18} className="text-blue-600" />
-                  <span>કાર્ડ / નેટ બેંકિંગ</span>
+                  <CreditCard size={18} className="text-blue-600 shrink-0" />
+                  <span className="leading-tight text-center">કાર્ડ / નેટ બેંકિંગ</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("challan")}
-                  className={`p-2.5 rounded-xl border text-xs font-bold transition flex flex-col items-center gap-1 ${
+                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] ${
                     paymentMethod === "challan"
-                      ? "bg-orange-50 border-orange-500 text-orange-800 ring-2 ring-orange-500/20 shadow-xs"
+                      ? "bg-orange-50 border-orange-500 text-orange-900 ring-2 ring-orange-500/20 shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
                   }`}
                 >
-                  <Landmark size={18} className="text-emerald-600" />
-                  <span>કચેરીએ રોકડ ચલણ</span>
+                  <Landmark size={18} className="text-emerald-600 shrink-0" />
+                  <span className="leading-tight text-center">કચેરીએ રોકડ ચલણ</span>
                 </button>
               </div>
 
-              {/* UPI QR Display */}
+              {/* UPI QR Display - REAL SCANNABLE BHARAT QR */}
               {paymentMethod === "upi" && (
-                <div className="border border-orange-200 bg-orange-50/50 rounded-2xl p-4 flex flex-col sm:flex-row items-center gap-4 text-center sm:text-left">
-                  <div className="bg-white p-2.5 rounded-xl border-2 border-orange-300 shadow-xs shrink-0">
-                    {/* Simulated Authentic Bharat QR */}
-                    <div className="w-24 h-24 bg-slate-900 rounded-lg flex flex-col items-center justify-center text-white text-[9px] font-mono p-1">
-                      <QrCode size={48} className="text-white mx-auto" />
-                      <span className="text-[7.5px] mt-0.5 text-orange-300">GUJ-GOV-UPI</span>
+                <div className="border-2 border-orange-300 bg-orange-50/60 rounded-2xl p-3.5 sm:p-4 space-y-3">
+                  <div className="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4 text-center sm:text-left">
+                    {/* Real Scannable Bharat QR Code Image */}
+                    <div className="bg-white p-2.5 rounded-2xl border-2 border-orange-400 shadow-sm shrink-0 flex flex-col items-center">
+                      <img
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+                          `upi://pay?pa=cybertreasury.gujarat@sbi&pn=Cyber%20Treasury%20Gujarat&am=${service.fee}&cu=INR&tn=NagrikSeva%20Fee%20${activeChallanNo}`
+                        )}&margin=4`}
+                        alt="Cyber Treasury Gujarat Bharat QR"
+                        className="w-32 h-32 sm:w-36 sm:h-36 object-contain rounded-lg"
+                      />
+                      <span className="text-[8.5px] font-black text-orange-800 tracking-wider mt-1 uppercase">
+                        🏛️ BHARAT QR • NPCI
+                      </span>
+                    </div>
+
+                    <div className="space-y-2 flex-1 text-xs">
+                      <div>
+                        <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full inline-block mb-1">
+                          ● લાઈવ સ્કેનેબલ સત્તાવાર QR
+                        </span>
+                        <h4 className="font-extrabold text-slate-900 text-xs sm:text-sm">
+                          કોઈપણ UPI એપથી સ્કેન કરી ફી ચૂકવો
+                        </h4>
+                        <p className="text-[11px] text-slate-600">
+                          GPay, PhonePe, Paytm, BHIM અથવા સરકારી બેંકિંગ એપના કેમેરાથી સીધું સ્કેન કરો.
+                        </p>
+                      </div>
+
+                      <div className="bg-white border border-orange-200 rounded-xl p-2 space-y-1">
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-slate-500 font-medium">સત્તાવાર UPI VPA:</span>
+                          <div className="flex items-center gap-1 font-mono font-bold text-slate-900">
+                            <span>cybertreasury.gujarat@sbi</span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText("cybertreasury.gujarat@sbi");
+                                setCopiedVpa(true);
+                                setTimeout(() => setCopiedVpa(false), 2000);
+                              }}
+                              className="text-[9.5px] text-orange-600 hover:text-orange-700 font-bold px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200"
+                            >
+                              {copiedVpa ? "✓ કૉપી થયું" : "કૉપી"}
+                            </button>
+                          </div>
+                        </div>
+                        <div className="flex items-center justify-between text-[11px]">
+                          <span className="text-slate-500 font-medium">ચૂકવવાપાત્ર ફી:</span>
+                          <span className="font-mono font-black text-orange-600">₹ {service.fee}.00</span>
+                        </div>
+                      </div>
+
+                      {/* Mobile One-Tap Direct UPI App Opener */}
+                      <a
+                        href={`upi://pay?pa=cybertreasury.gujarat@sbi&pn=Cyber%20Treasury%20Gujarat&am=${service.fee}&cu=INR&tn=NagrikSeva%20Fee%20${activeChallanNo}`}
+                        className="flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition sm:hidden"
+                      >
+                        <Smartphone size={14} />
+                        <span>મોબાઈલ UPI એપમાં સીધું ખોલો (GPay / PhonePe)</span>
+                      </a>
                     </div>
                   </div>
-                  <div className="space-y-1.5 text-xs">
-                    <p className="font-extrabold text-slate-900">કોઈપણ UPI એપથી સ્કેન કરો</p>
-                    <p className="text-[11px] text-slate-600">
-                      GPay, PhonePe, Paytm, BHIM અથવા સરકારી બેંકિંગ એપ
-                    </p>
-                    <div className="font-mono text-[10px] bg-white border border-orange-200 px-2.5 py-1 rounded-md text-slate-700 font-bold inline-block">
-                      UPI VPA: cybertreasury.gujarat@sbi
-                    </div>
-                    <p className="text-[10px] text-emerald-800 font-bold">
-                      ✓ ચુકવણી થયા બાદ તરત જ ઈ-રસીદ જનરેટ થશે
-                    </p>
-                  </div>
+
+                  {/* Instant Approval Simulation / Paid Trigger Button */}
+                  <button
+                    type="button"
+                    onClick={handleFinalPaymentSubmit}
+                    disabled={isProcessingPayment}
+                    className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center justify-center gap-1.5"
+                  >
+                    <Check size={16} />
+                    <span>✓ ચુકવણી સ્કેન થઈ ગઈ? ક્લિક કરીને તરત સત્તાવાર ઈ-રસીદ જનરેટ કરો</span>
+                  </button>
                 </div>
               )}
 
@@ -689,36 +746,45 @@ export default function DocumentServicePortal() {
               )}
             </div>
 
-            {/* Confirm & Submit Button */}
-            <div className="border-t pt-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-              <div className="text-[10px] text-slate-500 font-mono">
-                GRN: {activeChallanNo} • Ref: {activeTxnId}
+            {/* Confirm & Submit Button - HARD RESPONSIVE NO CRAMPING */}
+            <div className="border-t border-slate-200 pt-3 space-y-2.5">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-1 text-[11px] text-slate-500 font-mono text-center sm:text-left">
+                <div>
+                  GRN: <strong className="text-slate-800">{activeChallanNo}</strong> • Ref: <strong className="text-slate-800">{activeTxnId}</strong>
+                </div>
+                <div className="text-emerald-700 font-bold font-sans text-[10px]">
+                  🔒 RBI માન્ય ૨૫૬-બીટ સુરક્ષિત સાયબર ટ્રેઝરી
+                </div>
               </div>
-              <div className="flex items-center gap-2 w-full sm:w-auto">
+
+              <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
                 <button
                   type="button"
                   onClick={() => setShowPaymentModal(false)}
                   disabled={isProcessingPayment}
-                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold transition w-full sm:w-auto"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap text-center shrink-0"
                 >
                   રદ કરો
                 </button>
+
                 <button
                   type="button"
                   onClick={handleFinalPaymentSubmit}
                   disabled={isProcessingPayment}
-                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs sm:text-sm font-extrabold shadow-md transition active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 w-full sm:w-auto"
+                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
                 >
                   {isProcessingPayment ? (
                     <>
-                      <Loader2 size={15} className="animate-spin" />
+                      <Loader2 size={16} className="animate-spin" />
                       <span>ચુકવણી ચકાસણી થઈ રહી છે...</span>
                     </>
                   ) : (
                     <>
-                      <Check size={16} />
+                      <Check size={18} />
                       <span>
-                        {paymentMethod === "challan" ? "ચલણ જનરેટ કરો & સબમિટ" : `ફી ₹ ${service.fee} ચૂકવો & સબમિટ`}
+                        {paymentMethod === "challan"
+                          ? "ચલણ જનરેટ કરો & સબમિટ"
+                          : `ફી ₹ ${service.fee} ચૂકવો & સત્તાવાર પહોંચ મેળવો`}
                       </span>
                     </>
                   )}
@@ -813,24 +879,44 @@ export default function DocumentServicePortal() {
               </div>
             )}
 
-            {/* Action Buttons */}
+            {/* Action Buttons - Hard Responsive with Direct PDF Download */}
             <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSlipModal(true)}
+                className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-center font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap"
+              >
+                <Printer size={16} />
+                <span>🖨️ સત્તાવાર સરકારી પહોંચ / PDF ડાઉનલોડ</span>
+              </button>
+
               <Link
                 href={`/track?id=${encodeURIComponent(submittedApp.id)}`}
-                className="flex-1 py-3 px-4 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-center font-extrabold text-sm shadow-md transition flex items-center justify-center gap-2"
+                className="py-3 px-4 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-center font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
               >
-                <Eye size={16} />
-                <span>લાઈવ સ્ટેટસ ટ્રેક કરો (Track in Registry)</span>
+                <Eye size={15} />
+                <span>લાઈવ સ્ટેટસ</span>
               </Link>
 
               <button
                 onClick={() => setSubmittedApp(null)}
-                className="py-3 px-5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition"
+                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition whitespace-nowrap"
               >
-                નવી અરજી કરો
+                નવી અરજી
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ── Official A4 Government Receipt Slip Modal (PDF Download / Print) ── */}
+      {showSlipModal && submittedApp && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <GovernmentReceiptSlip
+            app={submittedApp}
+            isModalPreview={true}
+            onClose={() => setShowSlipModal(false)}
+          />
         </div>
       )}
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, QrCode } from "lucide-react";
+import { CheckCircle2, QrCode, Download, Printer } from "lucide-react";
 
 interface GovernmentReceiptSlipProps {
   app: CitizenApplication;
@@ -19,33 +19,35 @@ export default function GovernmentReceiptSlip({
 
   return (
     <div
-      className={`bg-white text-slate-900 font-sans ${
+      className={`bg-white text-slate-900 font-sans print-only-certificate ${
         isModalPreview
-          ? "w-full max-w-3xl mx-auto p-4 sm:p-8 rounded-2xl shadow-2xl border border-slate-300 relative max-h-[90vh] overflow-y-auto"
-          : "print-only-certificate"
+          ? "w-full max-w-3xl mx-auto p-3 sm:p-6 rounded-2xl shadow-2xl border border-slate-300 relative max-h-[92vh] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print:m-0 print:w-full print:max-w-none"
+          : ""
       }`}
     >
       {/* On-screen modal action bar (hidden in print) */}
       {isModalPreview && (
-        <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-200 print:hidden sticky top-0 bg-white/95 backdrop-blur-sm z-10">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pb-3.5 mb-3.5 border-b border-slate-200 print:hidden sticky top-0 bg-white/95 backdrop-blur-sm z-10 gap-2">
           <div className="flex items-center gap-2">
-            <span className="p-1.5 bg-orange-100 text-orange-700 rounded-lg text-xs font-bold">
-              🏛️ સત્તાવાર સરકારી પહોંચ પ્રીવ્યૂ (Official Receipt)
+            <span className="p-1.5 bg-orange-100 text-orange-700 rounded-lg text-xs font-bold flex items-center gap-1.5">
+              <span>🏛️</span>
+              <span>સત્તાવાર સરકારી પહોંચ (Official e-Challan Slip)</span>
             </span>
           </div>
-          <div className="flex gap-2">
+          <div className="flex items-center gap-2">
             <button
               onClick={() => window.print()}
-              className="px-4 py-2 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+              className="flex-1 sm:flex-initial px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
             >
-              <span>🖨️ હમણાં પ્રિન્ટ કરો (Print A4 Slip)</span>
+              <Download size={15} />
+              <span>📥 PDF ડાઉનલોડ / પ્રિન્ટ કરો (Save as PDF)</span>
             </button>
             {onClose && (
               <button
                 onClick={onClose}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition"
+                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition shrink-0"
               >
-                બંધ કરો (Close)
+                બંધ કરો
               </button>
             )}
           </div>
