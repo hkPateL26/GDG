@@ -1,8 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import DocumentServicePortal from "@/components/DocumentServicePortal";
+import CitizenPortalHeader from "@/components/CitizenPortalHeader";
+import CitizenLoginShield from "@/components/CitizenLoginShield";
+import { CitizenLedgerProfile } from "@/lib/large-datasets";
 import {
   FileText,
   CheckCircle,
@@ -102,6 +105,37 @@ export default function DocumentsPage() {
   const [activeTab, setActiveTab] = useState<"apply" | "guides">("apply");
   const [expanded, setExpanded] = useState<string | null>("ration");
   const [checked, setChecked] = useState<Record<string, boolean>>({});
+  const [citizenSession, setCitizenSession] = useState<CitizenLedgerProfile | null>(null);
+
+  useEffect(() => {
+    const syncSession = () => {
+      const saved = localStorage.getItem("nagrik_citizen_session");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed && (parsed.mobile || parsed.citizenName)) {
+            setCitizenSession(parsed.citizen || parsed);
+          } else {
+            setCitizenSession(null);
+          }
+        } catch {
+          setCitizenSession(null);
+        }
+      } else {
+        setCitizenSession(null);
+      }
+    };
+
+    syncSession();
+    window.addEventListener("storage", syncSession);
+    return () => window.removeEventListener("storage", syncSession);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("nagrik_citizen_session");
+    window.dispatchEvent(new Event("storage"));
+    setCitizenSession(null);
+  };
 
   const toggle = (id: string) => setExpanded((p) => (p === id ? null : id));
   const toggleCheck = (key: string) => setChecked((p) => ({ ...p, [key]: !p[key] }));
@@ -159,14 +193,34 @@ export default function DocumentsPage() {
 
         {/* Tab 1: Apply & Update with AI Check */}
         {activeTab === "apply" && (
-          <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8">
-            <DocumentServicePortal />
+          <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6">
+            {!citizenSession ? (
+              <CitizenLoginShield
+                serviceTitle="નાગરિક દસ્તાવેજ સેવા & સુધારો પોર્ટલ"
+                onSuccess={(cit) => setCitizenSession(cit)}
+              />
+            ) : (
+              <>
+                <CitizenPortalHeader
+                  citizen={citizenSession}
+                  onLogout={handleLogout}
+                />
+                <DocumentServicePortal hideCitizenHeader={true} />
+              </>
+            )}
           </div>
         )}
 
         {/* Tab 2: Document Guides & Checklists */}
         {activeTab === "guides" && (
-          <div className="max-w-3xl mx-auto px-3 sm:px-4 py-8 space-y-4">
+          <div className="max-w-4xl mx-auto px-3 sm:px-4 py-8 space-y-4">
+            {citizenSession && (
+              <CitizenPortalHeader
+                citizen={citizenSession}
+                onLogout={handleLogout}
+              />
+            )}
+
             <div className="bg-white p-4 rounded-2xl border border-slate-200 text-xs text-slate-600">
               💡 <strong>કચેરી જતાં પહેલાં ચેકલિસ્ટ ટીક કરો:</strong> જો તમારા તમામ દસ્તાવેજો તૈયાર હોય, તો કચેરીએ એકપણ ધક્કો ખાધા વિના કામ થઈ જશે.
             </div>

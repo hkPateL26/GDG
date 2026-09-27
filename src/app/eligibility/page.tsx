@@ -6,6 +6,8 @@ import { SCHEMES_DATA } from "@/lib/schemes-data";
 import { Scheme } from "@/types";
 import { CitizenBenefitRecord, CitizenLedgerProfile } from "@/lib/large-datasets";
 import Link from "next/link";
+import CitizenPortalHeader from "@/components/CitizenPortalHeader";
+import CitizenLoginShield from "@/components/CitizenLoginShield";
 import {
   CheckCircle2,
   XCircle,
@@ -265,10 +267,31 @@ export default function EligibilityPage() {
           </div>
         </section>
 
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-            {/* Left Column: Citizen DBT Ledger & Profile Form */}
-            <div className="lg:col-span-5 space-y-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6">
+          {!linkedCitizen ? (
+            <CitizenLoginShield
+              serviceTitle="સરકારી યોજના પાત્રતા & DBT લાભ લેજર"
+              onSuccess={(cit) => {
+                setLinkedCitizen(cit);
+                setInputMobile(cit.mobile);
+                setInputAadhaar(cit.aadhaarLast4 || "4829");
+                fetchLedger(cit.mobile, cit.aadhaarLast4 || "4829");
+              }}
+            />
+          ) : (
+            <>
+              <CitizenPortalHeader
+                citizen={linkedCitizen}
+                onLogout={() => {
+                  localStorage.removeItem("nagrik_citizen_session");
+                  window.dispatchEvent(new Event("storage"));
+                  setLinkedCitizen(null);
+                }}
+              />
+
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
+                {/* Left Column: Citizen DBT Ledger & Profile Form */}
+                <div className="lg:col-span-5 space-y-4">
               {/* ── 1. Secure Aadhaar & Mobile DBT Ledger Box ── */}
               <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-slate-700 space-y-3.5">
                 <div className="flex items-center justify-between border-b border-slate-700 pb-2.5">
@@ -752,7 +775,9 @@ export default function EligibilityPage() {
               </div>
             </div>
           </div>
-        </div>
+        </>
+      )}
+    </div>
       </main>
     </>
   );

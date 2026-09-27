@@ -53,6 +53,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import CitizenLoginShield from "@/components/CitizenLoginShield";
 
 interface UploadedDocState {
   file: File | null;
@@ -66,7 +67,11 @@ interface UploadedDocState {
   needsNewDocument?: boolean;
 }
 
-export default function DocumentServicePortal() {
+export default function DocumentServicePortal({
+  hideCitizenHeader = false,
+}: {
+  hideCitizenHeader?: boolean;
+} = {}) {
   // 1. Service Selection & Mode
   const [selectedServiceId, setSelectedServiceId] = useState<string>("aadhaar");
   const [serviceMode, setServiceMode] = useState<"new" | "update">("update");
@@ -187,26 +192,34 @@ export default function DocumentServicePortal() {
   // Restore authenticated citizen session and auto-prefill fields
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("nagrik_citizen_session");
-      if (saved) {
-        try {
-          const parsed = JSON.parse(saved);
-          if (parsed) {
-            const cit = parsed.citizen || parsed;
-            setCitizenSession(cit);
-            setApplicantName((prev) => prev || cit.citizenName || "Rameshbhai Kantilal Patel");
-            setApplicantNameGu((prev) => prev || cit.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
-            setMobileNumber((prev) => prev || cit.mobile || "9825012345");
-            setAadhaarNumber((prev) => prev || `XXXX-XXXX-${cit.aadhaarLast4 || "4829"}`);
-            if (cit.district) setDistrict(cit.district);
-            if (cit.taluka) setTaluka(cit.taluka);
-            if (cit.village) setVillage(cit.village);
-            if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
+      const syncSession = () => {
+        const saved = localStorage.getItem("nagrik_citizen_session");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            if (parsed) {
+              const cit = parsed.citizen || parsed;
+              setCitizenSession(cit);
+              setApplicantName((prev) => prev || cit.citizenName || "Rameshbhai Kantilal Patel");
+              setApplicantNameGu((prev) => prev || cit.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
+              setMobileNumber((prev) => prev || cit.mobile || "9825012345");
+              setAadhaarNumber((prev) => prev || `XXXX-XXXX-${cit.aadhaarLast4 || "4829"}`);
+              if (cit.district) setDistrict(cit.district);
+              if (cit.taluka) setTaluka(cit.taluka);
+              if (cit.village) setVillage(cit.village);
+              if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
+            }
+          } catch (e) {
+            console.error("Failed to parse citizen session:", e);
           }
-        } catch (e) {
-          console.error("Failed to parse citizen session:", e);
+        } else {
+          setCitizenSession(null);
         }
-      }
+      };
+
+      syncSession();
+      window.addEventListener("storage", syncSession);
+      return () => window.removeEventListener("storage", syncSession);
     }
   }, []);
 
@@ -721,230 +734,24 @@ export default function DocumentServicePortal() {
     }
   };
 
-  // If the citizen is NOT authenticated yet, show the 2FA Citizen Login Shield!
+  // If the citizen is NOT authenticated yet, show the unified 2FA Citizen Login Shield!
   if (!citizenSession) {
     return (
-      <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden my-6 animate-in fade-in duration-300">
-        <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 sm:p-7 text-center space-y-2">
-          <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
-            🛡️
-          </div>
-          <h2 className="text-xl sm:text-2xl font-black">નાગરિક સુરક્ષા ચકાસણી (2FA Login)</h2>
-          <p className="text-xs sm:text-sm text-orange-100 max-w-md mx-auto leading-relaxed">
-            સત્તાવાર સરકારી દસ્તાવેજ સેવા (આધાર, રેશન કાર્ડ, આવક, જાતિ વગેરે) માટે અધિકૃત નાગરિક ઓળખ પ્રમાણીકરણ ફરજિયાત છે.
-          </p>
-        </div>
-
-        <div className="p-6 sm:p-8 space-y-5">
-          {/* 1-Click Fast Demo Pill */}
-          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2 text-orange-900">
-              <Sparkles size={16} className="text-orange-600 shrink-0" />
-              <span>
-                <strong>હેકાથોન જજ લાઈવ ડેમો:</strong> ૧-ક્લિકમાં રમેશભાઈ પટેલની વિગતો ભરો
-              </span>
-            </div>
-            <button
-              type="button"
-              onClick={handleDocFastDemoCitizen}
-              className="shrink-0 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition"
-            >
-              ડેમો ભરો ✓
-            </button>
-          </div>
-
-          {/* Login Form */}
-          <form onSubmit={otpSent ? handleVerifyDocOtp : handleRequestDocOtp} className="space-y-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                📱 રજિસ્ટર્ડ ૧૦ આંકડાનો મોબાઈલ નંબર
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-400">
-                  +91
-                </span>
-                <input
-                  type="tel"
-                  maxLength={10}
-                  value={loginMobile}
-                  onChange={(e) => setLoginMobile(e.target.value.replace(/\D/g, ""))}
-                  disabled={otpSent}
-                  placeholder="૯૮૨૫૦ ૧૨૩૪૫"
-                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
-                🪪 આધાર કાર્ડના છેલ્લા ૪ આંકડા (Two-Factor Binding)
-              </label>
-              <div className="relative">
-                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">
-                  XXXX - XXXX -
-                </span>
-                <input
-                  type="text"
-                  maxLength={4}
-                  value={loginAadhaar}
-                  onChange={(e) => setLoginAadhaar(e.target.value.replace(/\D/g, ""))}
-                  disabled={otpSent}
-                  placeholder="૪૮૨૯"
-                  className="w-full pl-32 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
-                />
-              </div>
-            </div>
-
-            {/* If OTP Sent, Show OTP Input and Live Simulated SMS Badge */}
-            {otpSent && (
-              <div className="space-y-3 pt-2 animate-in fade-in duration-300">
-                {/* Live Simulated SMS Notification */}
-                {simulatedSmsOtp && (
-                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 rounded-2xl p-4 space-y-2 text-xs text-emerald-950 shadow-sm">
-                    <div className="flex items-center justify-between gap-2 border-b border-emerald-300 pb-2">
-                      <span className="font-black flex items-center gap-1.5 text-emerald-900">
-                        <Smartphone size={15} />
-                        <span>ગુજરાત સરકાર સુરક્ષિત SMS (UIDAI / DPI Gateway)</span>
-                      </span>
-                      <span className="bg-emerald-600 text-white font-mono font-bold px-2 py-0.5 rounded text-[10px]">
-                        LIVE SMS
-                      </span>
-                    </div>
-                    <p className="leading-relaxed">
-                      નમસ્તે રમેશભાઈ, તમારી નાગરિક સેવા અરજીઓ ટ્રેક કરવાનો તમારો સત્તાવાર સુરક્ષા કોડ (OTP):{" "}
-                      <strong className="font-mono text-base text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-300">
-                        {simulatedSmsOtp}
-                      </strong>
-                    </p>
-                    <div className="pt-1 flex items-center justify-between">
-                      <span className="text-[11px] text-emerald-700">આ કોડ અન્ય કોઈ સાથે શેર કરશો નહીં.</span>
-                      <button
-                        type="button"
-                        onClick={handleDocAutoFillOtp}
-                        className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-3 py-1 rounded-lg text-xs transition"
-                      >
-                        કોડ આપોઆપ ભરો ✓
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                <div>
-                  <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
-                      🔐 ૬ આંકડાનો OTP દાખલ કરો
-                    </label>
-                    <div className="flex items-center gap-2 text-xs font-semibold">
-                      <span className="text-orange-600 flex items-center gap-1">
-                        <Clock size={12} /> {otpCountdown}s
-                      </span>
-                      <span className="text-slate-400">| પ્રયાસો: {attemptsLeft}/3</span>
-                    </div>
-                  </div>
-
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={loginOtp}
-                    onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, ""))}
-                    placeholder="દા.ત. 123456"
-                    autoFocus
-                    className="w-full text-center tracking-widest text-xl font-mono font-black py-3 bg-white border-2 border-orange-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-slate-900"
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Feedback Alerts */}
-            {authError && (
-              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
-                <AlertTriangle size={15} className="shrink-0" />
-                <span>{authError}</span>
-              </div>
-            )}
-
-            {authSuccessMsg && !authError && (
-              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2">
-                <CheckCircle2 size={15} className="shrink-0" />
-                <span>{authSuccessMsg}</span>
-              </div>
-            )}
-
-            {/* Action Buttons */}
-            {!otpSent ? (
-              <button
-                type="submit"
-                disabled={authLoading || loginMobile.length !== 10 || loginAadhaar.length !== 4}
-                className="w-full py-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {authLoading ? (
-                  <>
-                    <Loader2 size={16} className="animate-spin" />
-                    <span>OTP મોકલાઈ રહ્યો છે...</span>
-                  </>
-                ) : (
-                  <>
-                    <ShieldCheck size={16} />
-                    <span>સુરક્ષિત OTP મેળવો (Get Secure OTP)</span>
-                  </>
-                )}
-              </button>
-            ) : (
-              <div className="space-y-2">
-                <button
-                  type="submit"
-                  disabled={authLoading || loginOtp.length !== 6}
-                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black rounded-xl text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {authLoading ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>ચકાસણી ચાલુ છે...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Lock size={16} />
-                      <span>સેવા અનલૉક કરો (Verify & Access Portal)</span>
-                    </>
-                  )}
-                </button>
-
-                <div className="flex justify-between items-center text-xs pt-1">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setOtpSent(false);
-                      setLoginOtp("");
-                      setSimulatedSmsOtp(null);
-                    }}
-                    className="text-slate-500 hover:text-slate-800 underline"
-                  >
-                    મોબાઈલ નંબર બદલો
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={handleRequestDocOtp}
-                    disabled={otpCountdown > 150}
-                    className="text-orange-600 hover:text-orange-700 font-bold disabled:opacity-40"
-                  >
-                    નવો OTP મોકલો (Resend)
-                  </button>
-                </div>
-              </div>
-            )}
-          </form>
-
-          {/* Direct link to check status */}
-          <div className="pt-4 border-t border-slate-100 text-center">
-            <Link
-              href="/track"
-              className="text-xs font-bold text-slate-500 hover:text-orange-600 transition inline-flex items-center gap-1.5"
-            >
-              <span>અગાઉ કરેલી અરજીનું સ્ટેટસ ટ્રેક કરવું છે? [ટ્રેકિંગ પોર્ટલ પર જાઓ →]</span>
-            </Link>
-          </div>
-        </div>
+      <div className="max-w-xl mx-auto my-6 animate-in fade-in duration-300">
+        <CitizenLoginShield
+          serviceTitle="નાગરિક દસ્તાવેજ સેવા & સુધારો પોર્ટલ"
+          onSuccess={(cit) => {
+            setCitizenSession(cit);
+            setApplicantName(cit.citizenName || "Rameshbhai Kantilal Patel");
+            setApplicantNameGu(cit.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
+            setMobileNumber(cit.mobile || "9825012345");
+            setAadhaarNumber(`XXXX-XXXX-${cit.aadhaarLast4 || "4829"}`);
+            if (cit.district) setDistrict(cit.district);
+            if (cit.taluka) setTaluka(cit.taluka);
+            if (cit.village) setVillage(cit.village);
+            if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
+          }}
+        />
       </div>
     );
   }
@@ -1200,6 +1007,230 @@ export default function DocumentServicePortal() {
                   </button>
                 )}
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Submission Success & Real-Time Alert Modal ── */}
+      {submittedApp && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+          <div className={`bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-5 shadow-2xl border-2 relative ${
+            submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
+          }`}>
+            {/* Header */}
+            <div className="text-center space-y-1.5">
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto shadow-inner ${
+                submittedApp.paymentStatus === "pending_challan"
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-emerald-100 text-emerald-600"
+              }`}>
+                {submittedApp.paymentStatus === "pending_challan" ? <Landmark size={30} /> : <CheckCircle2 size={32} />}
+              </div>
+              <span className={`text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full border ${
+                submittedApp.paymentStatus === "pending_challan"
+                  ? "text-amber-800 bg-amber-50 border-amber-300"
+                  : "text-emerald-700 bg-emerald-50 border-emerald-200"
+              }`}>
+                {submittedApp.paymentStatus === "pending_challan"
+                  ? "સત્તાવાર રોકડ ચલણ જનરેટ થયું • Cash Challan Issued"
+                  : "સત્તાવાર અરજી નોંધણી સફળ • Govt Registered"}
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+                {submittedApp.paymentStatus === "pending_challan"
+                  ? "ઓફલાઇન રોકડ ચલણ પાવતી સફળતાપૂર્વક જનરેટ થઈ!"
+                  : "અરજી સફળતાપૂર્વક સ્વીકારાઈ ગઈ છે!"}
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-600 font-medium">
+                અરજી ક્રમાંક (Tracking ID):{" "}
+                <span className="font-mono font-black text-orange-600 text-base">{submittedApp.id}</span>
+              </p>
+            </div>
+
+            {/* Treasury Payment Badge */}
+            {submittedApp.paymentStatus === "pending_challan" ? (
+              <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Receipt size={16} className="text-amber-700 shrink-0" />
+                  <div>
+                    <span className="font-bold text-amber-950 block">કચેરીએ ઓફલાઇન રોકડ ચલણ (Jan Seva Kendra Cash Counter)</span>
+                    <span className="text-[11px] text-amber-800 font-mono">
+                      GRN / ચલણ નં: <strong>{submittedApp.challanNo || activeChallanNo}</strong>
+                    </span>
+                  </div>
+                </div>
+                <span className="bg-amber-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs whitespace-nowrap">
+                  ₹ {submittedApp.feeAmount || service.fee} ભરપાઈ બાકી
+                </span>
+              </div>
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Receipt size={16} className="text-emerald-700 shrink-0" />
+                  <div>
+                    <span className="font-bold text-emerald-900 block">
+                      સરકારી ફી ભરપાઈ (Paid via {submittedApp.paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"})
+                    </span>
+                    <span className="text-[11px] text-emerald-700 font-mono">
+                      Txn: {submittedApp.txnId || activeTxnId} • GRN: {submittedApp.challanNo || activeChallanNo}
+                    </span>
+                  </div>
+                </div>
+                <span className="bg-emerald-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs whitespace-nowrap">
+                  ₹ {submittedApp.feeAmount || service.fee} PAID
+                </span>
+              </div>
+            )}
+
+            {/* Strict Document Lock Protocol for Cash Challan */}
+            {submittedApp.paymentStatus === "pending_challan" && (
+              <div className="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-3.5 sm:p-4 space-y-2 text-xs text-amber-950">
+                <div className="flex items-center gap-2 font-black text-amber-900 text-sm">
+                  <span>🔒</span>
+                  <span>પ્રમાણપત્ર લૉક પ્રોટોકોલ (Document Release Locked):</span>
+                </div>
+                <p className="leading-relaxed text-amber-900 font-medium">
+                  સરકારી નિયમ અનુસાર ઓનલાઇન ફી ભરપાઈ ન હોવાથી તમારું નવું/સુધારેલ પ્રમાણપત્ર હાલ <strong>સંપૂર્ણ લૉક</strong> છે.
+                </p>
+                <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 space-y-1 text-[11px] text-slate-800">
+                  <p className="font-bold text-slate-900">📌 કચેરી ખાતે અનુસરવાની પ્રક્રિયા:</p>
+                  <p>૧. નીચે આપેલ બટનથી <strong>'ઓફલાઇન રોકડ ચલણ'</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
+                  <p>૨. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર ચલણ નં. <strong className="font-mono text-orange-700">{submittedApp.challanNo || activeChallanNo}</strong> સાથે નિયત ફી <strong className="font-mono text-emerald-800">₹{submittedApp.feeAmount || service.fee}</strong> રોકડા ભરો.</p>
+                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં 'Payment Confirmed' કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
+                </div>
+              </div>
+            )}
+
+            {/* Biometric Appointment Slot if applicable */}
+            {submittedApp.biometricRequired && submittedApp.appointmentToken && (
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-2">
+                <div className="flex items-center gap-2 text-blue-900 font-extrabold text-sm">
+                  <Fingerprint size={18} className="text-blue-600" />
+                  <span>બાયોમેટ્રિક ફાસ્ટ-ટ્રેક એપોઇન્ટમેન્ટ સ્લોટ ફાળવાયો</span>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+                  <div className="bg-white p-2 rounded-xl border border-blue-100">
+                    <span className="text-slate-400 text-[10px] block">ટોકન નંબર</span>
+                    <span className="font-mono font-extrabold text-blue-700 text-sm">{submittedApp.appointmentToken}</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-xl border border-blue-100">
+                    <span className="text-slate-400 text-[10px] block">તારીખ & સમય</span>
+                    <span className="font-bold text-slate-800">{submittedApp.appointmentDate} (૧૧:૩૦ AM)</span>
+                  </div>
+                  <div className="bg-white p-2 rounded-xl border border-blue-100 col-span-2 sm:col-span-1">
+                    <span className="text-slate-400 text-[10px] block">કેન્દ્ર</span>
+                    <span className="font-semibold text-slate-800 text-[11px] truncate block">જન સેવા કેન્દ્ર, {taluka}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Live Citizen Notifications (SMS & Email Preview) */}
+            {notificationPayload && (
+              <div className="space-y-3">
+                <h4 className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
+                  <Smartphone size={15} className="text-orange-600" />
+                  <span>ઓટોમેટેડ નાગરિક સૂચનાઓ (Live SMS & Email Alert Simulated):</span>
+                </h4>
+
+                {/* SMS Simulation */}
+                {notificationPayload.sms && (
+                  <div className="bg-slate-900 text-slate-100 rounded-2xl p-3.5 space-y-1.5 shadow-md">
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1">
+                      <span className="font-mono text-orange-400 font-bold">📱 GOVT-GUJ SMS ALERT</span>
+                      <span>To: {notificationPayload.sms.sentTo}</span>
+                    </div>
+                    <p className="text-xs font-mono leading-relaxed text-slate-200">
+                      {notificationPayload.sms.message}
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Action Buttons - Hard Responsive with Direct PDF Download */}
+            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowSlipModal(true)}
+                className={`flex-1 py-3 px-4 active:scale-95 text-white rounded-xl text-center font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap ${
+                  submittedApp.paymentStatus === "pending_challan"
+                    ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                    : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                }`}
+              >
+                <Printer size={16} />
+                <span>
+                  {submittedApp.paymentStatus === "pending_challan"
+                    ? "🖨️ ઓફલાઇન રોકડ ચલણ (PDF / પ્રિન્ટ કરો)"
+                    : "🖨️ સત્તાવાર સરકારી પહોંચ / PDF ડાઉનલોડ"}
+                </span>
+              </button>
+
+              <Link
+                href={`/track?id=${encodeURIComponent(submittedApp.id)}`}
+                className="py-3 px-4 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-center font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
+              >
+                <Eye size={15} />
+                <span>લાઈવ સ્ટેટસ</span>
+              </Link>
+
+              <button
+                onClick={() => setSubmittedApp(null)}
+                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition whitespace-nowrap"
+              >
+                નવી અરજી
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Official A4 Government Receipt Slip Modal (PDF Download / Print) ── */}
+      {showSlipModal && submittedApp && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <GovernmentReceiptSlip
+            app={submittedApp}
+            isModalPreview={true}
+            onClose={() => setShowSlipModal(false)}
+          />
+        </div>
+      )}
+
+      {/* ── Top Bar: Fast 1-Click Demo Button for Judges ── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 p-4 rounded-2xl border border-orange-200 shadow-xs">
+        <div>
+          <h2 className="font-extrabold text-slate-900 text-base sm:text-lg flex items-center gap-2">
+            <span className="p-1 bg-orange-600 text-white rounded-lg text-xs">🏛️</span>
+            <span>ડિજિટલ દસ્તાવેજ સેવા & સુધારો પોર્ટલ (Service Portal)</span>
+          </h2>
+          <p className="text-xs text-slate-600">
+            હયાત દસ્તાવેજમાંથી ઓટો-ફેચ, મલ્ટીપલ સુધારા, કચેરી ફોર્મ, અને સુરક્ષિત સાયબર ટ્રેઝરી ફી ચુકવણી.
+          </p>
+        </div>
+
+        <button
+          type="button"
+          onClick={handleAutoFillDemo}
+          className="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
+        >
+          <Sparkles size={14} />
+          <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
+        </button>
+      </div>
+
+      {/* ── Compact Citizen Session Notification ── */}
+      {citizenSession && !hideCitizenHeader && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-950 shadow-2xs">
+          <div className="flex items-center gap-2.5">
+            <span className="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shrink-0">✓</span>
+            <div>
+              <p className="font-extrabold text-emerald-950 text-xs sm:text-sm">
+                2FA પ્રમાણિત અરજદાર: {citizenSession.citizenNameGu || citizenSession.citizenName}
+              </p>
+              <p className="text-[11px] text-emerald-700">
+                📱 +91 {citizenSession.mobile} &bull; 🪪 આધાર: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
+              </p>
             </div>
           </div>
         </div>
