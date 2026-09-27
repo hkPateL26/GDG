@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DOCUMENT_SERVICES,
   DocumentServiceConfig,
@@ -170,6 +170,43 @@ export default function DocumentServicePortal() {
     sms?: { sentTo: string; message: string; timestamp: string };
     email?: { sentTo: string; subject: string; timestamp: string };
   } | null>(null);
+
+  const [citizenSession, setCitizenSession] = useState<{
+    citizenName?: string;
+    citizenNameGu?: string;
+    mobile?: string;
+    aadhaarLast4?: string;
+    district?: string;
+    taluka?: string;
+    village?: string;
+    annualIncome?: number;
+  } | null>(null);
+
+  // Restore authenticated citizen session and auto-prefill fields
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("nagrik_citizen_session");
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          if (parsed) {
+            const cit = parsed.citizen || parsed;
+            setCitizenSession(cit);
+            setApplicantName((prev) => prev || cit.citizenName || "Rameshbhai Kantilal Patel");
+            setApplicantNameGu((prev) => prev || cit.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
+            setMobileNumber((prev) => prev || cit.mobile || "9825012345");
+            setAadhaarNumber((prev) => prev || `XXXX-XXXX-${cit.aadhaarLast4 || "4829"}`);
+            if (cit.district) setDistrict(cit.district);
+            if (cit.taluka) setTaluka(cit.taluka);
+            if (cit.village) setVillage(cit.village);
+            if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
+          }
+        } catch (e) {
+          console.error("Failed to parse citizen session:", e);
+        }
+      }
+    }
+  }, []);
 
   const service = DOCUMENT_SERVICES.find((s) => s.id === selectedServiceId) || DOCUMENT_SERVICES[0];
   const isBiometricNeeded = serviceMode === "new" ? service.biometricRequiredNew : service.biometricRequiredUpdate;
@@ -1016,6 +1053,39 @@ export default function DocumentServicePortal() {
           <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
         </button>
       </div>
+
+      {/* ── Authenticated Citizen 2FA Session Banner ── */}
+      {citizenSession && (
+        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs sm:text-sm text-emerald-950 shadow-xs">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-base shrink-0 shadow-sm">
+              ✓
+            </div>
+            <div>
+              <p className="font-extrabold text-emerald-950 text-xs sm:text-sm flex items-center gap-1.5">
+                <span>સત્તાવાર 2FA પ્રમાણિત નાગરિક સત્ર સક્રિય (2FA Authenticated Session)</span>
+                <span className="bg-emerald-200 text-emerald-900 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  UIDAI લિંક્ડ
+                </span>
+              </p>
+              <p className="text-xs text-emerald-800 mt-0.5">
+                અરજદાર: <strong>{citizenSession.citizenNameGu || citizenSession.citizenName}</strong> &bull; 📱 +91 {citizenSession.mobile} &bull; 🪪 આધાર: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"}
+              </p>
+              <p className="text-[11px] text-emerald-700">
+                તમારું નામ, મોબાઈલ, આધાર અને કચેરી સરનામું આપોઆપ ભરાઈ ગયું છે. ફરીથી ટાઇપ કરવાની જરૂર નથી.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <Link
+              href="/track"
+              className="px-3.5 py-1.5 bg-emerald-700 hover:bg-emerald-800 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-xs"
+            >
+              મારી અરજીઓ વોલ્ટ જુઓ →
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* ── Step 1: Select Document Service ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">

@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   Home,
@@ -16,6 +16,8 @@ import {
   Camera,
   IndianRupee,
   Smartphone,
+  ShieldCheck,
+  Lock,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled } from "@/lib/usePwaInstall";
@@ -30,7 +32,34 @@ export default function Navbar() {
   const { currentLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [showInstallModal, setShowInstallModal] = useState(false);
+  const [citizenSession, setCitizenSession] = useState<{
+    citizenNameGu?: string;
+    citizenName?: string;
+    mobile?: string;
+  } | null>(null);
   const pathname = usePathname();
+
+  useEffect(() => {
+    const checkSession = () => {
+      if (typeof window !== "undefined") {
+        const saved = localStorage.getItem("nagrik_citizen_session");
+        if (saved) {
+          try {
+            const parsed = JSON.parse(saved);
+            setCitizenSession(parsed.citizen || parsed);
+          } catch {
+            setCitizenSession(null);
+          }
+        } else {
+          setCitizenSession(null);
+        }
+      }
+    };
+
+    checkSession();
+    window.addEventListener("storage", checkSession);
+    return () => window.removeEventListener("storage", checkSession);
+  }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (currentLang !== DEFAULT_LANGUAGE) {
@@ -41,6 +70,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
+    { href: "/documents",           label: "દસ્તાવેજ સેવા",   Icon: FileText },
     { href: "/eligibility",         label: t.nav.eligibility, Icon: Sparkles },
     { href: "/verify-doc",          label: t.nav.scanner,     Icon: Camera },
     { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
@@ -107,6 +137,27 @@ export default function Navbar() {
               <LanguageSelector variant="desktop" />
             </div>
 
+            {/* 🔐 Citizen 2FA Session / Login Badge */}
+            {citizenSession ? (
+              <Link
+                href="/track"
+                className="ml-1 flex items-center gap-1.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition"
+                title="તમારું નાગરિક વોલ્ટ ખોલો"
+              >
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="max-w-[100px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "વોલ્ટ"}</span>
+              </Link>
+            ) : (
+              <Link
+                href="/track"
+                className="ml-1 flex items-center gap-1 bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border border-slate-200 hover:border-orange-300 px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition"
+                title="નાગરિક 2FA લૉગિન"
+              >
+                <Lock size={12} className="shrink-0" />
+                <span>લૉગિન</span>
+              </Link>
+            )}
+
             {/* 📱 Desktop Install App Button */}
             {!isInstalled && (
               <button
@@ -165,6 +216,30 @@ export default function Navbar() {
                 <Smartphone size={16} />
                 <span>📲 {t.nav.installApp} (૧-ક્લિક)</span>
               </button>
+            )}
+
+            {/* 🔐 Citizen 2FA Session / Login Banner in Mobile Drawer */}
+            {citizenSession ? (
+              <Link
+                href="/track"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-between p-2.5 rounded-xl text-xs font-bold bg-emerald-50 text-emerald-900 border border-emerald-300 mb-2 shadow-xs"
+              >
+                <span className="flex items-center gap-2">
+                  <ShieldCheck size={16} className="text-emerald-600" />
+                  <span>પ્રમાણિત સત્ર: {citizenSession.citizenNameGu || citizenSession.citizenName}</span>
+                </span>
+                <span className="text-[11px] bg-emerald-600 text-white px-2 py-0.5 rounded-full font-bold">વોલ્ટ જુઓ →</span>
+              </Link>
+            ) : (
+              <Link
+                href="/track"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-bold bg-orange-50 text-orange-800 border border-orange-200 mb-2 shadow-xs"
+              >
+                <Lock size={14} className="text-orange-600" />
+                <span>નાગરિક 2FA લૉગિન (સુરક્ષિત વોલ્ટ)</span>
+              </Link>
             )}
 
             {navLinks.map(({ href, label, Icon }) => {
