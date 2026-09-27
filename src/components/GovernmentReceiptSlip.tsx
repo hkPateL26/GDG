@@ -327,9 +327,18 @@ export default function GovernmentReceiptSlip({
                 <p className="text-[9px] text-slate-500 leading-tight">{app.citizenName}</p>
               </div>
               <div>
-                <span className="text-slate-500 text-[9px] block">આધાર કાર્ડ સંદર્ભ:</span>
-                <p className="font-mono font-bold text-slate-900 leading-tight">XXXX-XXXX-{app.aadhaarLast4}</p>
-                <p className="text-[9px] text-emerald-600 font-semibold leading-tight">e-KYC સફળ</p>
+                <span className="text-slate-500 text-[9px] block">આધાર નોંધણી સંદર્ભ:</span>
+                {app.aadhaarLast4 === "NEW" || app.schemeId.startsWith("aadhaar-new") ? (
+                  <>
+                    <p className="font-mono font-bold text-orange-700 leading-tight">UIDAI EID: 2026-4829</p>
+                    <p className="text-[9px] text-emerald-600 font-semibold leading-tight">નવી નોંધણી માન્ય (EID Gen)</p>
+                  </>
+                ) : (
+                  <>
+                    <p className="font-mono font-bold text-slate-900 leading-tight">XXXX-XXXX-{app.aadhaarLast4}</p>
+                    <p className="text-[9px] text-emerald-600 font-semibold leading-tight">e-KYC સફળ</p>
+                  </>
+                )}
               </div>
               <div>
                 <span className="text-slate-500 text-[9px] block">લિંગ / કેટેગરી:</span>
@@ -412,7 +421,7 @@ export default function GovernmentReceiptSlip({
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 font-mono text-[9px]">
                   <div>
                     <span className="text-slate-500 font-sans block text-[8px]">ટ્રેઝરી GRN / ચલણ ક્રમાંક:</span>
-                    <strong className="text-slate-900 font-bold">{app.challanNo || `GRN-2026-${app.aadhaarLast4 || "4829"}`}</strong>
+                    <strong className="text-slate-900 font-bold">{app.challanNo || `GRN-2026-${app.aadhaarLast4 === "NEW" ? "4829" : app.aadhaarLast4 || "4829"}`}</strong>
                   </div>
                   <div>
                     <span className="text-slate-500 font-sans block text-[8px]">ટ્રાન્ઝેક્શન રેફરન્સ (Txn Ref):</span>
@@ -602,7 +611,7 @@ export default function GovernmentReceiptSlip({
                   </p>
                   <p className="text-[8.5px] text-slate-600">{app.officerDesignation}</p>
                   <p className="text-[7.5px] text-slate-500 font-mono">
-                    DSC ID: GJ-{isChallanPending ? "CHALLAN" : "GOV"}-AUTH-{app.aadhaarLast4}
+                    DSC ID: GJ-{isChallanPending ? "CHALLAN" : "GOV"}-AUTH-{app.aadhaarLast4 === "NEW" ? "EID2026" : app.aadhaarLast4}
                   </p>
                 </div>
               </div>

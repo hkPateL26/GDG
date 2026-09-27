@@ -447,7 +447,12 @@ export default function DocumentServicePortal() {
         signatureType,
         mobile: mobileNumber || "9825012345",
         email: emailAddress || "citizen@gujarat.gov.in",
-        aadhaarLast4: aadhaarNumber ? aadhaarNumber.slice(-4) : "4829",
+        aadhaarLast4:
+          service.id === "aadhaar" && serviceMode === "new"
+            ? "NEW"
+            : aadhaarNumber
+            ? aadhaarNumber.slice(-4)
+            : "4829",
         paymentStatus: paymentMethod === "challan" ? "pending_challan" : "paid",
         paymentMethod,
         paymentMethodNameGu:
@@ -1027,6 +1032,9 @@ export default function DocumentServicePortal() {
                 setSelectedServiceId(s.id);
                 setFetchedProfile(null);
                 setUploadedDocs({});
+                if (s.id === "aadhaar" && serviceMode === "new") {
+                  setAadhaarNumber("");
+                }
               }}
               className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 ${
                 selectedServiceId === s.id
@@ -1062,7 +1070,12 @@ export default function DocumentServicePortal() {
           <div className="flex rounded-xl p-1 bg-slate-100 border border-slate-200 w-full sm:w-auto">
             <button
               type="button"
-              onClick={() => setServiceMode("new")}
+              onClick={() => {
+                setServiceMode("new");
+                if (service.id === "aadhaar") {
+                  setAadhaarNumber("");
+                }
+              }}
               className={`flex-1 sm:flex-initial px-4 py-2 rounded-lg text-xs font-extrabold transition flex items-center justify-center gap-1.5 ${
                 serviceMode === "new"
                   ? "bg-white text-orange-700 shadow-xs"
@@ -1585,20 +1598,53 @@ export default function DocumentServicePortal() {
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      આધારના છેલ્લા ૪ આંકડા *
-                    </label>
-                    <input
-                      type="text"
-                      maxLength={4}
-                      value={aadhaarNumber}
-                      onChange={(e) => setAadhaarNumber(e.target.value)}
-                      placeholder="4829"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
-                    />
-                  </div>
+
+                  {service.id === "aadhaar" && serviceMode === "new" ? (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        ઇમેઇલ સરનામું (વૈકલ્પિક)
+                      </label>
+                      <input
+                        type="email"
+                        value={emailAddress}
+                        onChange={(e) => setEmailAddress(e.target.value)}
+                        placeholder="citizen@gujarat.gov.in"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      />
+                    </div>
+                  ) : (
+                    <div>
+                      <label className="block text-xs font-semibold text-slate-600 mb-1">
+                        {service.id === "aadhaar"
+                          ? "હાલના આધારના છેલ્લા ૪ આંકડા *"
+                          : "અરજદારના આધારના છેલ્લા ૪ આંકડા (e-KYC) *"}
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={4}
+                        value={aadhaarNumber}
+                        onChange={(e) => setAadhaarNumber(e.target.value)}
+                        placeholder="4829"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                      />
+                    </div>
+                  )}
                 </div>
+
+                {service.id === "aadhaar" && serviceMode === "new" && (
+                  <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center justify-between text-xs text-emerald-950">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-emerald-600 shrink-0" />
+                      <div className="text-[11px] leading-tight">
+                        <strong className="block text-emerald-900">✨ નવી આધાર નોંધણી (Fresh UIDAI Application):</strong>
+                        <span>નવી અરજી હોવાથી અગાઉનો કોઈ આધાર નંબર નથી; પ્રક્રિયા પૂર્ણ થયેથી UIDAI તરફથી Enrolment EID ફાળવવામાં આવશે.</span>
+                      </div>
+                    </div>
+                    <span className="text-[10px] bg-emerald-200 text-emerald-950 font-bold px-2 py-0.5 rounded font-mono shrink-0">
+                      EID Auto-Gen
+                    </span>
+                  </div>
+                )}
 
                 {/* District & Taluka Selectors */}
                 <div className="grid grid-cols-2 gap-2.5">
@@ -1759,10 +1805,14 @@ export default function DocumentServicePortal() {
                     />
                     <div>
                       <span className="font-bold text-slate-800 block">
-                        આધાર e-Sign (OTP ડિજિટલ સહી - ભલામણ કરેલ)
+                        {service.id === "aadhaar" && serviceMode === "new"
+                          ? "મોબાઈલ OTP ઈ-પ્રમાણીકરણ (Mobile OTP Verification - ભલામણ કરેલ)"
+                          : "આધાર e-Sign (OTP ડિજિટલ સહી - ભલામણ કરેલ)"}
                       </span>
                       <span className="text-[11px] text-slate-500">
-                        IT Act 2000 હેઠળ કાયદેસર માન્ય. આધાર મોબાઈલ OTP થી ૧-સેકન્ડમાં સહી.
+                        {service.id === "aadhaar" && serviceMode === "new"
+                          ? "અરજદારના નોંધાયેલા મોબાઈલ નંબર પર OTP થી ૧-સેકન્ડમાં ડિજિટલ પ્રમાણીકરણ."
+                          : "IT Act 2000 હેઠળ કાયદેસર માન્ય. આધાર મોબાઈલ OTP થી ૧-સેકન્ડમાં સહી."}
                       </span>
                     </div>
                   </label>
