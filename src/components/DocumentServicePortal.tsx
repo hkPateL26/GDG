@@ -48,6 +48,8 @@ import {
   Camera,
   User,
   Image as ImageIcon,
+  Lock,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -207,6 +209,134 @@ export default function DocumentServicePortal() {
       }
     }
   }, []);
+
+  // ── 2FA Authentication States for Document Portal ──
+  const [loginMobile, setLoginMobile] = useState("9825012345");
+  const [loginAadhaar, setLoginAadhaar] = useState("4829");
+  const [loginOtp, setLoginOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
+  const [simulatedSmsOtp, setSimulatedSmsOtp] = useState<string | null>(null);
+  const [otpCountdown, setOtpCountdown] = useState(180);
+  const [attemptsLeft, setAttemptsLeft] = useState(3);
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState("");
+  const [authSuccessMsg, setAuthSuccessMsg] = useState("");
+
+  // OTP Countdown Timer
+  useEffect(() => {
+    let interval: NodeJS.Timeout | null = null;
+    if (otpSent && otpCountdown > 0) {
+      interval = setInterval(() => {
+        setOtpCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [otpSent, otpCountdown]);
+
+  const handleRequestDocOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthLoading(true);
+    setAuthError("");
+    setAuthSuccessMsg("");
+
+    try {
+      const res = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "send_otp",
+          mobile: loginMobile,
+          aadhaarLast4: loginAadhaar,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setOtpSent(true);
+        setSimulatedSmsOtp(data.simulatedOtp);
+        setOtpCountdown(180);
+        setAttemptsLeft(3);
+        setAuthSuccessMsg(data.message || "OTP સફળતાપૂર્વક મોકલાયો છે.");
+      } else {
+        setAuthError(data.error || "OTP મોકલવામાં ક્ષતિ આવી.");
+      }
+    } catch {
+      setAuthError("સર્વર સાથે કનેક્ટ થઈ શક્યું નથી.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleVerifyDocOtp = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!loginOtp.trim()) {
+      setAuthError("કૃપા કરીને ૬ આંકડાનો OTP દાખલ કરો.");
+      return;
+    }
+
+    setAuthLoading(true);
+    setAuthError("");
+
+    try {
+      const res = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "verify_otp",
+          mobile: loginMobile,
+          otp: loginOtp,
+          aadhaarLast4: loginAadhaar,
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success && data.citizen) {
+        localStorage.setItem("nagrik_citizen_session", JSON.stringify(data.citizen));
+        window.dispatchEvent(new Event("storage"));
+        setCitizenSession(data.citizen);
+        setApplicantName(data.citizen.citizenName || "Rameshbhai Kantilal Patel");
+        setApplicantNameGu(data.citizen.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
+        setMobileNumber(data.citizen.mobile || "9825012345");
+        setAadhaarNumber(`XXXX-XXXX-${data.citizen.aadhaarLast4 || "4829"}`);
+        if (data.citizen.district) setDistrict(data.citizen.district);
+        if (data.citizen.taluka) setTaluka(data.citizen.taluka);
+        if (data.citizen.village) setVillage(data.citizen.village);
+        if (data.citizen.annualIncome) setAnnualIncomeVal(String(data.citizen.annualIncome));
+      } else {
+        if (data.attemptsLeft !== undefined) {
+          setAttemptsLeft(data.attemptsLeft);
+        }
+        setAuthError(data.error || "અમાન્ય OTP. કૃપા કરીને પુનઃ પ્રયાસ કરો.");
+      }
+    } catch {
+      setAuthError("સર્વર પ્રમાણીકરણમાં ક્ષતિ.");
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleDocFastDemoCitizen = () => {
+    setLoginMobile("9825012345");
+    setLoginAadhaar("4829");
+    setAuthError("");
+  };
+
+  const handleDocAutoFillOtp = () => {
+    if (simulatedSmsOtp) {
+      setLoginOtp(simulatedSmsOtp);
+    }
+  };
+
+  const handleDocLogout = () => {
+    localStorage.removeItem("nagrik_citizen_session");
+    window.dispatchEvent(new Event("storage"));
+    setCitizenSession(null);
+    setOtpSent(false);
+    setLoginOtp("");
+    setSimulatedSmsOtp(null);
+  };
 
   const service = DOCUMENT_SERVICES.find((s) => s.id === selectedServiceId) || DOCUMENT_SERVICES[0];
   const isBiometricNeeded = serviceMode === "new" ? service.biometricRequiredNew : service.biometricRequiredUpdate;
@@ -590,6 +720,234 @@ export default function DocumentServicePortal() {
         return [{ id: "general", labelGu: "સામાન્ય સુધારો (Correction)", desc: "દસ્તાવેજમાં ફેરફાર" }];
     }
   };
+
+  // If the citizen is NOT authenticated yet, show the 2FA Citizen Login Shield!
+  if (!citizenSession) {
+    return (
+      <div className="max-w-xl mx-auto bg-white rounded-3xl shadow-lg border border-slate-200 overflow-hidden my-6 animate-in fade-in duration-300">
+        <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-6 sm:p-7 text-center space-y-2">
+          <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
+            🛡️
+          </div>
+          <h2 className="text-xl sm:text-2xl font-black">નાગરિક સુરક્ષા ચકાસણી (2FA Login)</h2>
+          <p className="text-xs sm:text-sm text-orange-100 max-w-md mx-auto leading-relaxed">
+            સત્તાવાર સરકારી દસ્તાવેજ સેવા (આધાર, રેશન કાર્ડ, આવક, જાતિ વગેરે) માટે અધિકૃત નાગરિક ઓળખ પ્રમાણીકરણ ફરજિયાત છે.
+          </p>
+        </div>
+
+        <div className="p-6 sm:p-8 space-y-5">
+          {/* 1-Click Fast Demo Pill */}
+          <div className="bg-orange-50 border border-orange-200 rounded-2xl p-3 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2 text-orange-900">
+              <Sparkles size={16} className="text-orange-600 shrink-0" />
+              <span>
+                <strong>હેકાથોન જજ લાઈવ ડેમો:</strong> ૧-ક્લિકમાં રમેશભાઈ પટેલની વિગતો ભરો
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={handleDocFastDemoCitizen}
+              className="shrink-0 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white font-bold px-3 py-1.5 rounded-xl text-xs transition"
+            >
+              ડેમો ભરો ✓
+            </button>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={otpSent ? handleVerifyDocOtp : handleRequestDocOtp} className="space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                📱 રજિસ્ટર્ડ ૧૦ આંકડાનો મોબાઈલ નંબર
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-bold text-xs text-slate-400">
+                  +91
+                </span>
+                <input
+                  type="tel"
+                  maxLength={10}
+                  value={loginMobile}
+                  onChange={(e) => setLoginMobile(e.target.value.replace(/\D/g, ""))}
+                  disabled={otpSent}
+                  placeholder="૯૮૨૫૦ ૧૨૩૪૫"
+                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">
+                🪪 આધાર કાર્ડના છેલ્લા ૪ આંકડા (Two-Factor Binding)
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-mono text-slate-400">
+                  XXXX - XXXX -
+                </span>
+                <input
+                  type="text"
+                  maxLength={4}
+                  value={loginAadhaar}
+                  onChange={(e) => setLoginAadhaar(e.target.value.replace(/\D/g, ""))}
+                  disabled={otpSent}
+                  placeholder="૪૮૨૯"
+                  className="w-full pl-32 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm font-bold font-mono focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500 disabled:opacity-60"
+                />
+              </div>
+            </div>
+
+            {/* If OTP Sent, Show OTP Input and Live Simulated SMS Badge */}
+            {otpSent && (
+              <div className="space-y-3 pt-2 animate-in fade-in duration-300">
+                {/* Live Simulated SMS Notification */}
+                {simulatedSmsOtp && (
+                  <div className="bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-emerald-400 rounded-2xl p-4 space-y-2 text-xs text-emerald-950 shadow-sm">
+                    <div className="flex items-center justify-between gap-2 border-b border-emerald-300 pb-2">
+                      <span className="font-black flex items-center gap-1.5 text-emerald-900">
+                        <Smartphone size={15} />
+                        <span>ગુજરાત સરકાર સુરક્ષિત SMS (UIDAI / DPI Gateway)</span>
+                      </span>
+                      <span className="bg-emerald-600 text-white font-mono font-bold px-2 py-0.5 rounded text-[10px]">
+                        LIVE SMS
+                      </span>
+                    </div>
+                    <p className="leading-relaxed">
+                      નમસ્તે રમેશભાઈ, તમારી નાગરિક સેવા અરજીઓ ટ્રેક કરવાનો તમારો સત્તાવાર સુરક્ષા કોડ (OTP):{" "}
+                      <strong className="font-mono text-base text-emerald-700 bg-white px-2 py-0.5 rounded border border-emerald-300">
+                        {simulatedSmsOtp}
+                      </strong>
+                    </p>
+                    <div className="pt-1 flex items-center justify-between">
+                      <span className="text-[11px] text-emerald-700">આ કોડ અન્ય કોઈ સાથે શેર કરશો નહીં.</span>
+                      <button
+                        type="button"
+                        onClick={handleDocAutoFillOtp}
+                        className="bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold px-3 py-1 rounded-lg text-xs transition"
+                      >
+                        કોડ આપોઆપ ભરો ✓
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-xs font-bold text-slate-700 uppercase tracking-wide">
+                      🔐 ૬ આંકડાનો OTP દાખલ કરો
+                    </label>
+                    <div className="flex items-center gap-2 text-xs font-semibold">
+                      <span className="text-orange-600 flex items-center gap-1">
+                        <Clock size={12} /> {otpCountdown}s
+                      </span>
+                      <span className="text-slate-400">| પ્રયાસો: {attemptsLeft}/3</span>
+                    </div>
+                  </div>
+
+                  <input
+                    type="text"
+                    maxLength={6}
+                    value={loginOtp}
+                    onChange={(e) => setLoginOtp(e.target.value.replace(/\D/g, ""))}
+                    placeholder="દા.ત. 123456"
+                    autoFocus
+                    className="w-full text-center tracking-widest text-xl font-mono font-black py-3 bg-white border-2 border-orange-400 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500 text-slate-900"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Feedback Alerts */}
+            {authError && (
+              <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-2">
+                <AlertTriangle size={15} className="shrink-0" />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            {authSuccessMsg && !authError && (
+              <div className="p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-2">
+                <CheckCircle2 size={15} className="shrink-0" />
+                <span>{authSuccessMsg}</span>
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            {!otpSent ? (
+              <button
+                type="submit"
+                disabled={authLoading || loginMobile.length !== 10 || loginAadhaar.length !== 4}
+                className="w-full py-3.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
+              >
+                {authLoading ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    <span>OTP મોકલાઈ રહ્યો છે...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShieldCheck size={16} />
+                    <span>સુરક્ષિત OTP મેળવો (Get Secure OTP)</span>
+                  </>
+                )}
+              </button>
+            ) : (
+              <div className="space-y-2">
+                <button
+                  type="submit"
+                  disabled={authLoading || loginOtp.length !== 6}
+                  className="w-full py-3.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-black rounded-xl text-sm shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {authLoading ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin" />
+                      <span>ચકાસણી ચાલુ છે...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Lock size={16} />
+                      <span>સેવા અનલૉક કરો (Verify & Access Portal)</span>
+                    </>
+                  )}
+                </button>
+
+                <div className="flex justify-between items-center text-xs pt-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setOtpSent(false);
+                      setLoginOtp("");
+                      setSimulatedSmsOtp(null);
+                    }}
+                    className="text-slate-500 hover:text-slate-800 underline"
+                  >
+                    મોબાઈલ નંબર બદલો
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRequestDocOtp}
+                    disabled={otpCountdown > 150}
+                    className="text-orange-600 hover:text-orange-700 font-bold disabled:opacity-40"
+                  >
+                    નવો OTP મોકલો (Resend)
+                  </button>
+                </div>
+              </div>
+            )}
+          </form>
+
+          {/* Direct link to check status */}
+          <div className="pt-4 border-t border-slate-100 text-center">
+            <Link
+              href="/track"
+              className="text-xs font-bold text-slate-500 hover:text-orange-600 transition inline-flex items-center gap-1.5"
+            >
+              <span>અગાઉ કરેલી અરજીનું સ્ટેટસ ટ્રેક કરવું છે? [ટ્રેકિંગ પોર્ટલ પર જાઓ →]</span>
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -1083,6 +1441,16 @@ export default function DocumentServicePortal() {
             >
               મારી અરજીઓ વોલ્ટ જુઓ →
             </Link>
+
+            <button
+              type="button"
+              onClick={handleDocLogout}
+              className="px-2.5 py-1.5 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1 shadow-xs"
+              title="સત્ર સમાપ્ત કરો"
+            >
+              <LogOut size={12} />
+              <span>લૉગઆઉટ</span>
+            </button>
           </div>
         </div>
       )}
