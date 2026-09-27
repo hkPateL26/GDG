@@ -218,8 +218,8 @@ export default function DocumentServicePortal() {
       if (!docs.some((d) => d.id === "photo_proof")) {
         docs.push({
           id: "photo_proof",
-          nameEn: "Fresh Passport Size Color Photograph (White Background)",
-          nameGu: "તાજો પાસપોર્ટ સાઇઝ રંગીન ફોટો (સફેદ બેકગ્રાઉન્ડ)",
+          nameEn: "Fresh Passport Size Color Photograph (Plain Background)",
+          nameGu: "તાજો પાસપોર્ટ સાઇઝ રંગીન ફોટો (કોઈપણ સાદું બેકગ્રાઉન્ડ - સફેદ/વાદળી/લાઇટ)",
           mandatory: true,
         });
       }
@@ -1091,94 +1091,94 @@ export default function DocumentServicePortal() {
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-                          {/* Photo Upload Box */}
-                          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
-                            <span className="font-bold text-xs text-slate-800 block">
-                              📸 ૧. નવો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Upload Fresh Photo):
-                            </span>
-                            <div className="flex items-center gap-3">
-                              <div className="w-16 h-20 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center overflow-hidden shrink-0">
-                                {newPhotoPreview ? (
-                                  <img src={newPhotoPreview} alt="New Photo" className="w-full h-full object-cover" />
-                                ) : (
-                                  <div className="text-center p-1">
-                                    <User size={22} className="text-slate-400 mx-auto" />
-                                    <span className="text-[8px] text-slate-400 mt-1 block">સફેદ બેકગ્રાઉન્ડ</span>
-                                  </div>
-                                )}
-                              </div>
-                              <div className="space-y-1.5 flex-1">
-                                <label className="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs w-full">
-                                  <UploadCloud size={14} />
-                                  <span>{newPhotoPreview ? "ફોટો બદલો (Change)" : "તાજો ફોટો અપલોડ કરો"}</span>
+                          {/* Left: Comparison & Guidance Notice (No Duplicate Upload Input) */}
+                          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-3 flex flex-col justify-between">
+                            <div className="space-y-2.5">
+                              <span className="font-extrabold text-xs text-slate-800 flex items-center gap-1.5 border-b pb-1.5">
+                                <Camera size={15} className="text-blue-600" />
+                                <span>૧. ફોટો સુધારો વિગત (Photo Details)</span>
+                              </span>
+
+                              <div className="space-y-2 text-xs">
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-slate-500 mb-0.5">
+                                    હાલની વિગત (Old Record):
+                                  </label>
                                   <input
-                                    type="file"
-                                    accept="image/jpeg,image/png"
-                                    className="hidden"
-                                    onChange={(e) => {
-                                      if (e.target.files && e.target.files[0]) {
-                                        const r = new FileReader();
-                                        r.onload = () => {
-                                          setNewPhotoPreview(r.result as string);
-                                          setOldVsNewValues((prev) => ({
-                                            ...prev,
-                                            [corrId]: {
-                                              oldVal: "હાલનો આધાર ફોટો (૧૦ વર્ષ જૂનો)",
-                                              newVal: "નવો પાસપોર્ટ ફોટો અપલોડ કરેલ છે (White Background)",
-                                            },
-                                          }));
-                                        };
-                                        r.readAsDataURL(e.target.files[0]);
-                                      }
-                                    }}
+                                    type="text"
+                                    disabled
+                                    value={currentVals?.oldVal ?? "હાલનો આધાર ફોટો (૧૦ વર્ષ જૂનો સરકારી રેકોર્ડ)"}
+                                    className="w-full px-2.5 py-1.5 bg-slate-100 border border-slate-200 rounded-lg text-xs text-slate-600 font-medium cursor-not-allowed"
                                   />
-                                </label>
-                                <p className="text-[10px] text-slate-500">
-                                  JPG/PNG, સાઈઝ 35x45mm, સીધો ચહેરો, બંને કાન દેખાય તેવો
-                                </p>
+                                </div>
+
+                                <div>
+                                  <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                                    સુધારેલી વિગત (Requested Update):
+                                  </label>
+                                  <input
+                                    type="text"
+                                    disabled
+                                    value="નવો પાસપોર્ટ સાઇઝ રંગીન ફોટો & બાયોમેટ્રિક્સ ખરાઈ"
+                                    className="w-full px-2.5 py-1.5 bg-emerald-50/60 border border-emerald-300 rounded-lg text-xs text-emerald-900 font-bold cursor-not-allowed"
+                                  />
+                                </div>
                               </div>
+                            </div>
+
+                            {/* Pointer to Bottom Document Checklist for AI Verification */}
+                            <div className="bg-blue-50/80 border border-blue-200 rounded-lg p-2.5 space-y-1 text-[11px]">
+                              <span className="font-bold text-blue-900 flex items-center gap-1">
+                                <Sparkles size={13} className="text-blue-600" />
+                                <span>ફોટો અપલોડ સૂચના (Document Checklist):</span>
+                              </span>
+                              <p className="text-[10.5px] text-blue-800 leading-relaxed">
+                                તાજો પાસપોર્ટ સાઇઝ ફોટો જમણી બાજુના <strong>'જરૂરી દસ્તાવેજો'</strong> વિભાગમાં અપલોડ કરવાનો રહેશે, જ્યાં AI દ્વારા તેની આપમેળે ખરાઈ કરવામાં આવશે.
+                              </p>
                             </div>
                           </div>
 
-                          {/* Biometrics Protocol Explanation: Authentic e-Gram VCE Ground Model */}
-                          <div className="bg-blue-50/90 border border-blue-200 p-3.5 rounded-xl space-y-2 text-xs text-blue-950 flex flex-col justify-between">
+                          {/* Right: Dignified & Professional Indian Government Biometric Protocol */}
+                          <div className="bg-slate-50 border border-slate-300 p-3.5 rounded-xl space-y-2.5 text-xs text-slate-900 flex flex-col justify-between">
                             <div>
-                              <div className="flex items-center justify-between mb-1.5">
-                                <div className="flex items-center gap-1.5 font-extrabold text-blue-900">
-                                  <Fingerprint size={16} className="text-blue-700" />
-                                  <span>૨. ફિંગરપ્રિન્ટ & આઇરિસ સ્કેન (સ્થાનિક ગ્રામ પંચાયત મોડેલ)</span>
+                              <div className="flex items-center justify-between mb-1.5 border-b border-slate-200 pb-1.5">
+                                <div className="flex items-center gap-1.5 font-extrabold text-slate-900">
+                                  <Fingerprint size={16} className="text-emerald-700" />
+                                  <span>૨. બાયોમેટ્રિક્સ પ્રમાણીકરણ (e-Gram કેન્દ્ર પ્રોટોકોલ)</span>
                                 </div>
-                                <span className="bg-emerald-700 text-white text-[9.5px] font-bold px-2 py-0.5 rounded font-mono">
-                                  e-Gram VCE
+                                <span className="bg-slate-800 text-white text-[9.5px] font-bold px-2 py-0.5 rounded font-mono">
+                                  અધિકૃત પંચાયત સુવિધા
                                 </span>
                               </div>
-                              <p className="text-[11px] text-blue-900 leading-relaxed">
-                                સરકારી નિયમ (UIDAI) મુજબ બાયોમેટ્રિક્સ સ્કેન ઓનલાઇન થઈ શકતું નથી, પરંતુ <strong>તાલુકા કચેરીએ ધક્કો ખાવાની જરૂર નથી!</strong>
+                              <p className="text-[11px] text-slate-600 leading-relaxed">
+                                UIDAI સુરક્ષા ધારાધોરણો મુજબ આંગળીના નિશાન (Fingerprint) અને કીકી (Iris) ની રૂબરૂ ચકાસણી અનિવાર્ય છે.
                               </p>
                               
-                              {/* Ground-Level e-Gram VCE Dispute-Free Mechanism */}
-                              <div className="bg-white/95 border border-blue-200 rounded-lg p-2.5 mt-1.5 space-y-1.5 text-[10.5px]">
-                                <span className="font-bold text-slate-900 block flex items-center gap-1">
-                                  <Shield size={13} className="text-emerald-600 shrink-0" />
-                                  <span>ગ્રાઉન્ડ લેવલ પંચાયત સુવિધા (ઝીરો લાઈન • ઝીરો ઝઘડો):</span>
+                              {/* Formal Government Directives */}
+                              <div className="bg-white border border-slate-200 rounded-lg p-2.5 mt-2 space-y-1.5 text-[10.5px]">
+                                <span className="font-bold text-slate-900 block border-b pb-1">
+                                  સત્તાવાર સરકારી માર્ગદર્શિકા (Government Directives):
                                 </span>
-                                <ul className="text-slate-700 space-y-1 list-disc list-inside">
-                                  <li>
-                                    <strong>ગામમાં જ કામ:</strong> તમારા જ ગામની <strong>ગ્રામ પંચાયતમાં VCE (વિલેજ કોમ્પ્યુટર ઓપરેટર)</strong> પાસે મશીન છે, ત્યાં ૨ મિનિટમાં અંગૂઠો મૂકી શકાય.
+                                <ul className="text-slate-700 space-y-1">
+                                  <li className="flex items-start gap-1.5">
+                                    <span className="font-bold text-slate-900 shrink-0">• સ્થાનિક ગ્રામ્ય સુવિધા:</span>
+                                    <span>નાગરિકોની સુગમતા અર્થે આપના જ ગામની ગ્રામ પંચાયતમાં કાર્યરત <strong>e-Gram VCE કેન્દ્ર</strong> ખાતે બાયોમેટ્રિક ખરાઈ ઉપલબ્ધ છે.</span>
                                   </li>
-                                  <li>
-                                    <strong>નાગરિક માટે ₹૦ રોકડા (Zero Cash):</strong> તમે ફી ઓનલાઇન ભરી દીધી હોવાથી VCE ને ₹૧ પણ રોકડો આપવાનો નથી.
+                                  <li className="flex items-start gap-1.5">
+                                    <span className="font-bold text-slate-900 shrink-0">• શૂન્ય રોકડ નીતિ (Zero Cash):</span>
+                                    <span>નિયત સરકારી ફી સાયબર ટ્રેઝરી પોર્ટલ મારફતે ઓનલાઇન જમા થયેલ છે. સ્થાનિક કેન્દ્ર ખાતે કોઈ રોકડ રકમ ચૂકવવાની રહેતી નથી.</span>
                                   </li>
-                                  <li>
-                                    <strong>VCE ને સરકારી કમિશન (₹૨૦ DBT):</strong> ગુજરાત સરકારના e-Gram નિયમ મુજબ VCE ને ₹૨૦ કમિશન સરકાર સીધું તેમના બેંક ખાતામાં જમા કરશે.
+                                  <li className="flex items-start gap-1.5">
+                                    <span className="font-bold text-slate-900 shrink-0">• સત્તાવાર ડિજિટલ પહોંચ:</span>
+                                    <span>અરજી પૂર્ણ થયે મળતી સત્તાવાર પહોંચ દર્શાવીને e-Gram કેન્દ્ર પર ૨ મિનિટમાં બાયોમેટ્રિક પ્રમાણીકરણ સંપન્ન થશે.</span>
                                   </li>
                                 </ul>
                               </div>
                             </div>
 
-                            <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-2 flex items-center justify-between text-[10.5px]">
-                              <span className="font-bold text-emerald-900">માન્ય કેન્દ્ર:</span>
-                              <span className="font-mono font-black text-emerald-800">સ્થાનિક ગ્રામ પંચાયત e-Gram VCE કેન્દ્ર</span>
+                            <div className="bg-slate-100 border border-slate-300 rounded-lg p-2 flex items-center justify-between text-[10px] text-slate-600">
+                              <span>હેલ્પલાઇન: CM 1070 | પંચાયત 1800-233-5500</span>
+                              <span className="font-bold text-slate-800">પંચાયત અને ગ્રામ ગૃહનિર્માણ વિભાગ</span>
                             </div>
                           </div>
                         </div>

@@ -221,17 +221,17 @@ export default function GovernmentReceiptSlip({
               <div className="bg-amber-50/80 border border-amber-300 rounded p-2 text-[10px] space-y-1 text-slate-800">
                 <div className="flex items-center justify-between font-bold text-amber-950">
                   <span className="flex items-center gap-1">
-                    <span>📍 સ્થાનિક ગ્રામ પંચાયત e-Gram VCE માન્યતા (Zero Cash Protocol):</span>
+                    <span>📍 સ્થાનિક ગ્રામ પંચાયત e-Gram કેન્દ્ર પ્રમાણીકરણ (Zero Cash Protocol):</span>
                   </span>
                   <span className="bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded font-mono text-[8.5px] font-bold">
-                    GR: eGVS/VCE/₹20-DBT
+                    Govt. Authorized Facility
                   </span>
                 </div>
                 <p className="text-[9.5px] leading-tight text-slate-700">
-                  <strong className="text-emerald-800">અરજદારે VCE ને ₹૦ (ઝીરો રોકડા) આપવાના છે.</strong> તમામ સરકારી ફી ઓનલાઇન સાયબર ટ્રેઝરીમાં જમા થયેલ છે. ગુજરાત સરકારના નિયમ મુજબ <strong>₹૨૦ સર્વિસ કમિશન સરકાર દ્વારા સીધું VCE ના ખાતામાં DBT થી ચૂકવાશે</strong>.
+                  <strong className="text-emerald-800">અરજદારે સ્થાનિક કેન્દ્ર પર કોઈપણ વધારાની રોકડ રકમ ચૂકવવાની રહેતી નથી.</strong> આ અરજીની નિયત સરકારી ફી સાયબર ટ્રેઝરી પોર્ટલ મારફતે ઓનલાઇન જમા થઈ ચૂકી છે.
                 </p>
-                <p className="text-[8.5px] text-slate-500 font-medium">
-                  કોઈપણ VCE વધારાના પૈસા માંગી શકશે નહીં. ગેરરીતિ જણાયે CM હેલ્પલાઇન ૧૦૭૦ / ટોલ-ફ્રી ૧૮૦૦-૨૩૩-૫૫૦૦ પર ફરિયાદ નોંધાવો.
+                <p className="text-[8.5px] text-slate-600 font-medium">
+                  આ સત્તાવાર પહોંચ ગ્રામ પંચાયતના e-Gram કેન્દ્ર ખાતે દર્શાવીને તાત્કાલિક બાયોમેટ્રિક ખરાઈ કરાવી શકાશે. કોઈપણ પૂછપરછ કે ફરિયાદ માટે CM હેલ્પલાઇન ૧૦૭૦ / પંચાયત કૉલ સેન્ટર ૧૮૦૦-૨૩૩-૫૫૦૦ ઉપલબ્ધ છે.
                 </p>
               </div>
             </div>

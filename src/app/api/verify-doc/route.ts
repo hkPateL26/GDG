@@ -32,6 +32,16 @@ CRITICAL INSTRUCTIONS:
    - "Other / Invalid Document"
 
 2. Check strictly if it matches the EXPECTED DOCUMENT REQUIREMENT.
+   - If expected is "Passport Size Photograph / Photo Proof / પાસપોર્ટ સાઇઝ રંગીન ફોટો":
+     * ANY plain or solid background is 100% ACCEPTABLE (White, Blue, Light Blue, Off-White, Grey, Cream, etc.).
+     * DO NOT REJECT based on blue or white background color. In Indian government and Gujarat administrative practice, passport photos with light blue or white backgrounds are completely standard and valid.
+     * As long as it shows a clear human face (front-facing, eyes and ears visible, head & shoulders portrait):
+       -> "matchesExpected": true
+       -> "isValidForGovt": true
+       -> "qualityScore": 92
+       -> "actionableAdviceGu": "✅ માન્ય પાસપોર્ટ સાઇઝ ફોટો: ચહેરો સ્પષ્ટ છે અને ફોટો સરકારી રેકોર્ડ માટે સ્વીકાર્ય છે."
+       -> "feedbackGu": "પાસપોર્ટ સાઇઝનો ફોટો યોગ્ય છે. સ્પષ્ટ ચહેરો અને સરકારી ધારાધોરણો મુજબ સ્વીકાર્ય છે."
+
    - If expected is "Birth Certificate / School Leaving Certificate" and the image is a Marksheet (Statement of Marks):
      -> "matchesExpected": false
      -> "isValidForGovt": false
