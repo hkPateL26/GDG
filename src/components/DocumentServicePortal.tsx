@@ -45,6 +45,9 @@ import {
   UserCheck,
   Layers,
   ArrowLeftRight,
+  Camera,
+  User,
+  Image as ImageIcon,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -93,7 +96,22 @@ export default function DocumentServicePortal() {
       oldVal: "કુલ ૩ સભ્યો હયાત",
       newVal: "નવા સભ્ય: પ્રિયાંશી આર. પટેલ (પુત્રી - ઉંમર ૨ વર્ષ)",
     },
+    photo_biometric: {
+      oldVal: "હાલનો આધાર ફોટો & બાયોમેટ્રિક્સ (૧૦ વર્ષ જૂનું)",
+      newVal: "નવો પાસપોર્ટ ફોટો & રૂબરૂ ફાસ્ટ-ટ્રેક સ્લોટ",
+    },
+    photo_sign: {
+      oldVal: "હાલનો ફોટો & સહી (સરકારી રેકોર્ડ)",
+      newVal: "નવો પાસપોર્ટ ફોટો & સહી અપલોડ",
+    },
   });
+
+  // Specialized states for Photo & Family Member additions
+  const [newPhotoPreview, setNewPhotoPreview] = useState<string | null>(null);
+  const [newMemberName, setNewMemberName] = useState<string>("");
+  const [newMemberRelation, setNewMemberRelation] = useState<string>("પુત્રી (Daughter)");
+  const [newMemberAge, setNewMemberAge] = useState<string>("");
+  const [newMemberAadhaar, setNewMemberAadhaar] = useState<string>("");
 
   // 4. Kacheri Official Detailed Form Fields (Universal / New Application)
   const [applicantName, setApplicantName] = useState<string>("");
@@ -191,6 +209,17 @@ export default function DocumentServicePortal() {
           id: "member_proof",
           nameEn: "Birth / Marriage Certificate of New Member",
           nameGu: "ઉમેરવાના સભ્યનું જન્મ પ્રમાણપત્ર અથવા લગ્ન નોંધણી",
+          mandatory: true,
+        });
+      }
+    }
+
+    if (selectedCorrections.includes("photo_biometric") || selectedCorrections.includes("photo_sign")) {
+      if (!docs.some((d) => d.id === "photo_proof")) {
+        docs.push({
+          id: "photo_proof",
+          nameEn: "Fresh Passport Size Color Photograph (White Background)",
+          nameGu: "તાજો પાસપોર્ટ સાઇઝ રંગીન ફોટો (સફેદ બેકગ્રાઉન્ડ)",
           mandatory: true,
         });
       }
@@ -1045,6 +1074,187 @@ export default function DocumentServicePortal() {
                   const corrOpt = getCorrectionOptions().find((o) => o.id === corrId);
                   const currentVals = oldVsNewValues[corrId] || { oldVal: "સરકારી રેકોર્ડ મુજબ", newVal: "" };
 
+                  // ── SPECIALIZED CARD 1: Photo & Biometric Update ──
+                  if (corrId === "photo_biometric" || corrId === "photo_sign") {
+                    return (
+                      <div key={corrId} className="bg-slate-50 border-2 border-blue-200 rounded-2xl p-4 space-y-3.5 shadow-xs">
+                        <div className="flex items-center justify-between border-b border-blue-100 pb-2">
+                          <div className="flex items-center gap-2">
+                            <Camera size={18} className="text-blue-600" />
+                            <span className="font-extrabold text-xs sm:text-sm text-slate-800">
+                              {corrOpt?.labelGu}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-blue-800 bg-blue-100 font-bold px-2.5 py-0.5 rounded-full">
+                            હાઇબ્રિડ સેવા (Digital Photo + In-Person Biometrics)
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+                          {/* Photo Upload Box */}
+                          <div className="bg-white p-3.5 rounded-xl border border-slate-200 space-y-2.5">
+                            <span className="font-bold text-xs text-slate-800 block">
+                              📸 ૧. નવો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Upload Fresh Photo):
+                            </span>
+                            <div className="flex items-center gap-3">
+                              <div className="w-16 h-20 bg-slate-100 border-2 border-dashed border-slate-300 rounded-lg flex flex-col items-center justify-center overflow-hidden shrink-0">
+                                {newPhotoPreview ? (
+                                  <img src={newPhotoPreview} alt="New Photo" className="w-full h-full object-cover" />
+                                ) : (
+                                  <div className="text-center p-1">
+                                    <User size={22} className="text-slate-400 mx-auto" />
+                                    <span className="text-[8px] text-slate-400 mt-1 block">સફેદ બેકગ્રાઉન્ડ</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="space-y-1.5 flex-1">
+                                <label className="cursor-pointer bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs w-full">
+                                  <UploadCloud size={14} />
+                                  <span>{newPhotoPreview ? "ફોટો બદલો (Change)" : "તાજો ફોટો અપલોડ કરો"}</span>
+                                  <input
+                                    type="file"
+                                    accept="image/jpeg,image/png"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      if (e.target.files && e.target.files[0]) {
+                                        const r = new FileReader();
+                                        r.onload = () => {
+                                          setNewPhotoPreview(r.result as string);
+                                          setOldVsNewValues((prev) => ({
+                                            ...prev,
+                                            [corrId]: {
+                                              oldVal: "હાલનો આધાર ફોટો (૧૦ વર્ષ જૂનો)",
+                                              newVal: "નવો પાસપોર્ટ ફોટો અપલોડ કરેલ છે (White Background)",
+                                            },
+                                          }));
+                                        };
+                                        r.readAsDataURL(e.target.files[0]);
+                                      }
+                                    }}
+                                  />
+                                </label>
+                                <p className="text-[10px] text-slate-500">
+                                  JPG/PNG, સાઈઝ 35x45mm, સીધો ચહેરો, બંને કાન દેખાય તેવો
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Biometrics Protocol Explanation */}
+                          <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-xl space-y-1.5 text-xs text-blue-950 flex flex-col justify-between">
+                            <div>
+                              <div className="flex items-center gap-1.5 font-bold text-blue-900 mb-1">
+                                <Fingerprint size={16} className="text-blue-700" />
+                                <span>૨. ફિંગરપ્રિન્ટ & આઇરિસ સ્કેન (Biometrics Protocol)</span>
+                              </div>
+                              <p className="text-[11px] text-blue-900 leading-relaxed">
+                                સરકારી સુરક્ષા પ્રોટોકોલ (UIDAI) મુજબ બાયોમેટ્રિક્સ સ્કેન ઓનલાઇન કેમેરાથી માન્ય નથી. આ અરજી સબમિટ થતાં જ સિસ્ટમ તમને <strong>નજીકના જન સેવા કેન્દ્રનો VIP Fast-Track સ્લોટ ટોકન (TK-XXX)</strong> ફાળવશે.
+                              </p>
+                            </div>
+                            <div className="bg-white border border-blue-200 rounded-lg p-2 flex items-center justify-between text-[10.5px]">
+                              <span className="font-semibold text-slate-700">લાઈનમાં ઊભા વગર:</span>
+                              <span className="font-mono font-bold text-blue-700">૨ મિનિટ સ્લોટ (Zero Queue)</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ── SPECIALIZED CARD 2: Add New Member in Ration Card ──
+                  if (corrId === "add_member") {
+                    return (
+                      <div key={corrId} className="bg-slate-50 border-2 border-amber-200 rounded-2xl p-4 space-y-3 shadow-xs">
+                        <div className="flex items-center justify-between border-b border-amber-200 pb-2">
+                          <span className="font-bold text-xs sm:text-sm text-slate-800">
+                            🛒 {corrOpt?.labelGu}
+                          </span>
+                          <span className="text-[10px] text-amber-800 bg-amber-100 font-bold px-2 py-0.5 rounded">
+                            નવા સભ્યની નોંધણી
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              નવા સભ્યનું પૂરું નામ *
+                            </label>
+                            <input
+                              type="text"
+                              value={newMemberName}
+                              onChange={(e) => {
+                                setNewMemberName(e.target.value);
+                                setOldVsNewValues((prev) => ({
+                                  ...prev,
+                                  [corrId]: {
+                                    oldVal: "કુલ ૩ સભ્યો હયાત",
+                                    newVal: `${e.target.value} (${newMemberRelation})`,
+                                  },
+                                }));
+                              }}
+                              placeholder="દા.ત. પ્રિયાંશી આર. પટેલ"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              વડા સાથે સંબંધ *
+                            </label>
+                            <select
+                              value={newMemberRelation}
+                              onChange={(e) => {
+                                setNewMemberRelation(e.target.value);
+                                setOldVsNewValues((prev) => ({
+                                  ...prev,
+                                  [corrId]: {
+                                    oldVal: "કુલ ૩ સભ્યો હયાત",
+                                    newVal: `${newMemberName || "નવા સભ્ય"} (${e.target.value})`,
+                                  },
+                                }));
+                              }}
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            >
+                              <option value="પુત્રી (Daughter)">પુત્રી (Daughter)</option>
+                              <option value="પુત્ર (Son)">પુત્ર (Son)</option>
+                              <option value="પત્ની (Wife)">પત્ની (Wife)</option>
+                              <option value="પુત્રવધૂ (Daughter-in-law)">પુત્રવધૂ (Daughter-in-law)</option>
+                              <option value="પૌત્ર / પૌત્રી (Grandchild)">પૌત્ર / પૌત્રી (Grandchild)</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              ઉંમર / જન્મ તારીખ *
+                            </label>
+                            <input
+                              type="text"
+                              value={newMemberAge}
+                              onChange={(e) => setNewMemberAge(e.target.value)}
+                              placeholder="દા.ત. ૨ વર્ષ (2024-05-10)"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="block text-[10px] font-bold text-slate-600 mb-1">
+                              આધાર નંબર (૧૨ આંકડા)
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={12}
+                              value={newMemberAadhaar}
+                              onChange={(e) => setNewMemberAadhaar(e.target.value)}
+                              placeholder="XXXX-XXXX-XXXX"
+                              className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-mono focus:ring-2 focus:ring-amber-500 focus:outline-none"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  // ── STANDARD TEXT COMPARISON CARD (Address, Name, DOB, Mobile, etc.) ──
                   return (
                     <div key={corrId} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 space-y-2">
                       <div className="flex items-center justify-between">
@@ -1063,7 +1273,7 @@ export default function DocumentServicePortal() {
                           <input
                             type="text"
                             disabled
-                            value={currentVals.oldVal}
+                            value={currentVals?.oldVal ?? "સરકારી રેકોર્ડ મુજબ"}
                             className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs text-slate-500 font-medium cursor-not-allowed"
                           />
                         </div>
@@ -1075,13 +1285,16 @@ export default function DocumentServicePortal() {
                           </label>
                           <input
                             type="text"
-                            value={currentVals.newVal}
+                            value={currentVals?.newVal ?? ""}
                             onChange={(e) => {
                               const v = e.target.value;
-                              setOldVsNewValues((prev) => ({
-                                ...prev,
-                                [corrId]: { ...prev[corrId], newVal: v },
-                              }));
+                              setOldVsNewValues((prev) => {
+                                const existing = prev[corrId] || { oldVal: "સરકારી રેકોર્ડ મુજબ", newVal: "" };
+                                return {
+                                  ...prev,
+                                  [corrId]: { ...existing, newVal: v },
+                                };
+                              });
                             }}
                             placeholder="અહીં નવી સાચી વિગત દાખલ કરો"
                             className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs text-slate-800 font-bold focus:ring-2 focus:ring-emerald-500 focus:outline-none"
