@@ -34,6 +34,108 @@ export default function GovernmentReceiptSlip({
     return "ઓનલાઇન સાયબર ટ્રેઝરી ગેટવે (Cyber Treasury e-Grass)";
   };
 
+  // Reliable Isolated Iframe Printing to guarantee 0% blank pages & 0% cut-off
+  const handlePrintDocument = () => {
+    const printArea = document.getElementById("official-receipt-print-area");
+    if (!printArea) {
+      window.print();
+      return;
+    }
+
+    // Scroll window and parent modal to top so no scroll offset interferes
+    window.scrollTo({ top: 0, behavior: "instant" });
+
+    // Clean up any old print iframe
+    const oldIframe = document.getElementById("receipt-print-frame");
+    if (oldIframe) {
+      oldIframe.remove();
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "receipt-print-frame";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.zIndex = "-1";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    // Grab all loaded style elements and stylesheet links
+    const styleTags = Array.from(document.querySelectorAll("style, link[rel='stylesheet']"))
+      .map((el) => el.outerHTML)
+      .join("\n");
+
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html lang="gu">
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <title>${isChallanPending ? "Govt_Cash_Challan" : "Official_Govt_Receipt"}_${app.id}</title>
+          ${styleTags}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 4mm 5mm;
+            }
+            *, *::before, *::after {
+              box-sizing: border-box;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              color: #0f172a !important;
+              font-family: system-ui, -apple-system, sans-serif !important;
+              width: 100% !important;
+              height: auto !important;
+              overflow: visible !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
+            #official-receipt-print-area {
+              position: static !important;
+              width: 100% !important;
+              max-width: 100% !important;
+              height: auto !important;
+              margin: 0 auto !important;
+              padding: 2.5mm 3.5mm !important;
+              box-sizing: border-box !important;
+              border: 2px solid #0f172a !important;
+              background: #ffffff !important;
+              display: block !important;
+              overflow: visible !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${printArea.outerHTML}
+        </body>
+      </html>
+    `);
+    doc.close();
+
+    // Trigger print
+    setTimeout(() => {
+      try {
+        iframe.contentWindow?.focus();
+        iframe.contentWindow?.print();
+      } catch (err) {
+        console.warn("Iframe print error fallback:", err);
+        window.print();
+      }
+    }, 250);
+  };
+
   return (
     <div
       className={`bg-white text-slate-900 font-sans print-only-certificate ${
@@ -63,7 +165,7 @@ export default function GovernmentReceiptSlip({
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => window.print()}
+              onClick={handlePrintDocument}
               className={`flex-1 sm:flex-initial px-4 py-2 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 ${
                 isChallanPending
                   ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"

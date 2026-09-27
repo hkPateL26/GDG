@@ -774,28 +774,31 @@ export default function DocumentServicePortal() {
                   રદ કરો
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handleFinalPaymentSubmit}
-                  disabled={isProcessingPayment}
-                  className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
-                >
-                  {isProcessingPayment ? (
-                    <>
-                      <Loader2 size={16} className="animate-spin" />
-                      <span>ચુકવણી ચકાસણી થઈ રહી છે...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Check size={18} />
-                      <span>
-                        {paymentMethod === "challan"
-                          ? "ચલણ જનરેટ કરો & સબમિટ"
-                          : `ફી ₹ ${service.fee} ચૂકવો & સત્તાવાર પહોંચ મેળવો`}
-                      </span>
-                    </>
-                  )}
-                </button>
+                {/* Only render bottom submit button for Card and Cash Challan, as UPI has its dedicated single top button */}
+                {paymentMethod !== "upi" && (
+                  <button
+                    type="button"
+                    onClick={handleFinalPaymentSubmit}
+                    disabled={isProcessingPayment}
+                    className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
+                  >
+                    {isProcessingPayment ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        <span>ચુકવણી ચકાસણી થઈ રહી છે...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Check size={18} />
+                        <span>
+                          {paymentMethod === "challan"
+                            ? "ચલણ જનરેટ કરો & સબમિટ"
+                            : `ફી ₹ ${service.fee} ચૂકવો & સત્તાવાર પહોંચ મેળવો`}
+                        </span>
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
             </div>
           </div>
