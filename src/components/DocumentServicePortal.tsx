@@ -1140,20 +1140,45 @@ export default function DocumentServicePortal() {
                             </div>
                           </div>
 
-                          {/* Biometrics Protocol Explanation */}
-                          <div className="bg-blue-50/80 border border-blue-200 p-3.5 rounded-xl space-y-1.5 text-xs text-blue-950 flex flex-col justify-between">
+                          {/* Biometrics Protocol Explanation: Authentic e-Gram VCE Ground Model */}
+                          <div className="bg-blue-50/90 border border-blue-200 p-3.5 rounded-xl space-y-2 text-xs text-blue-950 flex flex-col justify-between">
                             <div>
-                              <div className="flex items-center gap-1.5 font-bold text-blue-900 mb-1">
-                                <Fingerprint size={16} className="text-blue-700" />
-                                <span>૨. ફિંગરપ્રિન્ટ & આઇરિસ સ્કેન (Biometrics Protocol)</span>
+                              <div className="flex items-center justify-between mb-1.5">
+                                <div className="flex items-center gap-1.5 font-extrabold text-blue-900">
+                                  <Fingerprint size={16} className="text-blue-700" />
+                                  <span>૨. ફિંગરપ્રિન્ટ & આઇરિસ સ્કેન (સ્થાનિક ગ્રામ પંચાયત મોડેલ)</span>
+                                </div>
+                                <span className="bg-emerald-700 text-white text-[9.5px] font-bold px-2 py-0.5 rounded font-mono">
+                                  e-Gram VCE
+                                </span>
                               </div>
                               <p className="text-[11px] text-blue-900 leading-relaxed">
-                                સરકારી સુરક્ષા પ્રોટોકોલ (UIDAI) મુજબ બાયોમેટ્રિક્સ સ્કેન ઓનલાઇન કેમેરાથી માન્ય નથી. આ અરજી સબમિટ થતાં જ સિસ્ટમ તમને <strong>નજીકના જન સેવા કેન્દ્રનો VIP Fast-Track સ્લોટ ટોકન (TK-XXX)</strong> ફાળવશે.
+                                સરકારી નિયમ (UIDAI) મુજબ બાયોમેટ્રિક્સ સ્કેન ઓનલાઇન થઈ શકતું નથી, પરંતુ <strong>તાલુકા કચેરીએ ધક્કો ખાવાની જરૂર નથી!</strong>
                               </p>
+                              
+                              {/* Ground-Level e-Gram VCE Dispute-Free Mechanism */}
+                              <div className="bg-white/95 border border-blue-200 rounded-lg p-2.5 mt-1.5 space-y-1.5 text-[10.5px]">
+                                <span className="font-bold text-slate-900 block flex items-center gap-1">
+                                  <Shield size={13} className="text-emerald-600 shrink-0" />
+                                  <span>ગ્રાઉન્ડ લેવલ પંચાયત સુવિધા (ઝીરો લાઈન • ઝીરો ઝઘડો):</span>
+                                </span>
+                                <ul className="text-slate-700 space-y-1 list-disc list-inside">
+                                  <li>
+                                    <strong>ગામમાં જ કામ:</strong> તમારા જ ગામની <strong>ગ્રામ પંચાયતમાં VCE (વિલેજ કોમ્પ્યુટર ઓપરેટર)</strong> પાસે મશીન છે, ત્યાં ૨ મિનિટમાં અંગૂઠો મૂકી શકાય.
+                                  </li>
+                                  <li>
+                                    <strong>નાગરિક માટે ₹૦ રોકડા (Zero Cash):</strong> તમે ફી ઓનલાઇન ભરી દીધી હોવાથી VCE ને ₹૧ પણ રોકડો આપવાનો નથી.
+                                  </li>
+                                  <li>
+                                    <strong>VCE ને સરકારી કમિશન (₹૨૦ DBT):</strong> ગુજરાત સરકારના e-Gram નિયમ મુજબ VCE ને ₹૨૦ કમિશન સરકાર સીધું તેમના બેંક ખાતામાં જમા કરશે.
+                                  </li>
+                                </ul>
+                              </div>
                             </div>
-                            <div className="bg-white border border-blue-200 rounded-lg p-2 flex items-center justify-between text-[10.5px]">
-                              <span className="font-semibold text-slate-700">લાઈનમાં ઊભા વગર:</span>
-                              <span className="font-mono font-bold text-blue-700">૨ મિનિટ સ્લોટ (Zero Queue)</span>
+
+                            <div className="bg-emerald-50 border border-emerald-300 rounded-lg p-2 flex items-center justify-between text-[10.5px]">
+                              <span className="font-bold text-emerald-900">માન્ય કેન્દ્ર:</span>
+                              <span className="font-mono font-black text-emerald-800">સ્થાનિક ગ્રામ પંચાયત e-Gram VCE કેન્દ્ર</span>
                             </div>
                           </div>
                         </div>
@@ -1536,15 +1561,27 @@ export default function DocumentServicePortal() {
 
               {/* Biometric Flag */}
               {isBiometricNeeded ? (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-1">
-                  <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
-                    <Fingerprint size={16} className="text-blue-600" />
-                    <span>બાયોમેટ્રિક (ફિંગરપ્રિન્ટ) જરૂરી રહેશે</span>
+                serviceMode === "update" && selectedCorrections.includes("photo_biometric") ? (
+                  <div className="bg-emerald-50 border border-emerald-300 rounded-xl p-2.5 flex items-center justify-between text-xs text-emerald-950">
+                    <div className="flex items-center gap-1.5">
+                      <Fingerprint size={16} className="text-emerald-700 shrink-0" />
+                      <span className="font-bold">બાયોમેટ્રિક્સ: સ્થાનિક ગ્રામ પંચાયત e-Gram VCE (Zero Cash)</span>
+                    </div>
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-mono font-bold px-2 py-0.5 rounded shrink-0">
+                      પંચાયત માન્ય
+                    </span>
                   </div>
-                  <p className="text-[11px] text-blue-800">
-                    અરજી સબમિટ થતાં જ તમને નજીકના જન સેવા કેન્દ્રનો ૨ મિનિટનો <strong>Fast-Track ટોકન</strong> મળી જશે.
-                  </p>
-                </div>
+                ) : (
+                  <div className="bg-blue-50 border border-blue-200 rounded-xl p-3 space-y-1">
+                    <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
+                      <Fingerprint size={16} className="text-blue-600" />
+                      <span>બાયોમેટ્રિક (ફિંગરપ્રિન્ટ) સુવિધા</span>
+                    </div>
+                    <p className="text-[11px] text-blue-800">
+                      તાલુકા કચેરીએ ધક્કો ખાધા વગર: <strong>તમારા જ ગામની ગ્રામ પંચાયતમાં e-Gram VCE</strong> પાસે ૨ મિનિટમાં ફિંગરપ્રિન્ટ માન્ય થશે (નાગરિકે ₹૦ રોકડા ચૂકવવાના છે).
+                    </p>
+                  </div>
+                )
               ) : (
                 <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5 flex items-center gap-2 text-xs text-emerald-800">
                   <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />

@@ -216,6 +216,24 @@ export default function GovernmentReceiptSlip({
                   </span>
                 </div>
               </div>
+
+              {/* Official e-Gram VCE Biometric Authorization & Zero Cash Notice */}
+              <div className="bg-amber-50/80 border border-amber-300 rounded p-2 text-[10px] space-y-1 text-slate-800">
+                <div className="flex items-center justify-between font-bold text-amber-950">
+                  <span className="flex items-center gap-1">
+                    <span>📍 સ્થાનિક ગ્રામ પંચાયત e-Gram VCE માન્યતા (Zero Cash Protocol):</span>
+                  </span>
+                  <span className="bg-amber-200 text-amber-900 px-1.5 py-0.2 rounded font-mono text-[8.5px] font-bold">
+                    GR: eGVS/VCE/₹20-DBT
+                  </span>
+                </div>
+                <p className="text-[9.5px] leading-tight text-slate-700">
+                  <strong className="text-emerald-800">અરજદારે VCE ને ₹૦ (ઝીરો રોકડા) આપવાના છે.</strong> તમામ સરકારી ફી ઓનલાઇન સાયબર ટ્રેઝરીમાં જમા થયેલ છે. ગુજરાત સરકારના નિયમ મુજબ <strong>₹૨૦ સર્વિસ કમિશન સરકાર દ્વારા સીધું VCE ના ખાતામાં DBT થી ચૂકવાશે</strong>.
+                </p>
+                <p className="text-[8.5px] text-slate-500 font-medium">
+                  કોઈપણ VCE વધારાના પૈસા માંગી શકશે નહીં. ગેરરીતિ જણાયે CM હેલ્પલાઇન ૧૦૭૦ / ટોલ-ફ્રી ૧૮૦૦-૨૩૩-૫૫૦૦ પર ફરિયાદ નોંધાવો.
+                </p>
+              </div>
             </div>
           </div>
 
