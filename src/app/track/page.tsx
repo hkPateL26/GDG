@@ -99,6 +99,40 @@ export default function TrackPage() {
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [isConfirmingCash, setIsConfirmingCash] = useState(false);
+  const [cashConfirmedAlert, setCashConfirmedAlert] = useState(false);
+
+  const handleConfirmCashPayment = async () => {
+    if (!selectedApp) return;
+    setIsConfirmingCash(true);
+    try {
+      const res = await fetch("/api/track", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedApp.id,
+          action: "confirm_cash_payment",
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.application) {
+        setSelectedApp(data.application);
+        setCashConfirmedAlert(true);
+        // Also update in records list if present
+        setRecords((prev) =>
+          prev.map((r) => (r.id === data.application.id ? data.application : r))
+        );
+        setTimeout(() => setCashConfirmedAlert(false), 5000);
+      } else {
+        alert(data.error || "ઓપરેટર કન્ફર્મેશનમાં ક્ષતિ આવી.");
+      }
+    } catch (e) {
+      console.error(e);
+      alert("સર્વર ક્ષતિ આવી.");
+    } finally {
+      setIsConfirmingCash(false);
+    }
+  };
 
   // Fetch paginated or searched records
   const loadData = useCallback(async () => {
@@ -461,29 +495,107 @@ export default function TrackPage() {
                     <p className="text-[11px] text-slate-500 mt-1">સ્થળ તપાસ રીપોર્ટ</p>
                   </div>
 
-                  <div
-                    className={`p-2.5 rounded-xl border ${
-                      selectedApp.status === "approved"
-                        ? "bg-emerald-50 border-emerald-200 text-emerald-800"
-                        : selectedApp.status === "rejected"
-                        ? "bg-rose-50 border-rose-200 text-rose-800"
-                        : "bg-slate-100 border-slate-200 text-slate-400"
-                    }`}
-                  >
-                    <div className="flex items-center gap-1.5 font-bold text-xs">
-                      {selectedApp.status === "approved" ? (
-                        <CheckCircle2 size={14} />
-                      ) : selectedApp.status === "rejected" ? (
-                        <XCircle size={14} />
-                      ) : (
-                        <Clock size={14} />
-                      )}
-                      <span>૪. DBT સહાય જમા</span>
+                  {selectedApp.paymentStatus === "pending_challan" ? (
+                    <div className="p-2.5 rounded-xl border bg-amber-50 border-amber-300 text-amber-900">
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        <span>🔒</span>
+                        <span>૪. કચેરી ફી & રિલીઝ</span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 mt-1 font-bold">રોકડ ચુકવણી બાકી</p>
                     </div>
-                    <p className="text-[11px] text-slate-500 mt-1">PFMS બેંક ક્રેડિટ</p>
-                  </div>
+                  ) : (
+                    <div
+                      className={`p-2.5 rounded-xl border ${
+                        selectedApp.status === "approved"
+                          ? "bg-emerald-50 border-emerald-200 text-emerald-800"
+                          : selectedApp.status === "rejected"
+                          ? "bg-rose-50 border-rose-200 text-rose-800"
+                          : "bg-slate-100 border-slate-200 text-slate-400"
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 font-bold text-xs">
+                        {selectedApp.status === "approved" ? (
+                          <CheckCircle2 size={14} />
+                        ) : selectedApp.status === "rejected" ? (
+                          <XCircle size={14} />
+                        ) : (
+                          <Clock size={14} />
+                        )}
+                        <span>૪. DBT સહાય / પ્રમાણપત્ર</span>
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        {selectedApp.status === "approved" ? "સફળ રિલીઝ" : "પ્રક્રિયા હેઠળ"}
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Cash Confirmation Alert (Live simulated) */}
+              {cashConfirmedAlert && (
+                <div className="bg-emerald-50 border-2 border-emerald-400 rounded-xl p-3.5 flex items-center justify-between text-xs text-emerald-900 animate-in fade-in">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                    <div>
+                      <strong className="block text-emerald-950 font-bold">✓ ઓપરેટર દ્વારા રોકડ ફી સ્વીકારી લેવાઈ!</strong>
+                      <span>ચલણ માન્ય ગણાયું છે અને પ્રમાણપત્ર ડિજિટલી રિલીઝ (અનલૉક) થઈ ગયું છે.</span>
+                    </div>
+                  </div>
+                  <span className="bg-emerald-600 text-white font-mono font-bold px-2 py-0.5 rounded text-[10px]">
+                    STATUS: APPROVED
+                  </span>
+                </div>
+              )}
+
+              {/* Offline Cash Challan Lock Box & Interactive Operator Simulation for Hackathon Judges */}
+              {selectedApp.paymentStatus === "pending_challan" && (
+                <div className="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-4 space-y-3 text-xs text-amber-950">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-amber-300 pb-2">
+                    <div className="flex items-center gap-2 font-black text-amber-950 text-sm">
+                      <span>🔒</span>
+                      <span>દસ્તાવેજ / પ્રમાણપત્ર રિલીઝ લૉક (Payment Locked)</span>
+                    </div>
+                    <span className="bg-amber-200 text-amber-900 font-mono text-[11px] font-bold px-2.5 py-0.5 rounded-full inline-block">
+                      GRN: {selectedApp.challanNo}
+                    </span>
+                  </div>
+
+                  <p className="leading-relaxed text-slate-800">
+                    સરકારી નિયમ મુજબ આ અરજીની ફી ઓનલાઇન ચૂકવેલ ન હોવાથી પ્રમાણપત્ર હાલ <strong>સંપૂર્ણ લૉક</strong> છે. અરજદારે તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર ચલણ નં. <strong className="font-mono text-orange-700">{selectedApp.challanNo}</strong> સાથે નિયત સરકારી ફી <strong className="font-mono text-emerald-800">₹{selectedApp.feeAmount || 50}</strong> રોકડા ભરવાના રહેશે. કચેરી ઓપરેટર ચુકવણી કન્ફર્મ કરે ત્યાર બાદ જ પ્રમાણપત્ર અનલૉક થશે.
+                  </p>
+
+                  {/* Interactive Operator Demo Verification Bar for Judges */}
+                  <div className="bg-white/90 p-3 rounded-xl border border-amber-300 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                    <div>
+                      <span className="font-black text-slate-900 block text-xs">
+                        🏛️ હેકાથોન જજ લાઈવ ડેમો (કચેરી ઓપરેટર કન્ફર્મેશન):
+                      </span>
+                      <p className="text-[11px] text-slate-600">
+                        ઓપરેટર કાઉન્ટર પર રોકડ સ્વીકારી સિસ્ટમમાં 'Payment Verified' કરે તે સિમ્યુલેટ કરો:
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleConfirmCashPayment}
+                      disabled={isConfirmingCash}
+                      className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap shrink-0"
+                    >
+                      {isConfirmingCash ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin" />
+                          <span>ચુકવણી વેરિફાઈ થઈ રહી છે...</span>
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 size={15} />
+                          <span>✓ [ઓપરેટર લૉગિન]: રોકડ સ્વીકારી પ્રમાણપત્ર અનલૉક કરો</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* Biometric Appointment Slot if applicable */}
               {selectedApp.biometricRequired && selectedApp.appointmentToken && (
@@ -553,10 +665,18 @@ export default function TrackPage() {
                 </button>
                 <button
                   onClick={() => setShowPrintModal(true)}
-                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
+                  className={`px-4 py-2 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5 active:scale-95 ${
+                    selectedApp.paymentStatus === "pending_challan"
+                      ? "bg-amber-600 hover:bg-amber-700"
+                      : "bg-orange-600 hover:bg-orange-700"
+                  }`}
                 >
                   <Printer size={14} />
-                  <span>સરકારી પહોંચ જુઓ & પ્રિન્ટ (Official Slip)</span>
+                  <span>
+                    {selectedApp.paymentStatus === "pending_challan"
+                      ? "ઓફલાઇન રોકડ ચલણ જુઓ & પ્રિન્ટ (Cash Challan)"
+                      : "સરકારી પહોંચ જુઓ & પ્રિન્ટ (Official Slip)"}
+                  </span>
                 </button>
               </div>
             </div>

@@ -11,6 +11,7 @@ import {
   TOTAL_SYSTEM_RECORDS,
   CitizenApplication,
   addCustomApplication,
+  confirmApplicationPayment,
 } from "@/lib/large-datasets";
 
 export async function GET(req: NextRequest) {
@@ -137,6 +138,9 @@ export async function POST(req: NextRequest) {
       aadhaarLast4 = "1234",
       documentsVerified = [],
       paymentStatus = "paid",
+      paymentMethod = "upi",
+      paymentMethodNameGu,
+      operatorConfirmed = false,
       feeAmount = 50,
       txnId = `TXN-GUJ-${Math.floor(100000 + Math.random() * 899999)}`,
       challanNo = `GRN-2026-${Math.floor(10000 + Math.random() * 89999)}`,
@@ -147,6 +151,7 @@ export async function POST(req: NextRequest) {
 
     const resolvedCitizenName = citizenName || applicantName || "Citizen Applicant";
     const resolvedCitizenNameGu = citizenNameGu || applicantName || citizenName || "નાગરિક અરજદાર";
+    const resolvedPaymentStatus = paymentMethod === "challan" ? "pending_challan" : paymentStatus;
 
     // Generate unique official Application ID
     const randomSuffix = Math.floor(5425 + Math.random() * 4500);
@@ -160,6 +165,20 @@ export async function POST(req: NextRequest) {
     const appointmentTime = biometricRequired ? "11:30 AM" : undefined;
     const appointmentCenter = biometricRequired ? `જન સેવા કેન્દ્ર (Jan Seva Kendra), ${taluka}` : undefined;
     const appointmentToken = biometricRequired ? `TK-${Math.floor(100 + Math.random() * 899)}` : undefined;
+
+    let computedRemarksGu = "";
+    let computedRemarksEn = "";
+
+    if (resolvedPaymentStatus === "pending_challan") {
+      computedRemarksGu = `ઓફલાઇન રોકડ ચલણ નં. ${challanNo} ઇશ્યૂ થયેલ છે. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર નિયત ફી ₹${feeAmount} જમા કરાવવાના રહેશે. કચેરી ઓપરેટર કન્ફર્મ કર્યા બાદ જ દસ્તાવેજ રિલીઝ થશે.`;
+      computedRemarksEn = `Offline Cash Challan ${challanNo} issued. Please pay fee ₹${feeAmount} at Jan Seva Kendra cash counter. Document is locked until operator confirms payment.`;
+    } else if (biometricRequired) {
+      computedRemarksGu = `અરજી ઓનલાઇન સ્વીકારાઈ છે. ફી ₹${feeAmount} ભરપાઈ (Txn: ${txnId}). ફિંગરપ્રિન્ટ/બાયોમેટ્રિક માટે ટોકન નં. ${appointmentToken} ફાળવાયો છે.`;
+      computedRemarksEn = `Application accepted online. Fee ₹${feeAmount} paid (Txn: ${txnId}). Biometric appointment scheduled with Token ${appointmentToken}.`;
+    } else {
+      computedRemarksGu = `તમામ દસ્તાવેજો AI વેરિફાઈડ. સરકારી ફી ₹${feeAmount} સાયબર ટ્રેઝરીમાં જમા થયેલ (${paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"} - Txn: ${txnId}). મામલતદાર કચેરી ${taluka} દ્વારા પ્રમાણિત થયેલ છે.`;
+      computedRemarksEn = `All documents AI-verified. Govt fee ₹${feeAmount} paid via Cyber Treasury (${paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"} - Txn: ${txnId}). Certified by Mamlatdar Office ${taluka}.`;
+    }
 
     const newApp: CitizenApplication = {
       id,
@@ -175,16 +194,12 @@ export async function POST(req: NextRequest) {
       taluka,
       village,
       aadhaarLast4: aadhaarLast4.slice(-4),
-      status: "processing", // initial active state
+      status: resolvedPaymentStatus === "pending_challan" ? "processing" : "processing",
       appliedDate: today,
       lastUpdated: today,
       benefitAmount: Number(benefitAmount) || 0,
-      remarksGu: biometricRequired
-        ? `અરજી ઓનલાઇન સ્વીકારાઈ છે. ફિંગરપ્રિન્ટ/બાયોમેટ્રિક માટે ટોકન નં. ${appointmentToken} ફાળવાયો છે. ટ્રેઝરી ચલણ: ${challanNo}`
-        : `તમામ દસ્તાવેજો AI વેરિફાઈડ. સરકારી ફી ₹${feeAmount} જમા થયેલ (Txn: ${txnId}). મામલતદાર કચેરી ${taluka} દ્વારા આખરી ચકાસણી પ્રક્રિયામાં છે.`,
-      remarksEn: biometricRequired
-        ? `Application accepted online. Biometric appointment scheduled with Token ${appointmentToken}. Treasury Challan: ${challanNo}`
-        : `All documents AI-verified. Govt fee of ₹${feeAmount} received (Txn: ${txnId}). Final review in progress at Taluka Mamlatdar office.`,
+      remarksGu: computedRemarksGu,
+      remarksEn: computedRemarksEn,
       officerDesignation: `નાયબ મામલતદાર, જન સેવા કેન્દ્ર ${taluka}`,
       serviceType,
       biometricRequired,
@@ -196,7 +211,10 @@ export async function POST(req: NextRequest) {
       mobile,
       email,
       documentsVerified,
-      paymentStatus,
+      paymentStatus: resolvedPaymentStatus,
+      paymentMethod,
+      paymentMethodNameGu,
+      operatorConfirmed: false,
       feeAmount: Number(feeAmount) || 50,
       txnId,
       challanNo,
@@ -245,3 +263,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: err.message || "Failed to process application" }, { status: 500 });
   }
 }
+
+// =========================================================================
+// PATCH /api/track - Confirm offline cash payment (Operator Verification)
+// =========================================================================
+export async function PATCH(req: NextRequest) {
+  try {
+    const body = await req.json();
+    const { id, action } = body;
+
+    if (action === "confirm_cash_payment" && id) {
+      const updated = confirmApplicationPayment(id);
+      if (updated) {
+        // Also update Firestore if configured
+        if (db) {
+          try {
+            const { setDoc, doc: fsDoc } = await import("firebase/firestore");
+            await setDoc(fsDoc(db, "applications", id.toUpperCase()), updated, { merge: true });
+          } catch (fbErr) {
+            console.warn("Firestore update fallback:", fbErr);
+          }
+        }
+
+        return NextResponse.json({
+          success: true,
+          application: updated,
+          message: "ચલણ ફી રોકડમાં સ્વીકારી લેવાઈ છે. પ્રમાણપત્ર અનલૉક થઈ ગયું છે.",
+        });
+      }
+      return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
+    }
+
+    return NextResponse.json({ error: "Invalid action", success: false }, { status: 400 });
+  } catch (err: any) {
+    console.error("Failed to confirm cash payment:", err);
+    return NextResponse.json({ error: err.message || "Server error", success: false }, { status: 500 });
+  }
+}
+

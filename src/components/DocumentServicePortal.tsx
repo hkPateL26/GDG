@@ -449,6 +449,13 @@ export default function DocumentServicePortal() {
         email: emailAddress || "citizen@gujarat.gov.in",
         aadhaarLast4: aadhaarNumber ? aadhaarNumber.slice(-4) : "4829",
         paymentStatus: paymentMethod === "challan" ? "pending_challan" : "paid",
+        paymentMethod,
+        paymentMethodNameGu:
+          paymentMethod === "upi"
+            ? "UPI / Bharat QR (NPCI Direct)"
+            : paymentMethod === "card"
+            ? "નેટ બેંકિંગ / કાર્ડ (State Bank of India)"
+            : "કચેરીએ ઓફલાઇન રોકડ ચલણ (Jan Seva Kendra Cash Counter)",
         feeAmount: service.fee,
         txnId: activeTxnId,
         challanNo: activeChallanNo,
@@ -798,17 +805,31 @@ export default function DocumentServicePortal() {
       {/* ── Submission Success & Real-Time Alert Modal ── */}
       {submittedApp && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <div className="bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-6 shadow-2xl border-2 border-emerald-500 relative">
+          <div className={`bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-5 shadow-2xl border-2 relative ${
+            submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
+          }`}>
             {/* Header */}
             <div className="text-center space-y-1.5">
-              <div className="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 size={32} />
+              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto shadow-inner ${
+                submittedApp.paymentStatus === "pending_challan"
+                  ? "bg-amber-100 text-amber-700"
+                  : "bg-emerald-100 text-emerald-600"
+              }`}>
+                {submittedApp.paymentStatus === "pending_challan" ? <Landmark size={30} /> : <CheckCircle2 size={32} />}
               </div>
-              <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-0.5 rounded-full border border-emerald-200">
-                સત્તાવાર અરજી નોંધણી સફળ • Govt Registered
+              <span className={`text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full border ${
+                submittedApp.paymentStatus === "pending_challan"
+                  ? "text-amber-800 bg-amber-50 border-amber-300"
+                  : "text-emerald-700 bg-emerald-50 border-emerald-200"
+              }`}>
+                {submittedApp.paymentStatus === "pending_challan"
+                  ? "સત્તાવાર રોકડ ચલણ જનરેટ થયું • Cash Challan Issued"
+                  : "સત્તાવાર અરજી નોંધણી સફળ • Govt Registered"}
               </span>
               <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                અરજી સફળતાપૂર્વક સ્વીકારાઈ ગઈ છે!
+                {submittedApp.paymentStatus === "pending_challan"
+                  ? "ઓફલાઇન રોકડ ચલણ પાવતી સફળતાપૂર્વક જનરેટ થઈ!"
+                  : "અરજી સફળતાપૂર્વક સ્વીકારાઈ ગઈ છે!"}
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 font-medium">
                 અરજી ક્રમાંક (Tracking ID):{" "}
@@ -817,20 +838,58 @@ export default function DocumentServicePortal() {
             </div>
 
             {/* Treasury Payment Badge */}
-            <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 flex items-center justify-between text-xs">
-              <div className="flex items-center gap-2">
-                <Receipt size={16} className="text-emerald-700" />
-                <div>
-                  <span className="font-bold text-emerald-900 block">સરકારી ફી ભરપાઈ (Paid Receipt)</span>
-                  <span className="text-[11px] text-emerald-700 font-mono">
-                    Txn: {submittedApp.txnId || activeTxnId} • GRN: {submittedApp.challanNo || activeChallanNo}
-                  </span>
+            {submittedApp.paymentStatus === "pending_challan" ? (
+              <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Receipt size={16} className="text-amber-700 shrink-0" />
+                  <div>
+                    <span className="font-bold text-amber-950 block">કચેરીએ ઓફલાઇન રોકડ ચલણ (Jan Seva Kendra Cash Counter)</span>
+                    <span className="text-[11px] text-amber-800 font-mono">
+                      GRN / ચલણ નં: <strong>{submittedApp.challanNo || activeChallanNo}</strong>
+                    </span>
+                  </div>
+                </div>
+                <span className="bg-amber-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs whitespace-nowrap">
+                  ₹ {submittedApp.feeAmount || service.fee} ભરપાઈ બાકી
+                </span>
+              </div>
+            ) : (
+              <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <Receipt size={16} className="text-emerald-700 shrink-0" />
+                  <div>
+                    <span className="font-bold text-emerald-900 block">
+                      સરકારી ફી ભરપાઈ (Paid via {submittedApp.paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"})
+                    </span>
+                    <span className="text-[11px] text-emerald-700 font-mono">
+                      Txn: {submittedApp.txnId || activeTxnId} • GRN: {submittedApp.challanNo || activeChallanNo}
+                    </span>
+                  </div>
+                </div>
+                <span className="bg-emerald-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs whitespace-nowrap">
+                  ₹ {submittedApp.feeAmount || service.fee} PAID
+                </span>
+              </div>
+            )}
+
+            {/* Strict Document Lock Protocol for Cash Challan */}
+            {submittedApp.paymentStatus === "pending_challan" && (
+              <div className="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-3.5 sm:p-4 space-y-2 text-xs text-amber-950">
+                <div className="flex items-center gap-2 font-black text-amber-900 text-sm">
+                  <span>🔒</span>
+                  <span>પ્રમાણપત્ર લૉક પ્રોટોકોલ (Document Release Locked):</span>
+                </div>
+                <p className="leading-relaxed text-amber-900 font-medium">
+                  સરકારી નિયમ અનુસાર ઓનલાઇન ફી ભરપાઈ ન હોવાથી તમારું નવું/સુધારેલ પ્રમાણપત્ર હાલ <strong>સંપૂર્ણ લૉક</strong> છે.
+                </p>
+                <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 space-y-1 text-[11px] text-slate-800">
+                  <p className="font-bold text-slate-900">📌 કચેરી ખાતે અનુસરવાની પ્રક્રિયા:</p>
+                  <p>૧. નીચે આપેલ બટનથી <strong>'ઓફલાઇન રોકડ ચલણ'</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
+                  <p>૨. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર ચલણ નં. <strong className="font-mono text-orange-700">{submittedApp.challanNo || activeChallanNo}</strong> સાથે નિયત ફી <strong className="font-mono text-emerald-800">₹{submittedApp.feeAmount || service.fee}</strong> રોકડા ભરો.</p>
+                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં 'Payment Confirmed' કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
                 </div>
               </div>
-              <span className="bg-emerald-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs">
-                ₹ {submittedApp.feeAmount || service.fee} PAID
-              </span>
-            </div>
+            )}
 
             {/* Biometric Appointment Slot if applicable */}
             {submittedApp.biometricRequired && submittedApp.appointmentToken && (
@@ -884,10 +943,18 @@ export default function DocumentServicePortal() {
               <button
                 type="button"
                 onClick={() => setShowSlipModal(true)}
-                className="flex-1 py-3 px-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-center font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap"
+                className={`flex-1 py-3 px-4 active:scale-95 text-white rounded-xl text-center font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap ${
+                  submittedApp.paymentStatus === "pending_challan"
+                    ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
+                    : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                }`}
               >
                 <Printer size={16} />
-                <span>🖨️ સત્તાવાર સરકારી પહોંચ / PDF ડાઉનલોડ</span>
+                <span>
+                  {submittedApp.paymentStatus === "pending_challan"
+                    ? "🖨️ ઓફલાઇન રોકડ ચલણ (PDF / પ્રિન્ટ કરો)"
+                    : "🖨️ સત્તાવાર સરકારી પહોંચ / PDF ડાઉનલોડ"}
+                </span>
               </button>
 
               <Link

@@ -35,6 +35,9 @@ export interface CitizenApplication {
   email?: string;
   documentsVerified?: { name: string; verified: boolean; qualityScore: number }[];
   paymentStatus?: "paid" | "pending_challan" | "free";
+  paymentMethod?: "upi" | "card" | "challan";
+  paymentMethodNameGu?: string;
+  operatorConfirmed?: boolean;
   feeAmount?: number;
   txnId?: string;
   challanNo?: string;
@@ -547,6 +550,23 @@ export function addCustomApplication(app: CitizenApplication) {
   } else {
     CUSTOM_USER_APPLICATIONS.unshift(app);
   }
+  return app;
+}
+
+export function confirmApplicationPayment(id: string): CitizenApplication | null {
+  const cleanId = id.toUpperCase();
+  const app = CUSTOM_USER_APPLICATIONS.find(
+    (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+  );
+  if (!app) return null;
+
+  app.paymentStatus = "paid";
+  app.operatorConfirmed = true;
+  app.status = "approved";
+  app.txnId = app.txnId || `TXN-CSH-${Math.floor(100000 + Math.random() * 899999)}`;
+  app.lastUpdated = new Date().toISOString().split("T")[0];
+  app.remarksGu = `જન સેવા કેન્દ્ર રોકડ કાઉન્ટર પર ચલણ નં. ${app.challanNo} મુજબ ફી ₹${app.feeAmount || 50} જમા થયેલ છે (Txn: ${app.txnId}). ઓપરેટર દ્વારા ચુકવણી પ્રમાણિત થઈ ચૂકી છે અને દસ્તાવેજ / પ્રમાણપત્ર રિલીઝ (અનલૉક) થયેલ છે.`;
+  app.remarksEn = `Cash fee of ₹${app.feeAmount || 50} paid at Jan Seva Kendra cash counter against Challan ${app.challanNo} (Txn: ${app.txnId}). Verified by Operator. Document released.`;
   return app;
 }
 
