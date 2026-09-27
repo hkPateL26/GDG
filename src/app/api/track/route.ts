@@ -118,6 +118,7 @@ export async function POST(req: NextRequest) {
     const {
       citizenName,
       citizenNameGu,
+      applicantName,
       gender = "male",
       district = "Rajkot",
       districtGu = "રાજકોટ",
@@ -137,6 +138,9 @@ export async function POST(req: NextRequest) {
       documentsVerified = [],
     } = body;
 
+    const resolvedCitizenName = citizenName || applicantName || "Citizen Applicant";
+    const resolvedCitizenNameGu = citizenNameGu || applicantName || citizenName || "નાગરિક અરજદાર";
+
     // Generate unique official Application ID
     const randomSuffix = Math.floor(5425 + Math.random() * 4500);
     const id = `APP-GUJ-${randomSuffix}`;
@@ -152,8 +156,8 @@ export async function POST(req: NextRequest) {
 
     const newApp: CitizenApplication = {
       id,
-      citizenName: citizenName || "Citizen Applicant",
-      citizenNameGu: citizenNameGu || citizenName || "નાગરિક અરજદાર",
+      citizenName: resolvedCitizenName,
+      citizenNameGu: resolvedCitizenNameGu,
       gender,
       schemeId,
       schemeName,
@@ -201,7 +205,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Simulated SMS & Email Notification Payloads
-    const smsMessage = `Govt of Gujarat: નમસ્તે ${citizenNameGu || citizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: https://nagrikseva-ai-one.vercel.app/track?id=${id}`;
+    const smsMessage = `Govt of Gujarat: નમસ્તે ${resolvedCitizenNameGu || resolvedCitizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: https://nagrikseva-ai-one.vercel.app/track?id=${id}`;
     const emailSubject = `સરકારી પહોંચ સ્વીકૃતિ: ${schemeNameGu} (અરજી ક્રમાંક: ${id})`;
 
     return NextResponse.json({
