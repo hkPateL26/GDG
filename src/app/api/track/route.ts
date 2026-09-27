@@ -136,6 +136,13 @@ export async function POST(req: NextRequest) {
       email = "citizen@example.com",
       aadhaarLast4 = "1234",
       documentsVerified = [],
+      paymentStatus = "paid",
+      feeAmount = 50,
+      txnId = `TXN-GUJ-${Math.floor(100000 + Math.random() * 899999)}`,
+      challanNo = `GRN-2026-${Math.floor(10000 + Math.random() * 89999)}`,
+      correctionsRequested = [],
+      oldVsNewValues = {},
+      kacheriDetails = {},
     } = body;
 
     const resolvedCitizenName = citizenName || applicantName || "Citizen Applicant";
@@ -173,11 +180,11 @@ export async function POST(req: NextRequest) {
       lastUpdated: today,
       benefitAmount: Number(benefitAmount) || 0,
       remarksGu: biometricRequired
-        ? `અરજી ઓનલાઇન સ્વીકારાઈ છે. ફિંગરપ્રિન્ટ/બાયોમેટ્રિક માટે ટોકન નં. ${appointmentToken} ફાળવાયો છે.`
-        : `તમામ દસ્તાવેજો AI વેરિફાઈડ. મામલતદાર કચેરી ${taluka} દ્વારા આખરી ચકાસણી પ્રક્રિયામાં છે.`,
+        ? `અરજી ઓનલાઇન સ્વીકારાઈ છે. ફિંગરપ્રિન્ટ/બાયોમેટ્રિક માટે ટોકન નં. ${appointmentToken} ફાળવાયો છે. ટ્રેઝરી ચલણ: ${challanNo}`
+        : `તમામ દસ્તાવેજો AI વેરિફાઈડ. સરકારી ફી ₹${feeAmount} જમા થયેલ (Txn: ${txnId}). મામલતદાર કચેરી ${taluka} દ્વારા આખરી ચકાસણી પ્રક્રિયામાં છે.`,
       remarksEn: biometricRequired
-        ? `Application accepted online. Biometric appointment scheduled with Token ${appointmentToken}.`
-        : `All documents AI-verified. Final review in progress at Taluka Mamlatdar office.`,
+        ? `Application accepted online. Biometric appointment scheduled with Token ${appointmentToken}. Treasury Challan: ${challanNo}`
+        : `All documents AI-verified. Govt fee of ₹${feeAmount} received (Txn: ${txnId}). Final review in progress at Taluka Mamlatdar office.`,
       officerDesignation: `નાયબ મામલતદાર, જન સેવા કેન્દ્ર ${taluka}`,
       serviceType,
       biometricRequired,
@@ -189,6 +196,13 @@ export async function POST(req: NextRequest) {
       mobile,
       email,
       documentsVerified,
+      paymentStatus,
+      feeAmount: Number(feeAmount) || 50,
+      txnId,
+      challanNo,
+      correctionsRequested,
+      oldVsNewValues,
+      kacheriDetails,
     };
 
     // Save into server large-dataset in-memory cache

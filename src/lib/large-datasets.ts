@@ -34,6 +34,13 @@ export interface CitizenApplication {
   mobile?: string;
   email?: string;
   documentsVerified?: { name: string; verified: boolean; qualityScore: number }[];
+  paymentStatus?: "paid" | "pending_challan" | "free";
+  feeAmount?: number;
+  txnId?: string;
+  challanNo?: string;
+  correctionsRequested?: string[];
+  oldVsNewValues?: Record<string, { oldVal: string; newVal: string }>;
+  kacheriDetails?: Record<string, any>;
 }
 
 export const GUJARAT_DISTRICTS = [
@@ -443,6 +450,94 @@ export const DOCUMENT_SERVICES: DocumentServiceConfig[] = [
 
 // Global in-memory cache for newly created citizen applications
 export const CUSTOM_USER_APPLICATIONS: CitizenApplication[] = [];
+
+export interface ExistingCitizenProfile {
+  found: boolean;
+  docNumber: string;
+  applicantName: string;
+  applicantNameGu: string;
+  fatherOrHusbandName: string;
+  dob: string;
+  gender: "male" | "female";
+  mobile: string;
+  email: string;
+  district: string;
+  taluka: string;
+  village: string;
+  pincode: string;
+  addressFull: string;
+  serviceSpecificDetails: Record<string, any>;
+}
+
+export function lookupCitizenExistingRecord(serviceId: string, docNumber: string): ExistingCitizenProfile {
+  const cleanNum = docNumber.trim();
+  const last4 = cleanNum.slice(-4) || "4829";
+
+  const baseProfile: ExistingCitizenProfile = {
+    found: true,
+    docNumber: cleanNum || "4829",
+    applicantName: "Rameshbhai Kantilal Patel",
+    applicantNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+    fatherOrHusbandName: "કાંતિલાલ લાલજીભાઈ પટેલ",
+    dob: "1985-06-15",
+    gender: "male",
+    mobile: "9825012345",
+    email: "ramesh.patel@gujarat.gov.in",
+    district: "Rajkot",
+    taluka: "Gondal",
+    village: "ગોમટા (Gomta)",
+    pincode: "360320",
+    addressFull: "ઘર નં. ૧૨, પટેલ વાસ, પોસ્ટ-ગોમટા, તા. ગોંડલ, જિ. રાજકોટ - ૩૬૦૩૨૦",
+    serviceSpecificDetails: {},
+  };
+
+  if (serviceId === "aadhaar") {
+    baseProfile.serviceSpecificDetails = {
+      aadhaarMasked: `XXXX-XXXX-${last4}`,
+      enrolmentDate: "2014-03-22",
+      currentAddressEn: "Plot No. 12, Patel Street, Gomta Village, Gondal, Rajkot - 360320",
+      currentAddressGu: "પ્લોટ નં. ૧૨, પટેલ શેરી, ગોમટા ગામ, તા. ગોંડલ, જિ. રાજકોટ - ૩૬૦૩૨૦",
+      biometricStatus: "Biometric Updated 10 yrs ago (Refresh Advised)",
+    };
+  } else if (serviceId === "ration") {
+    baseProfile.serviceSpecificDetails = {
+      rationCardNo: cleanNum || "032014892145",
+      rationType: "NFSA - APL-1 (અન્ન સુરક્ષા રાશનકાર્ડ)",
+      fairPriceShop: "FPS-342 (ગોમટા સેવા સહકારી મંડળી)",
+      gasConnection: "HP Gas (Single Cylinder - Consumer No: 849201)",
+      existingMembers: [
+        { nameGu: "રમેશભાઈ કે. પટેલ", relation: "કુટુંબના વડા", age: 41, aadhaar: `•••• ${last4}` },
+        { nameGu: "ગીતાબેન આર. પટેલ", relation: "પત્ની", age: 38, aadhaar: "•••• 8912" },
+        { nameGu: "હર્ષ આર. પટેલ", relation: "પુત્ર", age: 16, aadhaar: "•••• 3741" },
+      ],
+    };
+  } else if (serviceId === "pan") {
+    baseProfile.serviceSpecificDetails = {
+      panNumber: cleanNum || "ABCDP1234K",
+      nameOnCard: "RAMESH KANTILAL PATEL",
+      fathersName: "KANTILAL LALJIBHAI PATEL",
+      aadhaarLinked: true,
+      status: "Active & Operative",
+    };
+  } else if (serviceId === "income") {
+    baseProfile.serviceSpecificDetails = {
+      prevCertNo: cleanNum || "INC/2023/84920",
+      prevIssuedDate: "2023-08-10",
+      validityStatus: "Expiring Soon (૩ વર્ષ પૂર્ણતા)",
+      prevAnnualIncome: "₹ 1,20,000/-",
+      issuingAuthority: "મામલતદાર કચેરી, ગોંડલ",
+    };
+  } else if (serviceId === "caste") {
+    baseProfile.serviceSpecificDetails = {
+      prevCertNo: cleanNum || "CST/2021/4921",
+      categoryName: "SEBC / OBC (સામાજિક અને શૈક્ષણિક રીતે પછાત વર્ગ)",
+      subCaste: "કડવા પાટીદાર / લેઉવા પાટીદાર / પ્રજાપતિ",
+      nclExpiryDate: "2024-03-31 (રિન્યુઅલ જરૂરી)",
+    };
+  }
+
+  return baseProfile;
+}
 
 export function addCustomApplication(app: CitizenApplication) {
   // Prepend so it appears first

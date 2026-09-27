@@ -201,6 +201,21 @@ export default function GovernmentReceiptSlip({
                   {app.remarksGu}
                 </p>
               </div>
+
+              {/* Cyber Treasury Payment Receipt Details */}
+              <div className="bg-slate-50 border border-slate-300 rounded p-2 flex items-center justify-between text-[10px]">
+                <div className="space-y-0.5">
+                  <span className="font-bold text-slate-800">સરકારી સાયબર ટ્રેઝરી ચુકવણી પહોંચ (Treasury e-Challan Receipt):</span>
+                  <p className="font-mono text-slate-600">
+                    Txn Ref: <strong className="text-slate-900">{app.txnId || `TXN-GUJ-${app.id.replace(/\D/g, "") || "928401"}`}</strong> • GRN: <strong className="text-slate-900">{app.challanNo || `GRN-2026-${app.aadhaarLast4 || "4829"}`}</strong>
+                  </p>
+                </div>
+                <div className="text-right">
+                  <span className="inline-block bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded text-[9.5px]">
+                    ✓ ભરપાઈ થયેલ (PAID: ₹{app.feeAmount || 50})
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
 
