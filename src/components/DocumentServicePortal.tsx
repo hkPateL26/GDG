@@ -1858,6 +1858,79 @@ export default function DocumentServicePortal() {
                 </span>
               </div>
 
+              {/* Sample Demo Documents Quick Panel for Judges & Testing */}
+              {service.id === "aadhaar" && serviceMode === "new" && (
+                <div className="bg-gradient-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200 rounded-2xl p-3.5 space-y-2.5 shadow-xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <div className="flex items-center gap-2">
+                      <Sparkles size={16} className="text-blue-700 shrink-0" />
+                      <div>
+                        <span className="text-xs font-black text-blue-950 block">
+                          ⚡ ૧-ક્લિક ડેમો સેમ્પલ દસ્તાવેજો (ખુંટ હરકિશન વિનોદરાય):
+                        </span>
+                        <span className="text-[10px] text-blue-700">
+                          નીચેથી દસ્તાવેજો સેવ/ડાઉનલોડ કરો અથવા સીધા જ ૧-ક્લિકમાં AI ઓટો-ચકાસણી કરો.
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        const demoList = [
+                          { id: "birth_proof", url: "/demo-docs/1_birth_certificate_khunt_harkishan.png", name: "1_birth_certificate_khunt_harkishan.png" },
+                          { id: "address_proof", url: "/demo-docs/2_electricity_bill_pgvcl_gondal.png", name: "2_electricity_bill_pgvcl_gondal.png" },
+                          { id: "photo_id", url: "/demo-docs/3_pan_card_khunt_harkishan.png", name: "3_pan_card_khunt_harkishan.png" },
+                        ];
+                        for (const item of demoList) {
+                          try {
+                            const res = await fetch(item.url);
+                            const blob = await res.blob();
+                            const fileObj = new File([blob], item.name, { type: "image/png" });
+                            await handleFileUpload(item.id, fileObj);
+                          } catch (err) {
+                            console.error("Demo auto-upload error:", err);
+                          }
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 shrink-0"
+                    >
+                      <UploadCloud size={14} />
+                      <span>⚡ ૧-ક્લિક ઓટો-ટેસ્ટ (Auto-Verify All)</span>
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-blue-200/60 text-xs">
+                    <a
+                      href="/demo-docs/1_birth_certificate_khunt_harkishan.png"
+                      download="1_birth_certificate_khunt_harkishan.png"
+                      target="_blank"
+                      className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
+                    >
+                      <span className="truncate text-[11px]">📥 ૧. જન્મનો દાખલો</span>
+                      <Download size={13} className="text-blue-700 shrink-0 ml-1" />
+                    </a>
+                    <a
+                      href="/demo-docs/2_electricity_bill_pgvcl_gondal.png"
+                      download="2_electricity_bill_pgvcl_gondal.png"
+                      target="_blank"
+                      className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
+                    >
+                      <span className="truncate text-[11px]">📥 ૨. PGVCL લાઈટ બિલ</span>
+                      <Download size={13} className="text-blue-700 shrink-0 ml-1" />
+                    </a>
+                    <a
+                      href="/demo-docs/3_pan_card_khunt_harkishan.png"
+                      download="3_pan_card_khunt_harkishan.png"
+                      target="_blank"
+                      className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
+                    >
+                      <span className="truncate text-[11px]">📥 ૩. PAN કાર્ડ (ID)</span>
+                      <Download size={13} className="text-blue-700 shrink-0 ml-1" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
               {/* Document Checklist Items */}
               <div className="space-y-3.5">
                 {requiredDocs.map((docItem, index) => {

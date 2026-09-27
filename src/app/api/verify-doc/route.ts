@@ -89,7 +89,12 @@ export async function POST(req: NextRequest) {
     const customPrompt = `${STRICT_VERIFICATION_PROMPT}\n\n====================\nEXPECTED DOCUMENT REQUIREMENT FOR THIS SLOT: "${expectedDocType}"\n====================`;
 
     // Try modern Gemini vision models with high availability
-    const visionModels = ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.6-flash", "gemini-3.7-flash"];
+    const visionModels = [
+      "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.5-flash",
+    ];
     let parsedData: any = null;
 
     for (const modelName of visionModels) {
