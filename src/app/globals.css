@@ -42,50 +42,71 @@ p, h1, h2, h3, h4, span, li {
   overflow-wrap: break-word;
 }
 
-/* ── Authentic Government Certificate Print Rules ── */
+/* ── Authentic Government Certificate Print Rules (STRICT SINGLE A4 PAGE) ── */
 @media print {
   @page {
     size: A4 portrait;
-    margin: 6mm 8mm 6mm 8mm;
+    margin: 0;
   }
 
   html, body {
     background: #ffffff !important;
-    color: #111827 !important;
+    color: #0f172a !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
     height: 100% !important;
     max-height: 100% !important;
     overflow: hidden !important;
-    font-size: 11pt !important;
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
 
-  /* Hide entire standard application UI during print */
+  /* Hide everything in the body by default */
+  body * {
+    visibility: hidden !important;
+  }
+
+  /* Make ONLY the official receipt and its children visible */
+  #official-receipt-print-area,
+  #official-receipt-print-area * {
+    visibility: visible !important;
+  }
+
+  /* Anchor the receipt directly to fill Page 1 with clean margins */
+  #official-receipt-print-area {
+    position: fixed !important;
+    left: 4mm !important;
+    top: 4mm !important;
+    right: 4mm !important;
+    bottom: 4mm !important;
+    width: calc(100% - 8mm) !important;
+    height: calc(100% - 8mm) !important;
+    max-height: 289mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    overflow: hidden !important;
+    background: #ffffff !important;
+    page-break-after: avoid !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    break-after: avoid !important;
+    z-index: 9999999 !important;
+  }
+
+  /* Completely suppress any scrollbars, navs, headers, footers, modal backdrops */
   nav,
   header,
   footer,
+  aside,
+  main,
   .print-hide,
   .no-print {
     display: none !important;
-  }
-
-  /* Display ONLY the authentic printable certificate filling full A4 page */
-  .print-only-certificate {
-    display: flex !important;
-    flex-direction: column !important;
-    width: 100% !important;
-    max-width: 100% !important;
-    height: 275mm !important;
-    max-height: 275mm !important;
-    box-sizing: border-box !important;
-    margin: 0 auto !important;
-    padding: 0 !important;
-    page-break-inside: avoid !important;
-    page-break-after: avoid !important;
-    page-break-before: avoid !important;
-    break-inside: avoid !important;
   }
 }
 
