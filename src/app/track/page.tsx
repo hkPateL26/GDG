@@ -21,7 +21,9 @@ import {
   Filter,
   RefreshCw,
   Sparkles,
+  Printer,
 } from "lucide-react";
+import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 
 type StatusType = "approved" | "processing" | "pending" | "rejected";
 
@@ -92,6 +94,7 @@ export default function TrackPage() {
   });
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
+  const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -158,7 +161,7 @@ export default function TrackPage() {
   return (
     <>
       <Navbar />
-      <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">
+      <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden print:hidden print-hide no-print">
         {/* Hero Section - 100% responsive, no text cut */}
         <section className="bg-gradient-to-br from-orange-600 via-orange-500 to-amber-600 text-white py-8 sm:py-12 px-4 shadow-md">
           <div className="max-w-6xl mx-auto">
@@ -494,10 +497,11 @@ export default function TrackPage() {
                   બંધ કરો (Close)
                 </button>
                 <button
-                  onClick={() => window.print()}
-                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold shadow-sm transition"
+                  onClick={() => setShowPrintModal(true)}
+                  className="px-4 py-2 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-sm transition flex items-center gap-1.5"
                 >
-                  પ્રિન્ટ પહોંચ (Print Slip)
+                  <Printer size={14} />
+                  <span>સરકારી પહોંચ જુઓ & પ્રિન્ટ (Official Slip)</span>
                 </button>
               </div>
             </div>
@@ -588,14 +592,22 @@ export default function TrackPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-1.5 shrink-0">
                           <span className="text-emerald-700 font-bold">
                             ₹{app.benefitAmount.toLocaleString("en-IN")}
                           </span>
-                          <ChevronRight
-                            size={14}
-                            className="text-slate-400 group-hover:text-orange-600 group-hover:translate-x-0.5 transition"
-                          />
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedApp(app);
+                              setShowPrintModal(true);
+                            }}
+                            className="px-2 py-0.5 bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 rounded text-[10px] font-bold flex items-center gap-1 transition"
+                            title="સત્તાવાર સરકારી પહોંચ જુઓ અને પ્રિન્ટ કરો"
+                          >
+                            <Printer size={10} /> પહોંચ
+                          </button>
                         </div>
                       </div>
 
@@ -639,6 +651,24 @@ export default function TrackPage() {
           </div>
         </div>
       </main>
+
+      {/* ── Official Gujarat Govt Digital Application Receipt (Print Only & Single A4 Page) ── */}
+      {selectedApp && (
+        <div className="hidden print:flex print-only-certificate bg-white">
+          <GovernmentReceiptSlip app={selectedApp} />
+        </div>
+      )}
+
+      {/* ── On-Screen Live Modal Preview with Stamp & Signature ── */}
+      {showPrintModal && selectedApp && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 print:hidden animate-in fade-in duration-200">
+          <GovernmentReceiptSlip
+            app={selectedApp}
+            isModalPreview={true}
+            onClose={() => setShowPrintModal(false)}
+          />
+        </div>
+      )}
     </>
   );
 }
