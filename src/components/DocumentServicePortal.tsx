@@ -386,6 +386,7 @@ export default function DocumentServicePortal({
           imageBase64: base64Data,
           mimeType: file.type || "image/jpeg",
           expectedDocType: requiredDocs.find((d) => d.id === docId)?.nameEn || "",
+          fileName: file.name,
         }),
       });
 
