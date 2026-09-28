@@ -675,10 +675,10 @@ export default function BenefitCalculatorPage() {
                       <span className="text-gray-400">રેશનકાર્ડ નં:</span>
                       <span className="font-mono font-semibold text-gray-700">{rationCardNumber}</span>
                     </div>
-                    <div className="flex justify-between pt-1 border-t border-gray-200/60">
-                      <span className="text-gray-400">કુટુંબના સભ્યો ({familyCount}):</span>
-                      <span className="font-medium text-gray-700 text-[11px] truncate max-w-[200px]">
-                        {familyMembersList.map((m) => m.name.split(" ")[0]).join(", ")}
+                    <div className="flex flex-col sm:flex-row sm:items-start justify-between pt-1 border-t border-gray-200/60 gap-1">
+                      <span className="text-gray-400 shrink-0">કુટુંબના સભ્યો ({familyCount}):</span>
+                      <span className="font-medium text-gray-800 text-[11px] text-left sm:text-right leading-relaxed">
+                        {familyMembersList.map((m) => `${m.name} (${m.age} વર્ષ)`).join(", ")}
                       </span>
                     </div>
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between pt-1.5 border-t border-gray-200/60 gap-1.5">
@@ -855,99 +855,67 @@ export default function BenefitCalculatorPage() {
                     )}
                   </div>
 
-                  {/* Citizen Meta Grid */}
-                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 py-3 text-[11px] border-b border-gray-100 relative">
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">નાગરિક નામ</span>
-                      <span className="font-bold text-gray-800 truncate block">
-                        {citizenName || "—"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">આધાર નંબર</span>
-                      <span className="font-bold text-gray-800 font-mono">
-                        {isKycVerified ? `XXXX-XXXX-${aadhaarNumber.replace(/\D/g, "").slice(-4)}` : "—"}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-gray-400 block text-[9px]">સામાજિક વર્ગ</span>
-                      <span className="font-bold text-orange-800 bg-orange-50 border border-orange-200 px-1.5 py-0.5 rounded text-[10px] inline-block font-mono">
-                        {casteCategory === "sebc" ? "SEBC/OBC" : casteCategory === "sc" ? "SC" : casteCategory === "st" ? "ST" : casteCategory === "ews" ? "EWS" : "General"}
-                      </span>
+                  {/* Citizen Meta Card (Spacious 2-tier card, 100% full content, NO truncation) */}
+                  <div className="py-2.5 px-3 bg-gray-50/90 rounded-2xl border border-gray-200/80 my-2 space-y-2 text-[11px]">
+                    {/* Top Row: Full Citizen Name (no truncate, bold & prominent) + Aadhaar + Caste Category */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-gray-200/60">
+                      <div className="min-w-0">
+                        <span className="text-gray-400 block text-[9.5px]">નાગરિક પૂરું નામ</span>
+                        <span className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight block">
+                          {citizenName || "—"}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <div className="bg-white border border-gray-200 px-2 py-0.5 rounded-lg text-right">
+                          <span className="text-gray-400 block text-[8.5px]">આધાર નંબર</span>
+                          <span className="font-bold text-gray-800 font-mono text-[11px]">
+                            {isKycVerified ? `XXXX-XXXX-${aadhaarNumber.replace(/\D/g, "").slice(-4)}` : "—"}
+                          </span>
+                        </div>
+                        <div className="bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-lg text-right">
+                          <span className="text-orange-600 block text-[8.5px]">સામાજિક વર્ગ</span>
+                          <span className="font-bold text-orange-900 font-mono text-[11px]">
+                            {casteCategory === "sebc" ? "SEBC/OBC" : casteCategory === "sc" ? "SC" : casteCategory === "st" ? "ST" : casteCategory === "ews" ? "EWS" : "General"}
+                          </span>
+                        </div>
+                      </div>
                     </div>
 
-                    {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Hover & Click */}
-                    <div
-                      className="cursor-pointer group select-none"
-                      onMouseEnter={() => isKycVerified && setActiveDetailView("members")}
-                      onClick={() => {
-                        if (!isKycVerified) return;
-                        setActiveDetailView(activeDetailView === "members" ? null : "members");
-                        setShowMembersModal(!showMembersModal);
-                      }}
-                      title={isKycVerified ? "કુટુંબના સભ્યોની યાદી જોવા ક્લિક કરો" : ""}
-                    >
-                      <span className="text-gray-400 block text-[9px] flex items-center justify-between">
-                        રેશનકાર્ડ સભ્યો
-                        {isKycVerified && (
-                          <span
-                            className={`font-bold text-[8px] px-1 py-0.2 rounded transition ${
-                              activeDetailView === "members"
-                                ? "bg-orange-500 text-white"
-                                : "bg-orange-100 text-orange-700 group-hover:bg-orange-200"
-                            }`}
-                          >
-                            {activeDetailView === "members" ? "ખુલ્લું ▲" : "વિગત ▾"}
-                          </span>
-                        )}
-                      </span>
-                      <span
-                        className={`font-bold flex items-center gap-1 transition ${
-                          activeDetailView === "members"
-                            ? "text-orange-600"
-                            : "text-gray-800 group-hover:text-orange-600"
-                        }`}
+                    {/* Bottom Row: Family Members + Residence (Clean, fully readable) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-0.5">
+                      {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Click */}
+                      <div
+                        className="cursor-pointer group select-none flex items-center gap-1.5"
+                        onClick={() => {
+                          if (!isKycVerified) return;
+                          setActiveDetailView(activeDetailView === "members" ? null : "members");
+                          setShowMembersModal(!showMembersModal);
+                        }}
+                        title={isKycVerified ? "કુટુંબના સભ્યોની યાદી જોવા ક્લિક કરો" : ""}
                       >
-                        <Users size={12} className="text-orange-500 shrink-0" />
-                        {familyCount > 0 ? `${familyCount} વ્યક્તિઓ` : "—"}
-                      </span>
-                    </div>
+                        <span className="text-gray-500 font-medium text-[11px]">રેશનકાર્ડ:</span>
+                        <span className="font-bold text-orange-700 bg-white border border-orange-200 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] shadow-2xs group-hover:border-orange-400 transition">
+                          <Users size={12} className="text-orange-500 shrink-0" />
+                          <span>{familyCount > 0 ? `${familyCount} સભ્યો (યાદી જુઓ ▾)` : "—"}</span>
+                        </span>
+                      </div>
 
-                    {/* 📍 ગામ & જિલ્લો - Interactive Hover & Click */}
-                    <div
-                      className="cursor-pointer group select-none"
-                      onMouseEnter={() => isKycVerified && setActiveDetailView("address")}
-                      onClick={() => {
-                        if (!isKycVerified) return;
-                        setActiveDetailView(activeDetailView === "address" ? null : "address");
-                        setShowAddressModal(!showAddressModal);
-                      }}
-                      title={isKycVerified ? "સંપૂર્ણ રહેઠાણ સરનામું જોવા ક્લિક કરો" : ""}
-                    >
-                      <span className="text-gray-400 block text-[9px] flex items-center justify-between">
-                        ગામ & જિલ્લો
-                        {isKycVerified && (
-                          <span
-                            className={`font-bold text-[8px] px-1 py-0.2 rounded transition ${
-                              activeDetailView === "address"
-                                ? "bg-blue-600 text-white"
-                                : "bg-blue-100 text-blue-700 group-hover:bg-blue-200"
-                            }`}
-                          >
-                            {activeDetailView === "address" ? "ખુલ્લું ▲" : "સરનામું ▾"}
-                          </span>
-                        )}
-                      </span>
-                      <span
-                        className={`font-bold flex items-center gap-1 transition truncate ${
-                          activeDetailView === "address"
-                            ? "text-blue-600"
-                            : "text-gray-800 group-hover:text-blue-600"
-                        }`}
+                      {/* 📍 ગામ & જિલ્લો - Interactive Click */}
+                      <div
+                        className="cursor-pointer group select-none flex items-center gap-1.5"
+                        onClick={() => {
+                          if (!isKycVerified) return;
+                          setActiveDetailView(activeDetailView === "address" ? null : "address");
+                          setShowAddressModal(!showAddressModal);
+                        }}
+                        title={isKycVerified ? "સંપૂર્ણ રહેઠાણ સરનામું જોવા ક્લિક કરો" : ""}
                       >
-                        <MapPin size={12} className="text-blue-500 shrink-0" />
-                        <span className="truncate">{village ? `${village}, ${district}` : "—"}</span>
-                      </span>
+                        <span className="text-gray-500 font-medium text-[11px]">રહેઠાણ:</span>
+                        <span className="font-bold text-blue-700 bg-white border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] shadow-2xs group-hover:border-blue-400 transition">
+                          <MapPin size={12} className="text-blue-500 shrink-0" />
+                          <span>{village ? `${village}, ${district}` : "—"} (સરનામું ▾)</span>
+                        </span>
+                      </div>
                     </div>
                   </div>
 
@@ -1014,7 +982,7 @@ export default function BenefitCalculatorPage() {
                               </span>
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-gray-600 mt-2 pt-1.5 border-t border-orange-50">
-                              <span className="text-[10px] font-medium text-gray-500 truncate mr-1">
+                              <span className="text-[10px] font-medium text-gray-500 mr-1 leading-snug">
                                 {m.relation}
                               </span>
                               <span className="font-bold text-orange-800 bg-orange-100/90 px-2 py-0.5 rounded-full font-mono text-[10px] shrink-0 whitespace-nowrap">
