@@ -106,10 +106,12 @@ export async function POST(req: NextRequest) {
 
     const customPrompt = `${STRICT_VERIFICATION_PROMPT}\n\n====================\nEXPECTED DOCUMENT REQUIREMENT FOR THIS SLOT: "${expectedDocType}"\n====================`;
 
-    // Active Gemini vision models with high availability
+    // Active Gemini vision models — try all until one works
     const visionModels = [
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
+      "gemini-3.8-flash",
+      "gemini-3.7-flash",
+      "gemini-2.5-flash",
+      "gemini-2.5-flash-preview-05-20",
     ];
     let parsedData: DocumentAnalysisResult | null = null;
 
@@ -119,7 +121,7 @@ export async function POST(req: NextRequest) {
           model: modelName,
           generationConfig: {
             temperature: 0.1,
-            responseMimeType: "application/json",
+            maxOutputTokens: 1024,
           },
         });
 
@@ -134,7 +136,13 @@ export async function POST(req: NextRequest) {
         ]);
 
         const responseText = result.response.text();
-        const parsed = JSON.parse(responseText) as DocumentAnalysisResult;
+
+        // Extract JSON — handle markdown code blocks like ```json ... ```
+        const jsonMatch = responseText.match(/```(?:json)?\s*([\s\S]*?)\s*```/) ||
+                          responseText.match(/(\{[\s\S]*\})/);
+        const rawJson = jsonMatch ? jsonMatch[1] : responseText.trim();
+
+        const parsed = JSON.parse(rawJson) as DocumentAnalysisResult;
         if (parsed && parsed.documentType) {
           // Double safeguard: if matchesExpected is false, ensure isValidForGovt is strictly false
           if (!parsed.matchesExpected) {
@@ -146,7 +154,7 @@ export async function POST(req: NextRequest) {
         }
       } catch (mErr: unknown) {
         const msg = mErr instanceof Error ? mErr.message : String(mErr);
-        console.warn(`Vision model ${modelName} failed or unavailable:`, msg);
+        console.warn(`Vision model ${modelName} failed:`, msg);
       }
     }
 
