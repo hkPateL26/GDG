@@ -671,6 +671,27 @@ export default function DocumentServicePortal({
         setShowPaymentModal(false);
         setSubmittedApp(data.application);
         setNotificationPayload(data.notifications || null);
+
+        // Sync with browser localStorage so it immediately reflects in My Applications
+        if (typeof window !== "undefined") {
+          try {
+            const savedAppsStr = localStorage.getItem("nagrik_user_applications");
+            let savedApps = savedAppsStr ? JSON.parse(savedAppsStr) : [];
+            savedApps = [data.application, ...savedApps.filter((a: { id?: string }) => a && a.id !== data.application.id)];
+            localStorage.setItem("nagrik_user_applications", JSON.stringify(savedApps));
+
+            const savedSessionStr = localStorage.getItem("nagrik_citizen_session");
+            if (savedSessionStr) {
+              const session = JSON.parse(savedSessionStr);
+              const existing = session.activeApplications || [];
+              session.activeApplications = [data.application, ...existing.filter((a: { id?: string }) => a && a.id !== data.application.id)];
+              localStorage.setItem("nagrik_citizen_session", JSON.stringify(session));
+            }
+            window.dispatchEvent(new Event("storage"));
+          } catch (storageErr) {
+            console.warn("Storage sync error:", storageErr);
+          }
+        }
       } else {
         alert(data.error || "અરજી સબમિટ કરવામાં મુશ્કેલી આવી.");
       }

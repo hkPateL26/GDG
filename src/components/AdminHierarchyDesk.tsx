@@ -172,9 +172,24 @@ export default function AdminHierarchyDesk({
       const res = await fetch(`/api/track?${params.toString()}`);
       const data = await res.json();
       if (data.success && data.records) {
+        let serverRecords: CitizenApplication[] = data.records;
+
+        // Also merge client-side locally submitted applications so new submissions show immediately
+        if (typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("nagrik_user_applications");
+            if (raw) {
+              const localApps: CitizenApplication[] = JSON.parse(raw);
+              serverRecords = [...localApps, ...serverRecords];
+            }
+          } catch (e) {
+            console.warn("Admin local storage parse error:", e);
+          }
+        }
+
         const seen = new Set<string>();
         const unique: CitizenApplication[] = [];
-        for (const item of data.records) {
+        for (const item of serverRecords) {
           if (item && item.id && !seen.has(item.id)) {
             seen.add(item.id);
             unique.push(item);
@@ -210,11 +225,8 @@ export default function AdminHierarchyDesk({
       setSelectedDistrict(target.district);
     }
 
-    if (target.taluka) {
-      setSelectedTaluka(target.taluka);
-    } else {
-      setSelectedTaluka("all");
-    }
+    // Default to "all" so switching role does not arbitrarily hide other talukas in the district
+    setSelectedTaluka("all");
 
     sessionStorage.setItem("nagrik_officer_session", JSON.stringify(target));
   };

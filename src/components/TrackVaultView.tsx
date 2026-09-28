@@ -176,9 +176,22 @@ export default function TrackVaultView({
       const data = await res.json();
       if (data.success && data.citizen) {
         const myApps: CitizenApplication[] = data.citizen.activeApplications || [];
+
+        // Also merge client-side locally submitted applications so new submissions never vanish
+        let localApps: CitizenApplication[] = [];
+        if (typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("nagrik_user_applications");
+            if (raw) localApps = JSON.parse(raw);
+          } catch (e) {
+            console.warn("Local storage parse error:", e);
+          }
+        }
+
+        const combined = [...localApps, ...myApps];
         const seen = new Set<string>();
         const uniqueApps: CitizenApplication[] = [];
-        for (const a of myApps) {
+        for (const a of combined) {
           if (a && a.id && !seen.has(a.id)) {
             seen.add(a.id);
             uniqueApps.push(a);
@@ -186,9 +199,12 @@ export default function TrackVaultView({
         }
         setRecords(uniqueApps);
 
-        if (targetId) {
-          const found = uniqueApps.find((a) => a.id.toLowerCase() === targetId.toLowerCase());
+        const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "") || searchQuery.trim();
+        if (activeTargetId) {
+          const found = uniqueApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
           if (found) setSelectedApp(found);
+        } else if (uniqueApps.length > 0) {
+          setSelectedApp(uniqueApps[0]);
         }
       } else {
         setError(data.error || "તમારી અરજીઓ લોડ કરવામાં સમસ્યા આવી.");
@@ -379,7 +395,16 @@ export default function TrackVaultView({
       loadOfficerData();
     } else {
       const q = searchQuery.trim().toLowerCase();
-      const myApps = citizen.activeApplications || [];
+      let myApps = citizen.activeApplications || [];
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("nagrik_user_applications");
+          if (raw) {
+            const localApps = JSON.parse(raw);
+            myApps = [...localApps, ...myApps];
+          }
+        } catch {}
+      }
       if (!q) {
         setRecords(myApps);
       } else {

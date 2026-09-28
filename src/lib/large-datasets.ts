@@ -3568,8 +3568,17 @@ export const DOCUMENT_SERVICES: DocumentServiceConfig[] = [
   }
 ];
 
-// Global in-memory cache for newly created citizen applications
-export const CUSTOM_USER_APPLICATIONS: CitizenApplication[] = [];
+// Global in-memory cache for newly created citizen applications (persists across Next.js reloads)
+const globalForApps = globalThis as unknown as {
+  __CUSTOM_USER_APPLICATIONS__?: CitizenApplication[];
+};
+
+export const CUSTOM_USER_APPLICATIONS: CitizenApplication[] =
+  globalForApps.__CUSTOM_USER_APPLICATIONS__ ?? [];
+
+if (!globalForApps.__CUSTOM_USER_APPLICATIONS__) {
+  globalForApps.__CUSTOM_USER_APPLICATIONS__ = CUSTOM_USER_APPLICATIONS;
+}
 
 export interface ExistingCitizenProfile {
   found: boolean;
@@ -3800,12 +3809,17 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
 
 export function addCustomApplication(app: CitizenApplication) {
   const sanitized = sanitizeApplication(app);
-  // Prepend so it appears first
-  const existingIdx = CUSTOM_USER_APPLICATIONS.findIndex((a) => a.id === sanitized.id);
+  const targetList = globalForApps.__CUSTOM_USER_APPLICATIONS__ || CUSTOM_USER_APPLICATIONS;
+  const existingIdx = targetList.findIndex((a) => a.id === sanitized.id);
   if (existingIdx >= 0) {
-    CUSTOM_USER_APPLICATIONS[existingIdx] = sanitized;
+    targetList[existingIdx] = sanitized;
   } else {
-    CUSTOM_USER_APPLICATIONS.unshift(sanitized);
+    targetList.unshift(sanitized);
+  }
+  if (CUSTOM_USER_APPLICATIONS !== targetList) {
+    const fbIdx = CUSTOM_USER_APPLICATIONS.findIndex((a) => a.id === sanitized.id);
+    if (fbIdx >= 0) CUSTOM_USER_APPLICATIONS[fbIdx] = sanitized;
+    else CUSTOM_USER_APPLICATIONS.unshift(sanitized);
   }
   return sanitized;
 }
@@ -4263,71 +4277,89 @@ export function getCitizenBenefitProfile(mobile: string, aadhaarLast4?: string):
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10) || "9825012345";
   const cleanAadhaar = (aadhaarLast4 || "").trim().slice(-4) || "4829";
 
-  // Find all applications submitted by this citizen in our custom or benchmark dataset
-  const citizenApps = CUSTOM_USER_APPLICATIONS.filter(
-    (a) => (a.mobile && a.mobile.includes(cleanMobile)) || a.aadhaarLast4 === cleanAadhaar
+  const targetList = globalForApps.__CUSTOM_USER_APPLICATIONS__ || CUSTOM_USER_APPLICATIONS;
+
+  // Find all applications submitted by this citizen in our custom dataset
+  const customUserApps = targetList.filter(
+    (a) =>
+      (a.mobile && cleanMobile && a.mobile.includes(cleanMobile)) ||
+      (a.aadhaarLast4 && cleanAadhaar && a.aadhaarLast4 === cleanAadhaar) ||
+      (a.citizenNameGu && a.citizenNameGu.includes("હરી")) ||
+      (a.citizenName && a.citizenName.toLowerCase().includes("hari"))
   );
 
-  // If none found in custom, associate 3 diverse benchmark applications for demonstration
-  // 1. Approved (PM-Kisan, 3 days SLA done, DBT transferred)
-  // 2. Processing (Income Certificate, 1 day 24-hr SLA, Under Mamlatdar scrutiny)
-  // 3. Rejected / Action Required (Ration Card update, 7 days SLA, with official reason & 1-click re-apply)
-  if (citizenApps.length === 0) {
-    citizenApps.push(
-      BENCHMARK_APPLICATIONS[0],
-      {
-        id: "APP-GUJ-7821",
-        citizenName: "Hari Vinodrai Patel",
-        citizenNameGu: "હરી વિનોદરાઈ પટેલ",
-        gender: "male",
-        schemeId: "income",
-        schemeName: "Income Certificate (આવકનો દાખલો)",
-        schemeNameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
-        schemeEmoji: "📜",
-        district: "Rajkot",
-        districtGu: "રાજકોટ",
-        taluka: "Rajkot",
-        village: "ઓમ નગર (Omnagar)",
-        aadhaarLast4: cleanAadhaar,
-        mobile: cleanMobile,
-        status: "processing",
-        appliedDate: "2026-09-27",
-        lastUpdated: "2026-09-28",
-        benefitAmount: 0,
-        remarksGu: "તલાટી કમ મંત્રી દ્વારા સ્થળ પંચનામું ચકાસણી હેઠળ છે. ૨૪ કલાકની સત્તાવાર સમયમર્યાદામાં ડિજિટલ સહી થશે.",
-        remarksEn: "Talati-cum-Mantri field verification in progress. Digital e-Sign scheduled within 24 hours.",
-        officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), રાજકોટ",
-        workflowStage: 2,
-        paymentStatus: "paid",
-        feeAmount: 20,
-      },
-      {
-        id: "APP-GUJ-6490",
-        citizenName: "Hari Vinodrai Patel",
-        citizenNameGu: "હરી વિનોદરાઈ પટેલ",
-        gender: "male",
-        schemeId: "ration",
-        schemeName: "Digital Ration Card - Add Member",
-        schemeNameGu: "ડિજિટલ રેશનકાર્ડ - નવા સભ્ય ઉમેરો",
-        schemeEmoji: "🛒",
-        district: "Rajkot",
-        districtGu: "રાજકોટ",
-        taluka: "Rajkot",
-        village: "ઓમ નગર (Omnagar)",
-        aadhaarLast4: cleanAadhaar,
-        mobile: cleanMobile,
-        status: "rejected",
-        appliedDate: "2026-09-18",
-        lastUpdated: "2026-09-22",
-        benefitAmount: 0,
-        remarksGu: "નવા સભ્ય (પ્રિયાંશી) નું જન્મ પ્રમાણપત્ર અસ્પષ્ટ વંચાય છે. કૃપા કરીને ગ્રામ પંચાયત અથવા નગરપાલિકાનું અસલ ડિજિટલ જન્મ પ્રમાણપત્ર અપલોડ કરી પુનઃ અરજી કરવી.",
-        remarksEn: "Birth certificate scan for new member is unclear. Please re-apply with original digital birth certificate from Panchayat / Municipality.",
-        officerDesignation: "પુરવઠા મામલતદાર શ્રી, રાજકોટ",
-        workflowStage: 2,
-        paymentStatus: "paid",
-        feeAmount: 20,
-      }
-    );
+  const seenIds = new Set<string>();
+  const citizenApps: CitizenApplication[] = [];
+
+  for (const app of customUserApps) {
+    if (!seenIds.has(app.id)) {
+      seenIds.add(app.id);
+      citizenApps.push(sanitizeApplication(app));
+    }
+  }
+
+  // Also include baseline benchmark records for complete demonstration
+  const demoApps: CitizenApplication[] = [
+    BENCHMARK_APPLICATIONS[0],
+    {
+      id: "APP-GUJ-7821",
+      citizenName: "Hari Vinodrai Patel",
+      citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+      gender: "male",
+      schemeId: "income",
+      schemeName: "Income Certificate (આવકનો દાખલો)",
+      schemeNameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
+      schemeEmoji: "📜",
+      district: "Rajkot",
+      districtGu: "રાજકોટ",
+      taluka: "Rajkot",
+      village: "ઓમ નગર (Omnagar)",
+      aadhaarLast4: cleanAadhaar,
+      mobile: cleanMobile,
+      status: "processing",
+      appliedDate: "2026-09-27",
+      lastUpdated: "2026-09-28",
+      benefitAmount: 0,
+      remarksGu: "તલાટી કમ મંત્રી દ્વારા સ્થળ પંચનામું ચકાસણી હેઠળ છે. ૨૪ કલાકની સત્તાવાર સમયમર્યાદામાં ડિજિટલ સહી થશે.",
+      remarksEn: "Talati-cum-Mantri field verification in progress. Digital e-Sign scheduled within 24 hours.",
+      officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), રાજકોટ",
+      workflowStage: 2,
+      paymentStatus: "paid",
+      feeAmount: 20,
+    },
+    {
+      id: "APP-GUJ-6490",
+      citizenName: "Hari Vinodrai Patel",
+      citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+      gender: "male",
+      schemeId: "ration",
+      schemeName: "Digital Ration Card - Add Member",
+      schemeNameGu: "ડિજિટલ રેશનકાર્ડ - નવા સભ્ય ઉમેરો",
+      schemeEmoji: "🛒",
+      district: "Rajkot",
+      districtGu: "રાજકોટ",
+      taluka: "Rajkot",
+      village: "ઓમ નગર (Omnagar)",
+      aadhaarLast4: cleanAadhaar,
+      mobile: cleanMobile,
+      status: "rejected",
+      appliedDate: "2026-09-18",
+      lastUpdated: "2026-09-22",
+      benefitAmount: 0,
+      remarksGu: "નવા સભ્ય (પ્રિયાંશી) નું જન્મ પ્રમાણપત્ર અસ્પષ્ટ વંચાય છે. કૃપા કરીને ગ્રામ પંચાયત અથવા નગરપાલિકાનું અસલ ડિજિટલ જન્મ પ્રમાણપત્ર અપલોડ કરી પુનઃ અરજી કરવી.",
+      remarksEn: "Birth certificate scan for new member is unclear. Please re-apply with original digital birth certificate from Panchayat / Municipality.",
+      officerDesignation: "પુરવઠા મામલતદાર શ્રી, રાજકોટ",
+      workflowStage: 2,
+      paymentStatus: "paid",
+      feeAmount: 20,
+    }
+  ];
+
+  for (const demo of demoApps) {
+    if (!seenIds.has(demo.id)) {
+      seenIds.add(demo.id);
+      citizenApps.push(sanitizeApplication(demo));
+    }
   }
 
   // Pre-configured government benefit ledger (DBT De-duplication Ledger)
