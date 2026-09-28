@@ -21,10 +21,12 @@ import {
   RotateCw,
   AlertTriangle,
   CheckCircle2,
+  Award,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
 
 type StatusType = "approved" | "processing" | "pending" | "rejected";
 
@@ -149,6 +151,7 @@ export default function TrackVaultView({
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
+  const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [isConfirmingCash, setIsConfirmingCash] = useState(false);
@@ -669,7 +672,7 @@ export default function TrackVaultView({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex items-center gap-2 flex-wrap shrink-0">
                   {selectedApp.status === "rejected" && (
                     <button
                       type="button"
@@ -680,14 +683,51 @@ export default function TrackVaultView({
                       <span>પુનઃ અરજી કરો</span>
                     </button>
                   )}
-                  <button
-                    type="button"
-                    onClick={() => setShowPrintModal(true)}
-                    className="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer"
-                  >
-                    <Printer size={14} />
-                    <span>પહોંચ ડાઉનલોડ (PDF)</span>
-                  </button>
+
+                  {/* ── Gated Action 1: Payment Slip (Unlocks ONLY after payment verified) ── */}
+                  {selectedApp.paymentStatus === "paid" ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowPrintModal(true)}
+                      className="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Printer size={14} />
+                      <span>પહોંચ ડાઉનલોડ (PDF)</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      title="કચેરી અધિકારી દ્વારા ચુકવણી ખરાઈ થયા બાદ જ સત્તાવાર પહોંચ અનલૉક થશે"
+                      className="px-3 py-2 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs border border-slate-200 flex items-center gap-1.5 cursor-not-allowed opacity-75"
+                    >
+                      <Lock size={13} className="text-amber-500" />
+                      <span>પહોંચ લૉક (ચુકવણી ખરાઈ બાકી)</span>
+                    </button>
+                  )}
+
+                  {/* ── Gated Action 2: Official Certificate (Unlocks ONLY after Mamlatdar e-Sign) ── */}
+                  {selectedApp.workflowStage === 3 || selectedApp.status === "approved" ? (
+                    <button
+                      type="button"
+                      onClick={() => setShowCertificateModal(true)}
+                      className="px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer animate-pulse"
+                    >
+                      <Award size={14} />
+                      <span>📜 નવું સરકારી પ્રમાણપત્ર (PDF)</span>
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      title="તાલુકા મામલતદાર સાહેબની ડિજિટલ સહી (e-Sign) બાદ જ પ્રમાણપત્ર ડાઉનલોડ થશે"
+                      className="px-3 py-2 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs border border-slate-200 flex items-center gap-1.5 cursor-not-allowed opacity-75"
+                    >
+                      <Lock size={13} className="text-slate-400" />
+                      <span>પ્રમાણપત્ર લૉક (e-Sign બાકી)</span>
+                    </button>
+                  )}
+
                   <button
                     type="button"
                     onClick={() => setSelectedApp(null)}
@@ -1254,6 +1294,17 @@ export default function TrackVaultView({
             app={selectedApp}
             isModalPreview={true}
             onClose={() => setShowPrintModal(false)}
+          />
+        </div>
+      )}
+
+      {/* ── Official Government Certificate Modal (PDF Download / Print) ── */}
+      {showCertificateModal && selectedApp && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+          <OfficialGovernmentCertificate
+            app={selectedApp}
+            isModalPreview={true}
+            onClose={() => setShowCertificateModal(false)}
           />
         </div>
       )}

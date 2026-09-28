@@ -116,3 +116,58 @@ export function SkeletonStatusCard() {
     </div>
   );
 }
+
+// ── Admin Hierarchy Specific Skeleton Loaders ──
+
+export function SkeletonAdminStats() {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 animate-pulse">
+      {[...Array(4)].map((_, i) => (
+        <div key={i} className="bg-white p-4 rounded-2xl border border-slate-200 space-y-2">
+          <div className="h-3 bg-slate-200 rounded w-24" />
+          <div className="h-6 bg-slate-200 rounded w-16" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonAdminTable() {
+  return (
+    <div className="bg-white rounded-3xl border border-slate-200 p-4 animate-pulse space-y-3">
+      <div className="h-10 bg-slate-100 rounded-xl w-full" />
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-14 bg-slate-50 border border-slate-100 rounded-xl p-3 flex items-center justify-between gap-4">
+          <div className="h-4 bg-slate-200 rounded w-28" />
+          <div className="h-4 bg-slate-200 rounded w-36 hidden sm:block" />
+          <div className="h-6 bg-slate-200 rounded-full w-20" />
+          <div className="h-8 bg-slate-200 rounded-lg w-24" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function SkeletonReviewModal() {
+  return (
+    <div className="bg-white rounded-3xl p-6 border border-slate-200 animate-pulse space-y-5 max-w-2xl mx-auto">
+      <div className="flex items-center gap-3">
+        <div className="w-12 h-12 bg-slate-200 rounded-2xl" />
+        <div className="space-y-2 flex-1">
+          <div className="h-4 bg-slate-200 rounded w-48" />
+          <div className="h-3 bg-slate-200 rounded w-32" />
+        </div>
+      </div>
+      <div className="h-24 bg-slate-100 rounded-2xl" />
+      <div className="space-y-2">
+        <div className="h-3 bg-slate-200 rounded w-full" />
+        <div className="h-3 bg-slate-200 rounded w-5/6" />
+        <div className="h-3 bg-slate-200 rounded w-3/4" />
+      </div>
+      <div className="flex gap-3 pt-3">
+        <div className="flex-1 h-10 bg-slate-200 rounded-xl" />
+        <div className="flex-1 h-10 bg-slate-200 rounded-xl" />
+      </div>
+    </div>
+  );
+}

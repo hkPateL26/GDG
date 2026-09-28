@@ -4410,7 +4410,67 @@ export function verifyOfficerPin(officerId: string, pin: string) {
   const cleanPin = (pin || "").trim();
 
   // Government Officer Credentials for Hackathon Demonstration
-  if ((cleanId === "GUJ-GOV-9012" || cleanId.startsWith("GUJ")) && cleanPin === "GJ2026") {
+  if (cleanPin === "GJ2026") {
+    if (cleanId === "GUJ-STATE-001") {
+      return {
+        success: true,
+        officer: {
+          id: "GUJ-STATE-001",
+          name: "મનોજ અગ્રવાલ, IAS",
+          designation: "અધિક મુખ્ય સચિવ (મહેસૂલ & સામાન્ય વહીવટ વિભાગ)",
+          district: "All",
+          districtGu: "સમગ્ર ગુજરાત (૩૩ જિલ્લા)",
+          office: "સ્વર્ણિમ સંકુલ-૧, સચિવાલય, ગાંધીનગર",
+          role: "state_admin",
+        },
+      };
+    }
+    if (cleanId === "GUJ-COL-3001") {
+      return {
+        success: true,
+        officer: {
+          id: "GUJ-COL-3001",
+          name: "પ્રભવ જોષી, IAS",
+          designation: "જિલ્લા કલેક્ટર & ડિસ્ટ્રિક્ટ મેજિસ્ટ્રેટ, રાજકોટ",
+          district: "Rajkot",
+          districtGu: "રાજકોટ",
+          office: "જિલ્લા કલેક્ટર કચેરી, રાજકોટ",
+          role: "district_collector",
+        },
+      };
+    }
+    if (cleanId === "GUJ-SDM-5002") {
+      return {
+        success: true,
+        officer: {
+          id: "GUJ-SDM-5002",
+          name: "કે. એમ. પંડ્યા, GAS",
+          designation: "સબ-ડિવિઝનલ મેજિસ્ટ્રેટ & પ્રાંત અધિકારી, ગોંડલ",
+          district: "Rajkot",
+          districtGu: "રાજકોટ",
+          taluka: "Gondal",
+          office: "સબ-ડિવિઝનલ મેજિસ્ટ્રેટ (પ્રાંત) કચેરી, ગોંડલ",
+          role: "sdm_prant",
+        },
+      };
+    }
+    if (cleanId === "GUJ-TAL-7089") {
+      return {
+        success: true,
+        officer: {
+          id: "GUJ-TAL-7089",
+          name: "વિજયકુમાર જોષી",
+          designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, ગોમતા",
+          district: "Rajkot",
+          districtGu: "રાજકોટ",
+          taluka: "Gondal",
+          office: "ગ્રામ પંચાયત કચેરી, ગોમતા",
+          role: "talati",
+        },
+      };
+    }
+
+    // Default / GUJ-GOV-9012 (Taluka Mamlatdar)
     return {
       success: true,
       officer: {
@@ -4420,11 +4480,12 @@ export function verifyOfficerPin(officerId: string, pin: string) {
         district: "Rajkot",
         taluka: "Gondal",
         office: "જન સેવા કેન્દ્ર & તાલુકા સેવા સદન",
-        role: "admin",
+        role: "mamlatdar",
       },
     };
   }
 
   return { success: false, error: "અમાન્ય કર્મચારી ID અથવા સત્તાવાર સુરક્ષા PIN. (ડેમો PIN: GJ2026)" };
 }
+
 

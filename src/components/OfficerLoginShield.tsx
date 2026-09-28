@@ -122,21 +122,97 @@ export default function OfficerLoginShield({
 
       {/* ── Form Body ── */}
       <div className="p-6 sm:p-8 space-y-4">
-        {/* Fast Demo Banner for Hackathon Judges */}
-        <div className="p-3 bg-amber-50 border border-amber-300 rounded-2xl flex items-center justify-between gap-2 shadow-2xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <Sparkles size={16} className="text-amber-700 shrink-0" />
-            <p className="text-xs font-bold text-amber-950 truncate">
-              હેકાથોન જજ લાઈવ ડેમો: ૧-ક્લિકમાં ID & PIN ભરો
-            </p>
+        {/* Fast Demo Banner for 5 Administrative Tiers */}
+        <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl space-y-2.5 shadow-2xs">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <Sparkles size={16} className="text-amber-700 shrink-0" />
+              <p className="text-xs font-black text-amber-950 truncate">
+                ૫-સ્તરીય વહીવટી સ્તર પસંદ કરો (1-Click Fast Fill):
+              </p>
+            </div>
+            <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full">
+              PIN: GJ2026
+            </span>
           </div>
-          <button
-            type="button"
-            onClick={handleDemoFill}
-            className="px-3 py-1 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-bold text-xs rounded-xl transition shrink-0 shadow-2xs"
-          >
-            ડેમો ભરો ✓
-          </button>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 text-[11px] font-bold">
+            <button
+              type="button"
+              onClick={() => {
+                setOfficerId("GUJ-STATE-001");
+                setOfficerPin("GJ2026");
+                setError("");
+              }}
+              className={`p-1.5 rounded-lg border text-left transition ${
+                officerId === "GUJ-STATE-001"
+                  ? "bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              🏛️ ૧. મુખ્ય સચિવાલય
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOfficerId("GUJ-COL-3001");
+                setOfficerPin("GJ2026");
+                setError("");
+              }}
+              className={`p-1.5 rounded-lg border text-left transition ${
+                officerId === "GUJ-COL-3001"
+                  ? "bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              🏢 ૨. જિલ્લા કલેક્ટર
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOfficerId("GUJ-SDM-5002");
+                setOfficerPin("GJ2026");
+                setError("");
+              }}
+              className={`p-1.5 rounded-lg border text-left transition ${
+                officerId === "GUJ-SDM-5002"
+                  ? "bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              ⚖️ ૩. પ્રાંત અધિકારી (SDM)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOfficerId("GUJ-GOV-9012");
+                setOfficerPin("GJ2026");
+                setError("");
+              }}
+              className={`p-1.5 rounded-lg border text-left transition ${
+                officerId === "GUJ-GOV-9012"
+                  ? "bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              🖋️ ૪. તાલુકા મામલતદાર
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setOfficerId("GUJ-TAL-7089");
+                setOfficerPin("GJ2026");
+                setError("");
+              }}
+              className={`p-1.5 rounded-lg border text-left transition ${
+                officerId === "GUJ-TAL-7089"
+                  ? "bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs"
+                  : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"
+              }`}
+            >
+              📋 ૫. તલાટી કમ મંત્રી
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleLogin} className="space-y-4">

@@ -9,6 +9,7 @@ import TrackVaultView from "@/components/TrackVaultView";
 import DocumentServicePortal from "@/components/DocumentServicePortal";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
+import AdminHierarchyDesk from "@/components/AdminHierarchyDesk";
 import { User, Building2, LogOut, X } from "lucide-react";
 
 export type PortalTabType = "track" | "documents" | "eligibility";
@@ -129,54 +130,16 @@ export default function UnifiedCitizenPortal({
   }
 
   // ══════════════════════════════════════════════════════════════
-  // STATE A: OFFICER LOGGED IN (Mamlatdar Scrutiny Portal)
+  // STATE A: OFFICER LOGGED IN (5-Tier Administrative Hierarchy Desk)
   // ══════════════════════════════════════════════════════════════
   if (officerSession) {
     return (
       <main className="min-h-screen bg-slate-100 text-slate-900 pb-16 overflow-x-hidden">
         <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 animate-in fade-in duration-300">
-          {/* Officer Dashboard Header */}
-          <div className="bg-slate-900 text-white rounded-3xl p-5 border-2 border-slate-800 shadow-xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3.5">
-              <div className="w-13 h-13 bg-amber-400/20 border border-amber-400/30 rounded-2xl flex items-center justify-center text-3xl shrink-0 shadow-inner">
-                🏛️
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h2 className="font-black text-base sm:text-lg text-white">
-                    {officerSession.name || "H. V. Patel, GAS"}
-                  </h2>
-                  <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2.5 py-0.5 rounded-full uppercase shadow-xs">
-                    મામલતદાર કચેરી
-                  </span>
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" /> અધિકૃત એક્ટિવ સત્ર
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 mt-1">
-                  {officerSession.designation || "તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ"} &bull; ID:{" "}
-                  <strong className="font-mono text-amber-300">{officerSession.id || "GUJ-GOV-9012"}</strong> ({officerSession.taluka}, {officerSession.district})
-                </p>
-              </div>
-            </div>
-
-            <div className="flex items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleOfficerLogout}
-                className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-rose-300 hover:text-rose-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
-              >
-                <LogOut size={13} />
-                <span>કચેરી લૉગઆઉટ</span>
-              </button>
-            </div>
-          </div>
-
-          {/* Full Officer Scrutiny Desk Component */}
-          <TrackVaultView
-            citizen={citizenSession as CitizenLedgerProfile}
-            onNavigateToDocuments={() => {}}
-            onNavigateToEligibility={() => {}}
+          <AdminHierarchyDesk
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            initialOfficer={officerSession as any}
+            onLogout={handleOfficerLogout}
           />
         </div>
       </main>
