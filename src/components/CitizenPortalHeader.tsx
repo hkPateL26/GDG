@@ -101,6 +101,14 @@ export default function CitizenPortalHeader({
                   </button>
                 )}
               </p>
+              {activeTab === "documents" && (
+                <p className="text-[11px] text-teal-700 mt-1.5 flex items-center gap-1.5 flex-wrap">
+                  <span className="inline-flex items-center gap-1 bg-teal-50 border border-teal-200 text-teal-800 font-bold px-2 py-0.5 rounded-full">
+                    ✓ ઓટો-ફિલ સક્રિય
+                  </span>
+                  <span>નામ, મોબાઈલ, આધાર અને સરનામું ફોર્મમાં આપોઆપ ભરાઈ ગયું છે — ફરી ટાઇપ કરવાની જરૂર નથી.</span>
+                </p>
+              )}
             </div>
           </div>
 
