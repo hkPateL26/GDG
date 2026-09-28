@@ -45,7 +45,7 @@ export default function EligibilityLedgerView({
   const [hasBPL, setHasBPL] = useState<boolean>(citizen.hasBPL || false);
   const [hasGirlChild, setHasGirlChild] = useState<boolean>(false);
 
-  const [activeTab, setActiveTab] = useState<"eligible" | "ineligible" | "profile">("eligible");
+  const [activeTab, setActiveTab] = useState<"eligible" | "ineligible" | "profile">("profile");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -140,9 +140,9 @@ export default function EligibilityLedgerView({
   };
 
   const tabs = [
+    { id: "profile" as const,    label: "⚙️ પ્રોફાઇલ & DBT",                       color: "orange"  },
     { id: "eligible" as const,   label: `✅ પાત્ર (${eligibleSchemes.length})`,   color: "emerald" },
     { id: "ineligible" as const, label: `❌ અ-પાત્ર (${otherSchemes.length})`,    color: "slate"   },
-    { id: "profile" as const,    label: "⚙️ પ્રોફાઇલ & DBT",                       color: "orange"  },
   ];
 
   return (
