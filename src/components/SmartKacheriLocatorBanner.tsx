@@ -35,6 +35,8 @@ interface SmartKacheriLocatorBannerProps {
     taluka?: string;
     village?: string;
   };
+  defaultExpanded?: boolean;
+  onClose?: () => void;
 }
 
 // Official Home Coordinates for citizen (Gomta village, Gondal taluka, Rajkot)
@@ -51,12 +53,16 @@ const OUTSIDE_TEST_COORDS = {
   labelGu: "રાજકોટ શહેર (કાલાવડ રોડ)",
 };
 
-export default function SmartKacheriLocatorBanner({ citizen }: SmartKacheriLocatorBannerProps) {
+export default function SmartKacheriLocatorBanner({
+  citizen,
+  defaultExpanded = false,
+  onClose,
+}: SmartKacheriLocatorBannerProps) {
   // Coordinates & Dynamic Real-time Location State
   const [currentCoords, setCurrentCoords] = useState<{ lat: number; lng: number }>(HOME_COORDS);
   const [currentLocationName, setCurrentLocationName] = useState<string>("લાઈવ લોકેશન મેળવી રહ્યું છે...");
   const [isGpsLoading, setIsGpsLoading] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(defaultExpanded);
   const [gpsError, setGpsError] = useState<string | null>(null);
 
   // Real Gujarat Government Office Live Status (Hours, Lunch Break, 2nd/4th Sat)
@@ -284,6 +290,18 @@ export default function SmartKacheriLocatorBanner({ citizen }: SmartKacheriLocat
           >
             {isExpanded ? <ChevronUp size={15} /> : <ChevronDown size={15} />}
           </button>
+
+          {/* Close button if shown in modal/drawer */}
+          {onClose && (
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-2.5 bg-white hover:bg-rose-50 border border-slate-200 text-slate-500 hover:text-rose-600 rounded-xl transition cursor-pointer shadow-2xs text-xs font-bold"
+              title="કચેરી લોકેટર બંધ કરો"
+            >
+              ✕
+            </button>
+          )}
         </div>
       </div>
 

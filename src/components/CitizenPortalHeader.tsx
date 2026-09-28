@@ -8,6 +8,7 @@ import {
   IndianRupee,
   LogOut,
   CheckCircle2,
+  Navigation,
 } from "lucide-react";
 
 interface CitizenPortalHeaderProps {
@@ -24,6 +25,7 @@ interface CitizenPortalHeaderProps {
   activeTab?: "track" | "documents" | "eligibility";
   onTabChange?: (tab: "track" | "documents" | "eligibility") => void;
   onLogout: () => void;
+  onOpenLocator?: () => void;
 }
 
 export default function CitizenPortalHeader({
@@ -31,6 +33,7 @@ export default function CitizenPortalHeader({
   activeTab,
   onTabChange,
   onLogout,
+  onOpenLocator,
 }: CitizenPortalHeaderProps) {
   const pathname = usePathname();
 
@@ -82,13 +85,37 @@ export default function CitizenPortalHeader({
                   UIDAI: XXXX-XXXX-{citizen.aadhaarLast4 || "4829"}
                 </span>
               </div>
-              <p className="text-xs text-slate-600 mt-1 leading-normal">
-                📱 +91 {citizen.mobile || "9825012345"} &bull; 📍 મુ. {citizen.village || "ગોમટા"}, તા. {citizen.taluka || "ગોંડલ"}, જિ. {citizen.districtGu || citizen.district || "રાજકોટ"}
+              <p className="text-xs text-slate-600 mt-1 leading-normal flex items-center gap-2 flex-wrap">
+                <span>📱 +91 {citizen.mobile || "9825012345"}</span>
+                &bull;
+                <span>📍 મુ. {citizen.village || "ગોમટા"}, તા. {citizen.taluka || "ગોંડલ"}, જિ. {citizen.districtGu || citizen.district || "રાજકોટ"}</span>
+                {onOpenLocator && (
+                  <button
+                    type="button"
+                    onClick={onOpenLocator}
+                    className="ml-1 px-2.5 py-0.5 bg-orange-600 hover:bg-orange-700 text-white font-extrabold text-[11px] rounded-full transition flex items-center gap-1 shadow-2xs cursor-pointer active:scale-95"
+                    title="તમારા સ્થાનથી સૌથી નજીકની સરકારી કચેરી અને લાઈવ GPS રસ્તો જુઓ"
+                  >
+                    <Navigation size={10} />
+                    <span>નજીકની કચેરી & રસ્તો</span>
+                  </button>
+                )}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+            {onOpenLocator && (
+              <button
+                type="button"
+                onClick={onOpenLocator}
+                className="px-3.5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                title="AI કચેરી નેવિગેટર અને GPS રસ્તો જુઓ"
+              >
+                <Navigation size={13} />
+                <span>કચેરી લોકેટર</span>
+              </button>
+            )}
             <button
               type="button"
               onClick={onLogout}

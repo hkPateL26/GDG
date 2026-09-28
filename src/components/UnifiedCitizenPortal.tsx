@@ -9,7 +9,7 @@ import TrackVaultView from "@/components/TrackVaultView";
 import DocumentServicePortal from "@/components/DocumentServicePortal";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
-import { User, Building2, LogOut } from "lucide-react";
+import { User, Building2, LogOut, X } from "lucide-react";
 
 export type PortalTabType = "track" | "documents" | "eligibility";
 
@@ -26,6 +26,7 @@ export default function UnifiedCitizenPortal({
   const [authMode, setAuthMode] = useState<"citizen" | "officer">(initialMode);
   const [citizenSession, setCitizenSession] = useState<CitizenLedgerProfile | null>(null);
   const [officerSession, setOfficerSession] = useState<OfficerProfile | null>(null);
+  const [isLocatorModalOpen, setIsLocatorModalOpen] = useState(false);
   const [isRestoring, setIsRestoring] = useState(true);
 
   // Restore and sync session from storage
@@ -194,9 +195,48 @@ export default function UnifiedCitizenPortal({
             activeTab={activeTab}
             onTabChange={handleTabChange}
             onLogout={handleCitizenLogout}
+            onOpenLocator={() => setIsLocatorModalOpen(true)}
           />
 
-          <SmartKacheriLocatorBanner citizen={citizenSession} />
+          {/* AI Kacheri Locator Modal - ONLY appears when user explicitly clicks! */}
+          {isLocatorModalOpen && (
+            <div
+              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
+              onClick={() => setIsLocatorModalOpen(false)}
+            >
+              <div
+                className="relative w-full max-w-4xl max-h-[92vh] overflow-y-auto bg-slate-50 rounded-3xl shadow-2xl border border-slate-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* Modal Header */}
+                <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md px-5 py-3 border-b border-slate-200 flex items-center justify-between rounded-t-3xl shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-600 animate-pulse" />
+                    <h3 className="font-black text-sm text-slate-900">
+                      🏛️ AI કચેરી નેવિગેટર (તમારા સ્થાનથી સૌથી નજીકની કચેરી & GPS રસ્તો)
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsLocatorModalOpen(false)}
+                    className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer text-xs font-bold flex items-center gap-1.5"
+                    title="બંધ કરો"
+                  >
+                    <span>બંધ કરો</span>
+                    <X size={15} />
+                  </button>
+                </div>
+
+                <div className="p-3 sm:p-5">
+                  <SmartKacheriLocatorBanner
+                    citizen={citizenSession}
+                    defaultExpanded={true}
+                    onClose={() => setIsLocatorModalOpen(false)}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {activeTab === "track" && (
             <TrackVaultView
