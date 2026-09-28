@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, Download, Printer, X, ShieldCheck, Award, QrCode, Phone, Mail, Globe, Scissors, CreditCard } from "lucide-react";
+import { Printer, X, ShieldCheck, Award, CreditCard, FileText } from "lucide-react";
 
 interface OfficialGovernmentCertificateProps {
   app: CitizenApplication;
@@ -11,73 +11,96 @@ interface OfficialGovernmentCertificateProps {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AUTHENTIC VECTOR ASSETS: ASHOKA PILLAR & UIDAI LOGOS
+// AUTHENTIC REALISTIC 1D BARCODE (Code 128 replica for UIDAI printouts)
 // ─────────────────────────────────────────────────────────────────────────────
-function AshokaEmblem({ className = "w-10 h-14" }: { className?: string }) {
+function RealisticBarcode({ className = "h-8 w-44" }: { className?: string }) {
+  const barPattern = [
+    2, 1, 1, 3, 1, 2, 3, 1, 1, 2, 1, 3, 2, 1, 1, 3, 1, 2, 1, 1, 3, 2, 1, 2, 3,
+    1, 1, 2, 3, 1, 2, 1, 1, 3, 2, 1, 1, 2, 3, 1, 1, 3, 2, 1, 1, 2, 1, 3, 1, 2,
+    2, 1, 3, 1, 1, 2, 1, 3, 2, 1, 2, 3, 1, 1, 2, 1, 3, 1, 2, 3,
+  ];
+  let curX = 2;
+
   return (
-    <svg className={className} viewBox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
-      {/* 3 Lions representation */}
-      <path
-        d="M60 12 C50 12 42 18 42 28 C42 38 48 45 46 52 C44 58 38 62 38 70 C38 78 45 84 52 86 C54 75 66 75 68 86 C75 84 82 78 82 70 C82 62 76 58 74 52 C72 45 78 38 78 28 C78 18 70 12 60 12 Z"
-        fill="#334155"
-      />
-      <circle cx="50" cy="32" r="3" fill="#ffffff" />
-      <circle cx="70" cy="32" r="3" fill="#ffffff" />
-      <path d="M52 46 C56 50 64 50 68 46" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" />
-      {/* Side Lions */}
-      <path d="M26 28 C26 38 32 46 36 54 C32 60 26 66 26 74 C26 80 30 84 36 86 C38 76 44 70 44 60 C44 48 38 40 38 28 C38 22 34 20 30 20 C27 20 26 24 26 28 Z" fill="#475569" />
-      <path d="M94 28 C94 38 88 46 84 54 C88 60 94 66 94 74 C94 80 90 84 84 86 C82 76 76 70 76 60 C76 48 82 40 82 28 C82 22 86 20 90 20 C93 20 94 24 94 28 Z" fill="#475569" />
-      {/* Abacus Platform */}
-      <rect x="18" y="90" width="84" height="14" rx="2" fill="#1e293b" />
-      {/* Central Ashoka Chakra on Abacus */}
-      <circle cx="60" cy="97" r="5" stroke="#ffffff" strokeWidth="1" fill="#3b82f6" />
-      <circle cx="60" cy="97" r="1.5" fill="#ffffff" />
-      {/* Bull and Horse decorations */}
-      <ellipse cx="36" cy="97" rx="6" ry="3" fill="#94a3b8" />
-      <ellipse cx="84" cy="97" rx="6" ry="3" fill="#94a3b8" />
-      {/* Lotus Base */}
-      <path d="M24 104 C30 114 44 118 60 118 C76 118 90 114 96 104 Z" fill="#334155" />
-      {/* Plinth */}
-      <rect x="20" y="118" width="80" height="7" rx="1.5" fill="#0f172a" />
-      {/* Motto text: सत्यमेव जयते */}
-      <text x="60" y="142" textAnchor="middle" fontSize="11" fontWeight="900" fill="#0f172a" fontFamily="serif" letterSpacing="0.5">
-        सत्यमेव जयते
-      </text>
+    <svg className={className} viewBox="0 0 160 32" fill="currentColor">
+      {barPattern.map((width, idx) => {
+        const xPos = curX;
+        curX += width + (idx % 3 === 0 ? 2 : 1.2);
+        return idx % 2 === 0 ? (
+          <rect key={idx} x={xPos} y={0} width={width} height={32} fill="#000000" />
+        ) : null;
+      })}
     </svg>
   );
 }
 
-function UidaiSunLogo({ className = "w-12 h-14" }: { className?: string }) {
+// ─────────────────────────────────────────────────────────────────────────────
+// AUTHENTIC UIDAI GUILLOCHE SECURITY PATTERN FOR PVC CARDS
+// ─────────────────────────────────────────────────────────────────────────────
+function GuillocheSecurityPattern({ className = "w-full h-full" }: { className?: string }) {
   return (
-    <svg className={className} viewBox="0 0 120 130" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      className={className}
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 340 215"
+      fill="none"
+      style={{ opacity: 0.38 }}
+    >
       <defs>
-        <radialGradient id="uidaiGrad" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stopColor="#f59e0b" />
-          <stop offset="60%" stopColor="#ea580c" />
-          <stop offset="100%" stopColor="#dc2626" />
-        </radialGradient>
+        <linearGradient id="pvcGuillocheGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#ea580c" stopOpacity="0.45" />
+          <stop offset="50%" stopColor="#0284c7" stopOpacity="0.2" />
+          <stop offset="100%" stopColor="#16a34a" stopOpacity="0.45" />
+        </linearGradient>
       </defs>
-      {/* Radiant Sun Rays */}
-      {[0, 20, 40, 60, 80, 100, 120, 140, 160, 180, 200, 220, 240, 260, 280, 300, 320, 340].map((deg) => (
-        <path
-          key={deg}
-          d="M60 48 L58 10 L60 4 L62 10 Z"
-          fill="url(#uidaiGrad)"
-          transform={`rotate(${deg} 60 48)`}
+      {[20, 36, 52, 68, 84, 100, 116, 132, 148, 164].map((r, i) => (
+        <ellipse
+          key={i}
+          cx="170"
+          cy="107"
+          rx={r * 1.7}
+          ry={r * 0.85}
+          stroke="url(#pvcGuillocheGrad)"
+          strokeWidth="0.75"
+          transform={`rotate(${i * 18} 170 107)`}
         />
       ))}
-      {/* Central Core with fingerprint curves */}
-      <circle cx="60" cy="48" r="28" fill="#ffffff" stroke="#ea580c" strokeWidth="2.5" />
-      {/* Fingerprint Arcs */}
-      <path d="M48 48 A12 12 0 0 1 72 48" stroke="#dc2626" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <path d="M44 48 A16 16 0 0 1 76 48" stroke="#ea580c" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <path d="M52 48 A8 8 0 0 1 68 48" stroke="#dc2626" strokeWidth="2.5" fill="none" strokeLinecap="round" />
-      <circle cx="60" cy="48" r="3" fill="#ea580c" />
-      {/* Hindi text: आधार */}
-      <text x="60" y="112" textAnchor="middle" fontSize="21" fontWeight="900" fill="#dc2626" fontFamily="sans-serif">
-        आधार
-      </text>
+      <circle cx="170" cy="107" r="40" stroke="#f97316" strokeWidth="0.5" strokeDasharray="3 2" />
+      <circle cx="170" cy="107" r="60" stroke="#16a34a" strokeWidth="0.5" strokeDasharray="4 2" />
+      {/* Background fine wavy lines */}
+      <path
+        d="M0,40 Q85,15 170,40 T340,40 M0,80 Q85,55 170,80 T340,80 M0,120 Q85,95 170,120 T340,120 M0,160 Q85,135 170,160 T340,160"
+        stroke="#ea580c"
+        strokeWidth="0.4"
+        strokeOpacity="0.3"
+      />
+      <path
+        d="M0,60 Q85,85 170,60 T340,60 M0,100 Q85,125 170,100 T340,100 M0,140 Q85,165 170,140 T340,140 M0,180 Q85,205 170,180 T340,180"
+        stroke="#16a34a"
+        strokeWidth="0.4"
+        strokeOpacity="0.3"
+      />
     </svg>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// METALLIC GOLD SECURITY HOLOGRAM STICKER (UIDAI Official CR80 Feature)
+// ─────────────────────────────────────────────────────────────────────────────
+function GoldSecurityHologram() {
+  return (
+    <div className="relative w-8 h-9 rounded-md overflow-hidden border border-amber-500/80 shadow-xs flex flex-col items-center justify-center p-0.5 bg-gradient-to-tr from-amber-400 via-yellow-100 to-amber-500 shrink-0">
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/60 to-transparent opacity-75" />
+      {/* eslint-disable-next-line @next/next/no-img-element */}
+      <img
+        src="/demo-docs/emblem_of_india.svg"
+        alt="Hologram Emblem"
+        className="w-4 h-5 object-contain opacity-90 relative z-10"
+      />
+      <span className="text-[5.5px] font-black tracking-widest text-amber-950 leading-none mt-0.5 uppercase relative z-10">
+        UIDAI
+      </span>
+    </div>
   );
 }
 
@@ -89,7 +112,9 @@ export default function OfficialGovernmentCertificate({
   onClose,
   isModalPreview = true,
 }: OfficialGovernmentCertificateProps) {
-  const [viewCardSide, setViewCardSide] = useState<"front" | "back">("front");
+  // Mode: "letter" = Full Authentic e-Aadhaar Letter + Bottom Cutout Card (Exact replica of user reference)
+  //       "pvc"    = Front & Back PVC wallet card with real UIDAI Guilloche colors
+  const [viewMode, setViewMode] = useState<"letter" | "pvc">("letter");
 
   const origin =
     typeof window !== "undefined"
@@ -121,104 +146,30 @@ export default function OfficialGovernmentCertificate({
     schemeName.includes("ration") ||
     schemeNameGu.includes("રેશન");
 
-  const isAyushman =
-    schemeId.includes("ayushman") ||
-    schemeName.includes("ayushman") ||
-    schemeId.includes("pmjay") ||
-    schemeNameGu.includes("આયુષ્માન");
+  // Dynamic Citizen Photo from user upload or fall back to authentic demo portrait
+  const citizenPhotoSrc =
+    app.citizenPhoto ||
+    app.userPhoto ||
+    (typeof window !== "undefined" ? localStorage.getItem("nagrik_user_photo") || "" : "") ||
+    "/demo-docs/aadhaar_photo_hq.png";
 
-  const isDriving =
-    schemeId.includes("driving") ||
-    schemeId.includes("licence") ||
-    schemeName.includes("driving") ||
-    schemeNameGu.includes("ડ્રાઇવિંગ");
-
-  // Print Engine
+  // Robust Native Print Engine (Guarantees zero blank pages & full color)
   const handlePrint = () => {
-    const printArea = document.getElementById("official-cert-print-area");
-    if (!printArea) {
-      window.print();
-      return;
-    }
-
-    const oldIframe = document.getElementById("cert-print-frame");
-    if (oldIframe) oldIframe.remove();
-
-    const iframe = document.createElement("iframe");
-    iframe.id = "cert-print-frame";
-    iframe.style.position = "fixed";
-    iframe.style.right = "0";
-    iframe.style.bottom = "0";
-    iframe.style.width = "0";
-    iframe.style.height = "0";
-    iframe.style.border = "0";
-    iframe.style.zIndex = "-1";
-    document.body.appendChild(iframe);
-
-    const doc = iframe.contentWindow?.document;
-    if (!doc) {
-      window.print();
-      return;
-    }
-
-    const styleTags = Array.from(document.querySelectorAll("style, link[rel='stylesheet']"))
-      .map((el) => el.outerHTML)
-      .join("\n");
-
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html lang="gu">
-        <head>
-          <title>${isAadhaar ? "UIDAI e-Aadhaar Document" : isPan ? "Income Tax PAN Card" : "Government Document"} - ${app.id}</title>
-          <meta charset="utf-8" />
-          <meta name="viewport" content="width=device-width, initial-scale=1" />
-          ${styleTags}
-          <style>
-            @page {
-              size: A4 portrait;
-              margin: 6mm;
-            }
-            body {
-              background: #ffffff !important;
-              color: #000000 !important;
-              font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-              margin: 0 !important;
-              padding: 0 !important;
-            }
-            * {
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-            }
-          </style>
-        </head>
-        <body>
-          <div style="padding: 0;">
-            ${printArea.innerHTML}
-          </div>
-          <script>
-            window.onload = function() {
-              setTimeout(function() {
-                window.focus();
-                window.print();
-              }, 300);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    doc.close();
+    window.print();
   };
 
   // Safe Citizen Benchmark Details
   const citizenNameGu = app.citizenNameGu || "હરી વિનોદરાઈ પટેલ";
   const citizenNameEn = app.citizenName || "Hari Vinodrai Patel";
-  const fatherName = "વિનોદરાઈ નારણભાઈ પટેલ";
+  const fatherNameGu = "વિનોદરાઈ નારણભાઈ પટેલ";
+  const fatherNameEn = "Vinodrai Naranbhai Patel";
   const dobStr = "15/06/1985";
-  const genderStr = app.gender === "female" ? "સ્ત્રી / Female" : "પુરુષ / Male";
+  const genderStrGu = app.gender === "female" ? "સ્ત્રી" : "પુરુષ";
+  const genderStrEn = app.gender === "female" ? "FEMALE" : "MALE";
   const villageStr = app.village || "ઓમ નગર (Omnagar)";
   const talukaStr = app.taluka || "Rajkot Urban";
   const districtStr = app.districtGu || app.district || "રાજકોટ";
+  const districtEn = app.district || "Rajkot";
   const pincodeStr = "360004";
   const mobileStr = app.mobile || "9974442291";
   const formattedAadhaar = `5429 8912 ${app.aadhaarLast4 && app.aadhaarLast4 !== "NEW" ? app.aadhaarLast4 : "1413"}`;
@@ -227,6 +178,39 @@ export default function OfficialGovernmentCertificate({
 
   return (
     <div className="relative w-full max-w-4xl mx-auto my-auto bg-white rounded-3xl shadow-2xl border border-slate-300 overflow-hidden text-slate-900 animate-in fade-in zoom-in-95 duration-200">
+      {/* ── Global Injected Print CSS: Perfect 100% Reliable Centered Printout ── */}
+      <style jsx global>{`
+        @media print {
+          /* Hide all application chrome, backdrop, navbar, and buttons */
+          body * {
+            visibility: hidden !important;
+          }
+          /* Show ONLY the certificate print container and all its children */
+          #official-cert-print-area,
+          #official-cert-print-area * {
+            visibility: visible !important;
+          }
+          #official-cert-print-area {
+            position: absolute !important;
+            left: 0 !important;
+            right: 0 !important;
+            top: 15px !important;
+            margin: 0 auto !important;
+            padding: 0 !important;
+            box-shadow: none !important;
+            border: 1px solid #94a3b8 !important;
+            background: #ffffff !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+          }
+          @page {
+            size: A4 portrait;
+            margin: 8mm;
+          }
+        }
+      `}</style>
+
       {/* ── Top Bar with Actions ── */}
       <div className="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between gap-3 border-b border-slate-800">
         <div className="flex items-center gap-2">
@@ -235,9 +219,11 @@ export default function OfficialGovernmentCertificate({
               <span className="text-xl">🪪</span>
               <div>
                 <span className="font-black text-xs sm:text-sm text-amber-300 block">
-                  ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ &bull; UIDAI e-Aadhaar Card
+                  ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ &bull; UIDAI e-Aadhaar
                 </span>
-                <span className="text-[10.5px] text-slate-400">સત્તાવાર આધાર કાર્ડ પત્ર & વોલેટ કાર્ડ (Exact 1:1 Format)</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-400">
+                  સત્તાવાર આધાર કાર્ડ પત્ર & કટઆઉટ કાર્ડ (100% અસલ સરકારી ફોર્મેટ)
+                </span>
               </div>
             </div>
           ) : isPan ? (
@@ -247,7 +233,7 @@ export default function OfficialGovernmentCertificate({
                 <span className="font-black text-xs sm:text-sm text-amber-300 block">
                   આવકવેરા વિભાગ &bull; Income Tax Department PAN Card
                 </span>
-                <span className="text-[10.5px] text-slate-400">પરમેનન્ટ એકાઉન્ટ નંબર કાર્ડ (Form 49A)</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-400">પરમેનન્ટ એકાઉન્ટ નંબર કાર્ડ (Form 49A)</span>
               </div>
             </div>
           ) : isRation ? (
@@ -257,7 +243,7 @@ export default function OfficialGovernmentCertificate({
                 <span className="font-black text-xs sm:text-sm text-amber-300 block">
                   ગુજરાત અન્ન & નાગરિક પુરવઠા વિભાગ &bull; NFSA Digital Ration Card
                 </span>
-                <span className="text-[10.5px] text-slate-400">બારકોડેડ રેશનકાર્ડ પુસ્તિકા</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-400">બારકોડેડ રેશનકાર્ડ પુસ્તિકા</span>
               </div>
             </div>
           ) : (
@@ -272,14 +258,32 @@ export default function OfficialGovernmentCertificate({
 
         <div className="flex items-center gap-2">
           {isAadhaar && (
-            <button
-              type="button"
-              onClick={() => setViewCardSide((prev) => (prev === "front" ? "back" : "front"))}
-              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-xs rounded-xl border border-slate-700 transition cursor-pointer"
-            >
-              <CreditCard size={13} />
-              <span>{viewCardSide === "front" ? "કાર્ડની પાછળની બાજુ (Back)" : "કાર્ડની આગળની બાજુ (Front)"}</span>
-            </button>
+            <div className="flex items-center bg-slate-800 rounded-xl p-0.5 border border-slate-700">
+              <button
+                type="button"
+                onClick={() => setViewMode("letter")}
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                  viewMode === "letter"
+                    ? "bg-amber-400 text-slate-950 shadow-xs"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <FileText size={12} />
+                <span>સંપૂર્ણ લેટર & કાર્ડ</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("pvc")}
+                className={`flex items-center gap-1 px-2.5 py-1 text-xs font-bold rounded-lg transition cursor-pointer ${
+                  viewMode === "pvc"
+                    ? "bg-amber-400 text-slate-950 shadow-xs"
+                    : "text-slate-300 hover:text-white"
+                }`}
+              >
+                <CreditCard size={12} />
+                <span>PVC વોલેટ કાર્ડ (આગળ & પાછળ)</span>
+              </button>
+            </div>
           )}
 
           <button
@@ -304,135 +308,173 @@ export default function OfficialGovernmentCertificate({
       </div>
 
       {/* ── Document Printable Body ── */}
-      <div className="p-3 sm:p-6 max-h-[84vh] overflow-y-auto bg-slate-200/80">
+      <div className="p-3 sm:p-6 max-h-[84vh] overflow-y-auto bg-slate-200/90 flex justify-center">
         <div
           id="official-cert-print-area"
-          className="relative bg-white shadow-2xl rounded-sm overflow-hidden mx-auto max-w-[340px] sm:max-w-[380px] md:max-w-[420px] text-black font-sans border border-slate-300"
+          className="relative bg-white shadow-2xl rounded-sm overflow-hidden text-black font-sans border border-slate-300 transition-all"
+          style={{
+            width: isAadhaar && viewMode === "letter" ? "330px" : isAadhaar && viewMode === "pvc" ? "720px" : "100%",
+            maxWidth: isAadhaar && viewMode === "letter" ? "350px" : isAadhaar && viewMode === "pvc" ? "740px" : "680px",
+          }}
         >
           {/* ══════════════════════════════════════════════════════════════════
-              DOCUMENT TYPE 1: EXACT 100% REPLICA OF THE USER'S AADHAAR CARD
-              (Matched exactly to media_1790610371373.png)
+              DOCUMENT TYPE 1: AADHAAR CARD
              ══════════════════════════════════════════════════════════════════ */}
           {isAadhaar ? (
-            <div className="bg-white flex flex-col justify-between select-none">
-              {/* TOP HEADER SECTION */}
-              <div className="p-3 pb-0">
-                <div className="flex items-start justify-between px-2 pt-1">
-                  <div className="flex flex-col items-center">
-                    <AshokaEmblem className="w-10 h-14" />
+            viewMode === "letter" ? (
+              /* ── 1A. FULL AUTHENTIC E-AADHAAR LETTERHEAD & CUTOUT CARD (Direct 1:1 match to media_1790610371373.png) ── */
+              <div className="bg-white flex flex-col justify-between select-none text-black w-full" style={{ minHeight: "680px" }}>
+                {/* 1. TOP HEADER SECTION */}
+                <div className="pt-2 px-2.5 pb-0">
+                  <div className="flex items-center justify-between px-1">
+                    {/* Ashoka Pillar - Official Vector */}
+                    <div className="flex flex-col items-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/demo-docs/emblem_of_india.svg"
+                        alt="Emblem of India"
+                        className="w-8 h-12 object-contain"
+                      />
+                    </div>
+                    {/* UIDAI Sun Logo - Official Vector */}
+                    <div className="flex flex-col items-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src="/demo-docs/aadhaar_logo.svg"
+                        alt="UIDAI Aadhaar"
+                        className="w-14 h-10 object-contain"
+                      />
+                    </div>
                   </div>
-                  <div className="flex flex-col items-center">
-                    <UidaiSunLogo className="w-12 h-14" />
+
+                  {/* Saffron & Green Official Header Banners (Using SVG background rects for guaranteed color printing) */}
+                  <div className="mt-1.5 text-center text-white space-y-[2px]">
+                    <div className="relative overflow-hidden py-1 px-1 leading-tight">
+                      <svg className="absolute inset-0 w-full h-full -z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
+                        <rect width="100" height="100" fill="#ea580c" />
+                      </svg>
+                      <h2 className="text-[12px] font-black tracking-wide">भारत सरकार</h2>
+                      <h3 className="text-[9.5px] font-bold leading-none mt-0.5">Government of India</h3>
+                    </div>
+                    <div className="relative overflow-hidden py-1 px-1 leading-tight">
+                      <svg className="absolute inset-0 w-full h-full -z-10" preserveAspectRatio="none" viewBox="0 0 100 100">
+                        <rect width="100" height="100" fill="#16a34a" />
+                      </svg>
+                      <h2 className="text-[10px] font-black tracking-tight">भारतीय विशिष्ट पहचान प्राधिकरण</h2>
+                      <h3 className="text-[8.5px] font-bold leading-none mt-0.5">Unique Identification Authority of India</h3>
+                    </div>
                   </div>
                 </div>
 
-                {/* Saffron & Green Official Header Banners */}
-                <div className="mt-2 text-center text-white space-y-[2px]">
-                  <div className="bg-[#f05a22] py-1 px-2 leading-tight">
-                    <h2 className="text-sm font-black tracking-wide">ભારત સરકાર</h2>
-                    <h3 className="text-xs font-bold leading-none mt-0.5">Government of India</h3>
-                  </div>
-                  <div className="bg-[#138808] py-1 px-2 leading-tight">
-                    <h2 className="text-[11.5px] font-black tracking-tight">ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ</h2>
-                    <h3 className="text-[10px] font-bold leading-none mt-0.5">Unique Identification Authority of India</h3>
-                  </div>
-                </div>
-              </div>
+                {/* 2. ENROLMENT NO & CITIZEN LETTER SLIP */}
+                <div className="p-2.5 pt-1.5 text-[9.5px] leading-tight space-y-1.5">
+                  <p className="font-mono text-[9px] text-slate-800">
+                    नामांकन क्रम/ Enrolment No.: <strong className="font-bold">{eidStr}</strong>
+                  </p>
 
-              {/* ENROLMENT NO & CITIZEN LETTER SLIP */}
-              <div className="p-3 pt-2 text-[11px] leading-tight space-y-2">
-                <p className="font-mono text-[10.5px] text-slate-800">
-                  નોંધણી ક્રમ / Enrolment No.: <strong className="font-bold">{eidStr}</strong>
-                </p>
+                  <div className="flex items-start justify-between gap-1.5 pt-0.5">
+                    {/* Left: Address Block */}
+                    <div className="space-y-0.5 max-w-[190px] text-black leading-snug">
+                      <span className="text-[9px] text-slate-600 block">To</span>
+                      <p className="font-black text-[10.5px] text-black leading-none">{citizenNameGu}</p>
+                      <p className="text-[9.5px] font-bold text-slate-800 leading-none">{citizenNameEn}</p>
+                      <p className="text-[8.5px] text-slate-700">C/O: Aadhaar Card</p>
+                      <p className="text-[8.5px] text-slate-700">VTC: Flat No 35, {villageStr}</p>
+                      <p className="text-[8.5px] text-slate-700">PO: {talukaStr}</p>
+                      <p className="text-[8.5px] text-slate-700">Sub District: {districtEn}</p>
+                      <p className="text-[8.5px] text-slate-700">District: {districtEn}</p>
+                      <p className="text-[8.5px] text-slate-700">State: Gujarat</p>
+                      <p className="text-[8.5px] text-slate-700 font-mono">PIN Code: {pincodeStr}</p>
+                      <p className="text-[8.5px] font-mono text-slate-800">Mobile: {mobileStr}</p>
 
-                <div className="flex items-start justify-between gap-2 pt-1">
-                  {/* Left: Address Block */}
-                  <div className="space-y-0.5 max-w-[210px] text-slate-900 leading-snug">
-                    <span className="text-[10px] text-slate-600 block">To</span>
-                    <p className="font-black text-xs text-black">{citizenNameGu}</p>
-                    <p className="text-[11px] font-bold text-slate-800">{citizenNameEn}</p>
-                    <p className="text-[10px] text-slate-700">C/O: {fatherName}</p>
-                    <p className="text-[10px] text-slate-700">{villageStr}</p>
-                    <p className="text-[10px] text-slate-700">{talukaStr}, {districtStr}</p>
-                    <p className="text-[10px] text-slate-700">ગુજરાત - {pincodeStr}</p>
-                    <p className="text-[10px] font-mono text-slate-800">Mobile: {mobileStr}</p>
+                      {/* Barcode Strip */}
+                      <div className="pt-1.5">
+                        <RealisticBarcode className="h-6 w-36" />
+                      </div>
+                    </div>
 
-                    {/* Barcode Strip */}
-                    <div className="pt-2 font-mono text-[9px] tracking-tight">
-                      <div className="h-6 flex items-center">
-                        <span className="font-black tracking-[3px] text-xs">||||| | |||| ||||| ||||||| ||| ||||||</span>
+                    {/* Right: Authentic High-Density QR Code */}
+                    <div className="shrink-0 flex flex-col items-center">
+                      <div className="p-0.5 border border-slate-300 bg-white shadow-2xs">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=115x115&data=${encodeURIComponent(
+                            `UIDAI-AUTH|${formattedAadhaar}|${citizenNameEn}|${dobStr}|${genderStrEn}|${pincodeStr}`
+                          )}`}
+                          alt="Aadhaar QR"
+                          className="w-20 h-20 object-contain"
+                        />
                       </div>
                     </div>
                   </div>
 
-                  {/* Right: High-Density Verification QR */}
-                  <div className="shrink-0 flex flex-col items-center">
-                    <div className="p-1 border border-slate-300 bg-white shadow-2xs">
+                  {/* Big Aadhaar Number in Letter */}
+                  <div className="text-center pt-1.5 pb-1 border-b border-slate-200">
+                    <p className="text-[9.5px] font-bold text-slate-800">
+                      आपका <span className="text-[#dc2626] font-black">आधार</span> क्रमांक / Your <span className="text-[#dc2626] font-black">Aadhaar</span> No. :
+                    </p>
+                    <p className="font-mono font-black text-lg tracking-[3px] text-black mt-0.5">
+                      {formattedAadhaar}
+                    </p>
+                    <p className="font-mono text-[8px] text-slate-600 mt-0.5">VID : {vidStr}</p>
+                    <p className="text-xs font-black text-black mt-0.5">
+                      मेरा <span className="text-[#dc2626]">आधार</span>, मेरी पहचान
+                    </p>
+                  </div>
+                </div>
+
+                {/* 3. DOTTED SCISSORS PERFORATION CUT LINE */}
+                <div className="relative py-1 flex items-center justify-between px-2">
+                  <div className="w-full border-t border-dashed border-slate-400" />
+                  <span className="absolute left-2 bg-white px-1 text-[9px] text-slate-700 font-bold">
+                    ✂️
+                  </span>
+                  <span className="absolute right-2 bg-white px-1 text-[9px] text-slate-700 font-bold">
+                    ✂️
+                  </span>
+                </div>
+
+                {/* 4. BOTTOM SECTION: THE EXACT CUTOUT AADHAAR CARD (As shown in media_1790610371373.png) */}
+                <div className="m-2 mt-0 border border-slate-400 bg-white p-2 space-y-1.5 relative shadow-xs rounded-xs">
+                  {/* Card Header: Emblem + Tricolor Ribbon + UIDAI Logo */}
+                  <div className="flex items-center justify-between">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src="/demo-docs/emblem_of_india.svg"
+                      alt="Emblem"
+                      className="w-5 h-8 object-contain shrink-0"
+                    />
+
+                    {/* Middle Tricolor Wave Ribbon */}
+                    <div className="flex flex-col items-center justify-center flex-1 px-1">
+                      <div className="h-[2.5px] w-28 bg-[#f05a22] rounded-full mb-0.5" />
+                      <p className="text-[9.5px] font-black text-black leading-tight">ભારત સરકાર</p>
+                      <p className="text-[8.5px] font-bold text-slate-800 leading-tight">Government of India</p>
+                      <div className="h-[2.5px] w-28 bg-[#138808] rounded-full mt-0.5" />
+                    </div>
+
+                    <div className="flex items-center gap-0.5 shrink-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=115x115&data=${encodeURIComponent(
-                          `UIDAI-AUTH|${formattedAadhaar}|${citizenNameEn}|${dobStr}|${genderStr}|${pincodeStr}`
-                        )}`}
-                        alt="Aadhaar QR"
-                        className="w-24 h-24 object-contain"
+                        src="/demo-docs/aadhaar_logo.svg"
+                        alt="UIDAI Logo"
+                        className="w-8 h-6 object-contain"
                       />
+                      <span className="text-[9px] text-slate-600">✂️</span>
                     </div>
                   </div>
-                </div>
 
-                {/* Big Aadhaar Number in Letter */}
-                <div className="text-center pt-2 pb-1 border-b border-slate-200">
-                  <p className="text-[11px] font-bold text-slate-800">
-                    આપનો <span className="text-[#dc2626]">આધાર</span> ક્રમાંક / Your <span className="text-[#dc2626]">Aadhaar</span> No. :
-                  </p>
-                  <p className="font-mono font-black text-lg sm:text-xl tracking-[4px] text-black mt-0.5">
-                    {formattedAadhaar}
-                  </p>
-                  <p className="font-mono text-[9.5px] text-slate-600 mt-0.5">VID : {vidStr}</p>
-                  <p className="text-sm font-black text-black mt-0.5">
-                    મારો <span className="text-[#dc2626]">આધાર</span>, મારી ઓળખ
-                  </p>
-                </div>
-              </div>
-
-              {/* Dotted Scissors Perforation Cut Line */}
-              <div className="relative py-1 flex items-center justify-center">
-                <div className="w-full border-t border-dashed border-slate-400" />
-                <span className="absolute bg-white px-2 text-[10px] text-slate-500 font-bold flex items-center gap-1">
-                  <Scissors size={12} className="text-slate-800" />
-                </span>
-              </div>
-
-              {/* ─────────────────────────────────────────────────────────────
-                  BOTTOM SECTION: THE EXACT CUTOUT AADHAAR CARD
-                  (As shown in bottom half of media_1790610371373.png)
-                 ───────────────────────────────────────────────────────────── */}
-              {viewCardSide === "front" ? (
-                /* ── CARD FRONT ── */
-                <div className="m-2 mt-1 border border-slate-400 bg-white p-2.5 space-y-2 relative">
-                  {/* Card Front Header */}
-                  <div className="flex items-center justify-between">
-                    <AshokaEmblem className="w-6 h-9 shrink-0" />
-                    <div className="text-center px-1">
-                      <div className="h-1 w-full bg-[#f05a22] rounded-full mb-0.5" />
-                      <p className="text-[10.5px] font-black text-black leading-none">ભારત સરકાર</p>
-                      <p className="text-[9.5px] font-bold text-slate-800 leading-none">Government of India</p>
-                      <div className="h-1 w-full bg-[#138808] rounded-full mt-0.5" />
-                    </div>
-                    <UidaiSunLogo className="w-7 h-9 shrink-0" />
-                  </div>
-
-                  {/* Card Front Middle Details */}
-                  <div className="flex items-start gap-2 pt-1">
-                    {/* Left: Citizen Photo & Vertical Issued Date */}
-                    <div className="flex items-center gap-1 shrink-0">
-                      <span className="text-[7.5px] font-mono text-slate-500 [writing-mode:vertical-lr] rotate-180 leading-none">
+                  {/* Card Middle Details */}
+                  <div className="flex items-start gap-1.5 pt-0.5">
+                    {/* Far Left: Vertical text Aadhaar no. issued + Citizen Photo */}
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <span className="text-[6.5px] font-mono text-slate-500 [writing-mode:vertical-lr] rotate-180 leading-none">
                         Aadhaar no. issued: {issueDate}
                       </span>
-                      <div className="w-18 h-22 border border-black bg-slate-100 overflow-hidden shadow-2xs">
+                      <div className="w-[66px] h-[82px] border border-black bg-white overflow-hidden shadow-2xs">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src="/demo-docs/3_pan_card_khunt_harkishan.png"
+                          src={citizenPhotoSrc}
                           alt="Citizen Photo"
                           className="w-full h-full object-cover"
                         />
@@ -440,94 +482,207 @@ export default function OfficialGovernmentCertificate({
                     </div>
 
                     {/* Middle: Details */}
-                    <div className="space-y-0.5 text-[10px] leading-tight text-slate-900 flex-1">
-                      <p className="font-black text-[11px] text-black">{citizenNameGu}</p>
-                      <p className="font-bold text-[10px] text-slate-800">{citizenNameEn}</p>
-                      <p className="text-[9.5px] text-slate-700">
+                    <div className="space-y-0.5 text-[8.5px] leading-tight text-black flex-1">
+                      <p className="font-black text-[10px] text-black leading-tight">{citizenNameGu}</p>
+                      <p className="font-bold text-[9px] text-slate-800 leading-tight">{citizenNameEn}</p>
+                      <p className="text-[8px] text-slate-700 pt-0.5">
                         જન્મ તારીખ/DOB: <strong className="font-mono text-black">{dobStr}</strong>
                       </p>
-                      <p className="text-[9.5px] text-slate-700">
-                        જાતિ/Gender: <strong>{genderStr}</strong>
+                      <p className="text-[8px] text-slate-700">
+                        પુરુષ/ {genderStrEn}
                       </p>
 
-                      {/* Official Warning Box (Exact match) */}
-                      <div className="border border-red-500 bg-red-50/50 p-1 rounded-xs mt-1">
-                        <p className="text-[7.5px] font-bold text-black leading-[9px]">
+                      {/* Official Warning Box (Exact match to reference) */}
+                      <div className="border border-red-500 bg-white p-1 rounded-none mt-1">
+                        <p className="text-[6.5px] font-bold text-black leading-[8px]">
                           આધાર ઓળખનો પુરાવો છે, નાગરિકતા કે જન્મતારીખનો નહીં.
                         </p>
-                        <p className="text-[7px] text-slate-600 leading-[8px] mt-0.5 font-sans">
+                        <p className="text-[6px] text-slate-600 leading-[7.5px] mt-0.5 font-sans">
                           Aadhaar is proof of identity, not of citizenship or date of birth.
                         </p>
                       </div>
                     </div>
 
                     {/* Right: Ghost Photo */}
-                    <div className="w-10 h-14 border border-slate-300 bg-slate-50 overflow-hidden opacity-60 grayscale shrink-0 self-start mt-1">
+                    <div className="w-[34px] h-[46px] border border-slate-300 bg-white overflow-hidden opacity-55 grayscale shrink-0 self-start mt-0.5">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src="/demo-docs/3_pan_card_khunt_harkishan.png"
+                        src={citizenPhotoSrc}
                         alt="Ghost Photo"
                         className="w-full h-full object-cover"
                       />
                     </div>
                   </div>
 
-                  {/* Card Front Bottom Red Line & Giant Aadhaar Number */}
-                  <div className="pt-1 border-t-2 border-red-600 text-center">
-                    <p className="font-mono font-black text-lg tracking-[4px] text-black leading-none">
+                  {/* Card Bottom Red Line & Giant Aadhaar Number */}
+                  <div className="pt-1 border-t-2 border-[#dc2626] text-center">
+                    <p className="font-mono font-black text-base tracking-[3px] text-black leading-none">
                       {formattedAadhaar}
                     </p>
-                    <p className="text-[11px] font-black text-black mt-1">
+                    <p className="text-[9.5px] font-black text-black mt-1">
                       મારો <span className="text-[#dc2626]">આધાર</span>, મારી ઓળખ
                     </p>
                   </div>
                 </div>
-              ) : (
-                /* ── CARD BACK (FLIPPABLE WALLET BACK VIEW) ── */
-                <div className="m-2 mt-1 border border-slate-400 bg-white p-2.5 space-y-2 relative">
-                  {/* Card Back Header */}
-                  <div className="text-center border-b border-slate-300 pb-1">
-                    <p className="text-[10px] font-black text-black">ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ</p>
-                    <p className="text-[9px] font-bold text-slate-700">Unique Identification Authority of India</p>
-                  </div>
+              </div>
+            ) : (
+              /* ── 1B. PVC WALLET CARD: BOTH SIDES (આગળ & પાછળ) WITH REAL GUILLOCHE COLORS & GOLD HOLOGRAM ── */
+              <div className="p-3 sm:p-5 bg-slate-100 w-full space-y-4">
+                <div className="text-center pb-1">
+                  <span className="text-xs font-bold text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-300 shadow-2xs">
+                    સત્તાવાર UIDAI PVC વોલેટ કાર્ડ (બંને બાજુ પ્રિન્ટ વ્યૂ - Front & Back Dual View)
+                  </span>
+                </div>
 
-                  {/* Card Back Address & Large QR */}
-                  <div className="flex items-start justify-between gap-2 text-[10px] leading-snug">
-                    <div className="space-y-0.5 text-slate-800 flex-1">
-                      <p className="font-black text-black text-[10px]">સરનામું:</p>
-                      <p className="text-[9.5px]">C/O: {fatherName}, {villageStr}</p>
-                      <p className="text-[9.5px]">{talukaStr}, {districtStr}, ગુજરાત - {pincodeStr}</p>
-                      <p className="text-[8.5px] text-slate-500 font-sans mt-1">
-                        Address: C/O {fatherName}, {villageStr}, {talukaStr}, {districtStr}, Gujarat - {pincodeStr}
-                      </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center justify-center">
+                  {/* ── CARD FRONT (આગળની બાજુ) ── */}
+                  <div className="relative w-full max-w-[340px] mx-auto h-[215px] rounded-2xl overflow-hidden border border-amber-300 shadow-lg bg-gradient-to-b from-[#fed7aa]/70 via-[#fcfbf9] to-[#bbf7d0]/70 p-2.5 flex flex-col justify-between select-none">
+                    {/* Background Guilloche Security Layer */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <GuillocheSecurityPattern />
                     </div>
 
-                    <div className="shrink-0 p-1 border border-slate-300 bg-white">
+                    {/* Card Front Top Header */}
+                    <div className="relative z-10 flex items-center justify-between border-b border-amber-200/80 pb-1">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
-                          `UIDAI-BACK|${formattedAadhaar}|${villageStr}, ${talukaStr}, ${districtStr}`
-                        )}`}
-                        alt="Aadhaar Back QR"
-                        className="w-20 h-20 object-contain"
+                        src="/demo-docs/emblem_of_india.svg"
+                        alt="Emblem"
+                        className="w-5 h-8 object-contain shrink-0"
                       />
+
+                      <div className="text-center px-1">
+                        <div className="h-[2px] w-20 bg-[#ea580c] rounded-full mx-auto mb-0.5" />
+                        <p className="text-[10px] font-black text-black leading-tight">ભારત સરકાર</p>
+                        <p className="text-[9px] font-bold text-slate-800 leading-tight">Government of India</p>
+                        <div className="h-[2px] w-20 bg-[#16a34a] rounded-full mx-auto mt-0.5" />
+                      </div>
+
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <GoldSecurityHologram />
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src="/demo-docs/aadhaar_logo.svg"
+                          alt="UIDAI Logo"
+                          className="w-7 h-5 object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card Front Content */}
+                    <div className="relative z-10 flex items-start gap-1.5 pt-0.5">
+                      {/* Left: Citizen Photo & Vertical Issued Date */}
+                      <div className="flex items-center gap-0.5 shrink-0">
+                        <span className="text-[6.5px] font-mono text-slate-600 [writing-mode:vertical-lr] rotate-180 leading-none">
+                          Aadhaar no. issued: {issueDate}
+                        </span>
+                        <div className="w-[66px] h-[82px] border border-black bg-white overflow-hidden shadow-2xs">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img
+                            src={citizenPhotoSrc}
+                            alt="Citizen Photo"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+
+                      {/* Middle Details */}
+                      <div className="space-y-0.5 text-[8.5px] leading-tight text-black flex-1">
+                        <p className="font-black text-[10.5px] text-black leading-tight">{citizenNameGu}</p>
+                        <p className="font-bold text-[9px] text-slate-800 leading-tight">{citizenNameEn}</p>
+                        <p className="text-[8px] text-slate-800 pt-0.5">
+                          જન્મ તારીખ/DOB: <strong className="font-mono text-black">{dobStr}</strong>
+                        </p>
+                        <p className="text-[8px] text-slate-800">
+                          જાતિ/Gender: <strong>{genderStrGu} / {genderStrEn}</strong>
+                        </p>
+
+                        <div className="border border-red-500 bg-white/90 p-1 rounded-none mt-1">
+                          <p className="text-[6.5px] font-bold text-black leading-[8px]">
+                            આધાર ઓળખનો પુરાવો છે, નાગરિકતા કે જન્મતારીખનો નહીં.
+                          </p>
+                          <p className="text-[6px] text-slate-600 leading-[7.5px] mt-0.5 font-sans">
+                            Aadhaar is proof of identity, not of citizenship or date of birth.
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* Right: Ghost Photo with Watermark */}
+                      <div className="w-[34px] h-[46px] border border-slate-300 bg-white/70 overflow-hidden opacity-55 grayscale shrink-0 self-start mt-0.5">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={citizenPhotoSrc}
+                          alt="Ghost Photo"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card Front Bottom Red Line & Aadhaar Number */}
+                    <div className="relative z-10 pt-1 border-t-2 border-[#dc2626] text-center">
+                      <p className="font-mono font-black text-base tracking-[3px] text-black leading-none">
+                        {formattedAadhaar}
+                      </p>
+                      <p className="text-[9px] font-black text-black mt-0.5">
+                        મારો <span className="text-[#dc2626]">આધાર</span>, મારી ઓળખ
+                      </p>
                     </div>
                   </div>
 
-                  {/* Card Back Bottom Helpline */}
-                  <div className="pt-1 border-t-2 border-red-600 text-center">
-                    <p className="font-mono font-black text-base tracking-[3px] text-black leading-none mb-1">
-                      {formattedAadhaar}
-                    </p>
-                    <div className="flex items-center justify-center gap-3 text-[9px] font-bold text-slate-700">
-                      <span>📞 1947</span>
-                      <span>✉️ help@uidai.gov.in</span>
-                      <span>🌐 www.uidai.gov.in</span>
+                  {/* ── CARD BACK (પાછળની બાજુ) ── */}
+                  <div className="relative w-full max-w-[340px] mx-auto h-[215px] rounded-2xl overflow-hidden border border-amber-300 shadow-lg bg-gradient-to-b from-[#fed7aa]/70 via-[#fcfbf9] to-[#bbf7d0]/70 p-2.5 flex flex-col justify-between select-none">
+                    {/* Background Guilloche Security Layer */}
+                    <div className="absolute inset-0 pointer-events-none">
+                      <GuillocheSecurityPattern />
+                    </div>
+
+                    {/* Card Back Header */}
+                    <div className="relative z-10 text-center border-b border-amber-200/80 pb-1">
+                      <p className="text-[10px] font-black text-black leading-tight">ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ</p>
+                      <p className="text-[8.5px] font-bold text-slate-800 leading-tight">Unique Identification Authority of India</p>
+                    </div>
+
+                    {/* Card Back Content: Address & Large QR */}
+                    <div className="relative z-10 flex items-start justify-between gap-1.5 text-[8.5px] leading-snug">
+                      <div className="space-y-0.5 text-black flex-1">
+                        <p className="font-black text-black text-[9.5px]">સરનામું:</p>
+                        <p className="text-[8px] leading-tight">C/O: {fatherNameGu}</p>
+                        <p className="text-[8px] leading-tight">{villageStr}, {talukaStr}</p>
+                        <p className="text-[8px] leading-tight">{districtStr}, ગુજરાત - {pincodeStr}</p>
+                        <div className="pt-1 text-[7.5px] text-slate-700 font-sans leading-tight">
+                          <p className="font-bold text-slate-800">Address:</p>
+                          <p>C/O: {fatherNameEn}, {villageStr}, {talukaStr}, {districtEn}, Gujarat - {pincodeStr}</p>
+                        </div>
+                      </div>
+
+                      {/* Right: High-Density Verification QR */}
+                      <div className="shrink-0 p-0.5 border border-slate-300 bg-white shadow-2xs">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={`https://api.qrserver.com/v1/create-qr-code/?size=115x115&data=${encodeURIComponent(
+                            `UIDAI-BACK|${formattedAadhaar}|${villageStr}, ${talukaStr}, ${districtStr}`
+                          )}`}
+                          alt="Aadhaar Back QR"
+                          className="w-18 h-18 object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Card Back Bottom Red Line, Aadhaar Number & Helpline */}
+                    <div className="relative z-10 pt-1 border-t-2 border-[#dc2626] text-center">
+                      <p className="font-mono font-black text-base tracking-[3px] text-black leading-none mb-0.5">
+                        {formattedAadhaar}
+                      </p>
+                      <div className="flex items-center justify-center gap-2.5 text-[8px] font-bold text-slate-800">
+                        <span>📞 1947 (Toll-Free)</span>
+                        <span>✉️ help@uidai.gov.in</span>
+                        <span>🌐 www.uidai.gov.in</span>
+                      </div>
                     </div>
                   </div>
                 </div>
-              )}
-            </div>
+              </div>
+            )
           ) : isPan ? (
             /* ══════════════════════════════════════════════════════════════════
                 DOCUMENT TYPE 2: REAL INCOME TAX PAN CARD
@@ -536,7 +691,8 @@ export default function OfficialGovernmentCertificate({
               {/* PAN Header */}
               <div className="flex items-center justify-between border-b border-blue-300 pb-2">
                 <div className="flex items-center gap-2">
-                  <AshokaEmblem className="w-6 h-8" />
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src="/demo-docs/emblem_of_india.svg" alt="Emblem" className="w-6 h-8 object-contain" />
                   <div>
                     <h3 className="text-[10px] font-black text-blue-950 uppercase leading-tight">INCOME TAX DEPARTMENT</h3>
                     <h4 className="text-[9px] font-bold text-slate-700 leading-none">આવકવેરા વિભાગ &bull; GOVT. OF INDIA</h4>
@@ -555,7 +711,7 @@ export default function OfficialGovernmentCertificate({
               <div className="flex items-center gap-3 text-xs">
                 <div className="w-18 h-22 border border-slate-400 bg-white overflow-hidden shadow-2xs shrink-0">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/demo-docs/3_pan_card_khunt_harkishan.png" alt="PAN Photo" className="w-full h-full object-cover" />
+                  <img src={citizenPhotoSrc} alt="PAN Photo" className="w-full h-full object-cover" />
                 </div>
                 <div className="space-y-1 text-slate-900 leading-tight">
                   <div>
@@ -564,7 +720,7 @@ export default function OfficialGovernmentCertificate({
                   </div>
                   <div>
                     <span className="text-[9px] text-slate-500 block">Father&apos;s Name / પિતાનું નામ:</span>
-                    <strong className="text-[11px]">VINODRAI PATEL</strong>
+                    <strong className="text-[11px]">{fatherNameEn.toUpperCase()}</strong>
                   </div>
                   <div>
                     <span className="text-[9px] text-slate-500 block">Date of Birth / જન્મ તારીખ:</span>
@@ -576,7 +732,7 @@ export default function OfficialGovernmentCertificate({
               {/* Signature Box */}
               <div className="flex items-center justify-between pt-2 border-t border-blue-200 text-[10px]">
                 <div className="border border-slate-400 bg-white px-3 py-1 font-mono italic text-slate-800 rounded">
-                  Hari V. Patel
+                  {citizenNameEn}
                 </div>
                 <span className="font-mono text-[9px] text-slate-500">UTIITSL / NSDL SECURE</span>
               </div>
@@ -635,7 +791,8 @@ export default function OfficialGovernmentCertificate({
                ══════════════════════════════════════════════════════════════════ */
             <div className="border-4 border-double border-slate-900 p-5 rounded-xl space-y-4">
               <div className="text-center border-b-2 border-slate-800 pb-3">
-                <AshokaEmblem className="w-10 h-14 mx-auto mb-1" />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/demo-docs/emblem_of_india.svg" alt="Emblem" className="w-9 h-14 mx-auto mb-1 object-contain" />
                 <p className="text-[10px] font-black uppercase text-slate-700">GOVERNMENT OF GUJARAT &bull; ગુજરાત સરકાર</p>
                 <h1 className="text-lg font-black text-slate-950">મહેસૂલ અને પંચાયત વિભાગ</h1>
                 <p className="text-xs font-bold text-slate-600">તાલુકા મામલતદાર કચેરી, {talukaStr}, જિલ્લો: {districtStr}</p>

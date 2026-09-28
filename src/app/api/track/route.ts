@@ -179,6 +179,8 @@ export async function POST(req: NextRequest) {
       correctionsRequested = [],
       oldVsNewValues = {},
       kacheriDetails = {},
+      citizenPhoto,
+      userPhoto,
     } = body;
 
     const resolvedCitizenName = citizenName || applicantName || "Citizen Applicant";
@@ -254,6 +256,8 @@ export async function POST(req: NextRequest) {
       correctionsRequested,
       oldVsNewValues,
       kacheriDetails,
+      citizenPhoto: citizenPhoto || userPhoto || undefined,
+      userPhoto: userPhoto || citizenPhoto || undefined,
     };
 
     // Save into server large-dataset in-memory cache

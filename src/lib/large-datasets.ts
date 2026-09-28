@@ -45,6 +45,8 @@ export interface CitizenApplication {
   oldVsNewValues?: Record<string, { oldVal: string; newVal: string }>;
   kacheriDetails?: Record<string, unknown>;
   workflowStage?: 1 | 2 | 3 | 4;
+  citizenPhoto?: string;
+  userPhoto?: string;
 }
 
 export const GUJARAT_DISTRICTS = [

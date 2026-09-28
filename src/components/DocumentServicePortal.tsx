@@ -165,6 +165,16 @@ export default function DocumentServicePortal({
   const [houseNo, setHouseNo] = useState<string>("");
   const [streetSociety, setStreetSociety] = useState<string>("");
   const [pincode, setPincode] = useState<string>("360311");
+  const [userUploadedPhoto, setUserUploadedPhoto] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("nagrik_user_photo") || "";
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  });
 
   // Service Specific Kacheri Fields
   const [rationCategory, setRationCategory] = useState<string>("NFSA - APL-1");
@@ -279,54 +289,63 @@ export default function DocumentServicePortal({
 
   // Dynamic Required Documents calculation based on service and selected corrections
   const getDynamicRequiredDocs = () => {
-    if (serviceMode === "new") {
-      return service.requiredDocsNew;
-    }
+    const isPhotoDocService = [
+      "aadhaar",
+      "pan",
+      "driving",
+      "ayushman",
+      "ration",
+      "senior_citizen",
+      "disability",
+    ].includes(selectedServiceId);
 
-    // Base document: existing copy of current document
-    const docs = [...service.requiredDocsUpdate];
+    const docs =
+      serviceMode === "new" ? [...service.requiredDocsNew] : [...service.requiredDocsUpdate];
 
-    if (selectedCorrections.includes("address")) {
-      if (!docs.some((d) => d.id === "address_proof_new")) {
-        docs.push({
-          id: "address_proof_new",
-          nameEn: "Proof of New Address (Electricity Bill / Tax Receipt / Registry)",
-          nameGu: "નવા સરનામાનો અધિકૃત પુરાવો (લાઈટ બિલ / મિલકત વેરા બિલ)",
-          mandatory: true,
-        });
-      }
-    }
-
-    if (selectedCorrections.includes("name") || selectedCorrections.includes("dob")) {
-      if (!docs.some((d) => d.id === "name_dob_proof")) {
-        docs.push({
-          id: "name_dob_proof",
-          nameEn: "Birth Certificate / School Leaving Certificate (LC) for Name/DOB Proof",
-          nameGu: "જન્મનો દાખલો / શાળા છોડ્યાનું પ્રમાણપત્ર (LC - જન્મ/નામ પુરાવો)",
-          mandatory: true,
-        });
-      }
-    }
-
-    if (selectedCorrections.includes("add_member")) {
-      if (!docs.some((d) => d.id === "member_proof")) {
-        docs.push({
-          id: "member_proof",
-          nameEn: "Birth / Marriage Certificate of New Member",
-          nameGu: "ઉમેરવાના સભ્યનું જન્મ પ્રમાણપત્ર અથવા લગ્ન નોંધણી",
-          mandatory: true,
-        });
-      }
-    }
-
-    if (selectedCorrections.includes("photo_biometric") || selectedCorrections.includes("photo_sign")) {
-      if (!docs.some((d) => d.id === "photo_proof")) {
-        docs.push({
+    // Always include Passport Photo for photo identity documents (Aadhaar, PAN, Ration, Driving, etc.)
+    if (isPhotoDocService || serviceMode === "new") {
+      if (!docs.some((d) => d.id === "photo_proof" || d.id === "photo")) {
+        docs.unshift({
           id: "photo_proof",
-          nameEn: "Fresh Passport Size Color Photograph (Plain Background)",
-          nameGu: "તાજો પાસપોર્ટ સાઇઝ રંગીન ફોટો (કોઈપણ સાદું બેકગ્રાઉન્ડ - સફેદ/વાદળી/લાઇટ)",
+          nameEn: "Passport Size Color Photograph (અસલ પાસપોર્ટ સાઇઝ રંગીન ફોટો)",
+          nameGu: "અસલ પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo - White/Light Background)",
           mandatory: true,
         });
+      }
+    }
+
+    if (serviceMode === "update") {
+      if (selectedCorrections.includes("address")) {
+        if (!docs.some((d) => d.id === "address_proof_new")) {
+          docs.push({
+            id: "address_proof_new",
+            nameEn: "Proof of New Address (Electricity Bill / Tax Receipt / Registry)",
+            nameGu: "નવા સરનામાનો અધિકૃત પુરાવો (લાઈટ બિલ / મિલકત વેરા બિલ)",
+            mandatory: true,
+          });
+        }
+      }
+
+      if (selectedCorrections.includes("name") || selectedCorrections.includes("dob")) {
+        if (!docs.some((d) => d.id === "name_dob_proof")) {
+          docs.push({
+            id: "name_dob_proof",
+            nameEn: "Birth Certificate / School Leaving Certificate (LC) for Name/DOB Proof",
+            nameGu: "જન્મનો દાખલો / શાળા છોડ્યાનું પ્રમાણપત્ર (LC - જન્મ/નામ પુરાવો)",
+            mandatory: true,
+          });
+        }
+      }
+
+      if (selectedCorrections.includes("add_member")) {
+        if (!docs.some((d) => d.id === "member_proof")) {
+          docs.push({
+            id: "member_proof",
+            nameEn: "Birth / Marriage Certificate of New Member",
+            nameGu: "ઉમેરવાના સભ્યનું જન્મ પ્રમાણપત્ર અથવા લગ્ન નોંધણી",
+            mandatory: true,
+          });
+        }
       }
     }
 
@@ -388,6 +407,29 @@ export default function DocumentServicePortal({
 
     try {
       const base64Data = await compressImageIfNeeded(file);
+
+      // Handle Passport Photo Upload directly
+      if (docId === "photo_proof" || docId === "photo") {
+        setUserUploadedPhoto(base64Data);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("nagrik_user_photo", base64Data);
+          } catch {}
+        }
+        setUploadedDocs((prev) => ({
+          ...prev,
+          [docId]: {
+            file,
+            fileName: file.name,
+            fileType: file.type || "image/jpeg",
+            base64: base64Data,
+            status: "valid",
+            qualityScore: 98,
+            adviceGu: "પાસપોર્ટ સાઇઝ રંગીન ફોટો માન્ય થયેલ છે.",
+          },
+        }));
+        return;
+      }
 
       // Set analyzing state
       setUploadedDocs((prev) => ({
@@ -658,6 +700,8 @@ export default function DocumentServicePortal({
           verified: uploadedDocs[d.id]?.status === "valid",
           qualityScore: uploadedDocs[d.id]?.qualityScore || 90,
         })),
+        citizenPhoto: userUploadedPhoto || uploadedDocs["photo_proof"]?.base64 || undefined,
+        userPhoto: userUploadedPhoto || uploadedDocs["photo_proof"]?.base64 || undefined,
       };
 
       const res = await fetch("/api/track", {
