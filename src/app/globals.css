@@ -67,14 +67,17 @@ p, h1, h2, h3, h4, span, li {
     visibility: hidden !important;
   }
 
-  /* Make ONLY the official receipt and its children visible */
+  /* Make ONLY the official receipt, certificate, and their children visible */
   #official-receipt-print-area,
-  #official-receipt-print-area * {
+  #official-receipt-print-area *,
+  .print-only-certificate,
+  .print-only-certificate * {
     visibility: visible !important;
   }
 
   /* Anchor the receipt directly to fill Page 1 with clean margins and full height */
-  #official-receipt-print-area {
+  #official-receipt-print-area,
+  .print-only-certificate {
     position: fixed !important;
     left: 4mm !important;
     top: 4mm !important;

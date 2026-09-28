@@ -300,6 +300,99 @@ export default function BenefitCalculatorPage() {
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };
 
+  // High-Fidelity Official A4 Certificate Print Engine
+  const handlePrintCertificate = () => {
+    const printArea = document.getElementById("official-receipt-print-area");
+    if (!printArea) {
+      window.print();
+      return;
+    }
+
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: "instant" });
+
+    // Remove any existing print frame
+    const oldIframe = document.getElementById("benefit-print-frame");
+    if (oldIframe) {
+      oldIframe.remove();
+    }
+
+    const iframe = document.createElement("iframe");
+    iframe.id = "benefit-print-frame";
+    iframe.style.position = "fixed";
+    iframe.style.right = "0";
+    iframe.style.bottom = "0";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "0";
+    iframe.style.zIndex = "-1";
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow?.document;
+    if (!doc) {
+      window.print();
+      return;
+    }
+
+    // Clone all stylesheets from head
+    const headStyles = Array.from(document.querySelectorAll('style, link[rel="stylesheet"]'))
+      .map((el) => el.outerHTML)
+      .join("\n");
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="gu">
+        <head>
+          <meta charset="utf-8" />
+          <title>ડિજિટલ નાગરિક પાત્રતા પ્રમાણપત્ર - ગુજરાત સરકાર</title>
+          ${headStyles}
+          <style>
+            @page {
+              size: A4 portrait;
+              margin: 4mm;
+            }
+            * {
+              box-sizing: border-box;
+            }
+            html, body {
+              margin: 0 !important;
+              padding: 0 !important;
+              background: #ffffff !important;
+              color: #0f172a !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+              font-family: system-ui, -apple-system, sans-serif;
+            }
+            #official-receipt-print-area,
+            .print-only-certificate {
+              display: flex !important;
+              visibility: visible !important;
+              position: static !important;
+              width: 100% !important;
+              height: 280mm !important;
+              min-height: 280mm !important;
+              box-sizing: border-box !important;
+              border: 2px solid #0f172a !important;
+              padding: 4mm 5mm !important;
+            }
+          </style>
+        </head>
+        <body>
+          ${printArea.outerHTML}
+        </body>
+      </html>
+    `;
+
+    doc.open();
+    doc.write(htmlContent);
+    doc.close();
+
+    setTimeout(() => {
+      iframe.contentWindow?.focus();
+      iframe.contentWindow?.print();
+    }, 350);
+  };
+
   // All 8 Realistic Government Parameters configured with Official Data Sources & Validation Rules
   const CONDITIONS = [
     {
@@ -1233,7 +1326,7 @@ export default function BenefitCalculatorPage() {
                       <Share2 size={15} /> WhatsApp પર મોકલો (૧-ક્લિક)
                     </button>
                     <button
-                      onClick={() => window.print()}
+                      onClick={handlePrintCertificate}
                       disabled={!isKycVerified}
                       className="flex items-center justify-center gap-1 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-semibold py-2.5 px-3.5 rounded-xl text-xs transition"
                     >
@@ -1249,7 +1342,7 @@ export default function BenefitCalculatorPage() {
       </main>
 
       {/* ── Official Authentic Gujarat Govt Digital Entitlement Certificate (Full A4 Page Print Only) ── */}
-      <div className="hidden print:flex print-only-certificate bg-white text-gray-900 font-sans">
+      <div id="official-receipt-print-area" className="hidden print:flex print-only-certificate bg-white text-gray-900 font-sans">
         <div className="border-2 border-gray-900 p-4 h-full flex flex-col justify-between box-border">
           
           {/* TOP SECTION: Header, Title, Meta, Citizen Info */}
