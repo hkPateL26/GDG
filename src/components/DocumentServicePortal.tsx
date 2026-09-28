@@ -195,8 +195,9 @@ export default function DocumentServicePortal({
   const [marriageDate, setMarriageDate] = useState<string>("2025-02-14");
   const [spouseName, setSpouseName] = useState<string>("પ્રિયાબેન");
 
-  // Category filter for the 13 services selector
+  // Category and Search filter for the 69 services selector
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState<string>("all");
+  const [serviceSearchQuery, setServiceSearchQuery] = useState<string>("");
 
   // 5. Document Uploads & AI Inspections
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocState>>({});
@@ -1484,68 +1485,110 @@ export default function DocumentServicePortal({
           ૧. સરકારી દસ્તાવેજ / સેવા પસંદ કરો (SELECT DOCUMENT SERVICE):
         </h3>
 
-        {/* Category Tabs for Services */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
-          {[
-            { id: "all", label: `તમામ સેવાઓ (${DOCUMENT_SERVICES.length})` },
-            { id: "revenue", label: "🌾 મહેસૂલ & જમીન", services: ["land_records", "income", "domicile_cert"] },
-            { id: "civil", label: "🪪 નાગરિક & ઓળખ", services: ["aadhaar", "ration", "pan", "birth_cert", "death_cert", "marriage_cert"] },
-            { id: "welfare", label: "⚖️ સામાજિક કલ્યાણ", services: ["caste", "ews_cert", "senior_citizen"] },
-            { id: "transport", label: "🚗 વાહન વ્યવહાર", services: ["driving_licence"] },
-          ].map((cat) => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setServiceCategoryFilter(cat.id)}
-              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
-                serviceCategoryFilter === cat.id
-                  ? "bg-orange-600 text-white shadow-xs"
-                  : "bg-slate-100 hover:bg-slate-200 text-slate-600"
-              }`}
-            >
-              {cat.label}
-            </button>
-          ))}
+        {/* Search Bar & Category Tabs for 69 Government Services */}
+        <div className="space-y-2.5">
+          <div className="relative">
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
+            <input
+              type="text"
+              value={serviceSearchQuery}
+              onChange={(e) => setServiceSearchQuery(e.target.value)}
+              placeholder="🔍 ૬૯ સરકારી સેવાઓમાંથી શોધો (દા.ત. ૭/૧૨, આવક દાખલો, રેશનકાર્ડ, પેન્શન, લાયસન્સ, જાતિ, ખેડૂત, શૌચાલય, વીજળી)..."
+              className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:ring-2 focus:ring-orange-500 focus:outline-none placeholder:text-slate-400"
+            />
+            {serviceSearchQuery && (
+              <button
+                type="button"
+                onClick={() => setServiceSearchQuery("")}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-slate-400 hover:text-slate-600 font-bold"
+              >
+                ✕
+              </button>
+            )}
+          </div>
+
+          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+            {[
+              { id: "all", label: `તમામ સેવાઓ (${DOCUMENT_SERVICES.length})` },
+              { id: "revenue", label: "🌾 મહેસૂલ & જમીન (૧૮)" },
+              { id: "supplies", label: "🛒 અન્ન & પુરવઠો (૮)" },
+              { id: "welfare", label: "⚖️ સામાજિક કલ્યાણ (૧૦)" },
+              { id: "panchayat", label: "👶 પંચાયત & સિવિલ (૯)" },
+              { id: "transport", label: "🚗 વાહનવ્યવહાર / RTO (૬)" },
+              { id: "police", label: "👮 ગૃહ & પોલીસ (૫)" },
+              { id: "labour", label: "👷 શ્રમ & શિક્ષણ (૮)" },
+              { id: "energy", label: "⚡ ઉર્જા & વીજળી (૩)" },
+              { id: "central", label: "🪪 કેન્દ્રીય ID (૨)" },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setServiceCategoryFilter(cat.id)}
+                className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer shrink-0 ${
+                  serviceCategoryFilter === cat.id
+                    ? "bg-orange-600 text-white shadow-xs"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
-          {DOCUMENT_SERVICES.filter((s) => {
-            if (serviceCategoryFilter === "all") return true;
-            if (serviceCategoryFilter === "revenue") return ["land_records", "income", "domicile_cert"].includes(s.id);
-            if (serviceCategoryFilter === "civil") return ["aadhaar", "ration", "pan", "birth_cert", "death_cert", "marriage_cert"].includes(s.id);
-            if (serviceCategoryFilter === "welfare") return ["caste", "ews_cert", "senior_citizen"].includes(s.id);
-            if (serviceCategoryFilter === "transport") return ["driving_licence"].includes(s.id);
-            return true;
-          }).map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => {
-                setSelectedServiceId(s.id);
-                setFetchedProfile(null);
-                setUploadedDocs({});
-                if (s.id === "aadhaar" && serviceMode === "new") {
-                  setAadhaarNumber("");
-                }
-              }}
-              className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 cursor-pointer ${
-                selectedServiceId === s.id
-                  ? "border-orange-500 bg-orange-50/60 ring-2 ring-orange-500/20 shadow-xs"
-                  : "border-slate-200 hover:border-slate-300 bg-white"
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-2xl">{s.emoji}</span>
-                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
-                  {s.fee === 0 ? "નિઃશુલ્ક" : `₹${s.fee}`}
-                </span>
-              </div>
-              <div>
-                <p className="font-bold text-xs text-slate-900 leading-snug">{s.nameGu}</p>
-                <p className="text-[10px] text-slate-500 truncate">{s.nameEn}</p>
-              </div>
-            </button>
-          ))}
+        {/* 69 Services Responsive Grid with smooth scroll */}
+        <div className="max-h-[460px] overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+            {DOCUMENT_SERVICES.filter((s) => {
+              // Category filter
+              const matchesCategory = serviceCategoryFilter === "all" || s.category === serviceCategoryFilter;
+              if (!matchesCategory) return false;
+
+              // Search query filter
+              if (serviceSearchQuery.trim()) {
+                const q = serviceSearchQuery.toLowerCase().trim();
+                const matchGu = s.nameGu.toLowerCase().includes(q);
+                const matchEn = s.nameEn.toLowerCase().includes(q);
+                const matchDept = (s.departmentGu || "").toLowerCase().includes(q) || (s.departmentEn || "").toLowerCase().includes(q);
+                return matchGu || matchEn || matchDept;
+              }
+              return true;
+            }).map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  setSelectedServiceId(s.id);
+                  setFetchedProfile(null);
+                  setUploadedDocs({});
+                  if (s.id === "aadhaar" && serviceMode === "new") {
+                    setAadhaarNumber("");
+                  }
+                }}
+                className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 cursor-pointer ${
+                  selectedServiceId === s.id
+                    ? "border-orange-500 bg-orange-50/70 ring-2 ring-orange-500/20 shadow-xs"
+                    : "border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50/50"
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-2xl">{s.emoji}</span>
+                  <div className="flex items-center gap-1">
+                    {selectedServiceId === s.id && (
+                      <CheckCircle2 size={14} className="text-orange-600" />
+                    )}
+                    <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                      {s.fee === 0 ? "નિઃશુલ્ક" : `₹${s.fee}`}
+                    </span>
+                  </div>
+                </div>
+                <div>
+                  <p className="font-bold text-xs text-slate-900 leading-snug line-clamp-2">{s.nameGu}</p>
+                  <p className="text-[10px] text-slate-500 truncate mt-0.5">{s.nameEn}</p>
+                </div>
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Dual Mode Switcher: New Issuance vs Correction/Update */}
