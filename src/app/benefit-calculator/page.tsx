@@ -637,31 +637,31 @@ export default function BenefitCalculatorPage() {
                       <span className="text-[10px] text-gray-400">ટેપ કરીને પસંદ કરો</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3.5">
+                    <div className="grid grid-cols-1 gap-3">
                       {CONDITIONS.map((cond) => {
                         const Icon = cond.Icon;
                         return (
                           <div
                             key={cond.id}
                             onClick={cond.toggle}
-                            className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition select-none flex flex-col justify-between gap-3 active:scale-[0.99] ${
+                            className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition select-none flex flex-col justify-between gap-2.5 active:scale-[0.99] ${
                               cond.active
                                 ? `${cond.color} shadow-sm ring-2 ring-orange-500/20`
                                 : "border-gray-200 bg-white hover:bg-gray-50/80 text-gray-700 hover:border-gray-300"
                             }`}
                           >
-                            {/* Top Row: Checkbox + Title + Amount Pill */}
-                            <div className="flex items-start justify-between gap-2.5">
-                              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                            {/* Top Row: Checkbox + Title + Scheme + Amount Badge */}
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
                                 <div
-                                  className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold transition ${
+                                  className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold transition ${
                                     cond.active ? "bg-orange-500 text-white shadow-xs" : "border-2 border-gray-300 bg-white"
                                   }`}
                                 >
                                   {cond.active && <Check size={13} strokeWidth={3} />}
                                 </div>
                                 <div className="min-w-0">
-                                  <h4 className="text-xs sm:text-sm font-bold text-gray-900 leading-snug break-words">
+                                  <h4 className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
                                     {cond.label}
                                   </h4>
                                   <p className="text-[11px] text-orange-600 font-semibold mt-0.5">
@@ -671,34 +671,35 @@ export default function BenefitCalculatorPage() {
                               </div>
 
                               <span
-                                className={`text-[11px] font-black px-2.5 py-1 rounded-xl shrink-0 ${
+                                className={`text-xs font-black px-2.5 py-1 rounded-xl shrink-0 self-start sm:self-auto ${
                                   cond.active
                                     ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
-                                    : "bg-gray-100 text-gray-600 border border-gray-200"
+                                    : "bg-gray-100 text-gray-700 border border-gray-200"
                                 }`}
                               >
                                 {cond.amount}
                               </span>
                             </div>
 
-                            {/* Middle Row: Crisp Government Rule (NO word breaking) */}
-                            <div className="text-[11px] text-gray-700 bg-white/80 border border-gray-100 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-2xs">
-                              <span className="font-bold text-gray-900 shrink-0">📌 શરત:</span>
-                              <span className="truncate">{cond.shortRule}</span>
-                            </div>
+                            {/* Bottom Row: Government Rule & Verified Evidence */}
+                            <div className="pt-2 border-t border-black/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                              <div className="flex items-start sm:items-center gap-1.5 text-gray-700 min-w-0 flex-1">
+                                <span className="font-bold text-gray-900 shrink-0 text-[11px]">📌 શરત:</span>
+                                <span className="text-[11px] text-gray-600 leading-snug">{cond.shortRule}</span>
+                              </div>
 
-                            {/* Bottom Row: Government Source & Verified Proof Badge */}
-                            <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-2 text-[10px]">
-                              <span className="text-gray-500 font-medium flex items-center gap-1 truncate">
-                                🏛️ {cond.govtSource}
-                              </span>
-                              {cond.active ? (
-                                <span className="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full text-[9.5px] flex items-center gap-1 shrink-0 shadow-2xs">
-                                  <CheckCircle2 size={10} /> {cond.verifiedEvidence}
+                              <div className="flex items-center gap-2 shrink-0 text-[10px] self-start sm:self-auto pt-1 sm:pt-0">
+                                <span className="text-gray-500 font-medium whitespace-nowrap">
+                                  🏛️ {cond.govtSource}
                                 </span>
-                              ) : (
-                                <span className="text-gray-400 text-[9.5px]">ચકાસણી બાકી</span>
-                              )}
+                                {cond.active ? (
+                                  <span className="bg-emerald-600 text-white font-bold px-2.5 py-0.5 rounded-full text-[9.5px] flex items-center gap-1 shadow-2xs whitespace-nowrap">
+                                    <CheckCircle2 size={11} /> {cond.verifiedEvidence}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400 text-[9.5px] whitespace-nowrap">ચકાસણી બાકી</span>
+                                )}
+                              </div>
                             </div>
                           </div>
                         );
