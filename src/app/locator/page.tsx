@@ -209,12 +209,13 @@ export default function OfficeLocatorPage() {
                     </a>
                   )}
                   <a
-                    href={`https://www.google.com/maps/search/?api=1&query=${office.mapQuery}`}
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${office.lat || 22.3039},${office.lng || 70.8022}&travelmode=driving`}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex-1 flex items-center justify-center gap-1.5 bg-orange-500 hover:bg-orange-600 text-white py-2 rounded-xl text-xs font-semibold transition active:scale-95"
+                    title="આ કચેરી સુધીનો ડ્રાઈવિંગ રસ્તો અને નેવિગેશન જુઓ"
                   >
-                    <Navigation size={13} /> રસ્તો જુઓ (Directions) <ExternalLink size={12} />
+                    <Navigation size={13} /> રસ્તો & રૂટ (Directions) <ExternalLink size={12} />
                   </a>
                 </div>
               </div>
