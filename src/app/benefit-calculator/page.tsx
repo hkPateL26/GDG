@@ -253,7 +253,7 @@ export default function BenefitCalculatorPage() {
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };
 
-  // All 8 Realistic Government Parameters configured as interactive tap-chips
+  // All 8 Realistic Government Parameters configured with Official Data Sources & Validation Rules
   const CONDITIONS = [
     {
       id: "farmer",
@@ -264,6 +264,9 @@ export default function BenefitCalculatorPage() {
       color: "border-amber-300 bg-amber-50/70 text-amber-900",
       active: isFarmer,
       toggle: () => setIsFarmer(!isFarmer),
+      govtSource: "AnyRoR ગુજરાત (૭/૧૨ & ૮-અ)",
+      eligibilityRuleGu: "૨ હેક્ટરથી ઓછી ખેતીની જમીન ધરાવતા અને આવકવેરો ન ભરતા નાના ખેડૂતો",
+      verifiedEvidence: "ખાતા નં: ૧૪૨/A (જમીન: ૧.૪ હેક્ટર - સીમાંત ખેડૂત પ્રમાણિત)",
     },
     {
       id: "house",
@@ -274,6 +277,9 @@ export default function BenefitCalculatorPage() {
       color: "border-green-300 bg-green-50/70 text-green-900",
       active: needsHouse,
       toggle: () => setNeedsHouse(!needsHouse),
+      govtSource: "AwasSoft / SECC-2011 વંચિતતા સર્વે",
+      eligibilityRuleGu: "સમગ્ર ભારતમાં ક્યાંય પાકું મકાન ન હોય અને ગ્રામ પંચાયત પ્રાથમિકતા યાદીમાં નામ હોય",
+      verifiedEvidence: "ગ્રામ પંચાયત હાઉસિંગ સર્વે યાદી: કાચું માટીનું મકાન ચકાસાયેલ",
     },
     {
       id: "lpg",
@@ -284,6 +290,9 @@ export default function BenefitCalculatorPage() {
       color: "border-red-300 bg-red-50/70 text-red-900",
       active: needsLPG,
       toggle: () => setNeedsLPG(!needsLPG),
+      govtSource: "OMC પોર્ટલ (IOCL/BPCL/HPCL રજિસ્ટ્રી)",
+      eligibilityRuleGu: "BPL/AAY રેશનકાર્ડ ધરાવતી પુખ્ત મહિલા (૧૮+) જેના નામે અગાઉ ગેસ કનેક્શન ન હોય",
+      verifiedEvidence: "OMC આધાર ડી-ડુપ્લિકેશન: કોઈ સક્રિય ગેસ કનેક્શન નોંધાયેલ નથી",
     },
     {
       id: "senior",
@@ -294,6 +303,9 @@ export default function BenefitCalculatorPage() {
       color: "border-purple-300 bg-purple-50/70 text-purple-900",
       active: hasSeniorCitizen,
       toggle: () => setHasSeniorCitizen(!hasSeniorCitizen),
+      govtSource: "RCMS ગુજરાત વય ચકાસણી ડેટાબેઝ",
+      eligibilityRuleGu: "કુટુંબમાં ૬૦ વર્ષ કે તેથી વધુ વયના નિરાધાર/બીપીએલ વડીલ સભ્ય",
+      verifiedEvidence: "ગોદાવરીબેન પટેલ (ઉંમર: ૭૪ વર્ષ) - RCMS રેકોર્ડ દ્વારા પ્રમાણિત",
     },
     {
       id: "girl",
@@ -304,6 +316,9 @@ export default function BenefitCalculatorPage() {
       color: "border-pink-300 bg-pink-50/70 text-pink-900",
       active: hasGirlChild,
       toggle: () => setHasGirlChild(!hasGirlChild),
+      govtSource: "મહિલા & બાળ વિકાસ / ડિજિટલ ગુજરાત",
+      eligibilityRuleGu: "કુટુંબની પ્રથમ અથવા બીજી દીકરી (જન્મ ૦૨/૦૮/૨૦૧૯ પછી અને આવક ₹૨ લાખ સુધી)",
+      verifiedEvidence: "દિવ્યાબેન પટેલ (પુત્રી) - જન્મ & વાર્ષિક આવક માપદંડ પ્રમાણિત",
     },
     {
       id: "business",
@@ -314,6 +329,9 @@ export default function BenefitCalculatorPage() {
       color: "border-blue-300 bg-blue-50/70 text-blue-900",
       active: isSmallBusiness,
       toggle: () => setIsSmallBusiness(!isSmallBusiness),
+      govtSource: "નગરપાલિકા / ULB સ્ટ્રીટ વેન્ડર રજિસ્ટ્રી",
+      eligibilityRuleGu: "શહેરી કે અર્ધ-શહેરી વિસ્તારમાં શાકભાજી, ફળ, ચા-નાસ્તો કે ફેરી કરતા લારીધારકો",
+      verifiedEvidence: "જેતપુર નગરપાલિકા વેન્ડિંગ સર્ટિફિકેટ / LoR આધાર લિંક્ડ",
     },
     {
       id: "student",
@@ -324,6 +342,9 @@ export default function BenefitCalculatorPage() {
       color: "border-indigo-300 bg-indigo-50/70 text-indigo-900",
       active: hasStudent,
       toggle: () => setHasStudent(!hasStudent),
+      govtSource: "ડિજિટલ ગુજરાત & U-DISE / CTS પોર્ટલ",
+      eligibilityRuleGu: "ધોરણ ૧૧-૧૨, ડિપ્લોમા કે ડિગ્રી કોલેજમાં અભ્યાસ કરતા વિદ્યાર્થીઓ (આવક ₹૨.૫ લાખ સુધી)",
+      verifiedEvidence: "ચિરાગ પટેલ (૨૨ વર્ષ) & દિવ્યાબેન (૧૮ વર્ષ) - સરકારી કોલેજ એનરોલમેન્ટ",
     },
     {
       id: "laborer",
@@ -334,6 +355,9 @@ export default function BenefitCalculatorPage() {
       color: "border-teal-300 bg-teal-50/70 text-teal-900",
       active: isLaborer,
       toggle: () => setIsLaborer(!isLaborer),
+      govtSource: "e-Shram UAN / શ્રમ & રોજગાર મંત્રાલય",
+      eligibilityRuleGu: "૧૮ પરંપરાગત કારીગરો (સુથાર, કડિયા, લુહાર, સોની, દરજી, કુંભાર, મોચી વગેરે)",
+      verifiedEvidence: "e-Shram UAN: XXXX-XXXX-2190 (કારીગર શ્રેણી પ્રમાણિત)",
     },
   ];
 
@@ -613,17 +637,17 @@ export default function BenefitCalculatorPage() {
                       <span className="text-[10px] text-gray-400">ટેપ કરીને પસંદ કરો</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {CONDITIONS.map((cond) => {
                         const Icon = cond.Icon;
                         return (
                           <div
                             key={cond.id}
                             onClick={cond.toggle}
-                            className={`p-2.5 rounded-xl border-2 cursor-pointer transition select-none flex items-start gap-2.5 active:scale-98 ${
+                            className={`p-3 rounded-2xl border-2 cursor-pointer transition select-none flex items-start gap-2.5 active:scale-98 ${
                               cond.active
-                                ? `${cond.color} shadow-xs`
-                                : "border-gray-100 bg-gray-50/70 hover:bg-gray-50 text-gray-600"
+                                ? `${cond.color} shadow-xs ring-1 ring-orange-400/30`
+                                : "border-gray-200 bg-gray-50/70 hover:bg-gray-100/60 text-gray-600"
                             }`}
                           >
                             <div
@@ -635,14 +659,36 @@ export default function BenefitCalculatorPage() {
                             </div>
 
                             <div className="min-w-0 flex-1">
-                              <p className="text-xs font-bold leading-tight truncate">
-                                {cond.label}
-                              </p>
-                              <div className="flex items-center justify-between mt-1">
-                                <span className="text-[10px] opacity-75 truncate">{cond.scheme}</span>
-                                <span className={`text-[10px] font-extrabold ${cond.active ? "text-green-700" : "text-gray-400"}`}>
+                              <div className="flex items-start justify-between gap-1">
+                                <p className="text-xs font-bold leading-tight truncate text-gray-900">
+                                  {cond.label}
+                                </p>
+                                <span className={`text-[10.5px] font-black shrink-0 ${cond.active ? "text-green-700" : "text-gray-400"}`}>
                                   {cond.amount}
                                 </span>
+                              </div>
+
+                              <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">
+                                📋 યોજના: {cond.scheme}
+                              </p>
+
+                              {/* Official Government Rule */}
+                              <p className="text-[9.5px] text-gray-600 mt-1 leading-snug line-clamp-2 bg-white/60 p-1.5 rounded-lg border border-gray-100">
+                                <span className="font-bold text-gray-700">પાત્રતા શરત:</span> {cond.eligibilityRuleGu}
+                              </p>
+
+                              {/* Official Government Validation Source & Proof */}
+                              <div className="mt-1.5 pt-1 border-t border-black/5 flex flex-wrap items-center justify-between gap-1 text-[9px]">
+                                <span className="text-gray-500 font-semibold truncate flex items-center gap-1">
+                                  🏛️ {cond.govtSource}
+                                </span>
+                                {cond.active ? (
+                                  <span className="text-emerald-800 bg-emerald-100/90 font-bold px-1.5 py-0.5 rounded text-[8.5px] truncate max-w-full">
+                                    ✅ {cond.verifiedEvidence}
+                                  </span>
+                                ) : (
+                                  <span className="text-gray-400 text-[8.5px]">અપ્રમાણિત / બાકી</span>
+                                )}
                               </div>
                             </div>
                           </div>
@@ -1074,6 +1120,33 @@ export default function BenefitCalculatorPage() {
                         <div className="flex items-center justify-between text-xs p-2 rounded-xl bg-blue-50/70 border border-blue-100">
                           <span className="font-medium text-gray-800">🏥 આયુષ્માન ભારત હેલ્થ કવચ</span>
                           <span className="font-bold text-blue-700">₹5,00,000 કેશલેસ સારવાર</span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Official DPI Verification Proofs Box */}
+                    {isKycVerified && (
+                      <div className="mt-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-200 text-[10px] space-y-1">
+                        <p className="font-bold text-slate-800 flex items-center gap-1">
+                          🏛️ સત્તાવાર સરકારી ડેટા વેરિફિકેશન આધારો (DPI Proofs):
+                        </p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[9.5px] text-slate-600 pt-0.5">
+                          <p className="flex items-center gap-1">
+                            <span className="text-emerald-600 font-black">✓</span>
+                            <span>AnyRoR: ખાતા ૧૪૨/A (૧.૪ હેક્ટર ખેડૂત)</span>
+                          </p>
+                          <p className="flex items-center gap-1">
+                            <span className="text-emerald-600 font-black">✓</span>
+                            <span>RCMS: ગોદાવરીબેન (૭૪ વર્ષ) વય પ્રમાણિત</span>
+                          </p>
+                          <p className="flex items-center gap-1">
+                            <span className="text-emerald-600 font-black">✓</span>
+                            <span>ડિજિટલ ગુજરાત: ૨ વિદ્યાર્થી સભ્યો સક્રિય</span>
+                          </p>
+                          <p className="flex items-center gap-1">
+                            <span className="text-emerald-600 font-black">✓</span>
+                            <span>NFSA: BPL અગ્રતા કુટુંબ (આયુષ્માન કવચ)</span>
+                          </p>
                         </div>
                       </div>
                     )}
