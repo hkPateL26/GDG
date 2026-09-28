@@ -49,10 +49,24 @@ export default function UnifiedCitizenPortal({
     return () => window.removeEventListener("storage", syncSession);
   }, []);
 
+  // Listen to browser Back/Forward navigation (BUG-012)
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== "undefined") {
+        const path = window.location.pathname.replace(/^\//, "");
+        if (path === "track" || path === "documents" || path === "eligibility") {
+          setActiveTab(path as PortalTabType);
+        }
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
+
   const handleTabChange = (tab: PortalTabType) => {
     setActiveTab(tab);
     if (typeof window !== "undefined") {
-      window.history.pushState(null, "", "/" + tab);
+      window.history.pushState({ tab }, "", "/" + tab);
     }
   };
 
@@ -61,6 +75,14 @@ export default function UnifiedCitizenPortal({
     window.dispatchEvent(new Event("storage"));
     setCitizenSession(null);
   };
+
+  if (isRestoring) {
+    return (
+      <main className="min-h-screen bg-slate-50 flex items-center justify-center">
+        <div className="w-8 h-8 border-3 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">

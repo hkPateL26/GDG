@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect } from "react";
-import { usePathname } from "next/navigation";
-import { getStoredLanguage, applyLanguage, DEFAULT_LANGUAGE } from "@/lib/translation";
+import {
+  getStoredLanguage,
+  setGoogleTranslateCookies,
+  DEFAULT_LANGUAGE,
+} from "@/lib/translation";
 
 declare global {
   interface Window {
@@ -29,10 +32,8 @@ declare global {
 }
 
 export default function GoogleTranslateScript() {
-  const pathname = usePathname();
-
   // When a translated language is active, ensure navigation uses full clean navigation
-  // This eliminates the violent React SPA DOM swap conflict and stops the "jatko" (jolt/flash) completely!
+  // This eliminates the violent React SPA DOM swap conflict and stops the "jatko" (jolt/flash) completely
   useEffect(() => {
     const handleGlobalLinkClick = (e: MouseEvent) => {
       const savedLang = getStoredLanguage();
@@ -66,10 +67,7 @@ export default function GoogleTranslateScript() {
 
     // Ensure cookie is in sync with stored language before script initializes
     if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
-      const cookieValue = `/gu/${savedLang}`;
-      const hostname = window.location.hostname;
-      document.cookie = `googtrans=${cookieValue}; path=/;`;
-      document.cookie = `googtrans=${cookieValue}; path=/; domain=${hostname};`;
+      setGoogleTranslateCookies(savedLang);
     }
 
     // Set callback for Google Translate initialization
@@ -85,31 +83,34 @@ export default function GoogleTranslateScript() {
             "google_translate_element"
           );
 
-          // If a language was previously stored and is not default, trigger combo
-          if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
-            setTimeout(() => {
+          // Always check fresh stored language from localStorage
+          const activeLang = getStoredLanguage();
+          if (activeLang && activeLang !== DEFAULT_LANGUAGE) {
+            let attempts = 0;
+            const checkInterval = setInterval(() => {
+              attempts++;
               const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
               if (combo) {
-                if (combo.value !== savedLang) {
-                  combo.value = savedLang;
-                  combo.dispatchEvent(new Event("change"));
+                clearInterval(checkInterval);
+                if (combo.value !== activeLang) {
+                  combo.value = activeLang;
+                  combo.dispatchEvent(new Event("change", { bubbles: true }));
                 }
-                // Signal PageLoader to hide after Google Translate applies (~500ms)
                 setTimeout(() => {
                   window.dispatchEvent(new Event("nagrikseva:pageReady"));
-                }, 600);
-              } else {
-                // Fallback: signal page ready if combo not found
+                }, 400);
+              } else if (attempts >= 40) {
+                clearInterval(checkInterval);
                 window.dispatchEvent(new Event("nagrikseva:pageReady"));
               }
-            }, 800);
+            }, 50);
           } else {
-            // Default language (Gujarati): page is ready immediately
             window.dispatchEvent(new Event("nagrikseva:pageReady"));
           }
         }
       } catch (err) {
         console.error("Google Translate init error:", err);
+        window.dispatchEvent(new Event("nagrikseva:pageReady"));
       }
     };
 
@@ -128,17 +129,13 @@ export default function GoogleTranslateScript() {
       }
     };
 
-    // Only load external translation script if user is NOT in default Gujarati
-    if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
-      loadScript();
-    } else {
-      // Default language (Gujarati): page is ready immediately, zero network requests
-      window.dispatchEvent(new Event("nagrikseva:pageReady"));
-    }
+    // Preload Google Translate script unconditionally so combo is pre-warmed & ready
+    loadScript();
 
     const handleLangChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
-      if (customEvent.detail && customEvent.detail !== DEFAULT_LANGUAGE) {
+      const newLang = customEvent.detail;
+      if (newLang && newLang !== DEFAULT_LANGUAGE) {
         loadScript();
       }
     };
@@ -150,7 +147,17 @@ export default function GoogleTranslateScript() {
   return (
     <div
       id="google_translate_element"
-      style={{ display: "none", position: "absolute", top: "-9999px", left: "-9999px" }}
+      style={{
+        position: "fixed",
+        top: "-9999px",
+        left: "-9999px",
+        width: "1px",
+        height: "1px",
+        opacity: 0,
+        pointerEvents: "none",
+        zIndex: -9999,
+        overflow: "hidden",
+      }}
       aria-hidden="true"
     />
   );

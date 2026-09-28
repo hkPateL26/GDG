@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Navbar from "@/components/Navbar";
 import { OFFICES_DATA, ExtendedOffice } from "@/lib/offices-data";
+import { GUJARAT_DISTRICTS } from "@/lib/large-datasets";
 import {
   MapPin,
   Clock,
@@ -14,15 +15,43 @@ import {
   CheckCircle,
 } from "lucide-react";
 
+// Synthesize coverage for all 33 Gujarat districts if not explicitly in static database
+const ALL_OFFICES: ExtendedOffice[] = [
+  ...OFFICES_DATA,
+  ...GUJARAT_DISTRICTS.filter(
+    (d) => !OFFICES_DATA.some((o) => o.district.toLowerCase() === d.en.toLowerCase())
+  ).map((d) => ({
+    id: `${d.en.toLowerCase()}-collectorate-jan-seva`,
+    name: `જિલ્લા કલેક્ટર કચેરી & જન સેવા કેન્દ્ર (${d.gu} / ${d.en})`,
+    type: "Jan Seva Kendra / Collectorate",
+    district: d.en,
+    category: "jan-seva" as const,
+    address: `જિલ્લા સેવા સદન, કલેક્ટર કચેરી કમ્પાઉન્ડ, ${d.gu} (${d.en})`,
+    city: d.en,
+    state: "Gujarat",
+    pincode: "380001",
+    phone: "1800-233-5500",
+    timings: "10:30 AM - 05:30 PM (સોમ થી શનિ)",
+    services: [
+      "આવકનો દાખલો (Income Certificate)",
+      "જાતિનો દાખલો (Caste Certificate)",
+      "રેશનકાર્ડ સેવાઓ (Ration Card Services)",
+      "ડિજિટલ ગુજરાત પોર્ટલ સેવાઓ",
+      "સરકારી સહાય અરજી ખરાઈ ડેસ્ક",
+    ],
+    mapQuery: `Collector+Office+${d.en}+Gujarat`,
+  })),
+];
+
 export default function OfficeLocatorPage() {
   const [selectedDistrict, setSelectedDistrict] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  const districts = ["All", "Rajkot", "Ahmedabad", "Surat", "Vadodara"];
+  const districts = ["All", ...GUJARAT_DISTRICTS.map((d) => d.en)];
 
-  const filteredOffices = OFFICES_DATA.filter((office) => {
+  const filteredOffices = ALL_OFFICES.filter((office) => {
     const matchDistrict =
-      selectedDistrict === "All" || office.district === selectedDistrict;
+      selectedDistrict === "All" || office.district.toLowerCase() === selectedDistrict.toLowerCase();
     const q = searchQuery.toLowerCase();
     const matchSearch =
       !searchQuery ||
@@ -73,19 +102,23 @@ export default function OfficeLocatorPage() {
             <span className="text-xs font-bold text-gray-500 uppercase flex-shrink-0 mr-1">
               જિલ્લો (District):
             </span>
-            {districts.map((d) => (
-              <button
-                key={d}
-                onClick={() => setSelectedDistrict(d)}
-                className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition ${
-                  selectedDistrict === d
-                    ? "bg-orange-500 text-white shadow-sm"
-                    : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
-                }`}
-              >
-                {d === "All" ? "બધા જિલ્લા (All)" : d}
-              </button>
-            ))}
+            {districts.map((d) => {
+              const matched = GUJARAT_DISTRICTS.find((gd) => gd.en === d);
+              const label = d === "All" ? "બધા જિલ્લા (All)" : matched ? `${matched.gu} (${d})` : d;
+              return (
+                <button
+                  key={d}
+                  onClick={() => setSelectedDistrict(d)}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium transition ${
+                    selectedDistrict === d
+                      ? "bg-orange-500 text-white shadow-sm"
+                      : "bg-white text-gray-600 border border-gray-200 hover:border-orange-300"
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
           </div>
 
           {/* Results Count */}

@@ -8,31 +8,13 @@ import {
 } from "@/lib/large-datasets";
 import {
   Search,
-  CheckCircle2,
-  Clock,
-  XCircle,
   Loader2,
-  TrendingUp,
-  FileCheck2,
-  IndianRupee,
-  ShieldCheck,
   Building2,
-  MapPin,
-  Calendar,
   User,
-  Filter,
-  RefreshCw,
   Sparkles,
   Printer,
-  Fingerprint,
   Lock,
-  Shield,
-  ArrowRight,
-  LogOut,
-  Smartphone,
-  AlertTriangle,
   Receipt,
-  UserCheck,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -96,18 +78,36 @@ interface TrackVaultViewProps {
 export default function TrackVaultView({
   citizen,
   onNavigateToDocuments,
-  onNavigateToEligibility,
-  onOfficerClick,
 }: TrackVaultViewProps) {
   // ── Mode: Citizen vs Officer ──
-  const [authMode, setAuthMode] = useState<"citizen" | "officer">("citizen");
+  const [authMode, setAuthMode] = useState<"citizen" | "officer">(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return sessionStorage.getItem("nagrik_officer_session") ? "officer" : "citizen";
+      } catch {
+        return "citizen";
+      }
+    }
+    return "citizen";
+  });
+
   const [officerSession, setOfficerSession] = useState<{
     id: string;
     name: string;
     designation: string;
     district: string;
     taluka: string;
-  } | null>(null);
+  } | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("nagrik_officer_session");
+        return saved ? JSON.parse(saved) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
   // ── Officer Modal States ──
   const [showOfficerModal, setShowOfficerModal] = useState(false);
@@ -117,15 +117,19 @@ export default function TrackVaultView({
   const [officerError, setOfficerError] = useState("");
 
   // ── Search & Records ──
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get("id") || "";
+    }
+    return "";
+  });
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
   const [limit] = useState(8);
 
   const [records, setRecords] = useState<CitizenApplication[]>([]);
-  const [totalRecords, setTotalRecords] = useState(5420);
-  const [totalPages, setTotalPages] = useState(678);
   const [stats, setStats] = useState<TrackStats>({
     total: 5420,
     approved: 3845,
@@ -162,8 +166,6 @@ export default function TrackVaultView({
       if (data.success && data.citizen) {
         const myApps: CitizenApplication[] = data.citizen.activeApplications || [];
         setRecords(myApps);
-        setTotalRecords(myApps.length);
-        setTotalPages(1);
 
         if (targetId) {
           const found = myApps.find((a) => a.id.toLowerCase() === targetId.toLowerCase());
@@ -184,26 +186,13 @@ export default function TrackVaultView({
   }, []);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const urlParams = new URLSearchParams(window.location.search);
-      const idParam = urlParams.get("id");
-      if (idParam) setSearchQuery(idParam);
-
-      if (citizen && citizen.mobile) {
-        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam || undefined);
-      }
-
-      const savedOfficer = sessionStorage.getItem("nagrik_officer_session");
-      if (savedOfficer) {
-        try {
-          const parsed = JSON.parse(savedOfficer);
-          if (parsed && parsed.id) {
-            setOfficerSession(parsed);
-          }
-        } catch (e) {
-          console.error("Officer session error:", e);
-        }
-      }
+    if (citizen && citizen.mobile) {
+      const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const idParam = urlParams ? urlParams.get("id") || undefined : undefined;
+      const timer = setTimeout(() => {
+        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam);
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [citizen, loadCitizenVault]);
 
@@ -225,8 +214,6 @@ export default function TrackVaultView({
       if (data.success) {
         if (data.records) {
           setRecords(data.records);
-          setTotalRecords(data.total);
-          setTotalPages(data.totalPages);
           if (data.stats) setStats(data.stats);
 
           if (data.records.length === 1 && searchQuery.trim().toUpperCase().startsWith("APP")) {
@@ -249,7 +236,10 @@ export default function TrackVaultView({
 
   useEffect(() => {
     if (authMode === "officer") {
-      loadOfficerData();
+      const timer = setTimeout(() => {
+        loadOfficerData();
+      }, 0);
+      return () => clearTimeout(timer);
     }
   }, [authMode, loadOfficerData]);
 
@@ -322,19 +312,24 @@ export default function TrackVaultView({
     }
   };
 
-  const handleAdvanceStage = async (newStage: number, newStatus: string) => {
-    if (!selectedApp) return;
+  const handleAdvanceStage = async (newStage: number, newStatus: string, targetApp?: CitizenApplication) => {
+    const appToUpdate = targetApp || selectedApp;
+    if (!appToUpdate) return;
     setIsUpdatingStage(true);
     try {
       const res = await fetch("/api/track", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          id: selectedApp.id,
-          action: "advance_stage",
+          id: appToUpdate.id,
+          action: "update_workflow_stage",
+          stage: newStage,
           newStage,
           newStatus,
+          officerRole: officerSession?.designation || officerSession?.name || "તાલુકા મામલતદાર, ગોંડલ",
           officerName: officerSession?.name || "મામલતદાર, ગોંડલ",
+          officerId: officerSession?.id || "GUJ-GOV-9012",
+          pin: "GJ2026",
         }),
       });
       const data = await res.json();
@@ -420,6 +415,32 @@ export default function TrackVaultView({
         </div>
       </div>
 
+      {/* ── Dynamic Alerts & Scrutiny Confirmation Notifications ── */}
+      {cashConfirmedAlert && (
+        <div className="bg-emerald-50 border border-emerald-300 text-emerald-800 p-3 rounded-2xl text-xs font-bold flex items-center justify-between animate-in fade-in shadow-xs">
+          <span>✓ ચલણ ફી રોકડમાં સ્વીકારી લેવાઈ છે. પ્રમાણપત્ર અનલૉક થઈ ગયું છે.</span>
+          <button type="button" onClick={() => setCashConfirmedAlert(false)} className="text-emerald-700 hover:text-emerald-900 px-2 font-black">✕</button>
+        </div>
+      )}
+      {stageUpdateAlert && (
+        <div className="bg-blue-50 border border-blue-300 text-blue-800 p-3 rounded-2xl text-xs font-bold flex items-center justify-between animate-in fade-in shadow-xs">
+          <span>{stageUpdateAlert}</span>
+          <button type="button" onClick={() => setStageUpdateAlert(null)} className="text-blue-700 hover:text-blue-900 px-2 font-black">✕</button>
+        </div>
+      )}
+      {loading && (
+        <div className="flex items-center justify-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 font-bold">
+          <Loader2 size={14} className="animate-spin text-orange-600" />
+          <span>કચેરી ડેટા લોડ થઈ રહ્યો છે...</span>
+        </div>
+      )}
+      {error && (
+        <div className="bg-rose-50 border border-rose-300 text-rose-800 p-3 rounded-2xl text-xs font-bold flex items-center justify-between animate-in fade-in shadow-xs">
+          <span>{error}</span>
+          <button type="button" onClick={() => setError("")} className="text-rose-700 hover:text-rose-900 px-2 font-black">✕</button>
+        </div>
+      )}
+
       {/* ══════════════════════════════════════════════════════════════
           MODE 1: CITIZEN PRIVATE VAULT
          ══════════════════════════════════════════════════════════════ */}
@@ -491,7 +512,15 @@ export default function TrackVaultView({
                 return (
                   <div
                     key={app.id}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setSelectedApp(app)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        setSelectedApp(app);
+                      }
+                    }}
                     className={`group bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md ${
                       isSelected
                         ? "border-orange-500 ring-2 ring-orange-200 bg-orange-50/20"
@@ -812,13 +841,14 @@ export default function TrackVaultView({
                           {app.status === "processing" && (
                             <button
                               type="button"
+                              disabled={isUpdatingStage}
                               onClick={() => {
                                 setSelectedApp(app);
-                                handleAdvanceStage(3, "approved");
+                                handleAdvanceStage(3, "approved", app);
                               }}
-                              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-[10px] font-bold transition"
+                              className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-lg text-[10px] font-bold transition"
                             >
-                              ✓ મંજૂર (e-Sign)
+                              {isUpdatingStage ? "પ્રક્રિયા ચાલુ..." : "✓ મંજૂર (e-Sign)"}
                             </button>
                           )}
                           <button

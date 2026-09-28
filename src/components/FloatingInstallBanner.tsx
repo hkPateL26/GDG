@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, X, Sparkles } from "lucide-react";
+import { Download, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
 import { useIsPwaInstalled } from "@/lib/usePwaInstall";

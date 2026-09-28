@@ -1,13 +1,11 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
 import {
-  IndianRupee,
   ShieldCheck,
   Share2,
   Printer,
-  Sparkles,
   Users,
   CheckCircle2,
   Lock,
@@ -85,6 +83,50 @@ export default function BenefitCalculatorPage() {
   const [isSmallBusiness, setIsSmallBusiness] = useState<boolean>(false);
   const [hasStudent, setHasStudent] = useState<boolean>(false);
   const [isLaborer, setIsLaborer] = useState<boolean>(false);
+
+  // Auto-Sync with Active Citizen Session if Logged In (BUG-006)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (typeof window !== "undefined") {
+        try {
+          const stored = localStorage.getItem("nagrik_citizen_session");
+          if (stored) {
+            const session = JSON.parse(stored);
+            if (session && session.mobile) {
+              const formattedMobile = session.mobile.length > 5 ? `${session.mobile.slice(0, 5)} ${session.mobile.slice(5)}` : session.mobile;
+              setMobileNumber(formattedMobile);
+              setAadhaarNumber(`XXXX XXXX ${session.aadhaarLast4 || "4829"}`);
+              setIsKycVerified(true);
+              setMaskValues(true);
+              setCitizenName(session.citizenNameGu || session.citizenName || "રમેશભાઈ કાંતિલાલ પટેલ");
+              setRationCardNumber("RC-GJ-2026-482901");
+              setVillage(session.village || "ગોમટા (Gomta)");
+              setTaluka(session.taluka || "ગોંડલ");
+              setDistrict(session.districtGu || session.district || "રાજકોટ");
+              setPincode("360320");
+              if (session.hasLand || session.occupation === "farmer") {
+                setIsFarmer(true);
+              }
+              if (session.annualIncome && session.annualIncome <= 200000) {
+                setNeedsHouse(true);
+              }
+              const verifiedMembers: VerifiedMember[] = [
+                { name: session.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ", relation: "કુટુંબના વડા (Self)", age: 41 },
+                { name: "ગીતાબેન રમેશભાઈ પટેલ", relation: "પત્ની (Wife)", age: 38 },
+                { name: "હાર્દિક રમેશભાઈ પટેલ", relation: "પુત્ર (Son)", age: 16 },
+                { name: "પૂજાબેન રમેશભાઈ પટેલ", relation: "પુત્રી (Daughter)", age: 12 },
+              ];
+              setFamilyMembersList(verifiedMembers);
+              setHasStudent(true);
+            }
+          }
+        } catch (err) {
+          console.warn("Failed to restore citizen session in calculator:", err);
+        }
+      }
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   // Dynamic calculations strictly tied to real-time verification and selected checkboxes
   const familyCount = familyMembersList.length || 0;
@@ -230,6 +272,7 @@ export default function BenefitCalculatorPage() {
 
   // Generate WhatsApp Share Message
   const shareOnWhatsApp = () => {
+    const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
     const text = encodeURIComponent(
       `🇮🇳 *નાગરિકસેવા AI - સત્તાવાર ડિજિટલ પાત્રતા સ્લિપ*\n` +
       `👤 નાગરિક: ${citizenName}\n` +
@@ -248,7 +291,7 @@ export default function BenefitCalculatorPage() {
       (isSmallBusiness ? `• PM સ્વનિધિ ધંધાકીય લોન: ₹20,000\n` : "") +
       (hasStudent ? `• ડિજિટલ ગુજરાત શિષ્યવૃત્તિ: ₹10,000\n` : "") +
       (isLaborer ? `• PM વિશ્વકર્મા ટૂલકીટ સહાય: ₹15,000\n` : "") +
-      `\nજનસેવા કેન્દ્ર (CSC) પર રજૂ કરવા યોગ્ય સ્લિપ: https://nagrik-seva.vercel.app`
+      `\nજનસેવા કેન્દ્ર (CSC) પર રજૂ કરવા યોગ્ય સ્લિપ: ${origin}/benefit-calculator`
     );
     window.open(`https://api.whatsapp.com/send?text=${text}`, "_blank");
   };
@@ -664,8 +707,9 @@ export default function BenefitCalculatorPage() {
                                   <h4 className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
                                     {cond.label}
                                   </h4>
-                                  <p className="text-[11px] text-orange-600 font-semibold mt-0.5">
-                                    📋 {cond.scheme}
+                                  <p className="text-[11px] text-orange-600 font-semibold mt-0.5 flex items-center gap-1">
+                                    <Icon size={12} className="shrink-0" />
+                                    <span>{cond.scheme}</span>
                                   </p>
                                 </div>
                               </div>

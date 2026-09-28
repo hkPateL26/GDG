@@ -25,7 +25,7 @@ function getAdminApp(): App | undefined {
       });
     } else {
       adminApp = initializeApp({
-        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "lumina-kitchen",
+        projectId: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "nagrik-seva-ai",
       });
     }
   } catch (err) {

@@ -72,6 +72,24 @@ CRITICAL INSTRUCTIONS:
 
 DO NOT include any markdown quotes or code blocks outside the JSON. Return only parseable JSON.`;
 
+interface DocumentAnalysisResult {
+  documentType: string;
+  documentNameGu: string;
+  qualityScore: number;
+  isValidForGovt: boolean;
+  matchesExpected: boolean;
+  needsUpdate: boolean;
+  needsNewDocument: boolean;
+  actionableAdviceGu: string;
+  extractedInfo: {
+    detectedName: string | null;
+    documentNumberMasked: string | null;
+    yearOrDate: string | null;
+  };
+  feedbackGu: string;
+  verificationPoints: { point: string; status: "pass" | "fail" | "warning"; note: string }[];
+}
+
 export async function POST(req: NextRequest) {
   try {
     const { imageBase64, mimeType = "image/jpeg", expectedDocType = "" } = await req.json();
@@ -88,14 +106,12 @@ export async function POST(req: NextRequest) {
 
     const customPrompt = `${STRICT_VERIFICATION_PROMPT}\n\n====================\nEXPECTED DOCUMENT REQUIREMENT FOR THIS SLOT: "${expectedDocType}"\n====================`;
 
-    // Try modern Gemini vision models with high availability
+    // Active Gemini vision models with high availability (BUG-008)
     const visionModels = [
       "gemini-3.8-flash",
       "gemini-3.7-flash",
-      "gemini-3.6-flash",
-      "gemini-3.5-flash",
     ];
-    let parsedData: any = null;
+    let parsedData: DocumentAnalysisResult | null = null;
 
     for (const modelName of visionModels) {
       try {
@@ -118,23 +134,24 @@ export async function POST(req: NextRequest) {
         ]);
 
         const responseText = result.response.text();
-        parsedData = JSON.parse(responseText);
-        if (parsedData && parsedData.documentType) {
+        const parsed = JSON.parse(responseText) as DocumentAnalysisResult;
+        if (parsed && parsed.documentType) {
           // Double safeguard: if matchesExpected is false, ensure isValidForGovt is strictly false
-          if (!parsedData.matchesExpected) {
-            parsedData.isValidForGovt = false;
-            if (parsedData.qualityScore > 30) parsedData.qualityScore = 15;
+          if (!parsed.matchesExpected) {
+            parsed.isValidForGovt = false;
+            if (parsed.qualityScore > 30) parsed.qualityScore = 15;
           }
+          parsedData = parsed;
           break;
         }
-      } catch (mErr: any) {
-        console.warn(`Vision model ${modelName} failed or unavailable:`, mErr?.message || mErr);
+      } catch (mErr: unknown) {
+        const msg = mErr instanceof Error ? mErr.message : String(mErr);
+        console.warn(`Vision model ${modelName} failed or unavailable:`, msg);
       }
     }
 
     // Fallback if all Gemini models fail (e.g. temporary API quota issue)
     if (!parsedData) {
-      const isBirthOrLCExpected = expectedDocType.toLowerCase().includes("birth") || expectedDocType.includes("જન્મ");
       parsedData = {
         documentType: "Document Verification Pending",
         documentNameGu: "ચકાસણી પેન્ડિંગ",
@@ -160,7 +177,7 @@ export async function POST(req: NextRequest) {
       success: true,
       analysis: parsedData,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("AI Document Verification Error:", error);
 
     return NextResponse.json({

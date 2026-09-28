@@ -78,8 +78,8 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
 
         {/* Benefits */}
         <div>
-          <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-wide mb-1.5">
-            ✨ Benefits
+          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
+            ✨ મુખ્ય લાભો (Benefits)
           </h4>
           <ul className="space-y-1">
             {scheme.benefits.slice(0, 3).map((benefit, i) => (
@@ -92,9 +92,9 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
         </div>
 
         {/* Meta */}
-        <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-gray-400 pt-1 border-t border-gray-50">
-          <span>📄 {scheme.documents.length} documents needed</span>
-          <span className="text-blue-400 truncate max-w-[140px]">{scheme.ministry}</span>
+        <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-gray-500 pt-1 border-t border-gray-50">
+          <span>📄 {scheme.documents.length} પુરાવા / દસ્તાવેજ</span>
+          <span className="text-blue-600 truncate max-w-[140px]">{scheme.ministry}</span>
         </div>
       </div>
 
@@ -102,18 +102,18 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
       <div className="px-4 pb-4 flex gap-2">
         <Link
           href={`/schemes/${scheme.id}`}
-          className="flex-1 text-center bg-orange-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-orange-600 active:scale-95 transition"
+          className="flex-1 text-center bg-orange-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-600 active:scale-95 transition"
         >
-          View Details
+          વિગત જુઓ
         </Link>
         {scheme.applicationUrl && (
           <a
             href={scheme.applicationUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 text-center border border-green-500 text-green-600 py-2 rounded-lg text-sm font-medium hover:bg-green-50 active:scale-95 transition"
+            className="flex-1 text-center border border-green-600 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-50 active:scale-95 transition"
           >
-            Apply →
+            અરજી કરો →
           </a>
         )}
       </div>

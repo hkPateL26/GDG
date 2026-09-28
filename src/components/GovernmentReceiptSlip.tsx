@@ -1,7 +1,7 @@
 "use client";
 
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, QrCode, Download, Clock } from "lucide-react";
+import { CheckCircle2, Download, Clock } from "lucide-react";
 
 interface GovernmentReceiptSlipProps {
   app: CitizenApplication;
@@ -18,7 +18,8 @@ export default function GovernmentReceiptSlip({
   const receiptNo = isChallanPending
     ? `GJ-CHALLAN-2026-${app.challanNo || app.id}`
     : `GJ-DPI-2026-${app.id}`;
-  const verifyUrl = `https://nagrikseva-ai-one.vercel.app/track?id=${encodeURIComponent(app.id)}`;
+  const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
+  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}`;
 
   // Payment Mode Label in Gujarati
   const getPaymentModeLabel = () => {
@@ -451,7 +452,7 @@ export default function GovernmentReceiptSlip({
                     <strong>આ અરજીની સરકારી ફી ઓનલાઇન ચૂકવેલ નથી.</strong> અરજદારે આ ચલણ તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર રજૂ કરી નિયત ફી ₹{app.feeAmount || 50} રોકડા ભરવાના રહેશે.
                   </p>
                   <p className="text-[8.5px] text-amber-900 font-bold">
-                    કચેરી ઓપરેટર દ્વારા સિસ્ટમમાં 'Payment Received' માર્ક થયા બાદ જ પ્રમાણપત્ર / સુધારેલ દસ્તાવેજ રિલીઝ (અનલૉક) થશે.
+                    કચેરી ઓપરેટર દ્વારા સિસ્ટમમાં &apos;Payment Received&apos; માર્ક થયા બાદ જ પ્રમાણપત્ર / સુધારેલ દસ્તાવેજ રિલીઝ (અનલૉક) થશે.
                   </p>
                 </div>
               ) : (
@@ -534,15 +535,31 @@ export default function GovernmentReceiptSlip({
           <div className="grid grid-cols-3 gap-2 items-center">
             {/* Left: Verification QR Code */}
             <div className="flex items-center gap-2">
-              <div className="w-14 h-14 sm:w-15 sm:h-15 p-1 bg-white border border-slate-400 rounded flex flex-col items-center justify-center shrink-0">
-                <QrCode size={40} className="text-slate-900" />
-              </div>
+              <a
+                href={verifyUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                title="ઓનલાઇન પહોંચ ચકાસો"
+                className="w-14 h-14 sm:w-15 sm:h-15 p-1 bg-white border border-slate-400 rounded flex flex-col items-center justify-center shrink-0 hover:border-orange-500 transition"
+              >
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(verifyUrl)}`}
+                  alt="Official Verification QR"
+                  className="w-12 h-12 object-contain"
+                />
+              </a>
               <div className="text-[8.5px] text-slate-600 leading-tight">
                 <p className="font-bold text-slate-900">QR કોડ સ્કેન કરો</p>
                 <p>મોબાઈલ દ્વારા પહોંચની સત્યતા તપાસો.</p>
-                <p className="font-mono text-[8px] text-orange-700 truncate max-w-[120px]">
-                  nagrik-seva.gov.in
-                </p>
+                <a
+                  href={verifyUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="font-mono text-[8px] text-orange-700 underline truncate max-w-[120px] block"
+                >
+                  {verifyUrl}
+                </a>
               </div>
             </div>
 

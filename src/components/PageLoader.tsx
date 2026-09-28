@@ -64,9 +64,9 @@ export default function PageLoader() {
           ? localStorage.getItem("nagrikseva_selected_lang")
           : null;
       if (lang && lang !== "gu") {
-        show();
+        setTimeout(() => show(), 0);
       }
-    } catch (e) {
+    } catch {
       // ignore
     }
 

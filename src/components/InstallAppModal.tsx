@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Smartphone, Download, QrCode, X, CheckCircle2, Sparkles, Share2 } from "lucide-react";
+import { Download, QrCode, X, CheckCircle2, Sparkles, Share2 } from "lucide-react";
 
 import { markPwaInstalled, useIsPwaInstalled } from "@/lib/usePwaInstall";
 
@@ -18,26 +18,29 @@ export default function InstallAppModal({
   onClose: () => void;
 }) {
   const { isInstalled } = useIsPwaInstalled();
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
-  const [isMobile, setIsMobile] = useState<boolean>(false);
-  const [isIos, setIsIos] = useState<boolean>(false);
-  const [currentUrl, setCurrentUrl] = useState<string>("https://nagrikseva-ai-one.vercel.app");
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
+    if (typeof window !== "undefined") {
+      return (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt || null;
+    }
+    return null;
+  });
+  const [isMobile] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(navigator.userAgent);
+  });
+  const [isIos] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    return /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as unknown as { MSStream?: unknown }).MSStream;
+  });
+  const [currentUrl] = useState<string>(() => {
+    if (typeof window !== "undefined" && window.location.origin) {
+      return window.location.origin;
+    }
+    return "https://nagrikseva-ai-one.vercel.app";
+  });
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setCurrentUrl(window.location.origin || "https://nagrikseva-ai-one.vercel.app");
-
-      // Detect mobile device
-      const ua = navigator.userAgent;
-      const mobile = /Android|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i.test(ua);
-      setIsMobile(mobile);
-      setIsIos(/iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream);
-
-      // Listen for PWA beforeinstallprompt
-      if ((window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt) {
-        setDeferredPrompt((window as unknown as { __pwaPrompt: BeforeInstallPromptEvent }).__pwaPrompt);
-      }
-
       const handleBeforeInstall = (e: Event) => {
         e.preventDefault();
         (window as unknown as { __pwaPrompt: BeforeInstallPromptEvent }).__pwaPrompt = e as BeforeInstallPromptEvent;
@@ -166,52 +169,17 @@ export default function InstallAppModal({
 
                 {/* Styled Crisp QR Display */}
                 <div className="inline-block p-3 bg-white border-2 border-gray-900 rounded-2xl shadow-sm">
-                  {/* Generated Dynamic SVG QR representation */}
-                  <svg viewBox="0 0 160 160" className="w-36 h-36 mx-auto text-gray-900 fill-current">
-                    {/* Corner Squares */}
-                    <rect x="10" y="10" width="40" height="40" rx="6" fill="#111827"/>
-                    <rect x="18" y="18" width="24" height="24" rx="3" fill="#ffffff"/>
-                    <rect x="24" y="24" width="12" height="12" rx="2" fill="#ea580c"/>
-
-                    <rect x="110" y="10" width="40" height="40" rx="6" fill="#111827"/>
-                    <rect x="118" y="18" width="24" height="24" rx="3" fill="#ffffff"/>
-                    <rect x="124" y="24" width="12" height="12" rx="2" fill="#ea580c"/>
-
-                    <rect x="10" y="110" width="40" height="40" rx="6" fill="#111827"/>
-                    <rect x="18" y="118" width="24" height="24" rx="3" fill="#ffffff"/>
-                    <rect x="24" y="124" width="12" height="12" rx="2" fill="#ea580c"/>
-
-                    {/* QR Code Dots Matrix Pattern */}
-                    <rect x="60" y="20" width="8" height="8" rx="2"/>
-                    <rect x="75" y="15" width="8" height="8" rx="2"/>
-                    <rect x="90" y="25" width="8" height="8" rx="2"/>
-                    <rect x="60" y="38" width="8" height="8" rx="2"/>
-                    <rect x="80" y="42" width="8" height="8" rx="2"/>
-
-                    <rect x="20" y="65" width="8" height="8" rx="2"/>
-                    <rect x="35" y="75" width="8" height="8" rx="2"/>
-                    <rect x="50" y="65" width="8" height="8" rx="2"/>
-                    <rect x="68" y="70" width="24" height="20" rx="4" fill="#ea580c"/>
-                    <circle cx="80" cy="80" r="5" fill="#ffffff"/>
-
-                    <rect x="100" y="65" width="8" height="8" rx="2"/>
-                    <rect x="120" y="75" width="8" height="8" rx="2"/>
-                    <rect x="135" y="65" width="8" height="8" rx="2"/>
-
-                    <rect x="60" y="105" width="8" height="8" rx="2"/>
-                    <rect x="75" y="115" width="8" height="8" rx="2"/>
-                    <rect x="90" y="105" width="8" height="8" rx="2"/>
-                    <rect x="65" y="130" width="8" height="8" rx="2"/>
-                    <rect x="85" y="135" width="8" height="8" rx="2"/>
-
-                    <rect x="110" y="110" width="8" height="8" rx="2"/>
-                    <rect x="125" y="125" width="8" height="8" rx="2"/>
-                    <rect x="140" y="115" width="8" height="8" rx="2"/>
-                    <rect x="115" y="140" width="8" height="8" rx="2"/>
-                    <rect x="135" y="140" width="8" height="8" rx="2"/>
-                  </svg>
-                  <p className="text-[10px] font-mono font-bold text-gray-600 mt-1">
-                    Scan with Mobile Camera / Lens
+                  {/* Scannable Dynamic QR Code */}
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(currentUrl)}`}
+                    alt="Scan to install NagrikSeva AI"
+                    width={144}
+                    height={144}
+                    className="w-36 h-36 mx-auto rounded-lg object-contain"
+                  />
+                  <p className="text-[10px] font-mono font-bold text-gray-600 mt-1 truncate max-w-[144px]">
+                    {currentUrl.replace(/^https?:\/\//, "")}
                   </p>
                 </div>
 

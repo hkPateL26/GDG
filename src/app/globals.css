@@ -127,7 +127,7 @@ iframe.goog-te-banner-frame,
 #goog-gt-tt,
 .goog-tooltip,
 .goog-tooltip:hover,
-#google_translate_element {
+.VIpgJd-ZVi9od-ORHb-OEVmcd {
   display: none !important;
   visibility: hidden !important;
 }
@@ -142,8 +142,16 @@ body {
   box-shadow: none !important;
 }
 
-.skiptranslate:not(.goog-te-combo):not(header *):not(nav *) {
-  display: none !important;
+#google_translate_element {
+  position: fixed !important;
+  top: -9999px !important;
+  left: -9999px !important;
+  width: 1px !important;
+  height: 1px !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+  z-index: -9999 !important;
+  overflow: hidden !important;
 }
 
 /* ── Smooth Page Appearance when Translated (Zero-Jerk) ── */
@@ -158,6 +166,3 @@ main {
     opacity: 1;
   }
 }
-
-
-

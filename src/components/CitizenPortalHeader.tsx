@@ -6,7 +6,6 @@ import {
   FileText,
   Sparkles,
   IndianRupee,
-  ShieldCheck,
   LogOut,
   Building2,
   CheckCircle2,

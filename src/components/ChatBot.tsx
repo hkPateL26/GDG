@@ -31,6 +31,62 @@ const QUICK_SUGGESTIONS = [
   "રેશનકાર્ડમાં નામ ઉમેરવા શું જોઈએ?",
 ];
 
+function renderFormattedMessage(text: string) {
+  const lines = text.split("\n");
+  return lines.map((line, lineIdx) => {
+    const renderInline = (str: string) => {
+      const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g;
+      const parts: React.ReactNode[] = [];
+      let lastIndex = 0;
+      let match;
+
+      while ((match = linkRegex.exec(str)) !== null) {
+        if (match.index > lastIndex) {
+          parts.push(renderBold(str.substring(lastIndex, match.index), `txt-${lineIdx}-${lastIndex}`));
+        }
+        const linkText = match[1];
+        const linkUrl = match[2];
+        parts.push(
+          <a
+            key={`link-${lineIdx}-${match.index}`}
+            href={linkUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-orange-600 underline font-bold hover:text-orange-700 inline-flex items-center gap-0.5 break-all"
+          >
+            {linkText}
+          </a>
+        );
+        lastIndex = match.index + match[0].length;
+      }
+      if (lastIndex < str.length) {
+        parts.push(renderBold(str.substring(lastIndex), `txt-${lineIdx}-${lastIndex}`));
+      }
+      return parts;
+    };
+
+    const renderBold = (str: string, keyPrefix: string) => {
+      const boldParts = str.split(/(\*\*[^*]+\*\*)/g);
+      return boldParts.map((sub, sIdx) => {
+        if (sub.startsWith("**") && sub.endsWith("**")) {
+          return (
+            <strong key={`${keyPrefix}-b-${sIdx}`} className="font-extrabold text-slate-900">
+              {sub.slice(2, -2)}
+            </strong>
+          );
+        }
+        return <span key={`${keyPrefix}-s-${sIdx}`}>{sub}</span>;
+      });
+    };
+
+    return (
+      <div key={`line-${lineIdx}`} className={line.trim() === "" ? "h-2" : "min-h-[1.25rem]"}>
+        {renderInline(line)}
+      </div>
+    );
+  });
+}
+
 export default function ChatBot() {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -46,7 +102,7 @@ export default function ChatBot() {
 
   const messagesContainerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const recognitionRef = useRef<any>(null);
+  const recognitionRef = useRef<{ stop: () => void; start: () => void; lang: string; continuous: boolean; interimResults: boolean; onstart: (() => void) | null; onresult: ((e: { results: { [index: number]: { [index: number]: { transcript: string } } } }) => void) | null; onerror: (() => void) | null; onend: (() => void) | null } | null>(null);
   const isInitialMount = useRef<boolean>(true);
 
   useEffect(() => {
@@ -75,8 +131,12 @@ export default function ChatBot() {
 
     if (typeof window === "undefined") return;
 
+    const windowWithSpeech = window as unknown as {
+      SpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+      webkitSpeechRecognition?: new () => NonNullable<typeof recognitionRef.current>;
+    };
     const SpeechRecognition =
-      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
       alert("તમારા બ્રાઉઝરમાં વોઈસ ઈનપુટ સપોર્ટ નથી. કૃપા કરીને Chrome અથવા Edge વાપરો.");
@@ -84,6 +144,7 @@ export default function ChatBot() {
     }
 
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     const currentLang = getStoredLanguage();
     recognition.lang = SPEECH_LANG_MAP[currentLang] || "gu-IN";
     recognition.continuous = false;
@@ -93,7 +154,7 @@ export default function ChatBot() {
       setIsListening(true);
     };
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       setInput(transcript);
       setIsListening(false);
@@ -226,7 +287,7 @@ export default function ChatBot() {
                   : "bg-white text-gray-800 rounded-bl-none border border-gray-100"
               }`}
             >
-              {msg.text}
+              {msg.role === "model" ? renderFormattedMessage(msg.text) : msg.text}
 
               {/* Audio Listen Button for AI response */}
               {msg.role === "model" && (

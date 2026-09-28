@@ -4,7 +4,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
-import { doc, getDoc } from "firebase/firestore";
+import { doc, getDoc, collection, getDocs, limit as fsLimit, query as fsQuery } from "firebase/firestore";
 import {
   queryApplications,
   calculateSystemStats,
@@ -14,6 +14,19 @@ import {
   confirmApplicationPayment,
   advanceWorkflowStage,
 } from "@/lib/large-datasets";
+
+function cleanForFirestore(obj: unknown): unknown {
+  if (obj === undefined) return null;
+  if (obj === null || typeof obj !== "object") return obj;
+  if (Array.isArray(obj)) return obj.map(cleanForFirestore);
+  const result: Record<string, unknown> = {};
+  for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
+    if (value !== undefined) {
+      result[key] = cleanForFirestore(value);
+    }
+  }
+  return result;
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -25,6 +38,22 @@ export async function GET(req: NextRequest) {
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const statsOnly = searchParams.get("stats") === "true";
+
+    // Pre-sync recent applications from Cloud Firestore into in-memory ledger
+    if (db) {
+      try {
+        const colRef = collection(db, "applications");
+        const snap = await getDocs(fsQuery(colRef, fsLimit(50)));
+        snap.forEach((docSnap) => {
+          const d = docSnap.data() as CitizenApplication;
+          if (d && d.id) {
+            addCustomApplication(d);
+          }
+        });
+      } catch {
+        // ignore fallback to memory
+      }
+    }
 
     // 1. If stats requested
     if (statsOnly) {
@@ -218,7 +247,7 @@ export async function POST(req: NextRequest) {
       paymentStatus: resolvedPaymentStatus,
       paymentMethod,
       paymentMethodNameGu,
-      operatorConfirmed: false,
+      operatorConfirmed: Boolean(operatorConfirmed),
       feeAmount: Number(feeAmount) || 50,
       txnId,
       challanNo,
@@ -234,14 +263,19 @@ export async function POST(req: NextRequest) {
     if (db) {
       try {
         const { setDoc, doc: fsDoc } = await import("firebase/firestore");
-        await setDoc(fsDoc(db, "applications", id), newApp);
+        await setDoc(fsDoc(db, "applications", id), cleanForFirestore(newApp) as Record<string, unknown>);
       } catch (fbErr) {
         console.warn("Firestore save fallback:", fbErr);
       }
     }
 
+    // Dynamic App Origin for SMS & Email Links
+    const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
+    const proto = req.headers.get("x-forwarded-proto") || "https";
+    const origin = req.headers.get("origin") || (host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in"));
+
     // Simulated SMS & Email Notification Payloads
-    const smsMessage = `Govt of Gujarat: નમસ્તે ${resolvedCitizenNameGu || resolvedCitizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: https://nagrikseva-ai-one.vercel.app/track?id=${id}`;
+    const smsMessage = `Govt of Gujarat: નમસ્તે ${resolvedCitizenNameGu || resolvedCitizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: ${origin}/track?id=${id}`;
     const emailSubject = `સરકારી પહોંચ સ્વીકૃતિ: ${schemeNameGu} (અરજી ક્રમાંક: ${id})`;
 
     return NextResponse.json({
@@ -262,28 +296,41 @@ export async function POST(req: NextRequest) {
         },
       },
     });
-  } catch (err: any) {
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Failed to process application";
     console.error("Failed to register application:", err);
-    return NextResponse.json({ success: false, error: err.message || "Failed to process application" }, { status: 500 });
+    return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }
 
 // =========================================================================
-// PATCH /api/track - Confirm offline cash payment (Operator Verification)
+// PATCH /api/track - Confirm offline cash payment & Advance Workflow Stage
 // =========================================================================
 export async function PATCH(req: NextRequest) {
   try {
     const body = await req.json();
-    const { id, action } = body;
+    const { id, action, operatorId, officerId, pin } = body;
 
+    // 1. Confirm offline cash payment (Operator Verification)
     if (action === "confirm_cash_payment" && id) {
+      // Authorization Check (BUG-004)
+      const isOperatorAuthorized =
+        operatorId === "JSK-OP-8921" ||
+        (officerId && (String(officerId).toUpperCase().startsWith("GUJ") || pin === "GJ2026"));
+
+      if (!isOperatorAuthorized) {
+        return NextResponse.json(
+          { error: "અનધિકૃત ઍક્સેસ! માન્ય ઓપરેટર અથવા કચેરી ઓળખપત્ર જરૂરી છે.", success: false },
+          { status: 401 }
+        );
+      }
+
       const updated = confirmApplicationPayment(id);
       if (updated) {
-        // Also update Firestore if configured
         if (db) {
           try {
             const { setDoc, doc: fsDoc } = await import("firebase/firestore");
-            await setDoc(fsDoc(db, "applications", id.toUpperCase()), updated, { merge: true });
+            await setDoc(fsDoc(db, "applications", id.toUpperCase()), cleanForFirestore(updated) as Record<string, unknown>, { merge: true });
           } catch (fbErr) {
             console.warn("Firestore update fallback:", fbErr);
           }
@@ -298,14 +345,31 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
     }
 
-    if (action === "update_workflow_stage" && id) {
-      const stage = Number(body.stage) as 1 | 2 | 3 | 4;
-      const updated = advanceWorkflowStage(id, stage, body.officerRole);
+    // 2. Advance Workflow Stage (Supports both 'update_workflow_stage' and 'advance_stage' - BUG-001)
+    if ((action === "update_workflow_stage" || action === "advance_stage") && id) {
+      // Authorization Check (BUG-004)
+      const isOfficerAuthorized =
+        (officerId && (String(officerId).toUpperCase().startsWith("GUJ") || pin === "GJ2026")) ||
+        operatorId === "JSK-OP-8921" ||
+        (body.officerRole && String(body.officerRole).includes("મામલતદાર")) ||
+        (body.officerName && String(body.officerName).includes("મામલતદાર"));
+
+      if (!isOfficerAuthorized) {
+        return NextResponse.json(
+          { error: "અનધિકૃત ઍક્સેસ! સત્તાવાર અધિકારી લૉગિન જરૂરી છે.", success: false },
+          { status: 401 }
+        );
+      }
+
+      const stage = Number(body.stage ?? body.newStage) as 1 | 2 | 3 | 4;
+      const officerRole = body.officerRole ?? body.officerName ?? "તાલુકા મામલતદાર";
+      const updated = advanceWorkflowStage(id, stage, officerRole);
+
       if (updated) {
         if (db) {
           try {
             const { setDoc, doc: fsDoc } = await import("firebase/firestore");
-            await setDoc(fsDoc(db, "applications", id.toUpperCase()), updated, { merge: true });
+            await setDoc(fsDoc(db, "applications", id.toUpperCase()), cleanForFirestore(updated) as Record<string, unknown>, { merge: true });
           } catch (fbErr) {
             console.warn("Firestore update fallback:", fbErr);
           }
@@ -330,9 +394,10 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json({ error: "Invalid action", success: false }, { status: 400 });
-  } catch (err: any) {
-    console.error("Failed to confirm cash payment:", err);
-    return NextResponse.json({ error: err.message || "Server error", success: false }, { status: 500 });
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : "Server error";
+    console.error("Failed to update application:", err);
+    return NextResponse.json({ error: errorMsg, success: false }, { status: 500 });
   }
 }
 

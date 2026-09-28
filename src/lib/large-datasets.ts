@@ -43,7 +43,7 @@ export interface CitizenApplication {
   challanNo?: string;
   correctionsRequested?: string[];
   oldVsNewValues?: Record<string, { oldVal: string; newVal: string }>;
-  kacheriDetails?: Record<string, any>;
+  kacheriDetails?: Record<string, unknown>;
   workflowStage?: 1 | 2 | 3 | 4;
 }
 
@@ -480,7 +480,7 @@ export interface ExistingCitizenProfile {
   village: string;
   pincode: string;
   addressFull: string;
-  serviceSpecificDetails: Record<string, any>;
+  serviceSpecificDetails: Record<string, unknown>;
 }
 
 export function lookupCitizenExistingRecord(serviceId: string, docNumber: string): ExistingCitizenProfile {
@@ -567,11 +567,37 @@ export function addCustomApplication(app: CitizenApplication) {
   return app;
 }
 
+let CACHED_SYSTEM_DATASET: CitizenApplication[] | null = null;
+
+export function getCachedSystemDataset(): CitizenApplication[] {
+  if (!CACHED_SYSTEM_DATASET) {
+    const list: CitizenApplication[] = [];
+    for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
+      list.push(generateApplication(i));
+    }
+    CACHED_SYSTEM_DATASET = list;
+  }
+  return CACHED_SYSTEM_DATASET;
+}
+
 export function confirmApplicationPayment(id: string): CitizenApplication | null {
   const cleanId = id.toUpperCase();
-  const app = CUSTOM_USER_APPLICATIONS.find(
+  let app = CUSTOM_USER_APPLICATIONS.find(
     (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
   );
+
+  // If not yet in custom applications cache, search benchmark & cached generated records
+  if (!app) {
+    const dataset = getCachedSystemDataset();
+    const found = dataset.find(
+      (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+    );
+    if (found) {
+      app = { ...found };
+      CUSTOM_USER_APPLICATIONS.unshift(app);
+    }
+  }
+
   if (!app) return null;
 
   app.paymentStatus = "paid";
@@ -580,8 +606,8 @@ export function confirmApplicationPayment(id: string): CitizenApplication | null
   app.workflowStage = 3;
   app.txnId = app.txnId || `TXN-CSH-${Math.floor(100000 + Math.random() * 899999)}`;
   app.lastUpdated = new Date().toISOString().split("T")[0];
-  app.remarksGu = `જન સેવા કેન્દ્ર રોકડ કાઉન્ટર પર ચલણ નં. ${app.challanNo} મુજબ ફી ₹${app.feeAmount || 50} જમા થયેલ છે (Txn: ${app.txnId}). ઓપરેટર દ્વારા ચુકવણી પ્રમાણિત થઈ ચૂકી છે અને દસ્તાવેજ / પ્રમાણપત્ર રિલીઝ (અનલૉક) થયેલ છે.`;
-  app.remarksEn = `Cash fee of ₹${app.feeAmount || 50} paid at Jan Seva Kendra cash counter against Challan ${app.challanNo} (Txn: ${app.txnId}). Verified by Operator. Document released.`;
+  app.remarksGu = `જન સેવા કેન્દ્ર રોકડ કાઉન્ટર પર ચલણ નં. ${app.challanNo || app.id} મુજબ ફી ₹${app.feeAmount || 50} જમા થયેલ છે (Txn: ${app.txnId}). ઓપરેટર દ્વારા ચુકવણી પ્રમાણિત થઈ ચૂકી છે અને દસ્તાવેજ / પ્રમાણપત્ર રિલીઝ (અનલૉક) થયેલ છે.`;
+  app.remarksEn = `Cash fee of ₹${app.feeAmount || 50} paid at Jan Seva Kendra cash counter against Challan ${app.challanNo || app.id} (Txn: ${app.txnId}). Verified by Operator. Document released.`;
   return app;
 }
 
@@ -595,15 +621,15 @@ export function advanceWorkflowStage(
     (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
   );
 
-  // If not yet in custom applications cache, find from generated dataset and copy over
+  // If not yet in custom applications cache, find from cached dataset and copy over
   if (!app) {
-    for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
-      const gen = generateApplication(i);
-      if (gen.id.toUpperCase() === cleanId || gen.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")) {
-        app = { ...gen };
-        CUSTOM_USER_APPLICATIONS.unshift(app);
-        break;
-      }
+    const dataset = getCachedSystemDataset();
+    const found = dataset.find(
+      (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+    );
+    if (found) {
+      app = { ...found };
+      CUSTOM_USER_APPLICATIONS.unshift(app);
     }
   }
 
@@ -611,20 +637,23 @@ export function advanceWorkflowStage(
 
   app.workflowStage = targetStage;
   app.lastUpdated = new Date().toISOString().split("T")[0];
+  if (officerRole) {
+    app.officerDesignation = officerRole;
+  }
 
   if (targetStage === 1) {
     app.status = "processing";
-    app.officerDesignation = `નાયબ મામલતદાર (દસ્તાવેજ સ્ક્રુટિની શાખા), ${app.taluka}`;
+    if (!officerRole) app.officerDesignation = `નાયબ મામલતદાર (દસ્તાવેજ સ્ક્રુટિની શાખા), ${app.taluka}`;
     app.remarksGu = `અરજદાર દ્વારા ઓનલાઇન અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. કચેરી સ્ક્રુટિની ડેસ્ક પર દસ્તાવેજો અને આધાર કાર્ડ ખરાઈની પ્રક્રિયા ચાલુ છે.`;
     app.remarksEn = `Application submitted by citizen. Document and Aadhaar scrutiny in progress at Nayab Mamlatdar desk.`;
   } else if (targetStage === 2) {
     app.status = "processing";
-    app.officerDesignation = `તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ${app.taluka}`;
+    if (!officerRole) app.officerDesignation = `તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ${app.taluka}`;
     app.remarksGu = `નાયબ મામલતદાર દ્વારા તમામ દસ્તાવેજો (આધાર, આવક, રેશનકાર્ડ પુરાવા) યોગ્ય ચકાસાયેલ છે. તાલુકા મામલતદાર સાહેબની આખરી ડિજિટલ સહી (e-Sign) અર્થે અગ્રેસિત કરેલ છે.`;
     app.remarksEn = `All documents verified by Nayab Mamlatdar. Forwarded to Taluka Mamlatdar for final digital e-Sign approval.`;
   } else if (targetStage === 3 || targetStage === 4) {
     app.status = "approved";
-    app.officerDesignation = `તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ${app.taluka}`;
+    if (!officerRole) app.officerDesignation = `તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ${app.taluka}`;
     app.remarksGu = `મામલતદાર કચેરી ${app.taluka} દ્વારા તમામ ચકાસણી પૂર્ણ કરી ડિજિટલ હસ્તાક્ષર (e-Sign) સાથે અરજી મંજૂર કરવામાં આવેલ છે. સત્તાવાર પ્રમાણપત્ર / સહાય માન્ય ઠરેલ છે.`;
     app.remarksEn = `Application verified and approved with official digital e-Sign by Mamlatdar Office ${app.taluka}. Certificate / benefit authorized.`;
   }
@@ -659,6 +688,8 @@ export function queryApplications(params: {
   const district = (params.district || "").trim().toLowerCase();
   const status = (params.status || "").trim().toLowerCase();
 
+  const dataset = getCachedSystemDataset();
+
   // 1. Check custom user-submitted applications first (for instant live tracking!)
   if (search.startsWith("app")) {
     const cleanId = search.toUpperCase();
@@ -675,17 +706,17 @@ export function queryApplications(params: {
       };
     }
 
-    for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
-      const app = generateApplication(i);
-      if (app.id.toUpperCase() === cleanId || app.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")) {
-        return {
-          records: [app],
-          total: 1,
-          page: 1,
-          totalPages: 1,
-          stats: calculateSystemStats(),
-        };
-      }
+    const foundInDataset = dataset.find(
+      (app) => app.id.toUpperCase() === cleanId || app.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+    );
+    if (foundInDataset) {
+      return {
+        records: [foundInDataset],
+        total: 1,
+        page: 1,
+        totalPages: 1,
+        stats: calculateSystemStats(),
+      };
     }
   }
 
@@ -714,10 +745,8 @@ export function queryApplications(params: {
     matches.push(customApp);
   }
 
-  // Stream through the deterministic dataset
-  for (let i = 0; i < TOTAL_SYSTEM_RECORDS; i++) {
-    const app = generateApplication(i);
-
+  // Iterate over pre-cached system records
+  for (const app of dataset) {
     if (district && district !== "all" && app.district.toLowerCase() !== district && app.districtGu !== district) {
       continue;
     }

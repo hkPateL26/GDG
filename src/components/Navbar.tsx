@@ -5,13 +5,10 @@ import { usePathname } from "next/navigation";
 import {
   Home,
   LayoutGrid,
-  FileText,
-  Search,
   Bot,
   Phone,
   Menu,
   X,
-  Sparkles,
   MapPin,
   IndianRupee,
   Smartphone,
@@ -76,7 +73,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50 notranslate" translate="no">
+    <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50 notranslate" translate="no" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between h-16">
           {/* ── Logo ── */}
@@ -113,7 +110,7 @@ export default function Navbar() {
                   }`}
                 >
                   <Icon size={14} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
-                  <span>{label}</span>
+                  <span suppressHydrationWarning>{label}</span>
                 </Link>
               );
             })}
@@ -162,7 +159,7 @@ export default function Navbar() {
                 title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
               >
                 <Smartphone size={13} className="shrink-0" />
-                <span>{t.nav.installApp}</span>
+                <span suppressHydrationWarning>{t.nav.installApp}</span>
               </button>
             )}
           </div>
@@ -179,7 +176,7 @@ export default function Navbar() {
                 className="pwa-install-element flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 shadow-xs active:scale-95 cursor-pointer"
               >
                 <Smartphone size={14} className="shrink-0" />
-                <span>{t.nav.installApp}</span>
+                <span suppressHydrationWarning>{t.nav.installApp}</span>
               </button>
             )}
             <button
@@ -209,7 +206,7 @@ export default function Navbar() {
                 className="pwa-install-element w-full flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 whitespace-nowrap transition shadow-sm mb-1.5 cursor-pointer"
               >
                 <Smartphone size={16} />
-                <span>📲 {t.nav.installApp} (૧-ક્લિક)</span>
+                <span suppressHydrationWarning>📲 {t.nav.installApp} (૧-ક્લિક)</span>
               </button>
             )}
 
@@ -254,7 +251,7 @@ export default function Navbar() {
                   }`}
                 >
                   <Icon size={17} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
-                  <span>{label}</span>
+                  <span suppressHydrationWarning>{label}</span>
                 </Link>
               );
             })}
@@ -264,7 +261,7 @@ export default function Navbar() {
               className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-orange-600 hover:bg-orange-50 whitespace-nowrap transition"
             >
               <Phone size={17} className="shrink-0" />
-              <span>{t.nav.helpline} – 14567 (Free 24/7)</span>
+              <span suppressHydrationWarning>{t.nav.helpline} – 14567 (Free 24/7)</span>
             </a>
           </div>
         )}

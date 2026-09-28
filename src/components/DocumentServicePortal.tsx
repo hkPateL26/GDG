@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import {
   DOCUMENT_SERVICES,
-  DocumentServiceConfig,
   GUJARAT_DISTRICTS,
   CitizenApplication,
   lookupCitizenExistingRecord,
@@ -15,40 +14,23 @@ import {
   CheckCircle2,
   AlertTriangle,
   Loader2,
-  Send,
-  Calendar,
-  MapPin,
   Fingerprint,
-  PenTool,
-  MessageSquare,
-  Mail,
-  ArrowRight,
-  ShieldCheck,
   Sparkles,
   Smartphone,
   Eye,
   FileText,
-  Clock,
   Printer,
   XCircle,
   Search,
   CreditCard,
   QrCode,
   Receipt,
-  Shield,
   Building,
   Check,
-  ChevronDown,
-  ChevronUp,
   Download,
   Landmark,
-  UserCheck,
-  Layers,
   ArrowLeftRight,
   Camera,
-  User,
-  Image as ImageIcon,
-  Lock,
   LogOut,
 } from "lucide-react";
 import Link from "next/link";
@@ -114,8 +96,7 @@ export default function DocumentServicePortal({
     },
   });
 
-  // Specialized states for Photo & Family Member additions
-  const [newPhotoPreview, setNewPhotoPreview] = useState<string | null>(null);
+  // Specialized states for Family Member additions
   const [newMemberName, setNewMemberName] = useState<string>("");
   const [newMemberRelation, setNewMemberRelation] = useState<string>("પુત્રી (Daughter)");
   const [newMemberAge, setNewMemberAge] = useState<string>("");
@@ -125,10 +106,10 @@ export default function DocumentServicePortal({
   const [applicantName, setApplicantName] = useState<string>("");
   const [applicantNameGu, setApplicantNameGu] = useState<string>("");
   const [fatherOrHusbandName, setFatherOrHusbandName] = useState<string>("");
-  const [motherName, setMotherName] = useState<string>("");
+  const [motherName] = useState<string>("");
   const [dob, setDob] = useState<string>("1985-06-15");
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [maritalStatus, setMaritalStatus] = useState<string>("વિવાહિત (Married)");
+  const [maritalStatus] = useState<string>("વિવાહિત (Married)");
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [emailAddress, setEmailAddress] = useState<string>("");
   const [aadhaarNumber, setAadhaarNumber] = useState<string>("");
@@ -139,27 +120,24 @@ export default function DocumentServicePortal({
   const [village, setVillage] = useState<string>("");
   const [houseNo, setHouseNo] = useState<string>("");
   const [streetSociety, setStreetSociety] = useState<string>("");
-  const [gramPanchayat, setGramPanchayat] = useState<string>("");
   const [pincode, setPincode] = useState<string>("360320");
 
   // Service Specific Kacheri Fields
   const [rationCategory, setRationCategory] = useState<string>("NFSA - APL-1");
   const [fpsShopNo, setFpsShopNo] = useState<string>("FPS-342 (ગોમટા સેવા સહકારી)");
-  const [gasConnectionStatus, setGasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
-  const [bankAccountNo, setBankAccountNo] = useState<string>("•••• •••• 4912");
-  const [bankIfsc, setBankIfsc] = useState<string>("SBIN0001249");
+  const [gasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
+  const [bankAccountNo] = useState<string>("•••• •••• 4912");
+  const [bankIfsc] = useState<string>("SBIN0001249");
   const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("120000");
   const [occupation, setOccupation] = useState<string>("ખેતી / પશુપાલન (Agriculture)");
-  const [subCaste, setSubCaste] = useState<string>("પાટીદાર (પટેલ)");
-  const [religion, setReligion] = useState<string>("હિન્દુ (Hindu)");
+  const [subCaste] = useState<string>("પાટીદાર (પટેલ)");
+  const [religion] = useState<string>("હિન્દુ (Hindu)");
 
   // 5. Document Uploads & AI Inspections
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocState>>({});
 
   // 6. Phygital: Signature selection
   const [signatureType, setSignatureType] = useState<"aadhaar-esign" | "physical-declaration">("aadhaar-esign");
-  const [esignOtp, setEsignOtp] = useState<string>("");
-  const [esignDone, setEsignDone] = useState<boolean>(false);
 
   // 7. Payment Gateway Modal State (Cyber Treasury / Bharat BillPay)
   const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
@@ -223,132 +201,10 @@ export default function DocumentServicePortal({
     }
   }, []);
 
-  // ── 2FA Authentication States for Document Portal ──
-  const [loginMobile, setLoginMobile] = useState("9825012345");
-  const [loginAadhaar, setLoginAadhaar] = useState("4829");
-  const [loginOtp, setLoginOtp] = useState("");
-  const [otpSent, setOtpSent] = useState(false);
-  const [simulatedSmsOtp, setSimulatedSmsOtp] = useState<string | null>(null);
-  const [otpCountdown, setOtpCountdown] = useState(180);
-  const [attemptsLeft, setAttemptsLeft] = useState(3);
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState("");
-  const [authSuccessMsg, setAuthSuccessMsg] = useState("");
-
-  // OTP Countdown Timer
-  useEffect(() => {
-    let interval: NodeJS.Timeout | null = null;
-    if (otpSent && otpCountdown > 0) {
-      interval = setInterval(() => {
-        setOtpCountdown((prev) => (prev > 0 ? prev - 1 : 0));
-      }, 1000);
-    }
-    return () => {
-      if (interval) clearInterval(interval);
-    };
-  }, [otpSent, otpCountdown]);
-
-  const handleRequestDocOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    setAuthLoading(true);
-    setAuthError("");
-    setAuthSuccessMsg("");
-
-    try {
-      const res = await fetch("/api/auth/otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "send_otp",
-          mobile: loginMobile,
-          aadhaarLast4: loginAadhaar,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success) {
-        setOtpSent(true);
-        setSimulatedSmsOtp(data.simulatedOtp);
-        setOtpCountdown(180);
-        setAttemptsLeft(3);
-        setAuthSuccessMsg(data.message || "OTP સફળતાપૂર્વક મોકલાયો છે.");
-      } else {
-        setAuthError(data.error || "OTP મોકલવામાં ક્ષતિ આવી.");
-      }
-    } catch {
-      setAuthError("સર્વર સાથે કનેક્ટ થઈ શક્યું નથી.");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleVerifyDocOtp = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault();
-    if (!loginOtp.trim()) {
-      setAuthError("કૃપા કરીને ૬ આંકડાનો OTP દાખલ કરો.");
-      return;
-    }
-
-    setAuthLoading(true);
-    setAuthError("");
-
-    try {
-      const res = await fetch("/api/auth/otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "verify_otp",
-          mobile: loginMobile,
-          otp: loginOtp,
-          aadhaarLast4: loginAadhaar,
-        }),
-      });
-
-      const data = await res.json();
-      if (data.success && data.citizen) {
-        localStorage.setItem("nagrik_citizen_session", JSON.stringify(data.citizen));
-        window.dispatchEvent(new Event("storage"));
-        setCitizenSession(data.citizen);
-        setApplicantName(data.citizen.citizenName || "Rameshbhai Kantilal Patel");
-        setApplicantNameGu(data.citizen.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
-        setMobileNumber(data.citizen.mobile || "9825012345");
-        setAadhaarNumber(`XXXX-XXXX-${data.citizen.aadhaarLast4 || "4829"}`);
-        if (data.citizen.district) setDistrict(data.citizen.district);
-        if (data.citizen.taluka) setTaluka(data.citizen.taluka);
-        if (data.citizen.village) setVillage(data.citizen.village);
-        if (data.citizen.annualIncome) setAnnualIncomeVal(String(data.citizen.annualIncome));
-      } else {
-        if (data.attemptsLeft !== undefined) {
-          setAttemptsLeft(data.attemptsLeft);
-        }
-        setAuthError(data.error || "અમાન્ય OTP. કૃપા કરીને પુનઃ પ્રયાસ કરો.");
-      }
-    } catch {
-      setAuthError("સર્વર પ્રમાણીકરણમાં ક્ષતિ.");
-    } finally {
-      setAuthLoading(false);
-    }
-  };
-
-  const handleDocFastDemoCitizen = () => {
-    setLoginMobile("9825012345");
-    setLoginAadhaar("4829");
-    setAuthError("");
-  };
-
-  const handleDocAutoFillOtp = () => {
-    if (simulatedSmsOtp) {
-      setLoginOtp(simulatedSmsOtp);
-    }
-  };
-
   const handleDocLogout = () => {
     localStorage.removeItem("nagrik_citizen_session");
     window.dispatchEvent(new Event("storage"));
     setCitizenSession(null);
-    setOtpSent(false);
-    setLoginOtp("");
-    setSimulatedSmsOtp(null);
   };
 
   const service = DOCUMENT_SERVICES.find((s) => s.id === selectedServiceId) || DOCUMENT_SERVICES[0];
@@ -413,11 +269,59 @@ export default function DocumentServicePortal({
 
   const requiredDocs = getDynamicRequiredDocs();
 
+  // Helper for Canvas-based client-side compression (BUG-023)
+  const compressImageIfNeeded = async (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target?.result as string;
+        if (!file.type.startsWith("image/") || file.size <= 1024 * 1024) {
+          resolve(dataUrl);
+          return;
+        }
+        const img = new window.Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          const maxDim = 1600;
+          if (width > maxDim || height > maxDim) {
+            if (width > height) {
+              height = Math.round((height * maxDim) / width);
+              width = maxDim;
+            } else {
+              width = Math.round((width * maxDim) / height);
+              height = maxDim;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve(dataUrl);
+            return;
+          }
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", 0.8));
+        };
+        img.onerror = () => resolve(dataUrl);
+        img.src = dataUrl;
+      };
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Handle Document Upload & Gemini AI Pre-Inspection
   const handleFileUpload = async (docId: string, file: File) => {
-    const reader = new FileReader();
-    reader.onload = async () => {
-      const base64Data = reader.result as string;
+    // 1. Client-side File Size Validation (BUG-023: Max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert("❌ દસ્તાવેજ ફાઇલ સાઇઝ ૫ MB થી ઓછી હોવી જોઈએ. કૃપા કરીને નાની ફાઇલ પસંદ કરો.");
+      return;
+    }
+
+    try {
+      const base64Data = await compressImageIfNeeded(file);
 
       // Set analyzing state
       setUploadedDocs((prev) => ({
@@ -431,49 +335,33 @@ export default function DocumentServicePortal({
         },
       }));
 
-      try {
-        const res = await fetch("/api/verify-doc", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            imageBase64: base64Data,
-            mimeType: file.type || "image/jpeg",
-            expectedDocType: requiredDocs.find((d) => d.id === docId)?.nameEn || "",
-          }),
-        });
+      const res = await fetch("/api/verify-doc", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          imageBase64: base64Data,
+          mimeType: file.type || "image/jpeg",
+          expectedDocType: requiredDocs.find((d) => d.id === docId)?.nameEn || "",
+        }),
+      });
 
-        const data = await res.json();
-        if (data.success && data.analysis) {
-          const a = data.analysis;
-          const isMismatch = a.matchesExpected === false || a.isValidForGovt === false;
-          let calculatedStatus: "valid" | "warning" | "invalid" = "valid";
-          if (isMismatch) {
-            calculatedStatus = "invalid";
-          } else if (a.needsUpdate || a.needsNewDocument) {
-            calculatedStatus = "warning";
-          } else {
-            calculatedStatus = "valid";
-          }
+      if (res.status === 413) {
+        throw new Error("દસ્તાવેજ ફાઇલ ખૂબ મોટી છે (Payload Too Large). કૃપા કરીને ફાઇલ કમ્પ્રેસ કરીને ફરીથી અપલોડ કરો.");
+      }
 
-          setUploadedDocs((prev) => ({
-            ...prev,
-            [docId]: {
-              file,
-              fileName: file.name,
-              fileType: file.type || "image/jpeg",
-              base64: base64Data,
-              status: calculatedStatus,
-              qualityScore: a.qualityScore || (isMismatch ? 15 : 92),
-              adviceGu: a.actionableAdviceGu || a.feedbackGu || "દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો.",
-              needsUpdate: a.needsUpdate,
-              needsNewDocument: a.needsNewDocument,
-            },
-          }));
+      const data = await res.json();
+      if (data.success && data.analysis) {
+        const a = data.analysis;
+        const isMismatch = a.matchesExpected === false || a.isValidForGovt === false;
+        let calculatedStatus: "valid" | "warning" | "invalid" = "valid";
+        if (isMismatch) {
+          calculatedStatus = "invalid";
+        } else if (a.needsUpdate || a.needsNewDocument) {
+          calculatedStatus = "warning";
         } else {
-          throw new Error("Verification failed");
+          calculatedStatus = "valid";
         }
-      } catch (err) {
-        // Strict fallback on failure: do NOT mark as valid
+
         setUploadedDocs((prev) => ({
           ...prev,
           [docId]: {
@@ -481,16 +369,34 @@ export default function DocumentServicePortal({
             fileName: file.name,
             fileType: file.type || "image/jpeg",
             base64: base64Data,
-            status: "invalid",
-            qualityScore: 15,
-            adviceGu: "❌ દસ્તાવેજ ચકાસણી સર્વર સાથે સંપર્ક થઈ શક્યો નહીં અથવા ફાઇલ અવાચ્ય છે. કૃપા કરીને સાચો સત્તાવાર દસ્તાવેજ ફરીથી અપલોડ કરો.",
-            needsUpdate: false,
-            needsNewDocument: false,
+            status: calculatedStatus,
+            qualityScore: a.qualityScore || (isMismatch ? 15 : 92),
+            adviceGu: a.actionableAdviceGu || a.feedbackGu || "દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો.",
+            needsUpdate: a.needsUpdate,
+            needsNewDocument: a.needsNewDocument,
           },
         }));
+      } else {
+        throw new Error("Verification failed");
       }
-    };
-    reader.readAsDataURL(file);
+    } catch (err: unknown) {
+      const errorMsg = err instanceof Error ? err.message : "દસ્તાવેજ ચકાસણી સર્વર સાથે સંપર્ક થઈ શક્યો નહીં.";
+      // Strict fallback on failure: do NOT mark as valid
+      setUploadedDocs((prev) => ({
+        ...prev,
+        [docId]: {
+          file,
+          fileName: file.name,
+          fileType: file.type || "image/jpeg",
+          base64: "",
+          status: "invalid",
+          qualityScore: 15,
+          adviceGu: `❌ ${errorMsg} કૃપા કરીને સાચો સત્તાવાર દસ્તાવેજ ફરીથી અપલોડ કરો.`,
+          needsUpdate: false,
+          needsNewDocument: false,
+        },
+      }));
+    }
   };
 
   // Auto-Fetch Existing Document Profile from DigiLocker / Govt Registry
@@ -536,7 +442,6 @@ export default function DocumentServicePortal({
     setLookupNumber("982548291045");
     handleFetchExistingRecord();
     setSelectedCorrections(["address", "mobile"]);
-    setEsignDone(true);
 
     // Auto mark all docs as AI Verified
     const demoDocs: Record<string, UploadedDocState> = {};
@@ -857,6 +762,7 @@ export default function DocumentServicePortal({
                   <div className="flex flex-col sm:flex-row items-center gap-3.5 sm:gap-4 text-center sm:text-left">
                     {/* Real Scannable Bharat QR Code Image */}
                     <div className="bg-white p-2.5 rounded-2xl border-2 border-orange-400 shadow-sm shrink-0 flex flex-col items-center">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
                           `upi://pay?pa=cybertreasury.gujarat@sbi&pn=Cyber%20Treasury%20Gujarat&am=${service.fee}&cu=INR&tn=NagrikSeva%20Fee%20${activeChallanNo}`
@@ -1094,9 +1000,9 @@ export default function DocumentServicePortal({
                 </p>
                 <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 space-y-1 text-[11px] text-slate-800">
                   <p className="font-bold text-slate-900">📌 કચેરી ખાતે અનુસરવાની પ્રક્રિયા:</p>
-                  <p>૧. નીચે આપેલ બટનથી <strong>'ઓફલાઇન રોકડ ચલણ'</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
+                  <p>૧. નીચે આપેલ બટનથી <strong>&apos;ઓફલાઇન રોકડ ચલણ&apos;</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
                   <p>૨. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર ચલણ નં. <strong className="font-mono text-orange-700">{submittedApp.challanNo || activeChallanNo}</strong> સાથે નિયત ફી <strong className="font-mono text-emerald-800">₹{submittedApp.feeAmount || service.fee}</strong> રોકડા ભરો.</p>
-                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં 'Payment Confirmed' કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
+                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં &apos;Payment Confirmed&apos; કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
                 </div>
               </div>
             )}
@@ -1318,9 +1224,9 @@ export default function DocumentServicePortal({
                 </p>
                 <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 space-y-1 text-[11px] text-slate-800">
                   <p className="font-bold text-slate-900">📌 કચેરી ખાતે અનુસરવાની પ્રક્રિયા:</p>
-                  <p>૧. નીચે આપેલ બટનથી <strong>'ઓફલાઇન રોકડ ચલણ'</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
+                  <p>૧. નીચે આપેલ બટનથી <strong>&apos;ઓફલાઇન રોકડ ચલણ&apos;</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
                   <p>૨. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર ચલણ નં. <strong className="font-mono text-orange-700">{submittedApp.challanNo || activeChallanNo}</strong> સાથે નિયત ફી <strong className="font-mono text-emerald-800">₹{submittedApp.feeAmount || service.fee}</strong> રોકડા ભરો.</p>
-                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં 'Payment Confirmed' કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
+                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં &apos;Payment Confirmed&apos; કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
                 </div>
               </div>
             )}
@@ -1771,7 +1677,7 @@ export default function DocumentServicePortal({
                                 <span>ફોટો અપલોડ સૂચના (Document Checklist):</span>
                               </span>
                               <p className="text-[10.5px] text-blue-800 leading-relaxed">
-                                તાજો પાસપોર્ટ સાઇઝ ફોટો જમણી બાજુના <strong>'જરૂરી દસ્તાવેજો'</strong> વિભાગમાં અપલોડ કરવાનો રહેશે, જ્યાં AI દ્વારા તેની આપમેળે ખરાઈ કરવામાં આવશે.
+                                તાજો પાસપોર્ટ સાઇઝ ફોટો જમણી બાજુના <strong>&apos;જરૂરી દસ્તાવેજો&apos;</strong> વિભાગમાં અપલોડ કરવાનો રહેશે, જ્યાં AI દ્વારા તેની આપમેળે ખરાઈ કરવામાં આવશે.
                               </p>
                             </div>
                           </div>

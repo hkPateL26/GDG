@@ -1,8 +1,26 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useContext, useSyncExternalStore, ReactNode } from "react";
 import { getStoredLanguage, applyLanguage, DEFAULT_LANGUAGE } from "@/lib/translation";
 import { INDIAN_LANGUAGES, IndianLanguage } from "@/lib/languages";
+
+function subscribeLanguage(callback: () => void) {
+  if (typeof window === "undefined") return () => {};
+  window.addEventListener("nagrikseva:languageChange", callback);
+  window.addEventListener("storage", callback);
+  return () => {
+    window.removeEventListener("nagrikseva:languageChange", callback);
+    window.removeEventListener("storage", callback);
+  };
+}
+
+function getLanguageSnapshot(): string {
+  return getStoredLanguage();
+}
+
+function getLanguageServerSnapshot(): string {
+  return DEFAULT_LANGUAGE;
+}
 
 export interface Translations {
   nav: {
@@ -487,25 +505,13 @@ const LanguageContext = createContext<LanguageContextType>({
 });
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [currentLang, setCurrentLang] = useState<string>(DEFAULT_LANGUAGE);
-
-  useEffect(() => {
-    const saved = getStoredLanguage();
-    setCurrentLang(saved);
-
-    const handleCustomChange = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      if (customEvent.detail) {
-        setCurrentLang(customEvent.detail);
-      }
-    };
-
-    window.addEventListener("nagrikseva:languageChange", handleCustomChange);
-    return () => window.removeEventListener("nagrikseva:languageChange", handleCustomChange);
-  }, []);
+  const currentLang = useSyncExternalStore(
+    subscribeLanguage,
+    getLanguageSnapshot,
+    getLanguageServerSnapshot
+  );
 
   const changeLang = (lang: string) => {
-    setCurrentLang(lang);
     applyLanguage(lang);
   };
 

@@ -8,14 +8,9 @@ import Link from "next/link";
 import {
   CheckCircle2,
   XCircle,
-  AlertCircle,
-  Sparkles,
   ArrowRight,
   Filter,
   RotateCcw,
-  IndianRupee,
-  User,
-  Briefcase,
   ShieldCheck,
   History,
 } from "lucide-react";
@@ -50,13 +45,16 @@ export default function EligibilityLedgerView({
   const [hasGirlChild, setHasGirlChild] = useState<boolean>(false);
 
   useEffect(() => {
-    if (citizen) {
-      if (citizen.annualIncome) setAnnualIncome(citizen.annualIncome);
-      if (citizen.occupation) setOccupation(citizen.occupation);
-      if (citizen.category) setCategory(citizen.category);
-      if (citizen.hasLand !== undefined) setHasLand(citizen.hasLand);
-      if (citizen.hasBPL !== undefined) setHasBPL(citizen.hasBPL);
-    }
+    const timer = setTimeout(() => {
+      if (citizen) {
+        if (citizen.annualIncome) setAnnualIncome(citizen.annualIncome);
+        if (citizen.occupation) setOccupation(citizen.occupation);
+        if (citizen.category) setCategory(citizen.category);
+        if (citizen.hasLand !== undefined) setHasLand(citizen.hasLand);
+        if (citizen.hasBPL !== undefined) setHasBPL(citizen.hasBPL);
+      }
+    }, 0);
+    return () => clearTimeout(timer);
   }, [citizen]);
 
   // Evaluate schemes against citizen profile with De-duplication check
@@ -70,12 +68,15 @@ export default function EligibilityLedgerView({
       let checksPassed = 0;
       let totalChecks = 0;
 
-      // 0. De-duplication & Past Availed Check
+      // 0. De-duplication & Past Availed Check (BUG-005: Harmonized Aliases)
       const availedRecord = citizen.availedBenefits.find(
         (b) =>
           b.schemeId === scheme.id ||
           (scheme.id === "pm-kisan" && b.schemeId.includes("kisan")) ||
-          (scheme.id === "ayushman-bharat" && b.schemeId.includes("ayushman"))
+          (scheme.id === "ayushman-bharat" && b.schemeId.includes("ayushman")) ||
+          ((scheme.id === "pm-awas" || scheme.id === "pm-awas-gramin") && (b.schemeId.includes("awas") || b.schemeId.includes("pm-awas"))) ||
+          ((scheme.id === "ujjwala-yojana" || scheme.id === "pm-ujjwala") && b.schemeId.includes("ujjwala")) ||
+          ((scheme.id === "mudra-loan" || scheme.id === "pm-mudra") && b.schemeId.includes("mudra"))
       );
 
       // 1. Age Check
@@ -135,7 +136,7 @@ export default function EligibilityLedgerView({
         }
       }
 
-      if (scheme.id === "pm-awas" || scheme.id === "ayushman-bharat") {
+      if (scheme.id === "pm-awas" || scheme.id === "pm-awas-gramin" || scheme.id.includes("awas") || scheme.id === "ayushman-bharat") {
         totalChecks++;
         if (hasBPL || numericIncome <= 200000) {
           checksPassed++;
@@ -295,7 +296,7 @@ export default function EligibilityLedgerView({
                   <label className="block text-xs font-semibold text-slate-600 mb-1">જાતિ / લિંગ</label>
                   <select
                     value={gender}
-                    onChange={(e) => setGender(e.target.value as any)}
+                    onChange={(e) => setGender(e.target.value as "all" | "male" | "female")}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
                   >
                     <option value="male">પુરુષ (Male)</option>

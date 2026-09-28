@@ -5,26 +5,13 @@ import { SCHEMES_DATA } from "@/lib/schemes-data";
 import {
   LayoutGrid,
   Bot,
-  Search,
   FileText,
   ChevronRight,
   Sparkles,
   MapPin,
-  Wheat,
-  HeartPulse,
-  Home as HomeIcon,
-  Flame,
-  Briefcase,
   IndianRupee,
+  HeartPulse,
 } from "lucide-react";
-
-const SCHEME_ICONS: Record<string, React.ElementType> = {
-  "pm-kisan":        Wheat,
-  "ayushman-bharat": HeartPulse,
-  "pm-awas-gramin":  HomeIcon,
-  "ujjwala-yojana":  Flame,
-  "mudra-loan":      Briefcase,
-};
 
 const QUICK_SERVICES = [
   { icon: Sparkles,    label: "પાત્રતા કેલ્ક્યુલેટર (Eligibility)", href: "/eligibility" },

@@ -1,41 +1,27 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useRef } from "react";
 import { Globe, Check, ChevronDown, X, Sparkles, Search } from "lucide-react";
-import { INDIAN_LANGUAGES, IndianLanguage } from "@/lib/languages";
-import { getStoredLanguage, applyLanguage, DEFAULT_LANGUAGE } from "@/lib/translation";
+import { INDIAN_LANGUAGES } from "@/lib/languages";
+import { useLanguage } from "@/context/LanguageContext";
+import { DEFAULT_LANGUAGE } from "@/lib/translation";
 
 export default function LanguageSelector({
   variant = "desktop",
 }: {
   variant?: "desktop" | "mobile-bar" | "drawer";
 }) {
+  const { currentLang: selectedCode, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedCode, setSelectedCode] = useState<string>(DEFAULT_LANGUAGE);
   const [searchQuery, setSearchQuery] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    setSelectedCode(getStoredLanguage());
-
-    const handleLangChange = (e: Event) => {
-      const customEvent = e as CustomEvent<string>;
-      if (customEvent.detail) {
-        setSelectedCode(customEvent.detail);
-      }
-    };
-
-    window.addEventListener("nagrikseva:languageChange", handleLangChange);
-    return () => window.removeEventListener("nagrikseva:languageChange", handleLangChange);
-  }, []);
 
   const currentLang =
     INDIAN_LANGUAGES.find((l) => l.code === selectedCode) || INDIAN_LANGUAGES[0];
 
   const handleSelectLanguage = (langCode: string) => {
-    setSelectedCode(langCode);
     setIsOpen(false);
-    applyLanguage(langCode);
+    setLanguage(langCode);
   };
 
   const filteredLanguages = INDIAN_LANGUAGES.filter((l) => {
@@ -92,15 +78,16 @@ export default function LanguageSelector({
   // Variant: Mobile Bar Compact Button
   if (variant === "mobile-bar") {
     return (
-      <div className="notranslate shrink-0" translate="no">
+      <div className="notranslate shrink-0" translate="no" suppressHydrationWarning>
         <button
           onClick={() => setIsOpen(true)}
           className="flex items-center gap-1 bg-gray-100 hover:bg-orange-50 text-gray-800 border border-gray-300 px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition active:scale-95 cursor-pointer"
           title="ભાષા બદલો / Change Language"
           aria-label="Change Language"
+          suppressHydrationWarning
         >
           <Globe size={13} className="text-orange-600 shrink-0" />
-          <span className="whitespace-nowrap">{currentLang.name}</span>
+          <span className="whitespace-nowrap" suppressHydrationWarning>{currentLang.name}</span>
           <ChevronDown size={11} className="text-gray-500 shrink-0" />
         </button>
 
@@ -111,16 +98,17 @@ export default function LanguageSelector({
 
   // Variant: Desktop Navigation Button
   return (
-    <div className="notranslate shrink-0" translate="no">
+    <div className="notranslate shrink-0" translate="no" suppressHydrationWarning>
       <button
         onClick={() => setIsOpen(true)}
         className="flex items-center gap-1.5 bg-gray-50 hover:bg-orange-50 border border-gray-200 hover:border-orange-300 text-gray-800 px-2 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-2xs active:scale-95 cursor-pointer"
         title="ભાષા બદલો / Select Indian Language"
+        suppressHydrationWarning
       >
         <Globe size={14} className="text-orange-600 shrink-0" />
-        <span className="font-semibold text-gray-900 whitespace-nowrap">{currentLang.name}</span>
+        <span className="font-semibold text-gray-900 whitespace-nowrap" suppressHydrationWarning>{currentLang.name}</span>
         {currentLang.isDefault && (
-          <span className="text-[9px] bg-green-100 text-green-800 px-1 py-0.2 rounded font-bold whitespace-nowrap">
+          <span className="text-[9px] bg-green-100 text-green-800 px-1 py-0.2 rounded font-bold whitespace-nowrap" suppressHydrationWarning>
             મૂળ
           </span>
         )}

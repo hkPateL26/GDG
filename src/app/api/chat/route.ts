@@ -1,4 +1,4 @@
-import { getChatModel, AVAILABLE_MODELS } from "@/lib/gemini";
+import { getChatModel } from "@/lib/gemini";
 import { SCHEMES_DATA } from "@/lib/schemes-data";
 import { ChatHistory } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
@@ -6,6 +6,30 @@ import { NextRequest, NextResponse } from "next/server";
 function getLocalFallbackReply(query: string): string {
   const q = query.toLowerCase();
 
+  // 1. Specialized Direct Handling for Gujarat Civil Supplies / Ration Card (BUG-021)
+  if (
+    q.includes("ration") ||
+    q.includes("રેશન") ||
+    q.includes("રાશન") ||
+    q.includes("બારકોડેડ રેશનકાર્ડ")
+  ) {
+    return `📜 **ગુજરાત અન્ન અને નાગરિક પુરવઠા સેવાઓ - રેશનકાર્ડ સહાય**\n\n` +
+      `📌 **મુખ્ય ઑનલાઇન સેવાઓ:**\n` +
+      `• નવા બારકોડેડ રેશનકાર્ડ માટે નવી અરજી\n` +
+      `• કુટુંબમાં નવા સભ્ય (બાળક/પત્ની) નું નામ ઉમેરવું\n` +
+      `• લગ્ન કે અવસાન બાદ નામ કમી કરાવવું\n` +
+      `• અલગ રહેતા કુટુંબ માટે રેશનકાર્ડ વિભાજન (Split Card)\n` +
+      `• સરનામું ફેરબદલી અથવા વાજબી ભાવની દુકાન (FPS) ટ્રાન્સફર\n\n` +
+      `📄 **જરૂરી આધાર પુરાવા:**\n` +
+      `• અરજદાર તથા તમામ સભ્યોના આધાર કાર્ડ\n` +
+      `• રહેઠાણ પુરાવો (લાઈટબિલ / વેરા પાવતી)\n` +
+      `• નામ ઉમેરવા માટે જન્મ દાખલો / લગ્ન નોંધણી પ્રમાણપત્ર\n` +
+      `• જૂના રેશનકાર્ડની નકલ\n\n` +
+      `🌐 **સત્તાવાર પોર્ટલ:** [Digital Gujarat Portal](https://www.digitalgujarat.gov.in)\n` +
+      `💡 તમે આ પોર્ટલના **"દસ્તાવેજ સેવાઓ"** ટેબમાંથી પણ રેશનકાર્ડ સુધારા માટે સીધી અરજી કરી શકો છો.`;
+  }
+
+  // 2. Exact Scheme Match
   const matchedScheme = SCHEMES_DATA.find((s) => {
     return (
       q.includes(s.name.toLowerCase()) ||
@@ -19,13 +43,11 @@ function getLocalFallbackReply(query: string): string {
       (q.includes("awas") && s.id.includes("awas")) ||
       (q.includes("આવાસ") && s.id.includes("awas")) ||
       (q.includes("મકાન") && s.id.includes("awas")) ||
-      (q.includes("gas") && s.id === "pm-ujjwala") ||
-      (q.includes("ગેસ") && s.id === "pm-ujjwala") ||
-      (q.includes("સિલિન્ડર") && s.id === "pm-ujjwala") ||
-      (q.includes("loan") && s.id === "pm-mudra") ||
-      (q.includes("લોન") && s.id === "pm-mudra") ||
-      (q.includes("ration") && q.includes("card")) ||
-      (q.includes("રેશન") && q.includes("કાર્ડ"))
+      (q.includes("gas") && (s.id === "ujjwala-yojana" || s.id === "pm-ujjwala")) ||
+      (q.includes("ગેસ") && (s.id === "ujjwala-yojana" || s.id === "pm-ujjwala")) ||
+      (q.includes("સિલિન્ડર") && (s.id === "ujjwala-yojana" || s.id === "pm-ujjwala")) ||
+      (q.includes("loan") && (s.id === "mudra-loan" || s.id === "pm-mudra")) ||
+      (q.includes("લોન") && (s.id === "mudra-loan" || s.id === "pm-mudra"))
     );
   });
 
@@ -74,9 +96,9 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Try available models with a 6-second per-model timeout
-    let lastError: any = null;
-    const fastModels = ["gemini-3.7-flash", "gemini-3.8-flash", "gemini-3.6-flash"];
+    // Try available active models with a 6-second per-model timeout
+    let lastError: Error | null = null;
+    const fastModels = ["gemini-3.8-flash", "gemini-3.7-flash"];
     const langPrompt =
       language && language !== "gu"
         ? `\n\n[Instruction: Respond in '${language}' language accurately with easy-to-understand terms.]`
@@ -92,13 +114,13 @@ export async function POST(req: NextRequest) {
           setTimeout(() => reject(new Error(`Timeout on model ${modelName}`)), 6000)
         );
 
-        const result: any = await Promise.race([sendPromise, timeoutPromise]);
+        const result = await Promise.race([sendPromise, timeoutPromise]);
         const reply = result.response.text();
         if (reply?.trim()) {
           return NextResponse.json({ reply, success: true });
         }
-      } catch (err: any) {
-        lastError = err;
+      } catch (err: unknown) {
+        lastError = err instanceof Error ? err : new Error(String(err));
         // Continue to try next model in fallback list
       }
     }

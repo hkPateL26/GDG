@@ -54,8 +54,9 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json({ success: false, error: "અમાન્ય વિનંતી (Invalid Action)" }, { status: 400 });
-  } catch (err: any) {
+  } catch (err: unknown) {
     console.error("Auth OTP API error:", err);
-    return NextResponse.json({ success: false, error: err.message || "સર્વર ક્ષતિ" }, { status: 500 });
+    const message = err instanceof Error ? err.message : "સર્વર ક્ષતિ";
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }

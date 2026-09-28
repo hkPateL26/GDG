@@ -7,9 +7,9 @@ import { getAuth, Auth } from "firebase/auth";
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "AIzaSyDRpbivZYRBV4TgLLwEYq9eu4vL9yrIPik",
-  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "lumina-kitchen.firebaseapp.com",
-  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "lumina-kitchen",
-  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "lumina-kitchen.firebasestorage.app",
+  authDomain:        process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || "nagrik-seva-ai.firebaseapp.com",
+  projectId:         process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID || "nagrik-seva-ai",
+  storageBucket:     process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET || "nagrik-seva-ai.firebasestorage.app",
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID || "55663881246",
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID || "1:55663881246:web:0a8e0c5df730e875bf520f",
 };

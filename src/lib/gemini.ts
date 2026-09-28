@@ -42,14 +42,11 @@ RESPONSE FORMAT:
 IMPORTANT: Only provide accurate information. If unsure, direct to official government websites.`;
 
 export const AVAILABLE_MODELS = [
-  "gemini-3.7-flash",
   "gemini-3.8-flash",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash",
-  "gemini-2.5-pro",
+  "gemini-3.7-flash",
 ];
 
-export function getChatModel(modelName = "gemini-3.7-flash") {
+export function getChatModel(modelName = "gemini-3.8-flash") {
   return genAI.getGenerativeModel({
     model: modelName,
     systemInstruction: NAGRIK_SEVA_PROMPT,

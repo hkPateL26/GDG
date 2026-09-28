@@ -14,7 +14,6 @@ import {
   FileText,
   IndianRupee,
 } from "lucide-react";
-import Link from "next/link";
 import { CitizenLedgerProfile } from "@/lib/large-datasets";
 
 interface CitizenLoginShieldProps {
@@ -146,6 +145,11 @@ export default function CitizenLoginShield({
         <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center mx-auto text-2xl shadow-inner">
           🛡️
         </div>
+        {serviceTitle && (
+          <span className="inline-block px-3 py-0.5 rounded-full bg-white/20 text-white text-xs font-semibold backdrop-blur-xs">
+            {serviceTitle}
+          </span>
+        )}
         <h2 className="text-xl sm:text-2xl font-black">નાગરિક સેવા સુરક્ષિત લૉગિન (2FA)</h2>
         <p className="text-xs sm:text-sm text-orange-100 max-w-md mx-auto leading-relaxed">
           સરકારી ડેટા સુરક્ષા અધિનિયમ (DPDP Act 2023) મુજબ ૧-વખત લૉગિન કરો અને તમારી તમામ સેવાઓ સીધી મેળવો.

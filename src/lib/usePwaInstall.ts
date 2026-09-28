@@ -7,8 +7,6 @@ export function useIsPwaInstalled() {
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
   useEffect(() => {
-    setIsMounted(true);
-
     const checkInstalled = () => {
       if (typeof window === "undefined") return false;
 
@@ -28,7 +26,10 @@ export function useIsPwaInstalled() {
       return installed;
     };
 
-    checkInstalled();
+    const timer = setTimeout(() => {
+      setIsMounted(true);
+      checkInstalled();
+    }, 0);
 
     // Listen to changes in display mode (when app opens in standalone)
     const mediaQuery = window.matchMedia("(display-mode: standalone)");
@@ -54,6 +55,7 @@ export function useIsPwaInstalled() {
     window.addEventListener("appinstalled", handleAppInstalled);
 
     return () => {
+      clearTimeout(timer);
       try {
         mediaQuery.removeEventListener("change", handleMediaChange);
       } catch {
