@@ -680,42 +680,34 @@ export default function BenefitCalculatorPage() {
                       <span className="text-[10px] text-gray-400">ટેપ કરીને પસંદ કરો</span>
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {CONDITIONS.map((cond) => {
                         const Icon = cond.Icon;
                         return (
                           <div
                             key={cond.id}
                             onClick={cond.toggle}
-                            className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition select-none flex flex-col justify-between gap-2.5 active:scale-[0.99] ${
+                            className={`p-3 rounded-xl border-2 cursor-pointer transition select-none flex flex-col justify-between gap-2 active:scale-[0.99] ${
                               cond.active
-                                ? `${cond.color} shadow-sm ring-2 ring-orange-500/20`
+                                ? `${cond.color} shadow-xs ring-1 ring-orange-500/20`
                                 : "border-gray-200 bg-white hover:bg-gray-50/80 text-gray-700 hover:border-gray-300"
                             }`}
                           >
-                            {/* Top Row: Checkbox + Title + Scheme + Amount Badge */}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 sm:gap-4">
-                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                            <div className="flex items-start justify-between gap-1.5">
+                              <div className="flex items-center gap-2 min-w-0">
                                 <div
-                                  className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold transition ${
+                                  className={`w-4 h-4 rounded-md flex items-center justify-center shrink-0 text-xs font-bold transition ${
                                     cond.active ? "bg-orange-500 text-white shadow-xs" : "border-2 border-gray-300 bg-white"
                                   }`}
                                 >
-                                  {cond.active && <Check size={13} strokeWidth={3} />}
+                                  {cond.active && <Check size={12} strokeWidth={3} />}
                                 </div>
-                                <div className="min-w-0">
-                                  <h4 className="text-xs sm:text-sm font-bold text-gray-900 leading-tight">
-                                    {cond.label}
-                                  </h4>
-                                  <p className="text-[11px] text-orange-600 font-semibold mt-0.5 flex items-center gap-1">
-                                    <Icon size={12} className="shrink-0" />
-                                    <span>{cond.scheme}</span>
-                                  </p>
-                                </div>
+                                <h4 className="text-xs font-bold text-gray-900 leading-snug line-clamp-1">
+                                  {cond.label}
+                                </h4>
                               </div>
-
                               <span
-                                className={`text-xs font-black px-2.5 py-1 rounded-xl shrink-0 self-start sm:self-auto ${
+                                className={`text-[10px] font-black px-1.5 py-0.5 rounded-md shrink-0 whitespace-nowrap ${
                                   cond.active
                                     ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
                                     : "bg-gray-100 text-gray-700 border border-gray-200"
@@ -725,25 +717,22 @@ export default function BenefitCalculatorPage() {
                               </span>
                             </div>
 
-                            {/* Bottom Row: Government Rule & Verified Evidence */}
-                            <div className="pt-2 border-t border-black/5 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
-                              <div className="flex items-start sm:items-center gap-1.5 text-gray-700 min-w-0 flex-1">
-                                <span className="font-bold text-gray-900 shrink-0 text-[11px]">📌 શરત:</span>
-                                <span className="text-[11px] text-gray-600 leading-snug">{cond.shortRule}</span>
-                              </div>
+                            <p className="text-[10.5px] text-orange-600 font-semibold flex items-center gap-1 truncate">
+                              <Icon size={12} className="shrink-0" />
+                              <span className="truncate">{cond.scheme}</span>
+                            </p>
 
-                              <div className="flex items-center gap-2 shrink-0 text-[10px] self-start sm:self-auto pt-1 sm:pt-0">
-                                <span className="text-gray-500 font-medium whitespace-nowrap">
-                                  🏛️ {cond.govtSource}
+                            <div className="pt-1.5 border-t border-black/5 flex items-center justify-between text-[10px] gap-1">
+                              <span className="text-gray-500 truncate" title={cond.shortRule}>
+                                {cond.shortRule}
+                              </span>
+                              {cond.active ? (
+                                <span className="bg-emerald-600 text-white font-bold px-1.5 py-0.2 rounded-full text-[9px] flex items-center gap-0.5 shrink-0 whitespace-nowrap">
+                                  <CheckCircle2 size={10} /> {cond.verifiedEvidence.split(" ")[0]}
                                 </span>
-                                {cond.active ? (
-                                  <span className="bg-emerald-600 text-white font-bold px-2.5 py-0.5 rounded-full text-[9.5px] flex items-center gap-1 shadow-2xs whitespace-nowrap">
-                                    <CheckCircle2 size={11} /> {cond.verifiedEvidence}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400 text-[9.5px] whitespace-nowrap">ચકાસણી બાકી</span>
-                                )}
-                              </div>
+                              ) : (
+                                <span className="text-gray-400 text-[9px] shrink-0 whitespace-nowrap">બાકી</span>
+                              )}
                             </div>
                           </div>
                         );
@@ -765,7 +754,7 @@ export default function BenefitCalculatorPage() {
             </div>
 
             {/* ════════ RIGHT COLUMN: Digital Entitlement Slip ════════ */}
-            <div className={`lg:col-span-6 space-y-4 ${activeTab === "inputs" ? "hidden lg:block" : "block"}`}>
+            <div className={`lg:col-span-6 space-y-4 lg:sticky lg:top-20 self-start ${activeTab === "inputs" ? "hidden lg:block" : "block"}`}>
 
               {/* Dynamic Benefits Summary Cards */}
               <div className="grid grid-cols-2 gap-2.5">
