@@ -836,6 +836,179 @@ export interface CitizenLedgerProfile {
   activeApplications: CitizenApplication[];
 }
 
+// =========================================================================
+// Gujarat Right to Services Act (GRTSA 2013) & SLA Durations Configuration
+// =========================================================================
+
+export interface ServiceSLAConfig {
+  schemeId: string;
+  schemeNameGu: string;
+  slaDays: number;
+  slaLabelGu: string;
+  authorityGu: string;
+  actSectionGu: string;
+  descriptionGu: string;
+}
+
+export const GUJARAT_SERVICE_SLA_CONFIG: Record<string, ServiceSLAConfig> = {
+  "income": {
+    schemeId: "income",
+    schemeNameGu: "આવકનું પ્રમાણપત્ર (Income Certificate)",
+    slaDays: 1,
+    slaLabelGu: "૧ દિવસ (૨૪ કલાક)",
+    authorityGu: "મામલતદાર કચેરી / જન સેવા કેન્દ્ર",
+    actSectionGu: "ગુજરાત નાગરિક સેવા અધિકાર અધિનિયમ (GRTSA ૨૦૧૩) અનુસૂચિ-૧, ક્રમ-૧૨",
+    descriptionGu: "તલાટી કમ મંત્રી પંચનામું & નાયબ મામલતદાર ડિજિટલ e-Sign ૨૪ કલાકમાં ફરજિયાત.",
+  },
+  "caste": {
+    schemeId: "caste",
+    schemeNameGu: "જાતિ પ્રમાણપત્ર & નોન-ક્રીમીલેયર",
+    slaDays: 2,
+    slaLabelGu: "૨ કાર્યકારી દિવસ (૪૮ કલાક)",
+    authorityGu: "તાલુકા મામલતદાર / સમાજ કલ્યાણ શાખા",
+    actSectionGu: "GRTSA ૨૦૧૩ અનુસૂચિ-૧, ક્રમ-૧૫",
+    descriptionGu: "પેઢીનામું અને શાળા છોડ્યાના પ્રમાણપત્રની ખરાઈ બાદ ડિજિટલ સર્ટિફિકેટ ઇશ્યૂ.",
+  },
+  "pm-kisan": {
+    schemeId: "pm-kisan",
+    schemeNameGu: "PM કિસાન સન્માન નિધિ",
+    slaDays: 3,
+    slaLabelGu: "૩ કાર્યકારી દિવસ",
+    authorityGu: "તાલુકા વિકાસ અધિકારી (TDO) & મામલતદાર",
+    actSectionGu: "પ્રધાનમંત્રી કિસાન પોર્ટલ સ્ટેન્ડર્ડ ઓપરેટિંગ પ્રોસિજર (SOP)",
+    descriptionGu: "૭/૧૨ અને ૮-અ જમીન ખાતાનું આધાર ઈ-કેવાયસી સીડિંગ અને ચકાસણી.",
+  },
+  "ration": {
+    schemeId: "ration",
+    schemeNameGu: "ડિજિટલ રેશનકાર્ડ સેવા",
+    slaDays: 7,
+    slaLabelGu: "૭ કાર્યકારી દિવસ",
+    authorityGu: "જિલ્લા પુરવઠા અધિકારી (DSO) / મામલતદાર પુરવઠા શાખા",
+    actSectionGu: "GRTSA ૨૦૧૩ અનુસૂચિ-૧, ક્રમ-૨૧",
+    descriptionGu: "NFSA / RCMS ડેટાબેઝમાં કુટુંબના સભ્યોનું આધાર લિંકિંગ અને વેરિફિકેશન.",
+  },
+  "ayushman-bharat": {
+    schemeId: "ayushman-bharat",
+    schemeNameGu: "આયુષ્માન ભારત PM-JAY (MAA કાર્ડ)",
+    slaDays: 2,
+    slaLabelGu: "૨ કાર્યકારી દિવસ (૪૮ કલાક)",
+    authorityGu: "ચીફ ડિસ્ટ્રિક્ટ હેલ્થ ઓફિસર (CDHO) / CMO શાખા",
+    actSectionGu: "નેશનલ હેલ્થ ઓથોરિટી (NHA) ગાઈડલાઈન્સ",
+    descriptionGu: "SECC-૨૦૧૧ અથવા NFSA રેશનકાર્ડ પાત્રતા ચકાસણી અને ડિજિટલ કાર્ડ ઇશ્યૂ.",
+  },
+  "pm-mudra": {
+    schemeId: "pm-mudra",
+    schemeNameGu: "PM મુદ્રા યોજના લોન",
+    slaDays: 5,
+    slaLabelGu: "૫ કાર્યકારી દિવસ",
+    authorityGu: "અગ્રણી જિલ્લા બેંક (LDM) / બેંક શાખા પ્રબંધક",
+    actSectionGu: "PM મુદ્રા સિટીઝન ચાર્ટર નિયમ-૭",
+    descriptionGu: "પ્રોજેક્ટ રિપોર્ટ અને સિબિલ સ્કોર સ્ક્રુટિની બાદ લોન સેંક્શન લેટર.",
+  },
+  "pm-awas": {
+    schemeId: "pm-awas",
+    schemeNameGu: "PM આવાસ યોજના ગ્રામીણ (PMAY-G)",
+    slaDays: 15,
+    slaLabelGu: "૧૫ કાર્યકારી દિવસ",
+    authorityGu: "જિલ્લા ગ્રામ વિકાસ એજન્સી (DRDA) / TDO",
+    actSectionGu: "ગ્રામીણ આવાસ મિશન ગાઈડલાઈન ૨૦૨૪-૨૬",
+    descriptionGu: "ગ્રામ સેવક દ્વારા સ્થળ મુલાકાત, કાચા મકાનનું જીઓ-ટેગિંગ અને ગ્રામસભા મંજૂરી.",
+  },
+  "aadhaar": {
+    schemeId: "aadhaar",
+    schemeNameGu: "આધાર કાર્ડ સેવા",
+    slaDays: 3,
+    slaLabelGu: "૩ કાર્યકારી દિવસ",
+    authorityGu: "UIDAI રજિસ્ટ્રાર / ઈ-ગ્રામ કેન્દ્ર",
+    actSectionGu: "UIDAI આધાર નિયમાવલી ૨૦૧૬",
+    descriptionGu: "બાયોમેટ્રિક્સ / ડેમોગ્રાફિક ડેટા અપડેટ સેન્ટ્રલ સર્વર ચકાસણી.",
+  },
+  "pan": {
+    schemeId: "pan",
+    schemeNameGu: "PAN કાર્ડ સેવા",
+    slaDays: 3,
+    slaLabelGu: "૩ કાર્યકારી દિવસ",
+    authorityGu: "આવકવેરા વિભાગ (NSDL / UTI)",
+    actSectionGu: "આવકવેરા ધારો ૧૯૬૧ કલમ ૧૩૯-એ",
+    descriptionGu: "ડિજિટલ e-PAN ૨૪ કલાકમાં અને ફિઝિકલ કાર્ડ ૫ દિવસમાં ડિલિવરી.",
+  },
+  "vahali-dikri": {
+    schemeId: "vahali-dikri",
+    schemeNameGu: "વ્હાલી દીકરી યોજના",
+    slaDays: 7,
+    slaLabelGu: "૭ કાર્યકારી દિવસ",
+    authorityGu: "મહિલા અને બાળ વિકાસ વિભાગ (WCD)",
+    actSectionGu: "ગુજરાત મહિલા કલ્યાણ ઠરાવ ૨૦૧૯",
+    descriptionGu: "દીકરી જન્મ નોંધણી, આવક દાખલો અને દંપતિ સંમતિપત્ર ચકાસણી.",
+  },
+  "vridh-pension": {
+    schemeId: "vridh-pension",
+    schemeNameGu: "ઇન્દિરા ગાંધી વૃદ્ધ પેન્શન",
+    slaDays: 7,
+    slaLabelGu: "૭ કાર્યકારી દિવસ",
+    authorityGu: "તાલુકા મામલતદાર (સામાજિક સુરક્ષા શાખા)",
+    actSectionGu: "રાષ્ટ્રીય સામાજિક સહાય કાર્યક્રમ (NSAP)",
+    descriptionGu: "૬૦+ વર્ષ ઉંમર ખરાઈ અને BPL યાદી ચકાસણી બાદ ડીબીટી મંજૂરી.",
+  },
+  "kisan-sahay": {
+    schemeId: "kisan-sahay",
+    schemeNameGu: "મુખ્યમંત્રી કિસાન સહાય યોજના",
+    slaDays: 5,
+    slaLabelGu: "૫ કાર્યકારી દિવસ",
+    authorityGu: "જિલ્લા ખેતીવાડી અધિકારી & મામલતદાર",
+    actSectionGu: "કૃષિ અને ખેડૂત કલ્યાણ વિભાગ માર્ગદર્શિકા",
+    descriptionGu: "પાક નુકસાની સર્વે રિપોર્ટ અને સેટેલાઇટ આંકડાકીય ખરાઈ.",
+  },
+};
+
+export function getApplicationSLADetails(app: CitizenApplication) {
+  const cfg = GUJARAT_SERVICE_SLA_CONFIG[app.schemeId] || {
+    schemeId: app.schemeId,
+    schemeNameGu: app.schemeNameGu,
+    slaDays: 3,
+    slaLabelGu: "૩ કાર્યકારી દિવસ",
+    authorityGu: app.officerDesignation || "સક્ષમ સત્તાધિકારી કચેરી",
+    actSectionGu: "ગુજરાત નાગરિક સેવા અધિકાર અધિનિયમ (GRTSA ૨૦૧૩)",
+    descriptionGu: "કચેરી નિયમાનુસાર સત્તાવાર સમયમર્યાદામાં દસ્તાવેજ ખરાઈ પ્રક્રિયા.",
+  };
+
+  let targetDateStr = "";
+  try {
+    const parts = (app.appliedDate || "2026-09-01").split("-");
+    const d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, parseInt(parts[2], 10));
+    d.setDate(d.getDate() + cfg.slaDays);
+    const day = String(d.getDate()).padStart(2, "0");
+    const month = String(d.getMonth() + 1).padStart(2, "0");
+    const year = d.getFullYear();
+    targetDateStr = `${day}/${month}/${year}`;
+  } catch {
+    targetDateStr = "૩ કાર્યકારી દિવસ";
+  }
+
+  let statusBadgeGu = "";
+  let statusColor = "";
+  if (app.status === "approved") {
+    statusBadgeGu = "✓ સમયસર મંજૂર (On-Time Sanction)";
+    statusColor = "bg-emerald-50 text-emerald-800 border-emerald-300";
+  } else if (app.status === "rejected") {
+    statusBadgeGu = "⚠️ પૂરક પુરાવા જરૂરી / પરત (Action Required)";
+    statusColor = "bg-rose-50 text-rose-800 border-rose-300";
+  } else if (app.status === "processing") {
+    statusBadgeGu = `⏳ ૧ દિવસ બાકી (અપેક્ષિત: ${targetDateStr})`;
+    statusColor = "bg-blue-50 text-blue-800 border-blue-300";
+  } else {
+    statusBadgeGu = `⏳ સ્થળ તપાસ બાકી (અપેક્ષિત: ${targetDateStr})`;
+    statusColor = "bg-amber-50 text-amber-800 border-amber-300";
+  }
+
+  return {
+    ...cfg,
+    targetDateStr,
+    statusBadgeGu,
+    statusColor,
+  };
+}
+
 export function getCitizenBenefitProfile(mobile: string, aadhaarLast4?: string): CitizenLedgerProfile {
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10) || "9825012345";
   const cleanAadhaar = (aadhaarLast4 || "").trim().slice(-4) || "4829";
@@ -845,9 +1018,66 @@ export function getCitizenBenefitProfile(mobile: string, aadhaarLast4?: string):
     (a) => (a.mobile && a.mobile.includes(cleanMobile)) || a.aadhaarLast4 === cleanAadhaar
   );
 
-  // If none found in custom, associate benchmark APP001 (Rameshbhai Patel) for demonstration
+  // If none found in custom, associate 3 diverse benchmark applications for demonstration
+  // 1. Approved (PM-Kisan, 3 days SLA done, DBT transferred)
+  // 2. Processing (Income Certificate, 1 day 24-hr SLA, Under Mamlatdar scrutiny)
+  // 3. Rejected / Action Required (Ration Card update, 7 days SLA, with official reason & 1-click re-apply)
   if (citizenApps.length === 0) {
-    citizenApps.push(BENCHMARK_APPLICATIONS[0]);
+    citizenApps.push(
+      BENCHMARK_APPLICATIONS[0],
+      {
+        id: "APP-GUJ-7821",
+        citizenName: "Rameshbhai K. Patel",
+        citizenNameGu: "રમેશભાઈ કે. પટેલ",
+        gender: "male",
+        schemeId: "income",
+        schemeName: "Income Certificate (આવકનો દાખલો)",
+        schemeNameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
+        schemeEmoji: "📜",
+        district: "Rajkot",
+        districtGu: "રાજકોટ",
+        taluka: "Gondal",
+        village: "ગોમટા (Gomta)",
+        aadhaarLast4: cleanAadhaar,
+        mobile: cleanMobile,
+        status: "processing",
+        appliedDate: "2026-09-27",
+        lastUpdated: "2026-09-28",
+        benefitAmount: 0,
+        remarksGu: "તલાટી કમ મંત્રી દ્વારા સ્થળ પંચનામું ચકાસણી હેઠળ છે. ૨૪ કલાકની સત્તાવાર સમયમર્યાદામાં ડિજિટલ સહી થશે.",
+        remarksEn: "Talati-cum-Mantri field verification in progress. Digital e-Sign scheduled within 24 hours.",
+        officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), ગોંડલ",
+        workflowStage: 2,
+        paymentStatus: "paid",
+        feeAmount: 20,
+      },
+      {
+        id: "APP-GUJ-6490",
+        citizenName: "Rameshbhai K. Patel",
+        citizenNameGu: "રમેશભાઈ કે. પટેલ",
+        gender: "male",
+        schemeId: "ration",
+        schemeName: "Digital Ration Card - Add Member",
+        schemeNameGu: "ડિજિટલ રેશનકાર્ડ - નવા સભ્ય ઉમેરો",
+        schemeEmoji: "🛒",
+        district: "Rajkot",
+        districtGu: "રાજકોટ",
+        taluka: "Gondal",
+        village: "ગોમટા (Gomta)",
+        aadhaarLast4: cleanAadhaar,
+        mobile: cleanMobile,
+        status: "rejected",
+        appliedDate: "2026-09-18",
+        lastUpdated: "2026-09-22",
+        benefitAmount: 0,
+        remarksGu: "નવા સભ્ય (પુત્રી પ્રિયાંશી) નું જન્મ પ્રમાણપત્ર અસ્પષ્ટ વંચાય છે. કૃપા કરીને ગ્રામ પંચાયત અથવા નગરપાલિકાનું અસલ ડિજિટલ જન્મ પ્રમાણપત્ર અપલોડ કરી પુનઃ અરજી કરવી.",
+        remarksEn: "Birth certificate scan for new member is unclear. Please re-apply with original digital birth certificate from Panchayat / Municipality.",
+        officerDesignation: "પુરવઠા મામલતદાર શ્રી, ગોંડલ",
+        workflowStage: 2,
+        paymentStatus: "paid",
+        feeAmount: 20,
+      }
+    );
   }
 
   // Pre-configured government benefit ledger (DBT De-duplication Ledger)

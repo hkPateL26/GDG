@@ -32,6 +32,7 @@ import {
   ArrowLeftRight,
   Camera,
   LogOut,
+  RotateCw,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -55,8 +56,51 @@ export default function DocumentServicePortal({
   hideCitizenHeader?: boolean;
 } = {}) {
   // 1. Service Selection & Mode
-  const [selectedServiceId, setSelectedServiceId] = useState<string>("aadhaar");
-  const [serviceMode, setServiceMode] = useState<"new" | "update">("update");
+  const [selectedServiceId, setSelectedServiceId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("nagrik_reapply_context");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.serviceId) return parsed.serviceId;
+        }
+      } catch {}
+    }
+    return "aadhaar";
+  });
+
+  const [serviceMode, setServiceMode] = useState<"new" | "update">(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("nagrik_reapply_context");
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed?.serviceMode) return parsed.serviceMode;
+        }
+      } catch {}
+    }
+    return "update";
+  });
+
+  const [reapplyContext, setReapplyContext] = useState<{
+    appId: string;
+    schemeId: string;
+    serviceId: string;
+    serviceMode: "new" | "update";
+    schemeNameGu: string;
+    remarksGu: string;
+    officerDesignation: string;
+  } | null>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = sessionStorage.getItem("nagrik_reapply_context");
+        return saved ? JSON.parse(saved) : null;
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
 
   // 2. Existing Card Lookup & Auto-Fetch (for Update Mode)
   const [lookupNumber, setLookupNumber] = useState<string>("");
@@ -1124,6 +1168,41 @@ export default function DocumentServicePortal({
           <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
         </button>
       </div>
+
+      {/* ── Re-Apply Context Banner ── */}
+      {reapplyContext && (
+        <div className="bg-rose-50 border-2 border-rose-300 text-rose-950 p-4 sm:p-5 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3.5 shadow-md animate-in fade-in">
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="bg-rose-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-xs">
+                <RotateCw size={12} className="animate-spin-slow" />
+                <span>🔄 પુનઃ અરજી મોડ (Re-Apply Mode)</span>
+              </span>
+              <span className="font-mono font-bold text-xs text-rose-800 bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200">
+                અગાઉનો અરજી ક્રમાંક: {reapplyContext.appId}
+              </span>
+            </div>
+            <p className="text-xs sm:text-sm font-black text-rose-950 mt-1 leading-snug">
+              કચેરી સ્ક્રુટિની આદેશ: <span className="font-semibold text-rose-900">{reapplyContext.remarksGu}</span>
+            </p>
+            <p className="text-[11px] text-rose-700">
+              💡 <strong>સુવિધા:</strong> તમારી અગાઉની તમામ વિગતો ફોર્મમાં આપોઆપ ભરાઈ ગઈ છે. તમારે માત્ર સુધારેલો / સાચો દસ્તાવેજ અપલોડ કરવાનો રહેશે.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== "undefined") {
+                sessionStorage.removeItem("nagrik_reapply_context");
+              }
+              setReapplyContext(null);
+            }}
+            className="px-3.5 py-2 bg-rose-200 hover:bg-rose-300 text-rose-950 font-bold rounded-xl text-xs transition shrink-0 cursor-pointer"
+          >
+            ✕ સામાન્ય મોડ
+          </button>
+        </div>
+      )}
 
       {/* ── Compact Citizen Session Notification ── */}
       {citizenSession && !hideCitizenHeader && (
