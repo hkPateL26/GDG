@@ -113,19 +113,38 @@ export default function GoogleTranslateScript() {
       }
     };
 
-    // Load external Google Translate engine script safely
-    if (!document.getElementById("google-translate-api-script")) {
-      const script = document.createElement("script");
-      script.id = "google-translate-api-script";
-      script.type = "text/javascript";
-      script.src = "//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
-      script.async = true;
-      script.onerror = () => {
-        // Silently handle if client adblocker or local network blocks google translate
-        window.dispatchEvent(new Event("nagrikseva:pageReady"));
-      };
-      document.body.appendChild(script);
+    const loadScript = () => {
+      if (!document.getElementById("google-translate-api-script")) {
+        const script = document.createElement("script");
+        script.id = "google-translate-api-script";
+        script.type = "text/javascript";
+        script.src = "https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit";
+        script.async = true;
+        script.onerror = () => {
+          // Silently handle if client adblocker or local network blocks google translate
+          window.dispatchEvent(new Event("nagrikseva:pageReady"));
+        };
+        document.body.appendChild(script);
+      }
+    };
+
+    // Only load external translation script if user is NOT in default Gujarati
+    if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
+      loadScript();
+    } else {
+      // Default language (Gujarati): page is ready immediately, zero network requests
+      window.dispatchEvent(new Event("nagrikseva:pageReady"));
     }
+
+    const handleLangChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      if (customEvent.detail && customEvent.detail !== DEFAULT_LANGUAGE) {
+        loadScript();
+      }
+    };
+
+    window.addEventListener("nagrikseva:languageChange", handleLangChange);
+    return () => window.removeEventListener("nagrikseva:languageChange", handleLangChange);
   }, []);
 
   return (

@@ -34,8 +34,13 @@ export default function InstallAppModal({
       setIsIos(/iPad|iPhone|iPod/.test(ua) && !(window as unknown as { MSStream?: unknown }).MSStream);
 
       // Listen for PWA beforeinstallprompt
+      if ((window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt) {
+        setDeferredPrompt((window as unknown as { __pwaPrompt: BeforeInstallPromptEvent }).__pwaPrompt);
+      }
+
       const handleBeforeInstall = (e: Event) => {
         e.preventDefault();
+        (window as unknown as { __pwaPrompt: BeforeInstallPromptEvent }).__pwaPrompt = e as BeforeInstallPromptEvent;
         setDeferredPrompt(e as BeforeInstallPromptEvent);
       };
 
@@ -55,13 +60,17 @@ export default function InstallAppModal({
   }, [onClose]);
 
   const handleInstallClick = async () => {
-    if (deferredPrompt) {
-      await deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
+    const prompt = deferredPrompt || (typeof window !== "undefined" ? (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt : null);
+    if (prompt) {
+      await prompt.prompt();
+      const choice = await prompt.userChoice;
       if (choice.outcome === "accepted") {
         markPwaInstalled();
       }
       setDeferredPrompt(null);
+      if (typeof window !== "undefined") {
+        (window as unknown as { __pwaPrompt?: null }).__pwaPrompt = null;
+      }
       onClose();
     } else {
       alert("તમારા બ્રાઉઝર મેનૂ (3 Dots) પર ક્લિક કરી 'Install App' અથવા 'Add to Home Screen' પસંદ કરો.");

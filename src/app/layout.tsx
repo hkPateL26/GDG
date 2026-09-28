@@ -8,7 +8,7 @@ import ScrollRestoration from "@/components/ScrollRestoration";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 import { LanguageProvider } from "@/context/LanguageContext";
 
-const inter = Inter({ subsets: ["latin"], display: "swap" });
+const inter = Inter({ subsets: ["latin"], display: "swap", preload: false });
 
 export const metadata: Metadata = {
   title: "NagrikSeva AI – Government Schemes Assistant",
