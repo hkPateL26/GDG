@@ -48,37 +48,37 @@ export interface CitizenApplication {
 }
 
 export const GUJARAT_DISTRICTS = [
-  { en: "Rajkot", gu: "રાજકોટ", talukas: ["Rajkot Urban", "Rajkot Rural", "Gondal", "Jetpur", "Dhoraji", "Jasdan", "Morbi Rd"] },
-  { en: "Ahmedabad", gu: "અમદાવાદ", talukas: ["City", "Daskroi", "Sanand", "Dholka", "Bavla", "Viramgam", "Dhandhuka"] },
-  { en: "Surat", gu: "સુરત", talukas: ["Choryasi", "Olpad", "Kamrej", "Bardoli", "Mahuva", "Mandvi", "Mangrol"] },
-  { en: "Vadodara", gu: "વડોદરા", talukas: ["Vadodara Urban", "Padra", "Karjan", "Dabhoi", "Waghodia", "Savli"] },
-  { en: "Bhavnagar", gu: "ભાવનગર", talukas: ["Bhavnagar Urban", "Sihor", "Palitana", "Talaja", "Gariadhar", "Mahuva"] },
-  { en: "Jamnagar", gu: "જામનગર", talukas: ["Jamnagar City", "Lalpur", "Kalavad", "Dhrol", "Jodiya"] },
-  { en: "Junagadh", gu: "જૂનાગઢ", talukas: ["Junagadh City", "Keshod", "Mangrol", "Manavadar", "Visavadar", "Malia"] },
+  { en: "Rajkot", gu: "રાજકોટ", talukas: ["Gondal", "Rajkot Urban", "Rajkot Rural", "Jetpur", "Dhoraji", "Upleta", "Jasdan", "Jamkandorna", "Kotda Sangani", "Lodhika", "Vinchhiya"] },
+  { en: "Ahmedabad", gu: "અમદાવાદ", talukas: ["Ahmedabad City", "Daskroi", "Sanand", "Dholka", "Bavla", "Viramgam", "Dhandhuka", "Mandal", "Detroj-Rampura", "Dholera"] },
+  { en: "Surat", gu: "સુરત", talukas: ["Surat City", "Choryasi", "Olpad", "Kamrej", "Bardoli", "Mahuva", "Mandvi", "Mangrol", "Palsana", "Umarpada"] },
+  { en: "Vadodara", gu: "વડોદરા", talukas: ["Vadodara Urban", "Vadodara Rural", "Padra", "Karjan", "Dabhoi", "Waghodia", "Savli", "Desar"] },
+  { en: "Bhavnagar", gu: "ભાવનગર", talukas: ["Bhavnagar Urban", "Sihor", "Palitana", "Talaja", "Gariadhar", "Mahuva", "Vallabhipur", "Umrala", "Ghogha", "Jesar"] },
+  { en: "Jamnagar", gu: "જામનગર", talukas: ["Jamnagar City", "Jamnagar Rural", "Lalpur", "Kalavad", "Dhrol", "Jodiya"] },
+  { en: "Junagadh", gu: "જૂનાગઢ", talukas: ["Junagadh City", "Junagadh Rural", "Keshod", "Mangrol", "Manavadar", "Visavadar", "Malia Hatina", "Mendarda", "Bhesan", "Vanthali"] },
   { en: "Gandhinagar", gu: "ગાંધીનગર", talukas: ["Gandhinagar", "Kalol", "Dehgam", "Mansa"] },
-  { en: "Mehsana", gu: "મહેસાણા", talukas: ["Mehsana", "Visnagar", "Kadi", "Vadnagar", "Kheralu", "Unjha"] },
-  { en: "Banaskantha", gu: "બનાસકાંઠા", talukas: ["Palanpur", "Deesa", "Dhanera", "Tharad", "Vav", "Dantiwada"] },
-  { en: "Kutch", gu: "કચ્છ", talukas: ["Bhuj", "Anjar", "Gandhidham", "Mandvi", "Mundra", "Nakhatrana", "Rapar"] },
-  { en: "Amreli", gu: "અમરેલી", talukas: ["Amreli", "Dhari", "Bagasara", "Savarkundla", "Rajula", "Jafrabad"] },
-  { en: "Anand", gu: "આણંદ", talukas: ["Anand", "Petlad", "Borsad", "Khambhat", "Umreth", "Sojitra"] },
-  { en: "Morbi", gu: "મોરબી", talukas: ["Morbi", "Wankaner", "Halvad", "Tankara", "Maliya"] },
-  { en: "Surendranagar", gu: "સુરેન્દ્રનગર", talukas: ["Wadhwan", "Dhrangadhra", "Limbdi", "Chotila", "Dasada"] },
-  { en: "Panchmahal", gu: "પંચમહાલ", talukas: ["Godhra", "Halol", "Kalol", "Shehra", "Ghoghamba"] },
-  { en: "Navsari", gu: "નવસારી", talukas: ["Navsari", "Jalalpore", "Gandevi", "Chikhli", "Vansda"] },
-  { en: "Valsad", gu: "વલસાડ", talukas: ["Valsad", "Pardi", "Vapi", "Dharampur", "Umbergaon"] },
-  { en: "Dahod", gu: "દાહોદ", talukas: ["Dahod", "Garbada", "Jhalod", "Limkheda", "Fatepura"] },
-  { en: "Patan", gu: "પાટણ", talukas: ["Patan", "Sidhpur", "Radhanpur", "Chanasma", "Sami"] },
+  { en: "Mehsana", gu: "મહેસાણા", talukas: ["Mehsana", "Visnagar", "Kadi", "Vadnagar", "Kheralu", "Unjha", "Vijapur", "Becharaji", "Satlasana", "Jotana", "Gozaria"] },
+  { en: "Banaskantha", gu: "બનાસકાંઠા", talukas: ["Palanpur", "Deesa", "Dhanera", "Tharad", "Vav", "Dantiwada", "Bhabhar", "Deodar", "Kankrej", "Vadgam", "Amirgadh", "Danta", "Suigam", "Lakhani"] },
+  { en: "Kutch", gu: "કચ્છ", talukas: ["Bhuj", "Anjar", "Gandhidham", "Mandvi", "Mundra", "Nakhatrana", "Rapar", "Abdasa", "Lakhpat", "Bhachau"] },
+  { en: "Amreli", gu: "અમરેલી", talukas: ["Amreli", "Dhari", "Bagasara", "Savarkundla", "Rajula", "Jafrabad", "Babra", "Lathi", "Lilia", "Khambha", "Kunkavav Vadia"] },
+  { en: "Anand", gu: "આણંદ", talukas: ["Anand", "Petlad", "Borsad", "Khambhat", "Umreth", "Sojitra", "Tarapur", "Anklav"] },
+  { en: "Morbi", gu: "મોરબી", talukas: ["Morbi", "Wankaner", "Halvad", "Tankara", "Maliya Miyana"] },
+  { en: "Surendranagar", gu: "સુરેન્દ્રનગર", talukas: ["Wadhwan", "Dhrangadhra", "Limbdi", "Chotila", "Dasada", "Sayla", "Muli", "Chuda", "Thangadh", "Lakhtar"] },
+  { en: "Panchmahal", gu: "પંચમહાલ", talukas: ["Godhra", "Halol", "Kalol", "Shehra", "Ghoghamba", "Morwa Hadaf", "Jambughoda"] },
+  { en: "Navsari", gu: "નવસારી", talukas: ["Navsari", "Jalalpore", "Gandevi", "Chikhli", "Vansda", "Khergam"] },
+  { en: "Valsad", gu: "વલસાડ", talukas: ["Valsad", "Pardi", "Vapi", "Dharampur", "Umbergaon", "Kaprada"] },
+  { en: "Dahod", gu: "દાહોદ", talukas: ["Dahod", "Garbada", "Jhalod", "Limkheda", "Fatepura", "Devgadh Baria", "Dhanpur", "Sanjeli", "Singvad"] },
+  { en: "Patan", gu: "પાટણ", talukas: ["Patan", "Sidhpur", "Radhanpur", "Chanasma", "Sami", "Harij", "Shankheshwar", "Santalpur", "Saraswati"] },
   { en: "Porbandar", gu: "પોરબંદર", talukas: ["Porbandar", "Ranavav", "Kutiyana"] },
-  { en: "Gir Somnath", gu: "ગીર સોમનાથ", talukas: ["Veraval", "Kodinar", "Una", "Talala", "Sutrapada"] },
-  { en: "Sabarkantha", gu: "સાબરકાંઠા", talukas: ["Himmatnagar", "Idar", "Prantij", "Khedbrahma", "Talod"] },
-  { en: "Bharuch", gu: "ભરૂચ", talukas: ["Bharuch", "Ankleshwar", "Jambusar", "Hansot", "Amod"] },
-  { en: "Kheda", gu: "ખેડા", talukas: ["Nadiad", "Kapadvanj", "Mehmedabad", "Matar", "Mahudha"] },
+  { en: "Gir Somnath", gu: "ગીર સોમનાથ", talukas: ["Veraval", "Kodinar", "Una", "Talala", "Sutrapada", "Gir Gadhada"] },
+  { en: "Sabarkantha", gu: "સાબરકાંઠા", talukas: ["Himmatnagar", "Idar", "Prantij", "Khedbrahma", "Talod", "Vadali", "Vijaynagar", "Poshina"] },
+  { en: "Bharuch", gu: "ભરૂચ", talukas: ["Bharuch", "Ankleshwar", "Jambusar", "Hansot", "Amod", "Vagra", "Jhagadia", "Valia", "Netrang"] },
+  { en: "Kheda", gu: "ખેડા", talukas: ["Nadiad", "Kapadvanj", "Mehmedabad", "Matar", "Mahudha", "Kheda", "Thasra", "Galteshwar", "Kathlal", "Vaso"] },
   { en: "Botad", gu: "બોટાદ", talukas: ["Botad", "Gadhada", "Barwala", "Ranpur"] },
-  { en: "Aravalli", gu: "અરવલ્લી", talukas: ["Modasa", "Malpur", "Bhiloda", "Meghraj", "Dhansura"] },
-  { en: "Mahisagar", gu: "મહીસાગર", talukas: ["Lunawada", "Santrampur", "Balasinor", "Kadana", "Virpur"] },
-  { en: "Chhotaudepur", gu: "છોટાઉદેપુર", talukas: ["Chhotaudepur", "Bodeli", "Sankheda", "Nasvadi", "Jetpur Pavi"] },
-  { en: "Narmada", gu: "નર્મદા", talukas: ["Rajpipla", "Dediapada", "Tilakwada", "Garudeshwar", "Sagbara"] },
-  { en: "Tapi", gu: "તાપી", talukas: ["Vyara", "Songadh", "Valod", "Nizar", "Uchchhal"] },
+  { en: "Aravalli", gu: "અરવલ્લી", talukas: ["Modasa", "Malpur", "Bhiloda", "Meghraj", "Dhansura", "Bayad"] },
+  { en: "Mahisagar", gu: "મહીસાગર", talukas: ["Lunawada", "Santrampur", "Balasinor", "Kadana", "Virpur", "Khanpur"] },
+  { en: "Chhotaudepur", gu: "છોટાઉદેપુર", talukas: ["Chhotaudepur", "Bodeli", "Sankheda", "Nasvadi", "Jetpur Pavi", "Kawant"] },
+  { en: "Narmada", gu: "નર્મદા", talukas: ["Rajpipla (Nandod)", "Dediapada", "Tilakwada", "Garudeshwar", "Sagbara"] },
+  { en: "Tapi", gu: "તાપી", talukas: ["Vyara", "Songadh", "Valod", "Nizar", "Uchchhal", "Dolvan", "Kukarmunda"] },
   { en: "Dang", gu: "ડાંગ", talukas: ["Ahwa", "Waghai", "Subir"] },
   { en: "Devbhumi Dwarka", gu: "દેવભૂમિ દ્વારકા", talukas: ["Khambhalia", "Dwarka", "Kalyanpur", "Bhanvad"] },
 ];
@@ -3721,18 +3721,93 @@ export function lookupCitizenExistingRecord(serviceId: string, docNumber: string
   return baseProfile;
 }
 
+export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenApplication {
+  const id = app.id || `APP-GUJ-${Math.floor(1000 + Math.random() * 9000)}`;
+
+  let fallbackName = "હરી વિનોદરાઈ પટેલ";
+  let fallbackNameEn = "Hari Vinodrai Patel";
+  let fallbackSchemeGu = "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)";
+  let fallbackSchemeEn = "Income Certificate";
+  let fallbackSchemeEmoji = "📜";
+  let fallbackTaluka = "Gondal";
+  let fallbackDistrict = "Rajkot";
+  let fallbackDistrictGu = "રાજકોટ";
+
+  if (id === "APP001") {
+    fallbackName = "હરી વિનોદરાઈ પટેલ";
+    fallbackNameEn = "Hari Vinodrai Patel";
+    fallbackSchemeGu = "PM કિસાન સન્માન નિધિ";
+    fallbackSchemeEn = "PM Kisan Samman Nidhi";
+    fallbackSchemeEmoji = "🌾";
+    fallbackTaluka = "Rajkot Rural";
+  } else if (id === "APP002") {
+    fallbackName = "આરતીબેન એમ. સોલંકી";
+    fallbackNameEn = "Aartiben M. Solanki";
+    fallbackSchemeGu = "આયુષ્માન ભારત PM-JAY કાર્ડ";
+    fallbackSchemeEn = "Ayushman Bharat PM-JAY";
+    fallbackSchemeEmoji = "🏥";
+    fallbackTaluka = "Gondal";
+  } else if (id === "APP003") {
+    fallbackName = "દિનેશભાઈ પી. રબારી";
+    fallbackNameEn = "Dineshbhai P. Rabari";
+    fallbackSchemeGu = "PM આવાસ યોજના ગ્રામીણ";
+    fallbackSchemeEn = "PM Awas Yojana Gramin";
+    fallbackSchemeEmoji = "🏠";
+    fallbackTaluka = "Jetpur";
+  } else if (id === "APP004") {
+    fallbackName = "મનસુખભાઈ જી. વાઘાણી";
+    fallbackNameEn = "Mansukhbhai G. Vaghani";
+    fallbackSchemeGu = "PM મુદ્રા લોન યોજના";
+    fallbackSchemeEn = "PM Mudra Loan";
+    fallbackSchemeEmoji = "💼";
+    fallbackTaluka = "Gondal";
+  }
+
+  return {
+    id,
+    citizenName: (app.citizenName && app.citizenName.trim()) ? app.citizenName : fallbackNameEn,
+    citizenNameGu: (app.citizenNameGu && app.citizenNameGu.trim()) ? app.citizenNameGu : fallbackName,
+    gender: app.gender || "male",
+    schemeId: app.schemeId || "income-certificate",
+    schemeName: (app.schemeName && app.schemeName.trim()) ? app.schemeName : fallbackSchemeEn,
+    schemeNameGu: (app.schemeNameGu && app.schemeNameGu.trim()) ? app.schemeNameGu : fallbackSchemeGu,
+    schemeEmoji: app.schemeEmoji || fallbackSchemeEmoji,
+    district: (app.district && app.district.trim()) ? app.district : fallbackDistrict,
+    districtGu: (app.districtGu && app.districtGu.trim()) ? app.districtGu : fallbackDistrictGu,
+    taluka: (app.taluka && app.taluka.trim()) ? app.taluka : fallbackTaluka,
+    village: (app.village && app.village.trim()) ? app.village : "ગોમતા",
+    aadhaarLast4: app.aadhaarLast4 || "1413",
+    status: app.status || "processing",
+    appliedDate: app.appliedDate || "2026-09-28",
+    lastUpdated: app.lastUpdated || "2026-09-28",
+    benefitAmount: Number(app.benefitAmount) || 0,
+    remarksGu: app.remarksGu || "દસ્તાવેજોની ચકાસણી તાલુકા મામલતદાર કચેરી હેઠળ પ્રગતિમાં છે.",
+    remarksEn: app.remarksEn || "Document scrutiny in progress under Taluka Mamlatdar desk.",
+    officerDesignation: app.officerDesignation || "તાલુકા મામલતદાર, ગોંડલ",
+    workflowStage: (app.workflowStage || (app.status === "approved" ? 3 : 1)) as 1 | 2 | 3 | 4,
+    paymentStatus: app.paymentStatus || (app.status === "approved" ? "paid" : "pending_challan"),
+    paymentMethod: app.paymentMethod || "upi",
+    feeAmount: app.feeAmount || 50,
+    txnId: app.txnId || `TXN-GUJ-${Math.floor(100000 + Math.random() * 899999)}`,
+    challanNo: app.challanNo || `GRN-2026-${Math.floor(10000 + Math.random() * 89999)}`,
+    documentsVerified: app.documentsVerified || [
+      { name: "ઓળખ પુરાવો (આધાર કાર્ડ)", verified: true, qualityScore: 98 },
+      { name: "રહેઠાણ પુરાવો (લાઈટ બિલ)", verified: true, qualityScore: 95 },
+      { name: "તલાટી આવક પંચનામું", verified: true, qualityScore: 92 },
+    ],
+  };
+}
+
 export function addCustomApplication(app: CitizenApplication) {
-  if (app.workflowStage === undefined) {
-    app.workflowStage = 1;
-  }
+  const sanitized = sanitizeApplication(app);
   // Prepend so it appears first
-  const existingIdx = CUSTOM_USER_APPLICATIONS.findIndex((a) => a.id === app.id);
+  const existingIdx = CUSTOM_USER_APPLICATIONS.findIndex((a) => a.id === sanitized.id);
   if (existingIdx >= 0) {
-    CUSTOM_USER_APPLICATIONS[existingIdx] = app;
+    CUSTOM_USER_APPLICATIONS[existingIdx] = sanitized;
   } else {
-    CUSTOM_USER_APPLICATIONS.unshift(app);
+    CUSTOM_USER_APPLICATIONS.unshift(sanitized);
   }
-  return app;
+  return sanitized;
 }
 
 let CACHED_SYSTEM_DATASET: CitizenApplication[] | null = null;
@@ -3954,7 +4029,7 @@ export function queryApplications(params: {
 
   const effectiveTotal = (search || district || status) ? matches.length : TOTAL_SYSTEM_RECORDS + CUSTOM_USER_APPLICATIONS.length;
   const start = (page - 1) * limit;
-  const paginated = matches.slice(start, start + limit);
+  const paginated = matches.slice(start, start + limit).map(sanitizeApplication);
 
   return {
     records: paginated,
