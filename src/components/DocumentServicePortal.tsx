@@ -164,18 +164,39 @@ export default function DocumentServicePortal({
   const [village, setVillage] = useState<string>("");
   const [houseNo, setHouseNo] = useState<string>("");
   const [streetSociety, setStreetSociety] = useState<string>("");
-  const [pincode, setPincode] = useState<string>("360320");
+  const [pincode, setPincode] = useState<string>("360311");
 
   // Service Specific Kacheri Fields
   const [rationCategory, setRationCategory] = useState<string>("NFSA - APL-1");
-  const [fpsShopNo, setFpsShopNo] = useState<string>("FPS-342 (ગોમટા સેવા સહકારી)");
+  const [fpsShopNo, setFpsShopNo] = useState<string>("FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)");
   const [gasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
   const [bankAccountNo] = useState<string>("•••• •••• 4912");
   const [bankIfsc] = useState<string>("SBIN0001249");
-  const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("120000");
-  const [occupation, setOccupation] = useState<string>("ખેતી / પશુપાલન (Agriculture)");
-  const [subCaste] = useState<string>("પાટીદાર (પટેલ)");
-  const [religion] = useState<string>("હિન્દુ (Hindu)");
+  const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("180000");
+  const [occupation, setOccupation] = useState<string>("ખેતી / વ્યવસાય (Farmer)");
+  const [subCaste, setSubCaste] = useState<string>("કડવા પાટીદાર (પટેલ)");
+  const [religion, setReligion] = useState<string>("હિન્દુ (Hindu)");
+
+  // Extended Government Services Form States
+  const [surveyNumber, setSurveyNumber] = useState<string>("241/1 પૈકી");
+  const [khataNumber, setKhataNumber] = useState<string>("412");
+  const [landArea, setLandArea] = useState<string>("1.42 હેક્ટર");
+  const [childName, setChildName] = useState<string>("હરી");
+  const [birthPlace, setBirthPlace] = useState<string>("સિવિલ હોસ્પિટલ, રાજકોટ");
+  const [deceasedName, setDeceasedName] = useState<string>("નારણભાઈ પટેલ");
+  const [deathDate, setDeathDate] = useState<string>("2023-11-04");
+  const [deathPlace, setDeathPlace] = useState<string>("રાજકોટ (ઘરે)");
+  const [ewsPropertyType, setEwsPropertyType] = useState<string>("રહેણાંક મકાન (< ૧૦૦૦ ચો.ફૂટ)");
+  const [domicileYears, setDomicileYears] = useState<string>("૨૦ વર્ષ (જન્મથી ગુજરાત)");
+  const [seniorBloodGroup, setSeniorBloodGroup] = useState<string>("B+");
+  const [seniorEmergencyPhone, setSeniorEmergencyPhone] = useState<string>("9974442291");
+  const [drivingClass, setDrivingClass] = useState<string>("MCWG (મોટરસાયકલ) & LMV (કાર)");
+  const [rtoOfficeName, setRtoOfficeName] = useState<string>("GJ-03 RTO કચેરી, રાજકોટ");
+  const [marriageDate, setMarriageDate] = useState<string>("2025-02-14");
+  const [spouseName, setSpouseName] = useState<string>("પ્રિયાબેન");
+
+  // Category filter for the 13 services selector
+  const [serviceCategoryFilter, setServiceCategoryFilter] = useState<string>("all");
 
   // 5. Document Uploads & AI Inspections
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocState>>({});
@@ -222,10 +243,10 @@ export default function DocumentServicePortal({
             if (parsed) {
               const cit = parsed.citizen || parsed;
               setCitizenSession(cit);
-              setApplicantName((prev) => prev || cit.citizenName || "Rameshbhai Kantilal Patel");
-              setApplicantNameGu((prev) => prev || cit.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
-              setMobileNumber((prev) => prev || cit.mobile || "9825012345");
-              setAadhaarNumber((prev) => prev || `XXXX-XXXX-${cit.aadhaarLast4 || "4829"}`);
+              setApplicantName((prev) => prev || cit.citizenName || "Hari Vinodrai Patel");
+              setApplicantNameGu((prev) => prev || cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
+              setMobileNumber((prev) => prev || cit.mobile || "9974442291");
+              setAadhaarNumber((prev) => prev || `XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
               if (cit.district) setDistrict(cit.district);
               if (cit.taluka) setTaluka(cit.taluka);
               if (cit.village) setVillage(cit.village);
@@ -448,7 +469,7 @@ export default function DocumentServicePortal({
   const handleFetchExistingRecord = () => {
     setIsFetchingProfile(true);
     setTimeout(() => {
-      const profile = lookupCitizenExistingRecord(service.id, lookupNumber || "4829");
+      const profile = lookupCitizenExistingRecord(service.id, lookupNumber || "1413");
       setFetchedProfile(profile);
       setApplicantName(profile.applicantName);
       setApplicantNameGu(profile.applicantNameGu);
@@ -461,14 +482,31 @@ export default function DocumentServicePortal({
       setTaluka(profile.taluka);
       setVillage(profile.village);
       setPincode(profile.pincode);
-      setStreetSociety("પટેલ શેરી, ગોમટા ગામ");
-      setHouseNo("૧૨");
+      setStreetSociety("ઓમ નગર, ૧૫૦ ફૂટ રિંગ રોડ");
+      setHouseNo("૧૦૨");
 
       if (service.id === "ration") {
         setRationCategory("NFSA - APL-1");
-        setFpsShopNo("FPS-342 (ગોમટા સેવા સહકારી)");
+        setFpsShopNo("FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)");
       } else if (service.id === "aadhaar") {
-        setAadhaarNumber(lookupNumber ? lookupNumber.slice(-4) : "4829");
+        setAadhaarNumber(lookupNumber ? lookupNumber.slice(-4) : "1413");
+      } else if (service.id === "land_records") {
+        setKhataNumber("412");
+        setSurveyNumber("241/1 પૈકી");
+        setLandArea("1.42 હેક્ટર");
+      } else if (service.id === "birth_cert") {
+        setChildName("હરી");
+        setBirthPlace("સિવિલ હોસ્પિટલ, રાજકોટ");
+      } else if (service.id === "death_cert") {
+        setDeceasedName("નારણભાઈ પટેલ");
+        setDeathDate("2023-11-04");
+        setDeathPlace("રાજકોટ (ઘરે)");
+      } else if (service.id === "senior_citizen") {
+        setSeniorBloodGroup("B+");
+        setSeniorEmergencyPhone("9974442291");
+      } else if (service.id === "driving_licence") {
+        setDrivingClass("MCWG (મોટરસાયકલ) & LMV (કાર)");
+        setRtoOfficeName("GJ-03 RTO કચેરી, રાજકોટ");
       }
 
       setIsFetchingProfile(false);
@@ -678,6 +716,50 @@ export default function DocumentServicePortal({
         return [
           { id: "renew_ncl", labelGu: "નોન-ક્રીમીલેયર રિન્યુઅલ (NCL Renewal)", desc: "૩ નાણાકીય વર્ષ પૂર્ણ થતાં નવું પ્રમાણપત્ર" },
           { id: "name_mismatch", labelGu: "LC મુજબ નામ સુધારો (Name Correction)", desc: "શાળા છોડ્યાના પ્રમાણપત્ર મુજબ સુધારો" },
+        ];
+      case "land_records":
+        return [
+          { id: "varasai", labelGu: "વારસાઈ આંબલીયો નોંધણી (Heirship Entry)", desc: "મૂળ ખાતેદાર અવસાન પામતાં વારસદારોના નામ દાખલ કરવા" },
+          { id: "boja_nondh", labelGu: "બેંક બોજો / ધિરાણ નોંધણી (Bank Loan Entry)", desc: "ખેતી ધિરાણ મેળવવા બેંક બોજો નોંધવો" },
+          { id: "hakk_kami", labelGu: "હક્ક કમી / વહેંચણી (Right Surrender / Partition)", desc: "જમીનમાંથી હક્ક કમી કરવો કે સર્વે વિભાજન" },
+        ];
+      case "birth_cert":
+        return [
+          { id: "add_child_name", labelGu: "બાળકનું નામ ઉમેરવું (Add Child Name)", desc: "જન્મ સમયે નામ ન લખાયું હોય તો નવું નામ દાખલ કરવું" },
+          { id: "name_spelling", labelGu: "નામ / અટકમાં સ્પેલિંગ સુધારો (Spelling Correction)", desc: "શાળા એલસી અથવા આધાર મુજબ સ્પેલિંગ સુધારો" },
+          { id: "dob_correction", labelGu: "જન્મ સ્થળ / તારીખ સુધારો", desc: "હોસ્પિટલ રેકોર્ડ મુજબ સુધારો કરવો" },
+        ];
+      case "death_cert":
+        return [
+          { id: "death_name_corr", labelGu: "મૃતકના નામમાં સ્પેલિંગ સુધારો", desc: "મૃતકના આધાર કાર્ડ મુજબ સુધારો કરવો" },
+          { id: "death_date_corr", labelGu: "મરણ તારીખ / સ્થળ સુધારો", desc: "હોસ્પિટલ/સ્મશાન દાખલા મુજબ સુધારો" },
+        ];
+      case "ews_cert":
+        return [
+          { id: "ews_renewal", labelGu: "વાર્ષિક નવીકરણ (Annual Renewal)", desc: "આગામી નાણાકીય વર્ષ માટે EWS પ્રમાણપત્ર તાજું કરવું" },
+          { id: "ews_income_update", labelGu: "આવક / મિલકત વિગત સુધારો", desc: "નવા આવક દાખલા મુજબ સુધારો" },
+        ];
+      case "domicile_cert":
+        return [
+          { id: "domicile_address", labelGu: "સરનામું બદલવું (Address Update)", desc: "ગુજરાતમાં નવું રહેઠાણ સરનામું નોંધવું" },
+          { id: "domicile_name", labelGu: "નામ સુધારો (Name Correction)", desc: "સરકારી પુરાવા મુજબ નામ સુધારવું" },
+        ];
+      case "senior_citizen":
+        return [
+          { id: "senior_blood", labelGu: "બ્લડ ગ્રુપ સુધારો (Blood Group Update)", desc: "તબીબી રિપોર્ટ મુજબ બ્લડ ગ્રુપ ઉમેરવું" },
+          { id: "senior_emergency", labelGu: "ઇમરજન્સી સંપર્ક નંબર બદલવો", desc: "પુત્ર/પુત્રીનો નવો મોબાઈલ નંબર નોંધવો" },
+          { id: "senior_address", labelGu: "સરનામું બદલવું (Address Change)", desc: "નવા સરનામે કાર્ડ અપડેટ કરવું" },
+        ];
+      case "driving_licence":
+        return [
+          { id: "dl_renewal", labelGu: "ડ્રાઇવિંગ લાયસન્સ રિન્યુઅલ (DL Renewal)", desc: "મુદત પૂર્ણ થતાં લાયસન્સ રિન્યુ કરવું" },
+          { id: "dl_address", labelGu: "લાયસન્સમાં સરનામું બદલવું (Address Change)", desc: "નવા જિલ્લા કે શહેરનું સરનામું બદલવું" },
+          { id: "dl_add_class", labelGu: "વાહન ક્લાસ ઉમેરવો (Add Vehicle Class)", desc: "MCWG બાઇક અથવા LMV કાર વર્ગ ઉમેરવો" },
+        ];
+      case "marriage_cert":
+        return [
+          { id: "marriage_spelling", labelGu: "પતિ / પત્નીના નામમાં સ્પેલિંગ સુધારો", desc: "આધાર કાર્ડ મુજબ નામ સુધારવું" },
+          { id: "marriage_address", labelGu: "કાયમી રહેઠાણ સરનામું સુધારો", desc: "લગ્ન નોંધણીમાં સરનામું સુધારવું" },
         ];
       default:
         return [{ id: "general", labelGu: "સામાન્ય સુધારો (Correction)", desc: "દસ્તાવેજમાં ફેરફાર" }];
@@ -1402,8 +1484,39 @@ export default function DocumentServicePortal({
           ૧. સરકારી દસ્તાવેજ / સેવા પસંદ કરો (SELECT DOCUMENT SERVICE):
         </h3>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
-          {DOCUMENT_SERVICES.map((s) => (
+        {/* Category Tabs for Services */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+          {[
+            { id: "all", label: `તમામ સેવાઓ (${DOCUMENT_SERVICES.length})` },
+            { id: "revenue", label: "🌾 મહેસૂલ & જમીન", services: ["land_records", "income", "domicile_cert"] },
+            { id: "civil", label: "🪪 નાગરિક & ઓળખ", services: ["aadhaar", "ration", "pan", "birth_cert", "death_cert", "marriage_cert"] },
+            { id: "welfare", label: "⚖️ સામાજિક કલ્યાણ", services: ["caste", "ews_cert", "senior_citizen"] },
+            { id: "transport", label: "🚗 વાહન વ્યવહાર", services: ["driving_licence"] },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => setServiceCategoryFilter(cat.id)}
+              className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer ${
+                serviceCategoryFilter === cat.id
+                  ? "bg-orange-600 text-white shadow-xs"
+                  : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-2.5">
+          {DOCUMENT_SERVICES.filter((s) => {
+            if (serviceCategoryFilter === "all") return true;
+            if (serviceCategoryFilter === "revenue") return ["land_records", "income", "domicile_cert"].includes(s.id);
+            if (serviceCategoryFilter === "civil") return ["aadhaar", "ration", "pan", "birth_cert", "death_cert", "marriage_cert"].includes(s.id);
+            if (serviceCategoryFilter === "welfare") return ["caste", "ews_cert", "senior_citizen"].includes(s.id);
+            if (serviceCategoryFilter === "transport") return ["driving_licence"].includes(s.id);
+            return true;
+          }).map((s) => (
             <button
               key={s.id}
               type="button"
@@ -1415,7 +1528,7 @@ export default function DocumentServicePortal({
                   setAadhaarNumber("");
                 }
               }}
-              className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 ${
+              className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between space-y-2 cursor-pointer ${
                 selectedServiceId === s.id
                   ? "border-orange-500 bg-orange-50/60 ring-2 ring-orange-500/20 shadow-xs"
                   : "border-slate-200 hover:border-slate-300 bg-white"
@@ -1423,9 +1536,9 @@ export default function DocumentServicePortal({
             >
               <div className="flex items-center justify-between">
                 <span className="text-2xl">{s.emoji}</span>
-                {selectedServiceId === s.id && (
-                  <CheckCircle2 size={16} className="text-orange-600" />
-                )}
+                <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-slate-100 text-slate-700">
+                  {s.fee === 0 ? "નિઃશુલ્ક" : `₹${s.fee}`}
+                </span>
               </div>
               <div>
                 <p className="font-bold text-xs text-slate-900 leading-snug">{s.nameGu}</p>
@@ -2126,6 +2239,265 @@ export default function DocumentServicePortal({
                           value={occupation}
                           onChange={(e) => setOccupation(e.target.value)}
                           className="w-full px-2 py-1 bg-white border border-blue-200 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "caste" && (
+                  <div className="bg-purple-50/60 border border-purple-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-purple-900 block">⚖️ જાતિ / નોન-ક્રીમીલેયર વિગતો:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-purple-800 block">પેટા જાતિ (Sub-Caste)</span>
+                        <input
+                          type="text"
+                          value={subCaste}
+                          onChange={(e) => setSubCaste(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-purple-200 rounded text-xs"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-purple-800 block">ધર્મ (Religion)</span>
+                        <input
+                          type="text"
+                          value={religion}
+                          onChange={(e) => setReligion(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-purple-200 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "land_records" && (
+                  <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-emerald-900 block">🌾 જમીન મહેસૂલી વિગતો (e-Dhara RoR 7/12):</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <span className="text-[10px] text-emerald-800 block">ખાતા નંબર *</span>
+                        <input
+                          type="text"
+                          value={khataNumber}
+                          onChange={(e) => setKhataNumber(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-emerald-200 rounded text-xs font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-emerald-800 block">સર્વે / બ્લોક નંબર *</span>
+                        <input
+                          type="text"
+                          value={surveyNumber}
+                          onChange={(e) => setSurveyNumber(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-emerald-200 rounded text-xs font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-emerald-800 block">ક્ષેત્રફળ (હેક્ટર)</span>
+                        <input
+                          type="text"
+                          value={landArea}
+                          onChange={(e) => setLandArea(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-emerald-200 rounded text-xs font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "birth_cert" && (
+                  <div className="bg-sky-50/60 border border-sky-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-sky-900 block">👶 જન્મ નોંધણી વિગત (Civil Registration System):</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-sky-800 block">બાળકનું નામ (Child Name)</span>
+                        <input
+                          type="text"
+                          value={childName}
+                          onChange={(e) => setChildName(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-sky-200 rounded text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-sky-800 block">જન્મ સ્થળ (હોસ્પિટલ/ઘર)</span>
+                        <input
+                          type="text"
+                          value={birthPlace}
+                          onChange={(e) => setBirthPlace(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-sky-200 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "death_cert" && (
+                  <div className="bg-slate-100 border border-slate-300 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-slate-800 block">🕊️ મરણ નોંધણી વિગત:</span>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <span className="text-[10px] text-slate-600 block">મૃતકનું પૂરું નામ *</span>
+                        <input
+                          type="text"
+                          value={deceasedName}
+                          onChange={(e) => setDeceasedName(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-600 block">મરણ તારીખ *</span>
+                        <input
+                          type="date"
+                          value={deathDate}
+                          onChange={(e) => setDeathDate(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs font-mono"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-600 block">મરણ સ્થળ</span>
+                        <input
+                          type="text"
+                          value={deathPlace}
+                          onChange={(e) => setDeathPlace(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-slate-300 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "ews_cert" && (
+                  <div className="bg-indigo-50/60 border border-indigo-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-indigo-900 block">🏛️ EWS મિલકત માપદંડ વિગતો:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-indigo-800 block">મકાન કાર્પેટ એરિયા</span>
+                        <input
+                          type="text"
+                          value={ewsPropertyType}
+                          onChange={(e) => setEwsPropertyType(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-indigo-200 rounded text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-indigo-800 block">વાર્ષિક આવક મર્યાદા</span>
+                        <span className="block px-2 py-1 bg-white border border-indigo-200 rounded text-xs font-bold text-emerald-700">
+                          ₹ ૧,૮૦,૦૦૦ (મર્યાદા ₹ ૮ લાખથી ઓછી)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "domicile_cert" && (
+                  <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-amber-900 block">🏠 ડોમિસાઇલ વસવાટ ખરાઈ:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-amber-800 block">ગુજરાતમાં સતત વસવાટ વર્ષો</span>
+                        <input
+                          type="text"
+                          value={domicileYears}
+                          onChange={(e) => setDomicileYears(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-amber-200 rounded text-xs font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-amber-800 block">કલેક્ટર કચેરી</span>
+                        <span className="block px-2 py-1 bg-white border border-amber-200 rounded text-xs text-slate-700">
+                          જિલ્લા કલેક્ટર કચેરી, રાજકોટ
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "senior_citizen" && (
+                  <div className="bg-rose-50/60 border border-rose-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-rose-900 block">👴 વરિષ્ઠ નાગરિક આરોગ્ય & ઇમરજન્સી:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-rose-800 block">બ્લડ ગ્રુપ (Blood Group)</span>
+                        <select
+                          value={seniorBloodGroup}
+                          onChange={(e) => setSeniorBloodGroup(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-rose-200 rounded text-xs font-bold"
+                        >
+                          <option value="A+">A+</option>
+                          <option value="A-">A-</option>
+                          <option value="B+">B+</option>
+                          <option value="B-">B-</option>
+                          <option value="O+">O+</option>
+                          <option value="O-">O-</option>
+                          <option value="AB+">AB+</option>
+                          <option value="AB-">AB-</option>
+                        </select>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-rose-800 block">ઇમરજન્સી સંપર્ક નંબર</span>
+                        <input
+                          type="tel"
+                          value={seniorEmergencyPhone}
+                          onChange={(e) => setSeniorEmergencyPhone(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-rose-200 rounded text-xs font-mono font-bold"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "driving_licence" && (
+                  <div className="bg-teal-50/60 border border-teal-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-teal-900 block">🚗 વાહન વર્ગ & RTO વિગત (SARATHI):</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-teal-800 block">વાહન વર્ગ (Vehicle Class)</span>
+                        <select
+                          value={drivingClass}
+                          onChange={(e) => setDrivingClass(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-teal-200 rounded text-xs font-bold"
+                        >
+                          <option value="MCWG">MCWG (મોટરસાયકલ ગિયરવાળી)</option>
+                          <option value="LMV">LMV (લાઇટ મોટર વ્હીકલ - કાર)</option>
+                          <option value="MCWG & LMV">MCWG & LMV (બાઇક અને કાર બંને)</option>
+                          <option value="TRANSPORT">ટ્રાન્સપોર્ટ / કોમર્શિયલ વાહન</option>
+                        </select>
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-teal-800 block">RTO કચેરી</span>
+                        <input
+                          type="text"
+                          value={rtoOfficeName}
+                          onChange={(e) => setRtoOfficeName(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-teal-200 rounded text-xs"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {service.id === "marriage_cert" && (
+                  <div className="bg-pink-50/60 border border-pink-200 rounded-xl p-2.5 space-y-2 text-xs">
+                    <span className="font-bold text-pink-900 block">💍 લગ્ન નોંધણી વિગતો:</span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <span className="text-[10px] text-pink-800 block">લગ્ન તારીખ *</span>
+                        <input
+                          type="date"
+                          value={marriageDate}
+                          onChange={(e) => setMarriageDate(e.target.value)}
+                          className="w-full px-2 py-1 bg-white border border-pink-200 rounded text-xs font-mono font-bold"
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-pink-800 block">પત્નીનું પૂરું નામ *</span>
+                        <input
+                          type="text"
+                          value={spouseName}
+                          onChange={(e) => setSpouseName(e.target.value)}
+                          placeholder="દા.ત. પ્રિયાબેન હરી પટેલ"
+                          className="w-full px-2 py-1 bg-white border border-pink-200 rounded text-xs font-bold"
                         />
                       </div>
                     </div>

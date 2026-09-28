@@ -460,6 +460,196 @@ export const DOCUMENT_SERVICES: DocumentServiceConfig[] = [
     biometricRequiredUpdate: false,
     fee: 20,
   },
+  {
+    id: "land_records",
+    nameEn: "AnyRoR 7/12 & 8A Land Records",
+    nameGu: "જમીન ૭/૧૨ & ૮-અ ડિજિટલ ઉતારા",
+    departmentEn: "Revenue Department, Government of Gujarat (e-Dhara)",
+    departmentGu: "મહેસૂલ વિભાગ, ગુજરાત સરકાર (e-Dhara / AnyRoR)",
+    emoji: "🌾",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["વારસાઈ નોંધણી (Heirship Entry)", "બોજો / ધિરાણ નોંધણી (Bank Loan Entry)", "હક્ક કમી / વહેંચણી (Right Surrender / Split)"],
+    requiredDocsNew: [
+      { id: "survey_proof", nameEn: "Khata Number / Survey Number Reference", nameGu: "ખાતા નંબર / જૂના સર્વે નંબરની નકલ", mandatory: true },
+      { id: "applicant_aadhaar", nameEn: "Applicant Aadhaar Card", nameGu: "અરજદારનું આધાર કાર્ડ", mandatory: true },
+      { id: "tax_receipt", nameEn: "Gram Panchayat Tax / Revenue Receipt", nameGu: "પંચાયત વેરા પાવતી / મહેસૂલી પહોંચ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "pedhinamu_doc", nameEn: "Talati Pedhinamu / Heirship Tree", nameGu: "તલાટીનું અધિકૃત પેઢીનામું", mandatory: true },
+      { id: "death_proof", nameEn: "Death Certificate of Khatedar", nameGu: "મૂળ ખાતેદારનું મરણ પ્રમાણપત્ર", mandatory: true },
+      { id: "consent_affidavit", nameEn: "Consent Affidavit of All Heirs", nameGu: "તમામ વારસદારોનું સંમતિ સોગંદનામું", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+  {
+    id: "birth_cert",
+    nameEn: "Birth Certificate (CRS / e-Gram)",
+    nameGu: "ડિજિટલ જન્મ પ્રમાણપત્ર",
+    departmentEn: "Panchayat, Rural Housing & Health Dept",
+    departmentGu: "પંચાયત, ગ્રામ ગૃહનિર્માણ અને આરોગ્ય વિભાગ",
+    emoji: "👶",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["બાળકનું નામ ઉમેરવું (Add Child Name)", "માતા-પિતાના નામમાં સ્પેલિંગ સુધારો", "જન્મ સ્થળ સુધારો"],
+    requiredDocsNew: [
+      { id: "hospital_discharge", nameEn: "Hospital Discharge Slip / Form 1", nameGu: "હોસ્પિટલ ડિસ્ચાર્જ સ્લિપ / ફોર્મ-૧", mandatory: true },
+      { id: "parents_aadhaar", nameEn: "Aadhaar Cards of Parents", nameGu: "માતા અને પિતા બંનેના આધાર કાર્ડ", mandatory: true },
+      { id: "marriage_or_ration", nameEn: "Marriage Certificate or Ration Card", nameGu: "લગ્ન નોંધણી દાખલો અથવા રેશનકાર્ડ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "current_birth_cert", nameEn: "Original Birth Certificate Copy", nameGu: "હાલનું અસલ જન્મ પ્રમાણપત્ર", mandatory: true },
+      { id: "school_lc_proof", nameEn: "School Leaving Certificate or Court Order", nameGu: "શાળા છોડ્યાનું પ્રમાણપત્ર (LC) / સોગંદનામું", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+  {
+    id: "death_cert",
+    nameEn: "Death Certificate (CRS)",
+    nameGu: "ડિજિટલ મરણ પ્રમાણપત્ર",
+    departmentEn: "Panchayat & Urban Development Dept",
+    departmentGu: "પંચાયત અને નગરપાલિકા નિયામકની કચેરી",
+    emoji: "🕊️",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["નામ સ્પેલિંગ સુધારો (Spelling Correction)", "મરણ તારીખ સુધારો", "કાયમી સરનામું સુધારો"],
+    requiredDocsNew: [
+      { id: "doctor_cause_cert", nameEn: "Medical Certificate of Cause of Death / Cremation Slip", nameGu: "ડોક્ટર મરણ સર્ટિફિકેટ / સ્મશાન પાવતી", mandatory: true },
+      { id: "deceased_aadhaar", nameEn: "Aadhaar Card of Deceased Person", nameGu: "મૃતકનું આધાર કાર્ડ / ઓળખપત્ર", mandatory: true },
+      { id: "informant_id", nameEn: "Applicant / Informant ID & Ration Card", nameGu: "અરજદાર/વારસદારનું આધાર કાર્ડ અને રેશનકાર્ડ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "old_death_cert", nameEn: "Existing Death Certificate Copy", nameGu: "હાલનું મરણ પ્રમાણપત્ર", mandatory: true },
+      { id: "notary_affidavit", nameEn: "Notary Affidavit & Evidence for Correction", nameGu: "નોટરી સોગંદનામું અને સુધારા પુરાવો", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+  {
+    id: "ews_cert",
+    nameEn: "Economically Weaker Section (EWS) Certificate",
+    nameGu: "EWS પ્રમાણપત્ર (આર્થિક નબળા વર્ગ)",
+    departmentEn: "Social Justice & Empowerment Department",
+    departmentGu: "સામાજિક ન્યાય અને અધિકારિતા વિભાગ, ગુજરાત સરકાર",
+    emoji: "🏛️",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["વાર્ષિક નવીકરણ (Annual Renewal)", "સરનામું સુધારો (Address Update)"],
+    requiredDocsNew: [
+      { id: "mamlatdar_income", nameEn: "Income Certificate (Annual Income < ₹8 Lakh)", nameGu: "મામલતદારનો આવકનો દાખલો (વાર્ષિક < ₹૮ લાખ)", mandatory: true },
+      { id: "property_document", nameEn: "Property / Land Documents (7/12 or House Index)", nameGu: "જમીન/મકાન મિલકત દસ્તાવેજ (ઇન્ડેક્ષ-૨ / ૭-૧૨)", mandatory: true },
+      { id: "school_lc", nameEn: "School Leaving Certificate (Caste / Category Proof)", nameGu: "શાળા છોડ્યાનું પ્રમાણપત્ર (બિન-અનામત જાતિ)", mandatory: true },
+      { id: "panchayat_tax", nameEn: "Municipal / Panchayat Tax Bill", nameGu: "વેરા બિલ / લાઈટ બિલ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "prev_ews_cert", nameEn: "Expired EWS Certificate Copy", nameGu: "જૂનું EWS પ્રમાણપત્ર", mandatory: true },
+      { id: "current_year_income", nameEn: "Current Financial Year Income Certificate", nameGu: "ચાલુ નાણાકીય વર્ષનો આવકનો દાખલો", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 20,
+  },
+  {
+    id: "domicile_cert",
+    nameEn: "Domicile Certificate (Resident of Gujarat)",
+    nameGu: "ડોમિસાઇલ પ્રમાણપત્ર (કાયમી વસવાટ)",
+    departmentEn: "Home Department / District Collector Office",
+    departmentGu: "ગૃહ વિભાગ & કલેક્ટર કચેરી, ગુજરાત સરકાર",
+    emoji: "🏠",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["સરનામું બદલવું (Change of Address)", "નામ સુધારો (Correction)"],
+    requiredDocsNew: [
+      { id: "continuous_residence", nameEn: "10 Years Continuous Residence Proof (Light/Tax Bills)", nameGu: "૧૦ વર્ષ સતત વસવાટના પુરાવા (લાઈટબિલ/વેરાબિલ)", mandatory: true },
+      { id: "birth_proof", nameEn: "Birth Certificate or School LC of Gujarat", nameGu: "ગુજરાતમાં જન્મનો દાખલો અથવા શાળા LC", mandatory: true },
+      { id: "applicant_aadhaar", nameEn: "Applicant Aadhaar Card", nameGu: "અરજદારનું આધાર કાર્ડ", mandatory: true },
+      { id: "police_inquiry", nameEn: "Police Verification / Talati Panchnama", nameGu: "પોલીસ ચકાસણી પંચનામું / તલાટી દાખલો", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "prev_domicile", nameEn: "Previous Domicile Certificate", nameGu: "અગાઉનું ડોમિસાઇલ પ્રમાણપત્ર", mandatory: true },
+      { id: "address_proof", nameEn: "New Address Proof", nameGu: "નવા સરનામાનો સત્તાવાર પુરાવો", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 50,
+  },
+  {
+    id: "senior_citizen",
+    nameEn: "Senior Citizen Identity Card (60+ Years)",
+    nameGu: "વરિષ્ઠ નાગરિક ઓળખપત્ર (૬૦+ વર્ષ)",
+    departmentEn: "Social Defence Directorate, Gujarat",
+    departmentGu: "સમાજ સુરક્ષા ખાતું, સામાજિક ન્યાય વિભાગ",
+    emoji: "👴",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["બ્લડ ગ્રુપ સુધારો (Blood Group Update)", "ઇમરજન્સી મોબાઈલ સુધારો", "સરનામું સુધારો"],
+    requiredDocsNew: [
+      { id: "age_proof", nameEn: "Age Proof (School LC / PAN / Voter ID - 60+ Years)", nameGu: "વય પુરાવો (LC / PAN / ચૂંટણી કાર્ડ - ૬૦ વર્ષ)", mandatory: true },
+      { id: "senior_aadhaar", nameEn: "Applicant Aadhaar Card", nameGu: "અરજદારનું આધાર કાર્ડ", mandatory: true },
+      { id: "passport_photo", nameEn: "Recent Passport Size Photograph", nameGu: "પાસપોર્ટ સાઇઝ રંગીન ફોટો", mandatory: true },
+      { id: "blood_report", nameEn: "Blood Group Medical Report", nameGu: "બ્લડ ગ્રુપ તબીબી રિપોર્ટ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "current_senior_card", nameEn: "Current Senior Citizen Card Copy", nameGu: "હાલનું વરિષ્ઠ નાગરિક કાર્ડ", mandatory: true },
+      { id: "update_proof", nameEn: "Supporting Document for Update", nameGu: "સુધારા માટેનો પુરાવો", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 0,
+  },
+  {
+    id: "driving_licence",
+    nameEn: "Driving Licence (SARATHI - Transport Dept)",
+    nameGu: "ડ્રાઇવિંગ લાયસન્સ (RTO સારથી)",
+    departmentEn: "Commissioner of Transport, Gujarat",
+    departmentGu: "વાહનવ્યવહાર કમિશનરની કચેરી, ગુજરાત સરકાર",
+    emoji: "🚗",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["લાયસન્સ રિન્યુઅલ (Renewal)", "સરનામું સુધારો (Address Change)", "વાહન ક્લાસ ઉમેરો (Add Vehicle Class)"],
+    requiredDocsNew: [
+      { id: "age_dob_proof", nameEn: "Age & DOB Proof (Birth Certificate / School LC)", nameGu: "વય અને જન્મ તારીખ પુરાવો (LC / જન્મ દાખલો)", mandatory: true },
+      { id: "address_proof", nameEn: "Permanent Address Proof (Aadhaar / Voter ID)", nameGu: "કાયમી સરનામાનો પુરાવો (આધાર કાર્ડ / ચૂંટણી કાર્ડ)", mandatory: true },
+      { id: "medical_form1a", nameEn: "Medical Fitness Certificate (Form 1A / Self-Declaration)", nameGu: "તબીબી ફિટનેસ પ્રમાણપત્ર (ફોર્મ ૧-એ)", mandatory: true },
+      { id: "photo_sign", nameEn: "Passport Photo & Specimen Signature", nameGu: "પાસપોર્ટ ફોટો અને નમૂના સહી", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "original_dl", nameEn: "Original Driving Licence Copy", nameGu: "અસલ ડ્રાઇવિંગ લાયસન્સની નકલ", mandatory: true },
+      { id: "aadhaar_proof", nameEn: "Aadhaar Card for Address / Identity Verification", nameGu: "આધાર કાર્ડ પુરાવો", mandatory: true },
+    ],
+    biometricRequiredNew: true,
+    biometricRequiredUpdate: false,
+    fee: 200,
+  },
+  {
+    id: "marriage_cert",
+    nameEn: "Marriage Registration Certificate",
+    nameGu: "લગ્ન નોંધણી પ્રમાણપત્ર",
+    departmentEn: "Panchayat & Urban Development Dept",
+    departmentGu: "પંચાયત અને શહેરી વિકાસ વિભાગ, ગુજરાત સરકાર",
+    emoji: "💍",
+    supportsNew: true,
+    supportsUpdate: true,
+    updateFields: ["નામ સ્પેલિંગ સુધારો (Spelling Correction)", "સરનામું સુધારો (Address Update)"],
+    requiredDocsNew: [
+      { id: "invitation_card", nameEn: "Wedding Invitation Card (કંકોત્રી) or Priest Certificate", nameGu: "લગ્ન કંકોત્રી અથવા ગોર મહારાજનું પ્રમાણપત્ર", mandatory: true },
+      { id: "couple_ids", nameEn: "Aadhaar & Birth Proof of Both Bride and Groom", nameGu: "વર અને કન્યા બંનેના આધાર કાર્ડ અને LC / જન્મ દાખલો", mandatory: true },
+      { id: "joint_photo", nameEn: "Joint Marriage Photograph", nameGu: "લગ્ન સમયનો સંયુક્ત પાસપોર્ટ ફોટો", mandatory: true },
+      { id: "witness_ids", nameEn: "Aadhaar Cards of Two Adult Witnesses", nameGu: "બે પુખ્ત સાક્ષીઓના આધાર કાર્ડ", mandatory: true },
+    ],
+    requiredDocsUpdate: [
+      { id: "original_marriage_cert", nameEn: "Existing Marriage Certificate Copy", nameGu: "અસલ લગ્ન નોંધણી દાખલો", mandatory: true },
+      { id: "affidavit_proof", nameEn: "Joint Correction Affidavit by Couple", nameGu: "દંપતીનું સંયુક્ત સુધારા સોગંદનામું", mandatory: true },
+    ],
+    biometricRequiredNew: false,
+    biometricRequiredUpdate: false,
+    fee: 100,
+  },
 ];
 
 // Global in-memory cache for newly created citizen applications
@@ -508,45 +698,107 @@ export function lookupCitizenExistingRecord(serviceId: string, docNumber: string
   if (serviceId === "aadhaar") {
     baseProfile.serviceSpecificDetails = {
       aadhaarMasked: `XXXX-XXXX-${last4}`,
-      enrolmentDate: "2014-03-22",
-      currentAddressEn: "Plot No. 12, Patel Street, Gomta Village, Gondal, Rajkot - 360320",
-      currentAddressGu: "પ્લોટ નં. ૧૨, પટેલ શેરી, ગોમટા ગામ, તા. ગોંડલ, જિ. રાજકોટ - ૩૬૦૩૨૦",
-      biometricStatus: "Biometric Updated 10 yrs ago (Refresh Advised)",
+      enrolmentDate: "2016-04-12",
+      currentAddressEn: "Omnagar, Rajkot - 360311, Gujarat",
+      currentAddressGu: "ઓમ નગર, રાજકોટ - ૩૬૦૩૧૧, ગુજરાત",
+      biometricStatus: "Biometric Updated Recently (Active)",
     };
   } else if (serviceId === "ration") {
     baseProfile.serviceSpecificDetails = {
       rationCardNo: cleanNum || "032014892145",
-      rationType: "NFSA - APL-1 (અન્ન સુરક્ષા રાશનકાર્ડ)",
-      fairPriceShop: "FPS-342 (ગોમટા સેવા સહકારી મંડળી)",
-      gasConnection: "HP Gas (Single Cylinder - Consumer No: 849201)",
+      rationType: "NFSA - APL-1 (અન્ન સુરક્ષા રેશનકાર્ડ)",
+      fairPriceShop: "FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)",
+      gasConnection: "HP Gas (Single Cylinder - Consumer No: 997444)",
       existingMembers: [
-        { nameGu: "રમેશભાઈ કે. પટેલ", relation: "કુટુંબના વડા", age: 41, aadhaar: `•••• ${last4}` },
-        { nameGu: "ગીતાબેન આર. પટેલ", relation: "પત્ની", age: 38, aadhaar: "•••• 8912" },
-        { nameGu: "હર્ષ આર. પટેલ", relation: "પુત્ર", age: 16, aadhaar: "•••• 3741" },
+        { nameGu: "વિનોદરાઈ નારણભાઈ પટેલ", relation: "કુટુંબના વડા", age: 52, aadhaar: `•••• 3391` },
+        { nameGu: "હરી વિનોદરાઈ પટેલ", relation: "પુત્ર (અરજદાર)", age: 20, aadhaar: `•••• ${last4}` },
       ],
     };
   } else if (serviceId === "pan") {
     baseProfile.serviceSpecificDetails = {
-      panNumber: cleanNum || "ABCDP1234K",
-      nameOnCard: "RAMESH KANTILAL PATEL",
-      fathersName: "KANTILAL LALJIBHAI PATEL",
+      panNumber: cleanNum || "BKZPP1413K",
+      nameOnCard: "HARI VINODRAI PATEL",
+      fathersName: "VINODRAI NARANBHAI PATEL",
       aadhaarLinked: true,
       status: "Active & Operative",
     };
   } else if (serviceId === "income") {
     baseProfile.serviceSpecificDetails = {
-      prevCertNo: cleanNum || "INC/2023/84920",
-      prevIssuedDate: "2023-08-10",
-      validityStatus: "Expiring Soon (૩ વર્ષ પૂર્ણતા)",
-      prevAnnualIncome: "₹ 1,20,000/-",
-      issuingAuthority: "મામલતદાર કચેરી, ગોંડલ",
+      prevCertNo: cleanNum || "INC/2024/99141",
+      prevIssuedDate: "2024-04-15",
+      validityStatus: "Active (૩ વર્ષ માન્ય - ૨૦૨૭ સુધી)",
+      prevAnnualIncome: "₹ 1,80,000/-",
+      issuingAuthority: "મામલતદાર કચેરી, રાજકોટ શહેર/ગ્રામ્ય",
     };
   } else if (serviceId === "caste") {
     baseProfile.serviceSpecificDetails = {
-      prevCertNo: cleanNum || "CST/2021/4921",
-      categoryName: "SEBC / OBC (સામાજિક અને શૈક્ષણિક રીતે પછાત વર્ગ)",
-      subCaste: "કડવા પાટીદાર / લેઉવા પાટીદાર / પ્રજાપતિ",
-      nclExpiryDate: "2024-03-31 (રિન્યુઅલ જરૂરી)",
+      prevCertNo: cleanNum || "GEN/2022/1413",
+      categoryName: "General / બિન-અનામત વર્ગ",
+      subCaste: "કડવા પાટીદાર (પટેલ)",
+      validityStatus: "કાયમી માન્ય",
+    };
+  } else if (serviceId === "land_records") {
+    baseProfile.serviceSpecificDetails = {
+      khataNumber: cleanNum || "412",
+      surveyNumber: "241/1 પૈકી",
+      moujeVillage: "ઓમ નગર (રાજકોટ ગ્રામ્ય)",
+      totalAreaHectare: "1.42 હેક્ટર",
+      khatedarNameGu: "હરી વિનોદરાઈ પટેલ (સંયુક્ત ખાતેદાર)",
+      lastMutationNo: "નોંધ નં. ૧૪૨૧ (વારસાઈ હક્ક)",
+    };
+  } else if (serviceId === "birth_cert") {
+    baseProfile.serviceSpecificDetails = {
+      registrationNo: cleanNum || "B-2004-GJ-84920",
+      dateOfBirth: "2004-08-12",
+      placeOfBirth: "રાજકોટ (સિવિલ હોસ્પિટલ / ઝોનલ કચેરી)",
+      childNameGu: "હરી",
+      fatherNameGu: "વિનોદરાઈ નારણભાઈ પટેલ",
+      motherNameGu: "ભાવનાબેન વિનોદરાઈ પટેલ",
+    };
+  } else if (serviceId === "death_cert") {
+    baseProfile.serviceSpecificDetails = {
+      registrationNo: cleanNum || "D-2023-GJ-11029",
+      dateOfDeath: "2023-11-04",
+      placeOfDeath: "રાજકોટ",
+      deceasedNameGu: "નારણભાઈ પટેલ",
+      informantNameGu: "હરી વિનોદરાઈ પટેલ (પૌત્ર)",
+    };
+  } else if (serviceId === "ews_cert") {
+    baseProfile.serviceSpecificDetails = {
+      certificateNo: cleanNum || "EWS/2024/7719",
+      financialYear: "2024-2025",
+      familyIncome: "₹ 1,80,000/-",
+      category: "બિન-અનામત વર્ગ (EWS)",
+      validityDate: "2027-03-31",
+    };
+  } else if (serviceId === "domicile_cert") {
+    baseProfile.serviceSpecificDetails = {
+      domicileNumber: cleanNum || "DOM/GJ/2021/3392",
+      continuousResidenceYears: "૨૦ વર્ષ (જન્મથી ગુજરાત)",
+      collectorate: "જિલ્લા કલેક્ટર કચેરી, રાજકોટ",
+      status: "Verified & Issued",
+    };
+  } else if (serviceId === "senior_citizen") {
+    baseProfile.serviceSpecificDetails = {
+      cardNo: cleanNum || "SR-GJ-2024-5194",
+      cardHolderName: "વિનોદરાઈ નારણભાઈ પટેલ",
+      ageYears: 62,
+      bloodGroup: "B+",
+      emergencyMobile: "9974442291",
+    };
+  } else if (serviceId === "driving_licence") {
+    baseProfile.serviceSpecificDetails = {
+      dlNumber: cleanNum || "GJ03-20220019284",
+      covAllowed: "MCWG (મોટરસાયકલ ગિયર સાથે) & LMV (કાર)",
+      validityTransport: "2044-08-11 (Non-Transport)",
+      rtoOffice: "RTO કચેરી, રાજકોટ (GJ-03)",
+    };
+  } else if (serviceId === "marriage_cert") {
+    baseProfile.serviceSpecificDetails = {
+      marriageRegNo: cleanNum || "MR/2025/10492",
+      marriageDate: "2025-02-14",
+      placeOfMarriage: "રાજકોટ",
+      registrarOffice: "નગરપાલિકા / વોર્ડ ઓફિસ, રાજકોટ",
     };
   }
 
