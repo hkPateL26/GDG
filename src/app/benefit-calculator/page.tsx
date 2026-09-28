@@ -12,7 +12,6 @@ import {
   KeyRound,
   ShieldAlert,
   BadgeCheck,
-  RotateCcw,
   Smartphone,
   Check,
   Wheat,
@@ -85,44 +84,15 @@ export default function BenefitCalculatorPage() {
   const [isLaborer, setIsLaborer] = useState<boolean>(false);
   const [casteCategory, setCasteCategory] = useState<"sebc" | "sc" | "st" | "ews" | "general">("sebc");
 
-  // Auto-Sync with Active Citizen Session if Logged In (BUG-006)
+  // Start strictly locked by default for citizen privacy and verification
   useEffect(() => {
     const timer = setTimeout(() => {
       if (typeof window !== "undefined") {
         try {
-          const stored = localStorage.getItem("nagrik_citizen_session");
-          if (stored) {
-            const session = JSON.parse(stored);
-            if (session && session.mobile) {
-              const formattedMobile = session.mobile.length > 5 ? `${session.mobile.slice(0, 5)} ${session.mobile.slice(5)}` : session.mobile;
-              setMobileNumber(formattedMobile);
-              setAadhaarNumber(`XXXX XXXX ${session.aadhaarLast4 || "4829"}`);
-              setIsKycVerified(true);
-              setMaskValues(true);
-              setCitizenName(session.citizenNameGu || session.citizenName || "રમેશભાઈ કાંતિલાલ પટેલ");
-              setRationCardNumber("RC-GJ-2026-482901");
-              setVillage(session.village || "ગોમટા (Gomta)");
-              setTaluka(session.taluka || "ગોંડલ");
-              setDistrict(session.districtGu || session.district || "રાજકોટ");
-              setPincode("360320");
-              if (session.hasLand || session.occupation === "farmer") {
-                setIsFarmer(true);
-              }
-              if (session.annualIncome && session.annualIncome <= 200000) {
-                setNeedsHouse(true);
-              }
-              const verifiedMembers: VerifiedMember[] = [
-                { name: session.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ", relation: "કુટુંબના વડા (Self)", age: 41 },
-                { name: "ગીતાબેન રમેશભાઈ પટેલ", relation: "પત્ની (Wife)", age: 38 },
-                { name: "હાર્દિક રમેશભાઈ પટેલ", relation: "પુત્ર (Son)", age: 16 },
-                { name: "પૂજાબેન રમેશભાઈ પટેલ", relation: "પુત્રી (Daughter)", age: 12 },
-              ];
-              setFamilyMembersList(verifiedMembers);
-              setHasStudent(true);
-            }
-          }
+          // Keep strictly locked by default (isKycVerified = false)
+          setIsKycVerified(false);
         } catch (err) {
-          console.warn("Failed to restore citizen session in calculator:", err);
+          console.warn("Failed to check citizen session in calculator:", err);
         }
       }
     }, 0);
@@ -732,9 +702,9 @@ export default function BenefitCalculatorPage() {
                       <button
                         type="button"
                         onClick={resetAll}
-                        className="text-[11px] text-gray-400 hover:text-red-500 flex items-center gap-1"
+                        className="text-[11px] text-red-600 hover:text-red-700 bg-red-50 hover:bg-red-100 px-2 py-0.5 rounded-lg font-bold flex items-center gap-1 transition shadow-2xs"
                       >
-                        <RotateCcw size={11} /> નવો નંબર
+                        <Lock size={11} /> લૉક કરો (રીસેટ)
                       </button>
                     </div>
                   )}
@@ -882,14 +852,21 @@ export default function BenefitCalculatorPage() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-white rounded-2xl p-6 border border-dashed border-gray-200 text-center text-gray-400 space-y-1.5">
-                  <Lock size={26} className="mx-auto text-gray-300" />
-                  <p className="text-xs font-semibold text-gray-600">
-                    સ્ટેપ ૨: કુટુંબ અને યોજનાઓની પસંદગી હજુ લોક છે
-                  </p>
-                  <p className="text-[11px] text-gray-400 max-w-xs mx-auto">
-                    ઉપર આધાર નંબર અને OTP નાખો જેથી રેશનકાર્ડ ડેટાબેઝમાંથી કુટુંબ અને સરનામું ઓટો-ફેચ થશે.
-                  </p>
+                <div className="bg-white rounded-2xl p-6 sm:p-8 border-2 border-dashed border-amber-200 bg-amber-50/20 text-center text-gray-500 space-y-3">
+                  <div className="w-14 h-14 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                    <Lock size={26} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm sm:text-base font-extrabold text-gray-900">
+                      🔒 સ્ટેપ ૨: કુટુંબ અને યોજનાઓની પસંદગી સુરક્ષિત લૉક છે
+                    </h4>
+                    <p className="text-xs text-gray-600 max-w-sm mx-auto leading-relaxed mt-1">
+                      સરકારી ડેટા ગોપનીયતા અધિનિયમ (DPDP Act 2023) અનુસાર, પહેલાં ઉપર સ્ટેપ ૧ માં તમારો આધાર નંબર દાખલ કરીને <strong>આધાર e-KYC</strong> પૂર્ણ કરો. તે પછી જ રેશનકાર્ડ, કુટુંબના સભ્યો અને યોજનાઓ અનલૉક થશે.
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-1.5 bg-white border border-amber-300 text-amber-800 text-[11px] font-bold px-3 py-1 rounded-full shadow-2xs">
+                    <ShieldCheck size={13} className="text-amber-600" /> UIDAI & RCMS ગુજરાત સિક્યોરિટી શિલ્ડ
+                  </div>
                 </div>
               )}
             </div>
@@ -949,68 +926,85 @@ export default function BenefitCalculatorPage() {
                   </div>
 
                   {/* Citizen Meta Card (Spacious 2-tier card, 100% full content, NO truncation) */}
-                  <div className="py-2.5 px-3 bg-gray-50/90 rounded-2xl border border-gray-200/80 my-2 space-y-2 text-[11px]">
-                    {/* Top Row: Full Citizen Name (no truncate, bold & prominent) + Aadhaar + Caste Category */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-gray-200/60">
-                      <div className="min-w-0">
-                        <span className="text-gray-400 block text-[9.5px]">નાગરિક પૂરું નામ</span>
-                        <span className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight block">
-                          {citizenName || "—"}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <div className="bg-white border border-gray-200 px-2 py-0.5 rounded-lg text-right">
-                          <span className="text-gray-400 block text-[8.5px]">આધાર નંબર</span>
-                          <span className="font-bold text-gray-800 font-mono text-[11px]">
-                            {isKycVerified ? `XXXX-XXXX-${aadhaarNumber.replace(/\D/g, "").slice(-4)}` : "—"}
+                  {isKycVerified ? (
+                    <div className="py-2.5 px-3 bg-gray-50/90 rounded-2xl border border-gray-200/80 my-2 space-y-2 text-[11px]">
+                      {/* Top Row: Full Citizen Name (no truncate, bold & prominent) + Aadhaar + Caste Category */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pb-2 border-b border-gray-200/60">
+                        <div className="min-w-0">
+                          <span className="text-gray-400 block text-[9.5px]">નાગરિક પૂરું નામ</span>
+                          <span className="font-extrabold text-gray-900 text-xs sm:text-sm leading-tight block">
+                            {citizenName || "—"}
                           </span>
                         </div>
-                        <div className="bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-lg text-right">
-                          <span className="text-orange-600 block text-[8.5px]">સામાજિક વર્ગ</span>
-                          <span className="font-bold text-orange-900 font-mono text-[11px]">
-                            {casteCategory === "sebc" ? "SEBC/OBC" : casteCategory === "sc" ? "SC" : casteCategory === "st" ? "ST" : casteCategory === "ews" ? "EWS" : "General"}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <div className="bg-white border border-gray-200 px-2 py-0.5 rounded-lg text-right">
+                            <span className="text-gray-400 block text-[8.5px]">આધાર નંબર</span>
+                            <span className="font-bold text-gray-800 font-mono text-[11px]">
+                              {`XXXX-XXXX-${aadhaarNumber.replace(/\D/g, "").slice(-4)}`}
+                            </span>
+                          </div>
+                          <div className="bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-lg text-right">
+                            <span className="text-orange-600 block text-[8.5px]">સામાજિક વર્ગ</span>
+                            <span className="font-bold text-orange-900 font-mono text-[11px]">
+                              {casteCategory === "sebc" ? "SEBC/OBC" : casteCategory === "sc" ? "SC" : casteCategory === "st" ? "ST" : casteCategory === "ews" ? "EWS" : "General"}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Bottom Row: Family Members + Residence (Clean, fully readable) */}
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-0.5">
+                        {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Click */}
+                        <div
+                          className="cursor-pointer group select-none flex items-center gap-1.5"
+                          onClick={() => {
+                            if (!isKycVerified) return;
+                            setActiveDetailView(activeDetailView === "members" ? null : "members");
+                            setShowMembersModal(!showMembersModal);
+                          }}
+                          title="કુટુંબના સભ્યોની યાદી જોવા ક્લિક કરો"
+                        >
+                          <span className="text-gray-500 font-medium text-[11px]">રેશનકાર્ડ:</span>
+                          <span className="font-bold text-orange-700 bg-white border border-orange-200 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] shadow-2xs group-hover:border-orange-400 transition">
+                            <Users size={12} className="text-orange-500 shrink-0" />
+                            <span>{familyCount > 0 ? `${familyCount} સભ્યો (યાદી જુઓ ▾)` : "—"}</span>
+                          </span>
+                        </div>
+
+                        {/* 📍 ગામ & જિલ્લો - Interactive Click */}
+                        <div
+                          className="cursor-pointer group select-none flex items-center gap-1.5"
+                          onClick={() => {
+                            if (!isKycVerified) return;
+                            setActiveDetailView(activeDetailView === "address" ? null : "address");
+                            setShowAddressModal(!showAddressModal);
+                          }}
+                          title="સંપૂર્ણ રહેઠાણ સરનામું જોવા ક્લિક કરો"
+                        >
+                          <span className="text-gray-500 font-medium text-[11px]">રહેઠાણ:</span>
+                          <span className="font-bold text-blue-700 bg-white border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] shadow-2xs group-hover:border-blue-400 transition">
+                            <MapPin size={12} className="text-blue-500 shrink-0" />
+                            <span>{village ? `${village}, ${district}` : "—"} (સરનામું ▾)</span>
                           </span>
                         </div>
                       </div>
                     </div>
-
-                    {/* Bottom Row: Family Members + Residence (Clean, fully readable) */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 pt-0.5">
-                      {/* 👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો - Interactive Click */}
-                      <div
-                        className="cursor-pointer group select-none flex items-center gap-1.5"
-                        onClick={() => {
-                          if (!isKycVerified) return;
-                          setActiveDetailView(activeDetailView === "members" ? null : "members");
-                          setShowMembersModal(!showMembersModal);
-                        }}
-                        title={isKycVerified ? "કુટુંબના સભ્યોની યાદી જોવા ક્લિક કરો" : ""}
-                      >
-                        <span className="text-gray-500 font-medium text-[11px]">રેશનકાર્ડ:</span>
-                        <span className="font-bold text-orange-700 bg-white border border-orange-200 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] shadow-2xs group-hover:border-orange-400 transition">
-                          <Users size={12} className="text-orange-500 shrink-0" />
-                          <span>{familyCount > 0 ? `${familyCount} સભ્યો (યાદી જુઓ ▾)` : "—"}</span>
-                        </span>
+                  ) : (
+                    <div className="py-4 px-3.5 bg-amber-50/40 rounded-2xl border-2 border-dashed border-amber-200/80 my-2 text-center space-y-1.5">
+                      <div className="w-8 h-8 bg-amber-100 text-amber-700 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                        <Lock size={15} />
                       </div>
-
-                      {/* 📍 ગામ & જિલ્લો - Interactive Click */}
-                      <div
-                        className="cursor-pointer group select-none flex items-center gap-1.5"
-                        onClick={() => {
-                          if (!isKycVerified) return;
-                          setActiveDetailView(activeDetailView === "address" ? null : "address");
-                          setShowAddressModal(!showAddressModal);
-                        }}
-                        title={isKycVerified ? "સંપૂર્ણ રહેઠાણ સરનામું જોવા ક્લિક કરો" : ""}
-                      >
-                        <span className="text-gray-500 font-medium text-[11px]">રહેઠાણ:</span>
-                        <span className="font-bold text-blue-700 bg-white border border-blue-200 px-2 py-0.5 rounded-md flex items-center gap-1 text-[11px] shadow-2xs group-hover:border-blue-400 transition">
-                          <MapPin size={12} className="text-blue-500 shrink-0" />
-                          <span>{village ? `${village}, ${district}` : "—"} (સરનામું ▾)</span>
+                      <p className="text-xs font-bold text-gray-800">નાગરિક ઓળખ અને રેશનકાર્ડ વિગતો લૉક છે</p>
+                      <p className="text-[10.5px] text-gray-500 max-w-xs mx-auto leading-relaxed">
+                        સ્ટેપ ૧ માં આધાર નંબર ચકાસી OTP વેરિફિકેશન પૂર્ણ કરો. તે પછી અહીં આધાર અને રેશનકાર્ડની અધિકૃત વિગતો અનલૉક થશે.
+                      </p>
+                      <div className="pt-0.5">
+                        <span className="inline-flex items-center gap-1 text-[9.5px] font-bold text-amber-800 bg-amber-100/70 px-2 py-0.5 rounded-full">
+                          <ShieldCheck size={11} className="text-amber-700" /> DPDP Act 2023 &bull; સુરક્ષિત મોડ્યુલ
                         </span>
                       </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* ─── Elegant Light Inline Detail Drawers (Responsive Carousel with Full Names & Navigation Buttons) ─── */}
                   {isKycVerified && activeDetailView === "members" && (
@@ -1210,12 +1204,16 @@ export default function BenefitCalculatorPage() {
                     </p>
 
                     {!isKycVerified ? (
-                      <div className="py-7 px-4 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/70 space-y-1">
-                        <Lock size={22} className="mx-auto text-gray-300" />
-                        <p className="text-xs font-bold text-gray-600">પાત્રતા સ્લિપ હજુ ખાલી છે</p>
-                        <p className="text-[10px] text-gray-400 max-w-xs mx-auto">
-                          આધાર e-KYC પૂર્ણ કરો. રેશનકાર્ડ વેરિફાય થયા પછી પસંદ કરેલી યોજનાઓ અહીં લાઈવ ગણાઈને દેખાશે.
-                        </p>
+                      <div className="py-6 px-4 text-center border-2 border-dashed border-gray-200 rounded-2xl bg-gray-50/80 space-y-2">
+                        <div className="w-10 h-10 bg-gray-100 text-gray-400 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                          <Lock size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-gray-700">યોજનાઓની પાત્રતા ગણતરી લૉક છે</p>
+                          <p className="text-[10.5px] text-gray-500 max-w-xs mx-auto leading-relaxed mt-0.5">
+                            નાગરિકતા પ્રમાણિત થયા વગર સરકારી સહાયની અધિકૃત ગણતરી દર્શાવી શકાતી નથી. કૃપા કરીને સ્ટેપ ૧ માં આધાર e-KYC પૂર્ણ કરો.
+                          </p>
+                        </div>
                       </div>
                     ) : (
                       <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
@@ -1317,21 +1315,29 @@ export default function BenefitCalculatorPage() {
                   </div>
 
                   {/* Actions: 1-Click WhatsApp Share */}
-                  <div className="pt-3 border-t border-gray-100 flex flex-col sm:flex-row gap-2">
-                    <button
-                      onClick={shareOnWhatsApp}
-                      disabled={!isKycVerified}
-                      className="flex-1 flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm active:scale-95"
-                    >
-                      <Share2 size={15} /> WhatsApp પર મોકલો (૧-ક્લિક)
-                    </button>
-                    <button
-                      onClick={handlePrintCertificate}
-                      disabled={!isKycVerified}
-                      className="flex items-center justify-center gap-1 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 text-gray-700 font-semibold py-2.5 px-3.5 rounded-xl text-xs transition"
-                    >
-                      <Printer size={14} /> પ્રિન્ટ / PDF
-                    </button>
+                  <div className="pt-3 border-t border-gray-100 space-y-2">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                      <button
+                        onClick={shareOnWhatsApp}
+                        disabled={!isKycVerified}
+                        className="flex-1 flex items-center justify-center gap-1.5 bg-[#25D366] hover:bg-[#20ba59] disabled:opacity-50 disabled:cursor-not-allowed text-white font-bold py-2.5 rounded-xl text-xs transition shadow-sm active:scale-95"
+                      >
+                        <Share2 size={15} /> WhatsApp પર મોકલો (૧-ક્લિક)
+                      </button>
+                      <button
+                        onClick={handlePrintCertificate}
+                        disabled={!isKycVerified}
+                        className="flex items-center justify-center gap-1 border border-gray-200 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 font-semibold py-2.5 px-3.5 rounded-xl text-xs transition"
+                      >
+                        <Printer size={14} /> પ્રિન્ટ / PDF
+                      </button>
+                    </div>
+                    {!isKycVerified && (
+                      <p className="text-[10.5px] text-amber-800 bg-amber-50/80 border border-amber-200/70 rounded-lg py-1 px-2.5 text-center flex items-center justify-center gap-1 font-medium">
+                        <Lock size={11} className="text-amber-600 shrink-0" />
+                        <span>અધિકૃત સ્લિપ પ્રિન્ટ કરવા કે શેર કરવા માટે પહેલાં આધાર e-KYC પૂર્ણ કરો</span>
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
