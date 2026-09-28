@@ -16,6 +16,7 @@ import {
   Loader2,
   X,
   ShieldCheck,
+  Camera,
 } from "lucide-react";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import { Scheme } from "@/types";
@@ -59,6 +60,16 @@ export default function SchemeDetailPage({
   const [annualIncome] = useState("180000");
   const [landDetails] = useState("7/12 & 8-A Verifiable");
   const [declarationChecked, setDeclarationChecked] = useState(true);
+  const [citizenPhoto, setCitizenPhoto] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        return localStorage.getItem("nagrik_user_photo") || "";
+      } catch {
+        return "";
+      }
+    }
+    return "";
+  });
 
   // Fetch live scheme from Cloud Firestore
   useEffect(() => {
@@ -136,6 +147,8 @@ export default function SchemeDetailPage({
           verified: true,
           qualityScore: 98,
         })) || [],
+        citizenPhoto: citizenPhoto || undefined,
+        userPhoto: citizenPhoto || undefined,
       };
 
       const res = await fetch("/api/track", {
@@ -484,6 +497,57 @@ export default function SchemeDetailPage({
                     placeholder="દા.ત. ગોમટા અથવા વોર્ડ નં. ૪"
                     className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3.5 py-2.5 text-xs text-gray-900 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
                   />
+                </div>
+
+                {/* Passport Photo Upload */}
+                <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border-2 border-dashed border-orange-300 rounded-2xl p-3 sm:p-4 flex items-center gap-3 shadow-2xs">
+                  <div className="relative w-16 h-20 border-2 border-slate-400 bg-white rounded-xl overflow-hidden shrink-0 shadow-xs flex items-center justify-center">
+                    {citizenPhoto ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={citizenPhoto} alt="Passport Photo" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="text-center p-1">
+                        <Camera size={20} className="text-slate-400 mx-auto mb-0.5" />
+                        <span className="text-[8px] text-slate-500 font-bold block leading-tight">પાસપોર્ટ ફોટો</span>
+                      </div>
+                    )}
+                    {citizenPhoto && (
+                      <span className="absolute bottom-0 inset-x-0 bg-emerald-600 text-white text-[7.5px] font-black text-center py-0.5">
+                        ✓ અપલોડ થયેલ
+                      </span>
+                    )}
+                  </div>
+                  <div className="space-y-1 flex-1 min-w-0">
+                    <span className="text-xs font-black text-slate-900 block truncate">
+                      અરજદારનો પાસપોર્ટ ફોટો (Passport Photo)
+                    </span>
+                    <p className="text-[10px] text-slate-600 leading-snug">
+                      તમારો ફોટો અપલોડ કરો. આ ફોટો સત્તાવાર સરકારી દસ્તાવેજમાં લાઈવ લાગશે.
+                    </p>
+                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-[11px] font-bold shadow-xs transition">
+                      <Camera size={12} />
+                      <span>{citizenPhoto ? "ફોટો બદલો (Change)" : "ફોટો અપલોડ કરો (Upload)"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            const reader = new FileReader();
+                            reader.onload = (ev) => {
+                              const b64 = ev.target?.result as string;
+                              setCitizenPhoto(b64);
+                              if (typeof window !== "undefined") {
+                                localStorage.setItem("nagrik_user_photo", b64);
+                              }
+                            };
+                            reader.readAsDataURL(file);
+                          }
+                        }}
+                      />
+                    </label>
+                  </div>
                 </div>
 
                 <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200 text-xs text-amber-900 space-y-1">

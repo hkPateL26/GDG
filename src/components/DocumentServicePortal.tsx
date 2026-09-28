@@ -299,19 +299,37 @@ export default function DocumentServicePortal({
       "disability",
     ].includes(selectedServiceId);
 
-    const docs =
+    const rawDocs =
       serviceMode === "new" ? [...service.requiredDocsNew] : [...service.requiredDocsUpdate];
 
-    // Always include Passport Photo for photo identity documents (Aadhaar, PAN, Ration, Driving, etc.)
-    if (isPhotoDocService || serviceMode === "new") {
-      if (!docs.some((d) => d.id === "photo_proof" || d.id === "photo")) {
-        docs.unshift({
-          id: "photo_proof",
-          nameEn: "Passport Size Color Photograph (અસલ પાસપોર્ટ સાઇઝ રંગીન ફોટો)",
-          nameGu: "અસલ પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo - White/Light Background)",
-          mandatory: true,
-        });
+    // Filter and deduplicate: keep strictly AT MOST ONE photo item across all documents
+    let hasPhotoEntry = false;
+    const docs = rawDocs.filter((d) => {
+      const isPhoto =
+        d.id === "applicant_photo" ||
+        d.id === "photo_proof" ||
+        d.id === "passport_photo" ||
+        d.id === "photo" ||
+        (d.id.includes("photo") && d.id !== "photo_id");
+      if (isPhoto) {
+        if (hasPhotoEntry) return false;
+        hasPhotoEntry = true;
+        d.id = "applicant_photo";
+        d.nameEn = "Applicant Passport Size Photograph";
+        d.nameGu = "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo)";
+        return true;
       }
+      return true;
+    });
+
+    // If service requires photo and none exists yet, prepend strictly ONE photo item
+    if (!hasPhotoEntry && (isPhotoDocService || serviceMode === "new")) {
+      docs.unshift({
+        id: "applicant_photo",
+        nameEn: "Applicant Passport Size Photograph",
+        nameGu: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo)",
+        mandatory: true,
+      });
     }
 
     if (serviceMode === "update") {
@@ -408,30 +426,7 @@ export default function DocumentServicePortal({
     try {
       const base64Data = await compressImageIfNeeded(file);
 
-      // Handle Passport Photo Upload directly
-      if (docId === "photo_proof" || docId === "photo") {
-        setUserUploadedPhoto(base64Data);
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem("nagrik_user_photo", base64Data);
-          } catch {}
-        }
-        setUploadedDocs((prev) => ({
-          ...prev,
-          [docId]: {
-            file,
-            fileName: file.name,
-            fileType: file.type || "image/jpeg",
-            base64: base64Data,
-            status: "valid",
-            qualityScore: 98,
-            adviceGu: "પાસપોર્ટ સાઇઝ રંગીન ફોટો માન્ય થયેલ છે.",
-          },
-        }));
-        return;
-      }
-
-      // Set analyzing state
+      // Set analyzing state with loading indicator for all documents including photos
       setUploadedDocs((prev) => ({
         ...prev,
         [docId]: {
@@ -443,13 +438,25 @@ export default function DocumentServicePortal({
         },
       }));
 
+      const isPhotoDoc =
+        docId === "applicant_photo" ||
+        docId === "photo_proof" ||
+        docId === "passport_photo" ||
+        docId === "photo" ||
+        (docId.includes("photo") && docId !== "photo_id");
+
+      const docItemObj = requiredDocs.find((d) => d.id === docId);
+      const expectedType = isPhotoDoc
+        ? "Passport Size Photograph / Photo Proof (પાસપોર્ટ સાઇઝ રંગીન ફોટો)"
+        : (docItemObj?.nameEn || docItemObj?.nameGu || "");
+
       const res = await fetch("/api/verify-doc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           imageBase64: base64Data,
           mimeType: file.type || "image/jpeg",
-          expectedDocType: requiredDocs.find((d) => d.id === docId)?.nameEn || "",
+          expectedDocType: expectedType,
           fileName: file.name,
         }),
       });
@@ -461,7 +468,7 @@ export default function DocumentServicePortal({
       const data = await res.json();
       if (data.success && data.analysis) {
         const a = data.analysis;
-        const isMismatch = a.matchesExpected === false || a.isValidForGovt === false;
+        const isMismatch = a.matchesExpected === false || a.isValidForGovt === false || (typeof a.qualityScore === "number" && a.qualityScore < 40);
         let calculatedStatus: "valid" | "warning" | "invalid" = "valid";
         if (isMismatch) {
           calculatedStatus = "invalid";
@@ -469,6 +476,25 @@ export default function DocumentServicePortal({
           calculatedStatus = "warning";
         } else {
           calculatedStatus = "valid";
+        }
+
+        // Only save as citizen photo if AI approves the photo as valid
+        if (isPhotoDoc) {
+          if (calculatedStatus === "valid") {
+            setUserUploadedPhoto(base64Data);
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.setItem("nagrik_user_photo", base64Data);
+              } catch {}
+            }
+          } else {
+            setUserUploadedPhoto("");
+            if (typeof window !== "undefined") {
+              try {
+                localStorage.removeItem("nagrik_user_photo");
+              } catch {}
+            }
+          }
         }
 
         setUploadedDocs((prev) => ({
@@ -479,7 +505,7 @@ export default function DocumentServicePortal({
             fileType: file.type || "image/jpeg",
             base64: base64Data,
             status: calculatedStatus,
-            qualityScore: a.qualityScore || (isMismatch ? 15 : 92),
+            qualityScore: a.qualityScore || (isMismatch ? 10 : 92),
             adviceGu: a.actionableAdviceGu || a.feedbackGu || "દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો.",
             needsUpdate: a.needsUpdate,
             needsNewDocument: a.needsNewDocument,
@@ -490,6 +516,20 @@ export default function DocumentServicePortal({
       }
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : "દસ્તાવેજ ચકાસણી સર્વર સાથે સંપર્ક થઈ શક્યો નહીં.";
+      const isPhotoDoc =
+        docId === "applicant_photo" ||
+        docId === "photo_proof" ||
+        docId === "passport_photo" ||
+        docId === "photo" ||
+        (docId.includes("photo") && docId !== "photo_id");
+      if (isPhotoDoc) {
+        setUserUploadedPhoto("");
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.removeItem("nagrik_user_photo");
+          } catch {}
+        }
+      }
       // Strict fallback on failure: do NOT mark as valid
       setUploadedDocs((prev) => ({
         ...prev,
@@ -499,7 +539,7 @@ export default function DocumentServicePortal({
           fileType: file.type || "image/jpeg",
           base64: "",
           status: "invalid",
-          qualityScore: 15,
+          qualityScore: 10,
           adviceGu: `❌ ${errorMsg} કૃપા કરીને સાચો સત્તાવાર દસ્તાવેજ ફરીથી અપલોડ કરો.`,
           needsUpdate: false,
           needsNewDocument: false,
@@ -700,8 +740,8 @@ export default function DocumentServicePortal({
           verified: uploadedDocs[d.id]?.status === "valid",
           qualityScore: uploadedDocs[d.id]?.qualityScore || 90,
         })),
-        citizenPhoto: userUploadedPhoto || uploadedDocs["photo_proof"]?.base64 || undefined,
-        userPhoto: userUploadedPhoto || uploadedDocs["photo_proof"]?.base64 || undefined,
+        citizenPhoto: userUploadedPhoto || uploadedDocs["applicant_photo"]?.base64 || uploadedDocs["photo_proof"]?.base64 || uploadedDocs["passport_photo"]?.base64 || undefined,
+        userPhoto: userUploadedPhoto || uploadedDocs["applicant_photo"]?.base64 || uploadedDocs["photo_proof"]?.base64 || uploadedDocs["passport_photo"]?.base64 || undefined,
       };
 
       const res = await fetch("/api/track", {
@@ -2126,7 +2166,7 @@ export default function DocumentServicePortal({
               </div>
 
               {/* Applicant Name Fields */}
-              <div className="space-y-2.5">
+              <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
                     અરજદારનું પૂરું નામ (ગુજરાતીમાં) *
@@ -2736,6 +2776,7 @@ export default function DocumentServicePortal({
                       type="button"
                       onClick={async () => {
                         const demoList = [
+                          { id: "applicant_photo", url: "/demo-docs/aadhaar_photo_hq.png", name: "aadhaar_photo_hq.png" },
                           { id: "birth_proof", url: "/demo-docs/1_birth_certificate_khunt_harkishan.png", name: "1_birth_certificate_khunt_harkishan.png" },
                           { id: "address_proof", url: "/demo-docs/2_electricity_bill_pgvcl_gondal.png", name: "2_electricity_bill_pgvcl_gondal.png" },
                           { id: "photo_id", url: "/demo-docs/3_pan_card_khunt_harkishan.png", name: "3_pan_card_khunt_harkishan.png" },
@@ -2758,14 +2799,23 @@ export default function DocumentServicePortal({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-1 border-t border-blue-200/60 text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1 border-t border-blue-200/60 text-xs">
+                    <a
+                      href="/demo-docs/aadhaar_photo_hq.png"
+                      download="aadhaar_photo_hq.png"
+                      target="_blank"
+                      className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
+                    >
+                      <span className="truncate text-[11px]">📥 ૧. પાસપોર્ટ ફોટો</span>
+                      <Download size={13} className="text-blue-700 shrink-0 ml-1" />
+                    </a>
                     <a
                       href="/demo-docs/1_birth_certificate_khunt_harkishan.png"
                       download="1_birth_certificate_khunt_harkishan.png"
                       target="_blank"
                       className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
                     >
-                      <span className="truncate text-[11px]">📥 ૧. જન્મનો દાખલો</span>
+                      <span className="truncate text-[11px]">📥 ૨. જન્મનો દાખલો</span>
                       <Download size={13} className="text-blue-700 shrink-0 ml-1" />
                     </a>
                     <a
@@ -2774,7 +2824,7 @@ export default function DocumentServicePortal({
                       target="_blank"
                       className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
                     >
-                      <span className="truncate text-[11px]">📥 ૨. PGVCL લાઈટ બિલ</span>
+                      <span className="truncate text-[11px]">📥 ૩. PGVCL લાઈટ બિલ</span>
                       <Download size={13} className="text-blue-700 shrink-0 ml-1" />
                     </a>
                     <a
@@ -2783,7 +2833,7 @@ export default function DocumentServicePortal({
                       target="_blank"
                       className="p-2 bg-white hover:bg-blue-100/60 border border-blue-200 rounded-xl flex items-center justify-between font-semibold text-blue-900 transition shadow-2xs"
                     >
-                      <span className="truncate text-[11px]">📥 ૩. PAN કાર્ડ (ID)</span>
+                      <span className="truncate text-[11px]">📥 ૪. PAN કાર્ડ (ID)</span>
                       <Download size={13} className="text-blue-700 shrink-0 ml-1" />
                     </a>
                   </div>
@@ -2860,7 +2910,15 @@ export default function DocumentServicePortal({
 
                       {/* Upload Controls (JPG, PNG, PDF) */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-black/5">
-                        <div className="flex items-center gap-2 text-xs">
+                        <div className="flex items-center gap-2.5 text-xs">
+                          {docItem.id === "applicant_photo" && isValid && (docState?.base64 || userUploadedPhoto) && (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={docState?.base64 || userUploadedPhoto}
+                              alt="Passport Photo"
+                              className="w-10 h-12 object-cover rounded-lg border-2 border-emerald-500 shadow-xs shrink-0"
+                            />
+                          )}
                           {docState?.fileName ? (
                             <span className="font-mono text-slate-700 font-semibold bg-white border border-slate-200 px-2.5 py-1 rounded-md flex items-center gap-1.5 truncate max-w-[220px]">
                               <FileText size={13} className="text-orange-600" />

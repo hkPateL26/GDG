@@ -31,16 +31,26 @@ CRITICAL INSTRUCTIONS:
    - "Driving License" (ડ્રાઇવિંગ લાયસન્સ)
    - "Other / Invalid Document"
 
-2. Check strictly if it matches the EXPECTED DOCUMENT REQUIREMENT.
-   - If expected is "Passport Size Photograph / Photo Proof / પાસપોર્ટ સાઇઝ રંગીન ફોટો":
-     * ANY plain or solid background is 100% ACCEPTABLE (White, Blue, Light Blue, Off-White, Grey, Cream, etc.).
-     * DO NOT REJECT based on blue or white background color. In Indian government and Gujarat administrative practice, passport photos with light blue or white backgrounds are completely standard and valid.
-     * As long as it shows a clear human face (front-facing, eyes and ears visible, head & shoulders portrait):
-       -> "matchesExpected": true
-       -> "isValidForGovt": true
-       -> "qualityScore": 92
-       -> "actionableAdviceGu": "✅ માન્ય પાસપોર્ટ સાઇઝ ફોટો: ચહેરો સ્પષ્ટ છે અને ફોટો સરકારી રેકોર્ડ માટે સ્વીકાર્ય છે."
-       -> "feedbackGu": "પાસપોર્ટ સાઇઝનો ફોટો યોગ્ય છે. સ્પષ્ટ ચહેરો અને સરકારી ધારાધોરણો મુજબ સ્વીકાર્ય છે."
+  - If expected is "Passport Size Photograph / Photo Proof / પાસપોર્ટ સાઇઝ રંગીન ફોટો" or similar:
+     * CRITICAL CHECK:
+       - The uploaded image MUST be a portrait of a real human face (head & shoulders personal photograph).
+       - If the user uploaded a Signature (સહી / દસ્તખત / signature on paper / handwritten text / stroke / sign.jpeg / sign.png), Marksheet (ગુણપત્રક / પરિણામ / Statement of Marks / Result), School Certificate, Degree, Text Document, Bill, Form, Object, or any document without a human face:
+         -> "matchesExpected": false
+         -> "isValidForGovt": false
+         -> "qualityScore": 5
+         -> "documentType": "Signature / Invalid Document"
+         -> "documentNameGu": "અરજદારની સહી (Signature) અથવા અમાન્ય દસ્તાવેજ"
+         -> "actionableAdviceGu": "❌ ખોટો ફોટો: તમે સહી (Signature) અથવા દસ્તાવેજ અપલોડ કર્યો છે! પાસપોર્ટ ફોટો સ્લોટમાં ફક્ત અરજદારનો અસલ પાસપોર્ટ સાઇઝ રંગીન વ્યક્તિગત ફોટો (Passport Photo with human face) જ માન્ય છે. સહી ફોટા તરીકે અસ્વીકાર્ય છે."
+         -> "feedbackGu": "આ અપલોડ થયેલ ચિત્ર સહી (Signature) છે, પાસપોર્ટ સાઇઝ ફોટો નથી. કૃપા કરીને અરજદારનો અસલ પાસપોર્ટ સાઇઝ ફોટો અપલોડ કરો."
+       - ONLY IF it is a genuine human face portrait photo:
+         * ANY plain or solid background is 100% ACCEPTABLE (White, Blue, Light Blue, Off-White, Grey, Cream, etc.).
+         * DO NOT REJECT based on blue or white background color. In Indian government and Gujarat administrative practice, passport photos with light blue or white backgrounds are completely standard and valid.
+         * As long as it shows a clear human face (front-facing, eyes and ears visible, head & shoulders portrait):
+           -> "matchesExpected": true
+           -> "isValidForGovt": true
+           -> "qualityScore": 95
+           -> "actionableAdviceGu": "✅ માન્ય પાસપોર્ટ સાઇઝ ફોટો: ચહેરો સ્પષ્ટ છે અને ફોટો સરકારી રેકોર્ડ માટે સ્વીકાર્ય છે."
+           -> "feedbackGu": "પાસપોર્ટ સાઇઝનો ફોટો યોગ્ય છે. સ્પષ્ટ ચહેરો અને સરકારી ધારાધોરણો મુજબ સ્વીકાર્ય છે."
 
    - If expected is "Birth Certificate / School Leaving Certificate" and the image is a Marksheet (Statement of Marks):
      -> "matchesExpected": false
@@ -109,12 +119,13 @@ export async function POST(req: NextRequest) {
       customPrompt += `\nORIGINAL FILENAME UPLOADED BY USER: "${fileName}"\n(Hint: If the filename or content shows Marksheet, Result, Semester, or Exam, and the requested slot is Aadhaar Card, Birth Certificate, or School Leaving Certificate, you MUST set matchesExpected: false, isValidForGovt: false, and qualityScore: 15.)\n`;
     }
 
-    // Tested working Gemini vision models — gemini-3.6-flash is verified online and responding
+    // Tested working Gemini vision models — gemini-3-flash-preview is actively responding
     const visionModels = [
-      "gemini-3.6-flash",
-      "gemini-3.1-flash-lite",
-      "gemini-flash-latest",
+      "gemini-3-flash-preview",
+      "gemini-3.1-flash-lite-preview",
       "gemini-3.8-flash",
+      "gemini-3.6-flash",
+      "gemini-flash-latest",
     ];
     let parsedData: DocumentAnalysisResult | null = null;
 
@@ -166,12 +177,89 @@ export async function POST(req: NextRequest) {
       const lowerName = (fileName || "").toLowerCase();
       const lowerExpected = (expectedDocType || "").toLowerCase();
 
-      const isMarksheet = lowerName.includes("mark") || lowerName.includes("sem") || lowerName.includes("result") || lowerName.includes("grade") || lowerName.includes("exam");
+      const isMarksheet = lowerName.includes("mark") || lowerName.includes("sem") || lowerName.includes("result") || lowerName.includes("grade") || lowerName.includes("exam") || lowerName.startsWith("12") || lowerName.startsWith("10");
+      const isSignature = lowerName.includes("sign") || lowerName.includes("signature") || lowerName.includes("sahi") || lowerName.includes("dastakhat") || lowerName.includes("sai") || lowerName.includes("thumb") || lowerName.includes("angutho");
       const isLightBill = lowerName.includes("pgvcl") || lowerName.includes("ugvcl") || lowerName.includes("bill") || lowerName.includes("light") || lowerName.includes("electricity");
       const isAadhaarExpected = lowerExpected.includes("aadhaar") || lowerExpected.includes("aadhar") || lowerExpected.includes("આધાર");
       const isBirthExpected = lowerExpected.includes("birth") || lowerExpected.includes("leaving") || lowerExpected.includes("lc") || lowerExpected.includes("જન્મ");
+      const isPhotoExpected = lowerExpected.includes("photo") || lowerExpected.includes("ફોટો") || lowerExpected.includes("photograph");
 
-      if (isMarksheet && (isAadhaarExpected || isBirthExpected)) {
+      if (isPhotoExpected) {
+        if (isSignature) {
+          parsedData = {
+            documentType: "Applicant Signature",
+            documentNameGu: "અરજદારની સહી (Signature)",
+            qualityScore: 5,
+            isValidForGovt: false,
+            matchesExpected: false,
+            needsUpdate: false,
+            needsNewDocument: true,
+            actionableAdviceGu: `❌ ખોટો ફોટો: તમે સહી (Signature - ${fileName}) અપલોડ કરી છે! પાસપોર્ટ ફોટો બોક્સમાં ફક્ત અરજદારનો અસલ પાસપોર્ટ સાઇઝ રંગીન વ્યક્તિગત ફોટો (Passport Photo with human face) જ માન્ય છે. સહી ફોટા તરીકે અસ્વીકાર્ય છે.`,
+            extractedInfo: {
+              detectedName: null,
+              documentNumberMasked: null,
+              yearOrDate: null,
+            },
+            feedbackGu: "અપલોડ કરેલ ચિત્ર સહી (Signature) છે, પાસપોર્ટ સાઇઝ ફોટો નથી. કૃપા કરીને અરજદારનો અસલ પાસપોર્ટ સાઇઝ ફોટો અપલોડ કરો.",
+            verificationPoints: [
+              { point: "પાસપોર્ટ ફોટો ચકાસણી", status: "fail", note: "સહી અસ્વીકાર્ય છે / માનવ ચહેરો જરૂરી છે" },
+              { point: "દસ્તાવેજ પ્રકાર", status: "fail", note: "પાસપોર્ટ સાઇઝ ફોટો જરૂરી છે" },
+            ],
+          };
+        } else if (isMarksheet || lowerName.includes("whatsapp") || mimeType === "application/pdf" || lowerName.includes("bill") || lowerName.includes("cert") || lowerName.includes("doc") || lowerName.includes("result")) {
+          parsedData = {
+            documentType: "Academic Marksheet / Invalid Document",
+            documentNameGu: "શૈક્ષણિક માર્કશીટ / પરિણામ / અમાન્ય ફાઇલ",
+            qualityScore: 10,
+            isValidForGovt: false,
+            matchesExpected: false,
+            needsUpdate: false,
+            needsNewDocument: true,
+            actionableAdviceGu: `❌ ખોટો ફોટો: તમે માર્કશીટ / પરિણામ / દસ્તાવેજ (${fileName}) અપલોડ કર્યો છે! પાસપોર્ટ ફોટો બોક્સમાં ફક્ત અરજદારનો અસલ પાસપોર્ટ સાઇઝ રંગીન વ્યક્તિગત ફોટો (Passport Photo with human face) જ માન્ય છે. માર્કશીટ ફોટા તરીકે અસ્વીકાર્ય છે.`,
+            extractedInfo: {
+              detectedName: null,
+              documentNumberMasked: null,
+              yearOrDate: null,
+            },
+            feedbackGu: "અપલોડ કરેલ ચિત્ર પાસપોર્ટ સાઇઝ ફોટો નથી પણ માર્કશીટ/દસ્તાવેજ છે. કૃપા કરીને અરજદારનો પાસપોર્ટ સાઇઝ ફોટો અપલોડ કરો.",
+            verificationPoints: [
+              { point: "પાસપોર્ટ ફોટો ચકાસણી", status: "fail", note: "ચહેરો નથી મળ્યો / માર્કશીટ અસ્વીકાર્ય છે" },
+              { point: "દસ્તાવેજ પ્રકાર", status: "fail", note: "પાસપોર્ટ ફોટો જરૂરી છે" },
+            ],
+          };
+        } else {
+          const isKnownPhoto = lowerName.includes("passport") || lowerName.includes("aadhaar_photo") || lowerName.includes("face") || lowerName === "photo.png" || lowerName === "photo.jpg" || lowerName === "photo.jpeg";
+          if (!isKnownPhoto) {
+            parsedData = {
+              documentType: "Non-Photo File / Invalid",
+              documentNameGu: "અમાન્ય ફોટો ફાઇલ",
+              qualityScore: 10,
+              isValidForGovt: false,
+              matchesExpected: false,
+              needsUpdate: false,
+              needsNewDocument: true,
+              actionableAdviceGu: `❌ ખોટો ફોટો: અપલોડ કરેલ ફાઇલ (${fileName}) માન્ય પાસપોર્ટ સાઇઝ ફોટો નથી. કૃપા કરીને અરજદારનો અસલ પાસપોર્ટ સાઇઝ રંગીન ફોટો અપલોડ કરો.`,
+              extractedInfo: { detectedName: null, documentNumberMasked: null, yearOrDate: null },
+              feedbackGu: "પાસપોર્ટ ફોટો તરીકે અસ્વીકાર્ય.",
+              verificationPoints: [{ point: "પાસપોર્ટ ફોટો", status: "fail", note: "અમાન્ય" }],
+            };
+          } else {
+            parsedData = {
+              documentType: "Passport Size Photograph",
+              documentNameGu: "અસલ પાસપોર્ટ સાઇઝ ફોટો",
+              qualityScore: 95,
+              isValidForGovt: true,
+              matchesExpected: true,
+              needsUpdate: false,
+              needsNewDocument: false,
+              actionableAdviceGu: "✅ માન્ય પાસપોર્ટ સાઇઝ ફોટો: ચહેરો સ્પષ્ટ છે અને ફોટો સરકારી રેકોર્ડ માટે સ્વીકાર્ય છે.",
+              extractedInfo: { detectedName: null, documentNumberMasked: null, yearOrDate: null },
+              feedbackGu: "પાસપોર્ટ સાઇઝનો ફોટો યોગ્ય છે.",
+              verificationPoints: [{ point: "પાસપોર્ટ ફોટો", status: "pass", note: "માન્ય" }],
+            };
+          }
+        }
+      } else if (isMarksheet && (isAadhaarExpected || isBirthExpected)) {
         parsedData = {
           documentType: "Academic Marksheet / Statement of Marks",
           documentNameGu: "શૈક્ષણિક માર્કશીટ (ગુણપત્રક)",

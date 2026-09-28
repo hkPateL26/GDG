@@ -3479,6 +3479,12 @@ export const DOCUMENT_SERVICES: DocumentServiceConfig[] = [
     ],
     "requiredDocsNew": [
       {
+        "id": "applicant_photo",
+        "nameEn": "Applicant Passport Size Photograph (અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો)",
+        "nameGu": "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo)",
+        "mandatory": true
+      },
+      {
         "id": "birth_proof",
         "nameEn": "Birth Certificate / School Leaving Certificate",
         "nameGu": "જન્મનો દાખલો / શાળા છોડ્યાનું પ્રમાણપત્ર",
@@ -3498,6 +3504,12 @@ export const DOCUMENT_SERVICES: DocumentServiceConfig[] = [
       }
     ],
     "requiredDocsUpdate": [
+      {
+        "id": "applicant_photo",
+        "nameEn": "Applicant Passport Size Photograph (અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો)",
+        "nameGu": "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo)",
+        "mandatory": true
+      },
       {
         "id": "current_aadhaar",
         "nameEn": "Current Aadhaar Card Copy",
