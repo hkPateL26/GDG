@@ -33,7 +33,12 @@ export default function AiBottleneckMonitor({
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Analyze all active applications
-  const activeApps = applications.filter((a) => a.status === "processing" || a.status === "pending");
+  const seenIds = new Set<string>();
+  const activeApps = applications.filter((a) => {
+    if (!a || !a.id || seenIds.has(a.id)) return false;
+    seenIds.add(a.id);
+    return a.status === "processing" || a.status === "pending";
+  });
   
   const analyzedApps = activeApps.map((app) => {
     // Generate deterministic minute offsets for demonstration
@@ -213,12 +218,12 @@ export default function AiBottleneckMonitor({
         </div>
       ) : (
         <div className="space-y-3.5">
-          {filteredApps.map(({ app, sla }) => {
+          {filteredApps.map(({ app, sla }, idx) => {
             const isEscalated = Boolean(escalatedAppIds[app.id]);
 
             return (
               <div
-                key={app.id}
+                key={`${app.id}-${idx}`}
                 className={`bg-white rounded-2xl border-2 p-4 sm:p-5 shadow-xs transition hover:shadow-md ${
                   sla.isBreached
                     ? "border-rose-200 hover:border-rose-400"

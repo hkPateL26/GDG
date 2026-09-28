@@ -56,14 +56,18 @@ export default function AdminHierarchyDesk({
 }: AdminHierarchyDeskProps) {
   // Current active officer state (allows switching between 5 tiers)
   const [currentOfficer, setCurrentOfficer] = useState<OfficerNode>(() => {
-    if (initialOfficer) return initialOfficer;
+    if (initialOfficer) {
+      const match = HIERARCHICAL_OFFICERS.find((o) => o.id === initialOfficer.id);
+      if (match) return { ...match, ...initialOfficer, avatarEmoji: match.avatarEmoji, tierNameGu: match.tierNameGu, officeGu: match.officeGu };
+      return initialOfficer;
+    }
     if (typeof window !== "undefined") {
       try {
         const saved = sessionStorage.getItem("nagrik_officer_session");
         if (saved) {
           const parsed = JSON.parse(saved);
           const found = HIERARCHICAL_OFFICERS.find((o) => o.id === parsed.id);
-          if (found) return found;
+          if (found) return { ...found, ...parsed, avatarEmoji: found.avatarEmoji, tierNameGu: found.tierNameGu, officeGu: found.officeGu };
         }
       } catch {
         // fallback
@@ -81,9 +85,11 @@ export default function AdminHierarchyDesk({
   const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy" | "audit">("queue");
 
   // Cascading Filters
-  const [selectedDistrict, setSelectedDistrict] = useState<string>(
-    currentOfficer.canViewAllDistricts ? "all" : currentOfficer.district
-  );
+  const [selectedDistrict, setSelectedDistrict] = useState<string>(() => {
+    return currentOfficer.canViewAllDistricts || currentOfficer.district === "All"
+      ? "all"
+      : currentOfficer.district;
+  });
   const [selectedTaluka, setSelectedTaluka] = useState<string>(
     currentOfficer.taluka || "all"
   );
@@ -132,7 +138,15 @@ export default function AdminHierarchyDesk({
       const res = await fetch(`/api/track?${params.toString()}`);
       const data = await res.json();
       if (data.success && data.records) {
-        setApplications(data.records);
+        const seen = new Set<string>();
+        const unique: CitizenApplication[] = [];
+        for (const item of data.records) {
+          if (item && item.id && !seen.has(item.id)) {
+            seen.add(item.id);
+            unique.push(item);
+          }
+        }
+        setApplications(unique);
       }
     } catch (e) {
       console.error("Failed to load applications:", e);
@@ -156,10 +170,10 @@ export default function AdminHierarchyDesk({
     setIsOnLeave(target.isOnLeave);
     setActingOfficerName(target.actingOfficerName || "ઇન-ચાર્જ અધિકારી");
 
-    if (target.district && target.district !== "All") {
-      setSelectedDistrict(target.district);
-    } else {
+    if (target.canViewAllDistricts || target.district === "All") {
       setSelectedDistrict("all");
+    } else {
+      setSelectedDistrict(target.district);
     }
 
     if (target.taluka) {
@@ -300,7 +314,11 @@ export default function AdminHierarchyDesk({
 
   // Filtered List with 15-Min SLA condition
   const filteredApplications = useMemo(() => {
+    const seen = new Set<string>();
     return applications.filter((app) => {
+      if (!app || !app.id || seen.has(app.id)) return false;
+      seen.add(app.id);
+
       // Taluka filter
       if (selectedTaluka !== "all" && app.taluka !== selectedTaluka) return false;
 
@@ -321,7 +339,7 @@ export default function AdminHierarchyDesk({
           {/* Officer Details */}
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-14 h-14 rounded-2xl bg-amber-400/20 border-2 border-amber-400/30 flex items-center justify-center text-3xl shadow-inner shrink-0">
-              {currentOfficer.avatarEmoji}
+              {currentOfficer.avatarEmoji || "🏛️"}
             </div>
             <div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -603,13 +621,13 @@ export default function AdminHierarchyDesk({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {filteredApplications.map((app) => {
+                    {filteredApplications.map((app, idx) => {
                       const sla = analyzeApplicationSla(app);
                       const isPaid = app.paymentStatus === "paid";
                       const isApproved = app.status === "approved" || app.workflowStage === 3;
 
                       return (
-                        <tr key={app.id} className="hover:bg-slate-50/80 transition">
+                        <tr key={`${app.id}-${idx}`} className="hover:bg-slate-50/80 transition">
                           {/* App ID & Citizen */}
                           <td className="p-3.5">
                             <span className="font-mono font-black text-slate-900 block">{app.id}</span>

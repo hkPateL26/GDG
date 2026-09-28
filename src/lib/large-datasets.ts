@@ -3889,9 +3889,12 @@ export function queryApplications(params: {
   }
 
   const matches: CitizenApplication[] = [];
+  const seenIds = new Set<string>();
 
   // Match custom user applications first
   for (const customApp of CUSTOM_USER_APPLICATIONS) {
+    if (seenIds.has(customApp.id)) continue;
+
     if (district && district !== "all" && customApp.district.toLowerCase() !== district && customApp.districtGu !== district) {
       continue;
     }
@@ -3910,11 +3913,14 @@ export function queryApplications(params: {
         customApp.aadhaarLast4.includes(search);
       if (!matchesSearch) continue;
     }
+    seenIds.add(customApp.id);
     matches.push(customApp);
   }
 
   // Iterate over pre-cached system records
   for (const app of dataset) {
+    if (seenIds.has(app.id)) continue;
+
     if (district && district !== "all" && app.district.toLowerCase() !== district && app.districtGu !== district) {
       continue;
     }
@@ -3937,6 +3943,7 @@ export function queryApplications(params: {
       if (!matchesSearch) continue;
     }
 
+    seenIds.add(app.id);
     matches.push(app);
 
     // Stop collecting if we have gathered enough for search previews

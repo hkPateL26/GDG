@@ -176,10 +176,18 @@ export default function TrackVaultView({
       const data = await res.json();
       if (data.success && data.citizen) {
         const myApps: CitizenApplication[] = data.citizen.activeApplications || [];
-        setRecords(myApps);
+        const seen = new Set<string>();
+        const uniqueApps: CitizenApplication[] = [];
+        for (const a of myApps) {
+          if (a && a.id && !seen.has(a.id)) {
+            seen.add(a.id);
+            uniqueApps.push(a);
+          }
+        }
+        setRecords(uniqueApps);
 
         if (targetId) {
-          const found = myApps.find((a) => a.id.toLowerCase() === targetId.toLowerCase());
+          const found = uniqueApps.find((a) => a.id.toLowerCase() === targetId.toLowerCase());
           if (found) setSelectedApp(found);
         }
       } else {
@@ -221,11 +229,19 @@ export default function TrackVaultView({
 
       if (data.success) {
         if (data.records) {
-          setRecords(data.records);
+          const seen = new Set<string>();
+          const uniqueRecords: CitizenApplication[] = [];
+          for (const a of data.records) {
+            if (a && a.id && !seen.has(a.id)) {
+              seen.add(a.id);
+              uniqueRecords.push(a);
+            }
+          }
+          setRecords(uniqueRecords);
           if (data.stats) setStats(data.stats);
 
-          if (data.records.length === 1 && searchQuery.trim().toUpperCase().startsWith("APP")) {
-            setSelectedApp(data.records[0]);
+          if (uniqueRecords.length === 1 && searchQuery.trim().toUpperCase().startsWith("APP")) {
+            setSelectedApp(uniqueRecords[0]);
           }
         } else if (data.application) {
           setSelectedApp(data.application);
@@ -516,14 +532,14 @@ export default function TrackVaultView({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
-              {records.map((app) => {
+              {records.map((app, idx) => {
                 const cfg = STATUS_CONFIG[app.status] || STATUS_CONFIG.processing;
                 const isSelected = selectedApp?.id === app.id;
                 const sla = getApplicationSLADetails(app);
 
                 return (
                   <div
-                    key={app.id}
+                    key={`${app.id}-${idx}`}
                     role="button"
                     tabIndex={0}
                     onClick={() => setSelectedApp(isSelected ? null : app)}
@@ -1162,10 +1178,10 @@ export default function TrackVaultView({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {records.map((app) => {
+                  {records.map((app, idx) => {
                     const cfg = STATUS_CONFIG[app.status] || STATUS_CONFIG.processing;
                     return (
-                      <tr key={app.id} className="hover:bg-slate-50/80 transition">
+                      <tr key={`${app.id}-${idx}`} className="hover:bg-slate-50/80 transition">
                         <td className="p-3 font-mono font-bold text-orange-600">{app.id}</td>
                         <td className="p-3 font-bold text-slate-800">
                           {app.citizenNameGu}
