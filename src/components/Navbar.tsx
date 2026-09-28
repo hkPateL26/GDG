@@ -14,6 +14,9 @@ import {
   Smartphone,
   ShieldCheck,
   Lock,
+  ChevronDown,
+  User,
+  Building2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled } from "@/lib/usePwaInstall";
@@ -33,11 +36,18 @@ export default function Navbar() {
     citizenName?: string;
     mobile?: string;
   } | null>(null);
+  const [officerSession, setOfficerSession] = useState<{
+    name?: string;
+    designation?: string;
+    id?: string;
+  } | null>(null);
+  const [showLoginDropdown, setShowLoginDropdown] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     const checkSession = () => {
       if (typeof window !== "undefined") {
+        // 1. Citizen Session
         const saved = localStorage.getItem("nagrik_citizen_session");
         if (saved) {
           try {
@@ -48,6 +58,19 @@ export default function Navbar() {
           }
         } else {
           setCitizenSession(null);
+        }
+
+        // 2. Officer Session
+        const savedOfficer = sessionStorage.getItem("nagrik_officer_session");
+        if (savedOfficer) {
+          try {
+            const parsed = JSON.parse(savedOfficer);
+            setOfficerSession(parsed);
+          } catch {
+            setOfficerSession(null);
+          }
+        } else {
+          setOfficerSession(null);
         }
       }
     };
@@ -129,10 +152,19 @@ export default function Navbar() {
               <LanguageSelector variant="desktop" />
             </div>
 
-            {/* 🔐 Single Unified Citizen Entry (Login / Dashboard) */}
-            {citizenSession ? (
+            {/* 🔐 Single Unified Entry (Login / Dashboard / Officer Desk) */}
+            {officerSession ? (
               <Link
-                href="/portal"
+                href="/portal?mode=officer"
+                className="ml-1.5 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border-2 border-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
+                title="કચેરી એડમિન સ્ક્રુટિની ડેસ્ક ખોલો"
+              >
+                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                <span className="max-w-[130px] truncate">{officerSession.name || "કચેરી એડમિન"} (મામલતદાર)</span>
+              </Link>
+            ) : citizenSession ? (
+              <Link
+                href="/portal?mode=citizen"
                 className="ml-1.5 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
                 title="તમારું નાગરિક પોર્ટલ અને વોલ્ટ ખોલો"
               >
@@ -140,14 +172,74 @@ export default function Navbar() {
                 <span className="max-w-[130px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)</span>
               </Link>
             ) : (
-              <Link
-                href="/portal"
-                className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap shrink-0 transition shadow-sm hover:shadow active:scale-95"
-                title="નાગરિક 2FA લૉગિન અને સેવા પોર્ટલ"
+              <div
+                className="relative"
+                onMouseEnter={() => setShowLoginDropdown(true)}
+                onMouseLeave={() => setShowLoginDropdown(false)}
               >
-                <Lock size={13} className="shrink-0" />
-                <span>🔐 નાગરિક લૉગિન</span>
-              </Link>
+                <button
+                  type="button"
+                  onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                  className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap shrink-0 transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
+                  title="લૉગિન પોર્ટલ પસંદ કરો"
+                >
+                  <Lock size={13} className="shrink-0" />
+                  <span>🔐 લૉગિન</span>
+                  <ChevronDown
+                    size={12}
+                    className={`transition-transform duration-200 ${showLoginDropdown ? "rotate-180" : ""}`}
+                  />
+                </button>
+
+                {/* Dropdown Menu on Cursor Hover or Click */}
+                {showLoginDropdown && (
+                  <div className="absolute right-0 top-full pt-1.5 w-72 z-50 animate-in fade-in slide-in-from-top-1 duration-150">
+                    <div className="bg-white rounded-2xl shadow-2xl border border-gray-200 p-2 space-y-1">
+                      {/* Option 1: Citizen Login */}
+                      <Link
+                        href="/portal?mode=citizen"
+                        onClick={() => setShowLoginDropdown(false)}
+                        className="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-orange-50 transition group/item"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
+                          <User size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-gray-900 text-xs">નાગરિક લૉગિન</span>
+                            <span className="text-[9.5px] bg-orange-100 text-orange-800 font-bold px-1.5 py-0.2 rounded-full">2FA SSO</span>
+                          </div>
+                          <p className="text-[10.5px] text-gray-500 leading-snug mt-0.5">
+                            આધાર OTP, અરજી ટ્રેકિંગ & ડિજિટલ વોલ્ટ
+                          </p>
+                        </div>
+                      </Link>
+
+                      <div className="border-t border-gray-100 my-1" />
+
+                      {/* Option 2: Officer / Admin Login */}
+                      <Link
+                        href="/portal?mode=officer"
+                        onClick={() => setShowLoginDropdown(false)}
+                        className="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-slate-100 transition group/item"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-slate-900 text-amber-300 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
+                          <Building2 size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-slate-900 text-xs">અધિકારી / એડમિન લૉગિન</span>
+                            <span className="text-[9.5px] bg-slate-900 text-amber-300 font-bold px-1.5 py-0.2 rounded-full">કચેરી</span>
+                          </div>
+                          <p className="text-[10.5px] text-gray-500 leading-snug mt-0.5">
+                            તાલુકા મામલતદાર, અરજી સ્ક્રુટિની & મંજૂરી
+                          </p>
+                        </div>
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
             )}
 
             {/* 📱 Desktop Install App Button */}
@@ -210,10 +302,22 @@ export default function Navbar() {
               </button>
             )}
 
-            {/* 🔐 Single Citizen 2FA Session / Login Banner in Mobile Drawer */}
-            {citizenSession ? (
+            {/* 🔐 Unified Session / Login Cards in Mobile Drawer */}
+            {officerSession ? (
               <Link
-                href="/portal"
+                href="/portal?mode=officer"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-slate-900 text-amber-300 border-2 border-amber-400 mb-2 shadow-xs"
+              >
+                <span className="flex items-center gap-2">
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                  <span>કચેરી એડમિન: {officerSession.name || "મામલતદાર"}</span>
+                </span>
+                <span className="text-[11px] bg-amber-400 text-slate-950 px-2.5 py-1 rounded-full font-black">ડેસ્ક જુઓ →</span>
+              </Link>
+            ) : citizenSession ? (
+              <Link
+                href="/portal?mode=citizen"
                 onClick={() => setIsOpen(false)}
                 className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-900 border-2 border-emerald-400 mb-2 shadow-xs"
               >
@@ -224,14 +328,36 @@ export default function Navbar() {
                 <span className="text-[11px] bg-emerald-600 text-white px-2.5 py-1 rounded-full font-black">વોલ્ટ જુઓ →</span>
               </Link>
             ) : (
-              <Link
-                href="/portal"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-center gap-2 p-3 rounded-2xl text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white mb-2 shadow-sm active:scale-95"
-              >
-                <Lock size={15} className="shrink-0" />
-                <span>🔐 નાગરિક લૉગિન (અરજીઓ, સેવા & પાત્રતા)</span>
-              </Link>
+              <div className="space-y-1.5 mb-2.5">
+                <p className="text-[10.5px] font-bold text-gray-500 uppercase tracking-wider px-1">
+                  🔐 લૉગિન પોર્ટલ પસંદ કરો:
+                </p>
+                <div className="grid grid-cols-1 gap-2">
+                  <Link
+                    href="/portal?mode=citizen"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm active:scale-95"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <User size={16} className="shrink-0" />
+                      <span className="font-bold">નાગરિક લૉગિન (Citizen 2FA)</span>
+                    </span>
+                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold">SSO પ્રવેશ →</span>
+                  </Link>
+
+                  <Link
+                    href="/portal?mode=officer"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-slate-900 text-amber-300 shadow-sm active:scale-95 border border-slate-800"
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <Building2 size={16} className="shrink-0 text-amber-300" />
+                      <span className="font-bold">અધિકારી / એડમિન લૉગિન</span>
+                    </span>
+                    <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black">મામલતદાર ડેસ્ક →</span>
+                  </Link>
+                </div>
+              </div>
             )}
 
             {navLinks.map(({ href, label, Icon }) => {
