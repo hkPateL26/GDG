@@ -13,7 +13,6 @@ import {
   X,
   Sparkles,
   MapPin,
-  Camera,
   IndianRupee,
   Smartphone,
   ShieldCheck,
@@ -71,7 +70,6 @@ export default function Navbar() {
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
     { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
-    { href: "/verify-doc",          label: t.nav.scanner,     Icon: Camera },
     { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },

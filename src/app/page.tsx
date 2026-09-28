@@ -15,7 +15,6 @@ import {
   Home as HomeIcon,
   Flame,
   Briefcase,
-  Camera,
   IndianRupee,
 } from "lucide-react";
 
@@ -29,7 +28,6 @@ const SCHEME_ICONS: Record<string, React.ElementType> = {
 
 const QUICK_SERVICES = [
   { icon: Sparkles,    label: "પાત્રતા કેલ્ક્યુલેટર (Eligibility)", href: "/eligibility" },
-  { icon: Camera,      label: "📸 AI દસ્તાવેજ સ્કેનર (Pre-Check)", href: "/verify-doc" },
   { icon: IndianRupee, label: "💰 કુટુંબ લાભ કેલ્ક્યુલેટર & પાસ", href: "/benefit-calculator" },
   { icon: MapPin,      label: "નજીકની કચેરી (Jan Seva Locator)",   href: "/locator" },
   { icon: FileText,    label: "રેશન કાર્ડ ગાઈડ & ચેકલિસ્ટ",        href: "/documents?type=ration" },
@@ -71,12 +69,6 @@ export default function Home() {
                 className="flex items-center gap-1.5 bg-yellow-400 hover:bg-yellow-300 text-gray-900 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition shadow-lg active:scale-95"
               >
                 <Sparkles size={15} /> પાત્રતા ચકાસો (Eligibility)
-              </Link>
-              <Link
-                href="/verify-doc"
-                className="flex items-center gap-1.5 bg-white text-orange-600 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm hover:bg-orange-50 active:scale-95 transition shadow"
-              >
-                📸 AI દસ્તાવેજ સ્કેનર
               </Link>
               <Link
                 href="/benefit-calculator"
