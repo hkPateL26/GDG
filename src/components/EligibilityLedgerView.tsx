@@ -312,10 +312,10 @@ export default function EligibilityLedgerView({
                 <SlidersHorizontal size={15} className="text-orange-500" />
                 પ્રોફાઇલ ફિલ્ટર — AI ચેક
               </h3>
-              <button onClick={resetForm}
-                className="text-xs text-slate-400 hover:text-orange-600 flex items-center gap-1 transition">
+              <span role="button" tabIndex={0} onClick={resetForm} onKeyDown={(e) => e.key === "Enter" && resetForm()}
+                className="text-xs text-slate-400 hover:text-orange-600 flex items-center gap-1 transition cursor-pointer">
                 <RotateCcw size={11} /> રીસેટ
-              </button>
+              </span>
             </div>
 
             <div className="grid grid-cols-2 gap-3">
