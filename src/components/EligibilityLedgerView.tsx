@@ -13,6 +13,8 @@ import {
   RotateCcw,
   ShieldCheck,
   History,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 
 interface EligibilityResult {
@@ -44,6 +46,12 @@ export default function EligibilityLedgerView({
   const [hasBPL, setHasBPL] = useState<boolean>(citizen.hasBPL || false);
   const [hasGirlChild, setHasGirlChild] = useState<boolean>(false);
 
+  // UI toggles
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
+  const [showIneligible, setShowIneligible] = useState(false);
+  const [showLedger, setShowLedger] = useState(false);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+
   useEffect(() => {
     const timer = setTimeout(() => {
       if (citizen) {
@@ -68,7 +76,7 @@ export default function EligibilityLedgerView({
       let checksPassed = 0;
       let totalChecks = 0;
 
-      // 0. De-duplication & Past Availed Check (BUG-005: Harmonized Aliases)
+      // 0. De-duplication & Past Availed Check
       const availedRecord = citizen.availedBenefits.find(
         (b) =>
           b.schemeId === scheme.id ||
@@ -86,9 +94,9 @@ export default function EligibilityLedgerView({
         const max = scheme.eligibility.maxAge ?? 100;
         if (numericAge >= min && numericAge <= max) {
           checksPassed++;
-          reasons.push(`તમારી ઉંમર (${numericAge} વર્ષ) માન્ય શ્રેણી (${min}-${max}) માં આવે છે.`);
+          reasons.push(`ઉંમર (${numericAge}વ.) ${min}-${max} સ્વીકૃત`);
         } else {
-          failedReasons.push(`ઉંમર ${min} થી ${max} વર્ષ વચ્ચે હોવી જરૂરી છે.`);
+          failedReasons.push(`ઉંમર ${min}-${max} વ. જોઈએ`);
         }
       }
 
@@ -97,9 +105,9 @@ export default function EligibilityLedgerView({
         totalChecks++;
         if (gender === scheme.eligibility.gender) {
           checksPassed++;
-          reasons.push(`આ યોજના ફક્ત ${scheme.eligibility.gender === "female" ? "મહિલાઓ" : "પુરુષો"} માટે છે (લાગુ પડે છે).`);
+          reasons.push(`${scheme.eligibility.gender === "female" ? "મહિલા" : "પુરુષ"} — લાગુ`);
         } else {
-          failedReasons.push(`આ યોજના ફક્ત ${scheme.eligibility.gender === "female" ? "મહિલાઓ" : "પુરુષો"} માટે છે.`);
+          failedReasons.push(`ફક્ત ${scheme.eligibility.gender === "female" ? "મહિલાઓ" : "પુરુષો"} માટે`);
         }
       }
 
@@ -108,9 +116,9 @@ export default function EligibilityLedgerView({
         totalChecks++;
         if (numericIncome <= scheme.eligibility.incomeLimit) {
           checksPassed++;
-          reasons.push(`વાર્ષિક આવક (₹${numericIncome.toLocaleString("en-IN")}) મર્યાદા (₹${scheme.eligibility.incomeLimit.toLocaleString("en-IN")}) ની અંદર છે.`);
+          reasons.push(`આવક ₹${(numericIncome / 1000).toFixed(0)}K — મર્યાદા ₹${(scheme.eligibility.incomeLimit / 1000).toFixed(0)}K ની અંદર`);
         } else {
-          failedReasons.push(`વાર્ષિક આવક ₹${scheme.eligibility.incomeLimit.toLocaleString("en-IN")} થી ઓછી હોવી જોઈએ.`);
+          failedReasons.push(`આવક ₹${(scheme.eligibility.incomeLimit / 1000).toFixed(0)}K+ — વધુ છે`);
         }
       }
 
@@ -119,20 +127,20 @@ export default function EligibilityLedgerView({
         totalChecks++;
         if (scheme.eligibility.occupation.includes(occupation)) {
           checksPassed++;
-          reasons.push(`વ્યવસાય (${occupation}) પાત્રતા ધરાવે છે.`);
+          reasons.push(`${occupation} — વ્યવસાય પાત્ર`);
         } else {
-          failedReasons.push(`આ યોજના ખાસ કરીને ${scheme.eligibility.occupation.join(", ")} માટે છે.`);
+          failedReasons.push(`ફક્ત ${scheme.eligibility.occupation.join(", ")} માટે`);
         }
       }
 
-      // 5. Special condition checks
+      // 5. Special conditions
       if (scheme.id === "pm-kisan" || scheme.id === "fasal-bima") {
         totalChecks++;
         if (hasLand) {
           checksPassed++;
-          reasons.push("ખેતીની જમીન (7/12 રેકોર્ડ) ધરાવો છો.");
+          reasons.push("7/12 જમીન ✓");
         } else {
-          failedReasons.push("ખેતીની જમીન (7/12 રેકોર્ડ) હોવી અનિવાર્ય છે.");
+          failedReasons.push("ખેતીની જમીન (7/12) જોઈએ");
         }
       }
 
@@ -140,9 +148,9 @@ export default function EligibilityLedgerView({
         totalChecks++;
         if (hasBPL || numericIncome <= 200000) {
           checksPassed++;
-          reasons.push("આર્થિક વર્ગ (SECC / BPL / અલ્પ આવક) ધોરણો પરિપૂર્ણ થાય છે.");
+          reasons.push("BPL/અલ્પ-આવક ✓");
         } else {
-          failedReasons.push("BPL કાર્ડ અથવા વાર્ષિક આવક ₹૨,૦૦,૦૦૦ થી ઓછી હોવી જરૂરી છે.");
+          failedReasons.push("BPL અથવા આવક ₹2L ↓ જોઈએ");
         }
       }
 
@@ -150,24 +158,16 @@ export default function EligibilityLedgerView({
         totalChecks++;
         if (hasGirlChild) {
           checksPassed++;
-          reasons.push("કુટુંબમાં ૧૦ વર્ષથી નાની દીકરી ઉપલબ્ધ છે.");
+          reasons.push("10 વ. ↓ દીકરી ✓");
         } else {
-          failedReasons.push("૧૦ વર્ષથી ઓછી ઉંમરની દીકરી હોવી જરૂરી છે.");
+          failedReasons.push("10 વ. ↓ દીકરી જોઈએ");
         }
       }
 
       const isEligible = totalChecks === 0 || checksPassed === totalChecks;
       const score = totalChecks === 0 ? 100 : Math.round((checksPassed / totalChecks) * 100);
 
-      return {
-        scheme,
-        isEligible,
-        score,
-        reasons,
-        failedReasons,
-        alreadyAvailed: Boolean(availedRecord),
-        availedRecord,
-      };
+      return { scheme, isEligible, score, reasons, failedReasons, alreadyAvailed: Boolean(availedRecord), availedRecord };
     });
   };
 
@@ -187,370 +187,291 @@ export default function EligibilityLedgerView({
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8">
-        {/* Left Column: Citizen DBT Ledger & Profile Form */}
-        <div className="lg:col-span-5 space-y-4">
-          {/* ── 1. Secure Aadhaar & Mobile DBT Ledger Box ── */}
-          <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 text-white rounded-2xl p-5 shadow-lg border border-slate-700 space-y-3.5">
-            <div className="flex items-center justify-between border-b border-slate-700 pb-2.5">
-              <div className="flex items-center gap-2">
-                <ShieldCheck size={18} className="text-amber-400" />
-                <div>
-                  <h3 className="font-extrabold text-xs sm:text-sm text-amber-400">
-                    સત્તાવાર DBT લાભ ખાતું (Verified Ledger)
-                  </h3>
-                  <p className="text-[10px] text-slate-300">
-                    De-duplication & Past Benefits Ledger (UIDAI / e-KYC)
-                  </p>
-                </div>
-              </div>
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 px-2 py-0.5 rounded font-mono font-bold">
-                ✓ 2FA લિંક્ડ
-              </span>
-            </div>
+    <div className="space-y-4 animate-in fade-in duration-300">
 
-            <div className="space-y-2.5 text-xs">
-              <div className="bg-slate-800/90 border border-slate-700 p-2.5 rounded-xl flex items-center justify-between">
-                <div>
-                  <span className="font-bold text-white block text-sm">
-                    {citizen.citizenNameGu || citizen.citizenName}
-                  </span>
-                  <span className="text-[11px] text-slate-400 font-mono">
-                    આધાર: XXXX-XXXX-{citizen.aadhaarLast4} • +91 {citizen.mobile}
-                  </span>
-                </div>
-                <span className="text-[11px] text-emerald-400 font-bold">
-                  {citizen.village}, {citizen.districtGu || citizen.district}
-                </span>
-              </div>
+      {/* ── Summary Banner ── */}
+      <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 rounded-2xl shadow-sm flex items-center justify-between">
+        <div>
+          <p className="text-[10px] uppercase font-extrabold tracking-wider text-orange-100">AI પાત્રતા ચકાસણી</p>
+          <h2 className="text-lg font-black mt-0.5">
+            {eligibleSchemes.length} યોજના — તમે પાત્ર છો!
+          </h2>
+          <p className="text-[11px] text-orange-100">
+            {otherSchemes.length} અ-પાત્ર • {citizen.availedBenefits.length} DBT લાભ અગાઉ
+          </p>
+        </div>
+        <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-2xl font-black shrink-0">
+          {eligibleSchemes.length}
+        </div>
+      </div>
 
-              {/* Past Availed Benefits Ledger List */}
-              <div className="space-y-1.5">
-                <p className="text-[11px] font-bold text-amber-300 flex items-center gap-1">
-                  <History size={13} /> ભૂતકાળમાં લીધેલ સત્તાવાર સરકારી લાભો (DBT Ledger):
+      {/* ── DBT Ledger + Profile Form — Collapsible ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+        {/* DBT Ledger Toggle */}
+        <div className="bg-slate-900 text-white rounded-2xl border border-slate-700 overflow-hidden">
+          <button
+            type="button"
+            onClick={() => setShowLedger((v) => !v)}
+            className="w-full flex items-center justify-between p-3.5 cursor-pointer"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-amber-400">
+              <ShieldCheck size={16} /> DBT ખાતું ({citizen.availedBenefits.length} રેકોર્ડ)
+            </span>
+            {showLedger ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+          </button>
+
+          {showLedger && (
+            <div className="px-3.5 pb-3.5 space-y-2 border-t border-slate-700 pt-2.5">
+              <div className="bg-slate-800 rounded-xl p-2.5 text-xs">
+                <p className="font-bold text-white">{citizen.citizenNameGu || citizen.citizenName}</p>
+                <p className="text-slate-400 font-mono text-[10px] mt-0.5">
+                  XXXX-XXXX-{citizen.aadhaarLast4} • {citizen.village}, {citizen.districtGu || citizen.district}
                 </p>
-                <div className="space-y-1.5">
-                  {citizen.availedBenefits.map((b, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-slate-800/60 border border-slate-700/80 rounded-lg p-2 text-[11px] space-y-0.5"
-                    >
-                      <div className="flex items-center justify-between">
-                        <span className="font-bold text-slate-200">{b.schemeNameGu}</span>
-                        <span className="font-mono text-emerald-400 font-bold">
-                          ₹{b.amountDisbursed.toLocaleString("en-IN")}
-                        </span>
-                      </div>
-                      <div className="text-[10px] text-slate-400 flex items-center justify-between font-mono">
-                        <span>તારીખ: {b.disbursedDate}</span>
-                        <span>Ref: {b.certOrInstallmentNo}</span>
-                      </div>
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-bold text-amber-300 flex items-center gap-1">
+                  <History size={11} /> ભૂતકાળ DBT લાભો:
+                </p>
+                {citizen.availedBenefits.map((b, idx) => (
+                  <div key={idx} className="bg-slate-800/60 border border-slate-700 rounded-lg p-2 text-[10px]">
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-slate-200 truncate">{b.schemeNameGu}</span>
+                      <span className="font-mono text-emerald-400 font-bold ml-2 shrink-0">₹{b.amountDisbursed.toLocaleString("en-IN")}</span>
                     </div>
-                  ))}
-                </div>
-              </div>
-
-              <div className="pt-1 flex items-center justify-between text-[11px]">
-                <span className="text-slate-400 text-[10px]">
-                  🔒 DBT De-duplication Rule Active
-                </span>
-                <span className="text-emerald-400 text-[10px] font-medium">
-                  {citizen.availedBenefits.length} સહાય જમા રેકોર્ડ્સ
-                </span>
+                    <div className="text-slate-500 font-mono mt-0.5">{b.disbursedDate} • {b.certOrInstallmentNo}</div>
+                  </div>
+                ))}
               </div>
             </div>
-          </div>
+          )}
+        </div>
 
-          {/* ── 2. Citizen Profile Form ── */}
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-5 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h2 className="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
-                <Filter size={16} className="text-orange-500" />
-                <span>નાગરિક પ્રોફાઇલ વિગતો</span>
-              </h2>
+        {/* Profile Form Toggle */}
+        <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+          <button
+            type="button"
+            onClick={() => setShowProfileForm((v) => !v)}
+            className="w-full flex items-center justify-between p-3.5 cursor-pointer"
+          >
+            <span className="flex items-center gap-2 text-sm font-bold text-slate-700">
+              <Filter size={15} className="text-orange-500" /> પ્રોફાઇલ ફિલ્ટર
+            </span>
+            <div className="flex items-center gap-2">
               <button
-                onClick={resetForm}
-                className="text-xs text-slate-400 hover:text-orange-600 flex items-center gap-1 transition"
+                type="button"
+                onClick={(e) => { e.stopPropagation(); resetForm(); }}
+                className="text-[10px] text-slate-400 hover:text-orange-600 flex items-center gap-0.5 transition"
               >
-                <RotateCcw size={12} /> રીસેટ
+                <RotateCcw size={10} /> રીસેટ
               </button>
+              {showProfileForm ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
             </div>
+          </button>
 
-            <div className="space-y-3.5 text-xs sm:text-sm">
-              {/* Age & Gender */}
-              <div className="grid grid-cols-2 gap-3">
+          {showProfileForm && (
+            <div className="px-3.5 pb-3.5 border-t border-slate-100 pt-2.5 space-y-2.5 text-xs">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">ઉંમર (વર્ષ)</label>
-                  <input
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={age}
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">ઉંમર</label>
+                  <input type="number" min={1} max={100} value={age}
                     onChange={(e) => setAge(e.target.value ? Number(e.target.value) : "")}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  />
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-orange-400" />
                 </div>
-
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">જાતિ / લિંગ</label>
-                  <select
-                    value={gender}
-                    onChange={(e) => setGender(e.target.value as "all" | "male" | "female")}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  >
-                    <option value="male">પુરુષ (Male)</option>
-                    <option value="female">મહિલા (Female)</option>
-                    <option value="all">અન્ય (Other)</option>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">લિંગ</label>
+                  <select value={gender} onChange={(e) => setGender(e.target.value as "all" | "male" | "female")}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-orange-400">
+                    <option value="male">પુરુષ</option>
+                    <option value="female">મહિલા</option>
+                    <option value="all">અન્ય</option>
                   </select>
                 </div>
               </div>
 
-              {/* Annual Income */}
               <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">
-                  વાર્ષિક કૌટુંબિક આવક (₹)
-                </label>
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1">વાર્ષિક આવક (₹)</label>
                 <div className="relative">
-                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold">₹</span>
-                  <input
-                    type="number"
-                    step={10000}
-                    value={annualIncome}
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs">₹</span>
+                  <input type="number" step={10000} value={annualIncome}
                     onChange={(e) => setAnnualIncome(e.target.value ? Number(e.target.value) : "")}
-                    className="w-full pl-7 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold font-mono focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                  />
+                    className="w-full pl-6 pr-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold font-mono focus:outline-none focus:ring-1 focus:ring-orange-400" />
                 </div>
               </div>
 
-              {/* Occupation */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">મુખ્ય વ્યવસાય</label>
-                <select
-                  value={occupation}
-                  onChange={(e) => setOccupation(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                >
-                  <option value="farmer">ખેડૂત / કૃષિ (Farmer)</option>
-                  <option value="labourer">શ્રમિક / મજૂર (Labourer)</option>
-                  <option value="student">વિદ્યાર્થી (Student)</option>
-                  <option value="self-employed">વેપારી / સ્વરોજગાર (Self-Employed)</option>
-                  <option value="unemployed">બેરોજગાર (Unemployed)</option>
-                  <option value="homemaker">ગૃહિણી (Homemaker)</option>
-                </select>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">વ્યવસાય</label>
+                  <select value={occupation} onChange={(e) => setOccupation(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-orange-400">
+                    <option value="farmer">ખેડૂત</option>
+                    <option value="labourer">શ્રમિક</option>
+                    <option value="student">વિદ્યાર્થી</option>
+                    <option value="self-employed">વેપારી</option>
+                    <option value="unemployed">બેરોજગાર</option>
+                    <option value="homemaker">ગૃહિણી</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-[10px] font-semibold text-slate-500 mb-1">કેટેગરી</label>
+                  <select value={category} onChange={(e) => setCategory(e.target.value)}
+                    className="w-full px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold focus:outline-none focus:ring-1 focus:ring-orange-400">
+                    <option value="General">General</option>
+                    <option value="OBC">OBC/SEBC</option>
+                    <option value="SC">SC</option>
+                    <option value="ST">ST</option>
+                    <option value="EWS">EWS</option>
+                  </select>
+                </div>
               </div>
 
-              {/* Social Category */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-600 mb-1">સામાજિક કેટેગરી</label>
-                <select
-                  value={category}
-                  onChange={(e) => setCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold focus:bg-white focus:outline-none focus:ring-1 focus:ring-orange-500"
-                >
-                  <option value="General">સામાન્ય (General)</option>
-                  <option value="OBC">ઓબીસી / સા.શૈ.પ. (SEBC / OBC)</option>
-                  <option value="SC">અનુસૂચિત જાતિ (SC)</option>
-                  <option value="ST">અનુસૂચિત જનજાતિ (ST)</option>
-                  <option value="EWS">આર્થિક નબળા વર્ગ (EWS)</option>
-                </select>
-              </div>
-
-              {/* Special Checkboxes */}
-              <div className="pt-2 space-y-2 border-t border-slate-100">
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasLand}
-                    onChange={(e) => setHasLand(e.target.checked)}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                  />
-                  <span>ખેતીની જમીન ધરાવો છો (7/12 રેકોર્ડ)</span>
-                </label>
-
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasBPL}
-                    onChange={(e) => setHasBPL(e.target.checked)}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                  />
-                  <span>BPL / અંત્યોદય રેશનકાર્ડ ધરાવો છો</span>
-                </label>
-
-                <label className="flex items-center gap-2 text-xs font-medium text-slate-700 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={hasGirlChild}
-                    onChange={(e) => setHasGirlChild(e.target.checked)}
-                    className="w-4 h-4 text-orange-600 rounded focus:ring-orange-500"
-                  />
-                  <span>કુટુંબમાં ૧૦ વર્ષથી નાની દીકરી છે</span>
-                </label>
+              <div className="pt-1.5 border-t border-slate-100 space-y-1.5">
+                {[
+                  { id: "land", checked: hasLand, set: setHasLand, label: "ખેતીની જમીન (7/12)" },
+                  { id: "bpl", checked: hasBPL, set: setHasBPL, label: "BPL / અંત્યોદય કાર્ડ" },
+                  { id: "girl", checked: hasGirlChild, set: setHasGirlChild, label: "10 વ. ↓ દીકરી" },
+                ].map(({ id, checked, set, label }) => (
+                  <label key={id} className="flex items-center gap-2 text-[11px] font-medium text-slate-700 cursor-pointer">
+                    <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)}
+                      className="w-3.5 h-3.5 text-orange-600 rounded focus:ring-orange-500" />
+                    {label}
+                  </label>
+                ))}
               </div>
             </div>
-          </div>
+          )}
         </div>
+      </div>
 
-        {/* Right Column: Matched Schemes & Results */}
-        <div className="lg:col-span-7 space-y-5">
-          {/* Summary Banner */}
-          <div className="bg-gradient-to-r from-orange-500 to-amber-500 text-white p-4 sm:p-5 rounded-2xl shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs uppercase font-extrabold tracking-wider text-orange-100">
-                AI પાત્રતા ચકાસણી પરિણામ
-              </p>
-              <h2 className="text-lg sm:text-xl font-black mt-0.5">
-                તમે {eligibleSchemes.length} સરકારી યોજનાઓ માટે પાત્ર છો!
-              </h2>
-              <p className="text-xs text-orange-100 mt-1">
-                આ પ્રોફાઇલ મુજબ તમને સીધો DBT લાભ મળી શકે છે.
-              </p>
-            </div>
-            <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-2xl font-black shrink-0">
-              {eligibleSchemes.length}
-            </div>
+      {/* ── Eligible Schemes — Compact List ── */}
+      <div className="space-y-2">
+        <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2 px-1">
+          <CheckCircle2 size={16} className="text-emerald-600" />
+          પાત્ર યોજનાઓ ({eligibleSchemes.length})
+        </h3>
+
+        {eligibleSchemes.length === 0 ? (
+          <div className="bg-white rounded-2xl p-5 text-center border border-slate-200 text-sm text-slate-500">
+            આ પ્રોફાઇલ મુજબ કોઈ સીધી યોજના મળી નથી.
           </div>
+        ) : (
+          <div className="space-y-2">
+            {eligibleSchemes.map(({ scheme, reasons, alreadyAvailed, availedRecord }) => {
+              const isExpanded = expandedCardId === scheme.id;
+              return (
+                <div key={scheme.id}
+                  className="bg-white rounded-xl border-2 border-emerald-200 shadow-xs overflow-hidden">
 
-          {/* 1. Eligible Schemes List */}
-          <div className="space-y-3.5">
-            <h3 className="text-sm font-extrabold text-slate-800 flex items-center gap-2">
-              <CheckCircle2 size={18} className="text-emerald-600" />
-              <span>સંપૂર્ણ પાત્રતા ધરાવતી યોજનાઓ ({eligibleSchemes.length})</span>
-            </h3>
-
-            {eligibleSchemes.length === 0 ? (
-              <div className="bg-white rounded-2xl p-6 text-center border border-slate-200">
-                <p className="text-sm text-slate-500">આ પ્રોફાઇલ મુજબ કોઈ સીધી યોજના મળી નથી.</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {eligibleSchemes.map(({ scheme, reasons, alreadyAvailed, availedRecord }) => (
-                  <div
-                    key={scheme.id}
-                    className="bg-white rounded-2xl border-2 border-emerald-300 p-4 sm:p-5 shadow-xs hover:shadow-md transition space-y-3"
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <span className="text-3xl p-2 bg-emerald-50 rounded-2xl border border-emerald-100 shrink-0">
-                          {scheme.icon}
-                        </span>
-                        <div>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <h4 className="font-extrabold text-base text-slate-900">
-                              {scheme.nameGu}
-                            </h4>
-                            {alreadyAvailed ? (
-                              <span className="bg-amber-100 text-amber-900 border border-amber-300 text-[10px] font-black px-2 py-0.5 rounded-full flex items-center gap-1">
-                                ✓ અગાઉ લાભ મળેલ છે (₹{availedRecord?.amountDisbursed.toLocaleString("en-IN")})
-                              </span>
-                            ) : (
-                              <span className="bg-emerald-100 text-emerald-800 border border-emerald-300 text-[10px] font-black px-2 py-0.5 rounded-full">
-                                ✓ ૧૦૦% પાત્ર (Eligible)
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-xs text-slate-500 mt-0.5">{scheme.name}</p>
-                        </div>
+                  {/* Compact row — always visible */}
+                  <div className="p-3 flex items-center gap-3">
+                    <span className="text-2xl shrink-0">{scheme.icon}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <p className="font-extrabold text-sm text-slate-900 leading-snug">{scheme.nameGu}</p>
+                        {alreadyAvailed ? (
+                          <span className="text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-300 px-1.5 py-0.5 rounded-full shrink-0">
+                            ✓ અગાઉ ₹{availedRecord?.amountDisbursed.toLocaleString("en-IN")}
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded-full shrink-0">
+                            ✓ ૧૦૦% પાત્ર
+                          </span>
+                        )}
                       </div>
-
-                      <div className="text-right shrink-0">
-                        <span className="text-xs sm:text-sm font-black text-emerald-700 block">
-                          {scheme.benefits?.[0] || "સરકારી સહાય"}
-                        </span>
-                        <span className="text-[10px] text-slate-400 font-semibold">{scheme.ministry}</span>
-                      </div>
+                      <p className="text-[10px] text-slate-500 mt-0.5 line-clamp-1">{scheme.benefits?.[0]}</p>
                     </div>
 
-                    <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                      {scheme.description}
-                    </p>
+                    {/* Expand toggle */}
+                    <button
+                      type="button"
+                      onClick={() => setExpandedCardId(isExpanded ? null : scheme.id)}
+                      className="p-1.5 rounded-lg bg-slate-100 hover:bg-orange-100 text-slate-500 hover:text-orange-600 transition shrink-0"
+                    >
+                      {isExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  </div>
 
-                    {/* Matched Checklist */}
-                    <div className="space-y-1">
-                      <p className="text-[11px] font-bold text-emerald-800">પરિપૂર્ણ થયેલ શરતો:</p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-1 text-[11px] text-emerald-700">
+                  {/* Expanded details */}
+                  {isExpanded && (
+                    <div className="border-t border-emerald-100 p-3 space-y-2.5 bg-emerald-50/50">
+                      <p className="text-xs text-slate-600 leading-relaxed">{scheme.description}</p>
+
+                      <div className="grid grid-cols-2 gap-1">
                         {reasons.map((r, i) => (
-                          <div key={i} className="flex items-center gap-1.5">
+                          <div key={i} className="flex items-center gap-1 text-[10px] text-emerald-700">
                             <span className="text-emerald-500 shrink-0">✓</span>
-                            <span className="truncate">{r}</span>
+                            <span>{r}</span>
                           </div>
                         ))}
                       </div>
-                    </div>
 
-                    {/* Action Bar */}
-                    <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
-                      <span className="text-[11px] text-slate-500">
-                        જરૂરી દસ્તાવેજો: <strong>{(scheme.documents || []).slice(0, 2).join(", ")}...</strong>
-                      </span>
+                      <p className="text-[10px] text-slate-400">
+                        📄 {(scheme.documents || []).slice(0, 2).join(" • ")}
+                      </p>
 
-                      {onNavigateToDocuments ? (
-                        <button
-                          type="button"
-                          onClick={onNavigateToDocuments}
-                          className="px-4 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition inline-flex items-center gap-1 active:scale-95 shadow-2xs"
-                        >
-                          <span>ઓનલાઇન અરજી કરો</span> <ArrowRight size={13} />
-                        </button>
-                      ) : (
-                        <Link
-                          href="/documents"
-                          className="px-4 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg transition inline-flex items-center gap-1 active:scale-95 shadow-2xs"
-                        >
-                          <span>ઓનલાઇન અરજી કરો</span> <ArrowRight size={13} />
+                      <div className="flex gap-2">
+                        {onNavigateToDocuments ? (
+                          <button type="button" onClick={onNavigateToDocuments}
+                            className="flex-1 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg text-xs transition inline-flex items-center justify-center gap-1 active:scale-95">
+                            ઓનલાઇન અરજી <ArrowRight size={12} />
+                          </button>
+                        ) : (
+                          <Link href="/documents"
+                            className="flex-1 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white font-bold rounded-lg text-xs transition inline-flex items-center justify-center gap-1 active:scale-95">
+                            ઓનલાઇન અરજી <ArrowRight size={12} />
+                          </Link>
+                        )}
+                        <Link href={`/schemes/${scheme.id}`}
+                          className="px-3 py-1.5 border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 font-bold rounded-lg text-xs transition">
+                          વિગત →
                         </Link>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* 2. Ineligible Schemes with exact reasons */}
-          <div className="pt-3 space-y-3">
-            <h3 className="text-xs sm:text-sm font-bold text-slate-500 flex items-center gap-2">
-              <XCircle size={16} className="text-slate-400" />
-              <span>હાલમાં અપાત્ર યોજનાઓ (શા માટે પાત્ર નથી તેનું કારણ)</span>
-            </h3>
-
-            <div className="space-y-2.5">
-              {otherSchemes.map(({ scheme, failedReasons }) => (
-                <div
-                  key={scheme.id}
-                  className="bg-white rounded-xl border border-slate-200 p-3.5 opacity-80 hover:opacity-100 transition space-y-2"
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="text-xl shrink-0">{scheme.icon}</span>
-                      <div className="min-w-0">
-                        <p className="font-bold text-xs sm:text-sm text-slate-800 truncate">
-                          {scheme.nameGu}
-                        </p>
-                        <p className="text-[10px] text-slate-400 truncate">{scheme.name}</p>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-600 rounded shrink-0">
-                      અપાત્ર
-                    </span>
-                  </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
 
-                  <div className="pt-1.5 border-t border-slate-100 text-xs">
-                    <p className="text-[10px] font-bold text-rose-500 mb-0.5">
-                      અપાત્રતાનું કારણ:
-                    </p>
-                    {failedReasons.map((f, i) => (
-                      <p key={i} className="text-[11px] text-rose-600 flex items-start gap-1">
-                        <span>✕</span> <span>{f}</span>
+      {/* ── Ineligible Schemes — Collapsed by default ── */}
+      <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
+        <button
+          type="button"
+          onClick={() => setShowIneligible((v) => !v)}
+          className="w-full flex items-center justify-between p-3.5 cursor-pointer hover:bg-slate-50 transition"
+        >
+          <span className="flex items-center gap-2 text-sm font-bold text-slate-500">
+            <XCircle size={15} className="text-slate-400" />
+            અ-પાત્ર યોજનાઓ ({otherSchemes.length}) — કારણ જુઓ
+          </span>
+          {showIneligible ? <ChevronUp size={16} className="text-slate-400" /> : <ChevronDown size={16} className="text-slate-400" />}
+        </button>
+
+        {showIneligible && (
+          <div className="border-t border-slate-100 p-3 space-y-1.5">
+            {otherSchemes.map(({ scheme, failedReasons }) => (
+              <div key={scheme.id}
+                className="flex items-start gap-2.5 p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                <span className="text-lg shrink-0 mt-0.5">{scheme.icon}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-bold text-xs text-slate-700 truncate">{scheme.nameGu}</p>
+                  <div className="mt-0.5">
+                    {failedReasons.slice(0, 2).map((f, i) => (
+                      <p key={i} className="text-[10px] text-rose-500 flex items-start gap-1">
+                        <span className="shrink-0">✕</span> {f}
                       </p>
                     ))}
                   </div>
                 </div>
-              ))}
-            </div>
+                <span className="text-[9px] font-bold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded shrink-0">
+                  અ-પાત્ર
+                </span>
+              </div>
+            ))}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
