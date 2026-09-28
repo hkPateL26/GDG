@@ -39,11 +39,11 @@ interface SmartKacheriLocatorBannerProps {
   onClose?: () => void;
 }
 
-// Official Home Coordinates for citizen (Gomta village, Gondal taluka, Rajkot)
+// Official Home Coordinates for citizen (Omnagar, Rajkot city)
 const HOME_COORDS = {
-  lat: 21.9125,
-  lng: 70.7654,
-  labelGu: "મુ. ગોમટા, તા. ગોંડલ (ઘરે)",
+  lat: 22.2868,
+  lng: 70.7893,
+  labelGu: "ઓમ નગર, રાજકોટ (ઘરે)",
 };
 
 // Simulated Outside Coordinate for testing (Rajkot City - Kalawad Road)

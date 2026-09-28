@@ -27,8 +27,8 @@ export default function CitizenLoginShield({
   onOfficerClick,
   serviceTitle = "સરકારી સેવા પોર્ટલ",
 }: CitizenLoginShieldProps) {
-  const [loginMobile, setLoginMobile] = useState("9825012345");
-  const [loginAadhaar, setLoginAadhaar] = useState("4829");
+  const [loginMobile, setLoginMobile] = useState("9974442291");
+  const [loginAadhaar, setLoginAadhaar] = useState("1413");
   const [loginOtp, setLoginOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [simulatedSmsOtp, setSimulatedSmsOtp] = useState<string | null>(null);
@@ -127,8 +127,8 @@ export default function CitizenLoginShield({
   };
 
   const handleFastDemoCitizen = () => {
-    setLoginMobile("9825012345");
-    setLoginAadhaar("4829");
+    setLoginMobile("9974442291");
+    setLoginAadhaar("1413");
     setAuthError("");
   };
 
@@ -178,7 +178,7 @@ export default function CitizenLoginShield({
           <div className="flex items-center gap-2 text-orange-900">
             <Sparkles size={16} className="text-orange-600 shrink-0" />
             <span>
-              <strong>હેકાથોન જજ લાઈવ ડેમો:</strong> ૧-ક્લિકમાં રમેશભાઈ પટેલની વિગતો ભરો
+              <strong>હેકાથોન જજ લાઈવ ડેમો:</strong> ૧-ક્લિકમાં હરી પટેલની વિગતો ભરો
             </span>
           </div>
           <button
