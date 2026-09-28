@@ -150,25 +150,25 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Fallback if all Gemini models fail — accept document gracefully, do not block submission
+    // Fallback if all Gemini models fail — show honest warning, do NOT blindly accept or reject
     if (!parsedData) {
       parsedData = {
-        documentType: "Document Accepted",
-        documentNameGu: "દસ્તાવેજ સ્વીકૃત",
-        qualityScore: 75,
-        isValidForGovt: true,
-        matchesExpected: true,
+        documentType: "Manual Verification Required",
+        documentNameGu: "માન્યુઅલ ચકાસણી જરૂરી",
+        qualityScore: 50,
+        isValidForGovt: false,
+        matchesExpected: false,
         needsUpdate: false,
         needsNewDocument: false,
-        actionableAdviceGu: "✅ દસ્તાવેજ સ્વીકૃત કરવામાં આવ્યો છે. AI ઓફ-લાઈન હોવાથી માન્યુઅલ ચકાસણી અધિકારી દ્વારા થશે.",
+        actionableAdviceGu: "⚠️ AI ચકાસણી અત્યારે ઉપલબ્ધ નથી. કૃપા કરીને ખાતરી કરો કે તમે સાચો જ દસ્તાવેજ અપલોડ કર્યો છે, ખોટો નહીં. ખોટો દસ્તાવેજ ફોર્મ ઓફિસ ખાતે રિજેક્ટ થશે.",
         extractedInfo: {
           detectedName: null,
           documentNumberMasked: null,
           yearOrDate: null,
         },
-        feedbackGu: "AI ઓટો-ચકાસણી ઉપલબ્ધ નથી. અધિકારી દ્વારા ચકાસણી થશે.",
+        feedbackGu: "AI ઓફ-લાઈન: ઓફિસ ખાતે અધિકારી દ્વારા ફિઝિકલ ચકાસણી થશે. ખોટો દસ્તાવેજ અરજી નામંજૂર કરાવી શકે.",
         verificationPoints: [
-          { point: "દસ્તાવેજ અપલોડ", status: "pass", note: "ફાઇલ સ્વીકૃત" },
+          { point: "AI ઓટો-ચકાસણી", status: "fail", note: "ઉપલબ્ધ નથી — ઓફિસ ચકાસણી થશે" },
         ],
       };
     }
