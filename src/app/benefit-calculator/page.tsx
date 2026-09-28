@@ -261,12 +261,12 @@ export default function BenefitCalculatorPage() {
       scheme: "PM કિસાન સન્માન નિધિ",
       amount: "₹6,000/વર્ષ",
       Icon: Wheat,
-      color: "border-amber-300 bg-amber-50/70 text-amber-900",
+      color: "border-amber-300 bg-amber-50/70 text-amber-950",
       active: isFarmer,
       toggle: () => setIsFarmer(!isFarmer),
-      govtSource: "AnyRoR ગુજરાત (૭/૧૨ & ૮-અ)",
-      eligibilityRuleGu: "૨ હેક્ટરથી ઓછી ખેતીની જમીન ધરાવતા અને આવકવેરો ન ભરતા નાના ખેડૂતો",
-      verifiedEvidence: "ખાતા નં: ૧૪૨/A (જમીન: ૧.૪ હેક્ટર - સીમાંત ખેડૂત પ્રમાણિત)",
+      govtSource: "AnyRoR (૭/૧૨ રેકોર્ડ)",
+      shortRule: "૨ હેક્ટરથી ઓછી ખેતીની જમીન ધરાવતા ખેડૂત",
+      verifiedEvidence: "ખાતા ૧૪૨/A (૧.૪ હેક્ટર)",
     },
     {
       id: "house",
@@ -274,12 +274,12 @@ export default function BenefitCalculatorPage() {
       scheme: "PM આવાસ યોજના",
       amount: "₹1,20,000 સહાય",
       Icon: Home,
-      color: "border-green-300 bg-green-50/70 text-green-900",
+      color: "border-green-300 bg-green-50/70 text-green-950",
       active: needsHouse,
       toggle: () => setNeedsHouse(!needsHouse),
-      govtSource: "AwasSoft / SECC-2011 વંચિતતા સર્વે",
-      eligibilityRuleGu: "સમગ્ર ભારતમાં ક્યાંય પાકું મકાન ન હોય અને ગ્રામ પંચાયત પ્રાથમિકતા યાદીમાં નામ હોય",
-      verifiedEvidence: "ગ્રામ પંચાયત હાઉસિંગ સર્વે યાદી: કાચું માટીનું મકાન ચકાસાયેલ",
+      govtSource: "AwasSoft / SECC સર્વે",
+      shortRule: "સમગ્ર ભારતમાં ક્યાંય પાકું મકાન ન હોય",
+      verifiedEvidence: "કાચું મકાન સર્વે પ્રમાણિત",
     },
     {
       id: "lpg",
@@ -287,12 +287,12 @@ export default function BenefitCalculatorPage() {
       scheme: "PM ઉજ્જવલા 2.0",
       amount: "₹3,600 ફ્રી કિટ",
       Icon: Flame,
-      color: "border-red-300 bg-red-50/70 text-red-900",
+      color: "border-red-300 bg-red-50/70 text-red-950",
       active: needsLPG,
       toggle: () => setNeedsLPG(!needsLPG),
-      govtSource: "OMC પોર્ટલ (IOCL/BPCL/HPCL રજિસ્ટ્રી)",
-      eligibilityRuleGu: "BPL/AAY રેશનકાર્ડ ધરાવતી પુખ્ત મહિલા (૧૮+) જેના નામે અગાઉ ગેસ કનેક્શન ન હોય",
-      verifiedEvidence: "OMC આધાર ડી-ડુપ્લિકેશન: કોઈ સક્રિય ગેસ કનેક્શન નોંધાયેલ નથી",
+      govtSource: "OMC ગેસ પોર્ટલ",
+      shortRule: "મહિલા સભ્યના નામે અગાઉ ગેસ કનેક્શન ન હોય",
+      verifiedEvidence: "કોઈ સક્રિય કનેક્શન નથી",
     },
     {
       id: "senior",
@@ -300,12 +300,12 @@ export default function BenefitCalculatorPage() {
       scheme: "વરિષ્ઠ નાગરિક પેન્શન",
       amount: "₹36,000/વર્ષ",
       Icon: UserCheck,
-      color: "border-purple-300 bg-purple-50/70 text-purple-900",
+      color: "border-purple-300 bg-purple-50/70 text-purple-950",
       active: hasSeniorCitizen,
       toggle: () => setHasSeniorCitizen(!hasSeniorCitizen),
-      govtSource: "RCMS ગુજરાત વય ચકાસણી ડેટાબેઝ",
-      eligibilityRuleGu: "કુટુંબમાં ૬૦ વર્ષ કે તેથી વધુ વયના નિરાધાર/બીપીએલ વડીલ સભ્ય",
-      verifiedEvidence: "ગોદાવરીબેન પટેલ (ઉંમર: ૭૪ વર્ષ) - RCMS રેકોર્ડ દ્વારા પ્રમાણિત",
+      govtSource: "RCMS વય ચકાસણી",
+      shortRule: "કુટુંબમાં ૬૦+ વર્ષના વડીલ સભ્ય (બીપીએલ)",
+      verifiedEvidence: "ગોદાવરીબેન (૭૪ વર્ષ)",
     },
     {
       id: "girl",
@@ -313,12 +313,12 @@ export default function BenefitCalculatorPage() {
       scheme: "વહાલી દીકરી યોજના",
       amount: "₹1,10,000 સહાય",
       Icon: Heart,
-      color: "border-pink-300 bg-pink-50/70 text-pink-900",
+      color: "border-pink-300 bg-pink-50/70 text-pink-950",
       active: hasGirlChild,
       toggle: () => setHasGirlChild(!hasGirlChild),
-      govtSource: "મહિલા & બાળ વિકાસ / ડિજિટલ ગુજરાત",
-      eligibilityRuleGu: "કુટુંબની પ્રથમ અથવા બીજી દીકરી (જન્મ ૦૨/૦૮/૨૦૧૯ પછી અને આવક ₹૨ લાખ સુધી)",
-      verifiedEvidence: "દિવ્યાબેન પટેલ (પુત્રી) - જન્મ & વાર્ષિક આવક માપદંડ પ્રમાણિત",
+      govtSource: "ડિજિટલ ગુજરાત",
+      shortRule: "દીકરીનો જન્મ ૦૨/૦૮/૨૦૧૯ પછી (આવક ₹૨ લાખ)",
+      verifiedEvidence: "દિવ્યાબેન (પુત્રી પ્રમાણિત)",
     },
     {
       id: "business",
@@ -326,12 +326,12 @@ export default function BenefitCalculatorPage() {
       scheme: "PM સ્વનિધિ સબસિડી લોન",
       amount: "₹20,000 લોન",
       Icon: Briefcase,
-      color: "border-blue-300 bg-blue-50/70 text-blue-900",
+      color: "border-blue-300 bg-blue-50/70 text-blue-950",
       active: isSmallBusiness,
       toggle: () => setIsSmallBusiness(!isSmallBusiness),
-      govtSource: "નગરપાલિકા / ULB સ્ટ્રીટ વેન્ડર રજિસ્ટ્રી",
-      eligibilityRuleGu: "શહેરી કે અર્ધ-શહેરી વિસ્તારમાં શાકભાજી, ફળ, ચા-નાસ્તો કે ફેરી કરતા લારીધારકો",
-      verifiedEvidence: "જેતપુર નગરપાલિકા વેન્ડિંગ સર્ટિફિકેટ / LoR આધાર લિંક્ડ",
+      govtSource: "નગરપાલિકા રજિસ્ટ્રી",
+      shortRule: "શાકભાજી, ફળ, ચા-નાસ્તો વેચતા લારીધારકો",
+      verifiedEvidence: "વેન્ડિંગ સર્ટિ. લિંક્ડ",
     },
     {
       id: "student",
@@ -339,12 +339,12 @@ export default function BenefitCalculatorPage() {
       scheme: "ડિજિટલ શિષ્યવૃત્તિ",
       amount: "₹10,000 સહાય",
       Icon: GraduationCap,
-      color: "border-indigo-300 bg-indigo-50/70 text-indigo-900",
+      color: "border-indigo-300 bg-indigo-50/70 text-indigo-950",
       active: hasStudent,
       toggle: () => setHasStudent(!hasStudent),
-      govtSource: "ડિજિટલ ગુજરાત & U-DISE / CTS પોર્ટલ",
-      eligibilityRuleGu: "ધોરણ ૧૧-૧૨, ડિપ્લોમા કે ડિગ્રી કોલેજમાં અભ્યાસ કરતા વિદ્યાર્થીઓ (આવક ₹૨.૫ લાખ સુધી)",
-      verifiedEvidence: "ચિરાગ પટેલ (૨૨ વર્ષ) & દિવ્યાબેન (૧૮ વર્ષ) - સરકારી કોલેજ એનરોલમેન્ટ",
+      govtSource: "U-DISE / CTS પોર્ટલ",
+      shortRule: "ધોરણ ૧૧-૧૨ કે કોલેજ અભ્યાસ કરતા વિદ્યાર્થી",
+      verifiedEvidence: "૨ વિદ્યાર્થી સભ્યો સક્રિય",
     },
     {
       id: "laborer",
@@ -352,12 +352,12 @@ export default function BenefitCalculatorPage() {
       scheme: "PM વિશ્વકર્મા યોજના",
       amount: "₹15,000 ટૂલકીટ",
       Icon: Wrench,
-      color: "border-teal-300 bg-teal-50/70 text-teal-900",
+      color: "border-teal-300 bg-teal-50/70 text-teal-950",
       active: isLaborer,
       toggle: () => setIsLaborer(!isLaborer),
-      govtSource: "e-Shram UAN / શ્રમ & રોજગાર મંત્રાલય",
-      eligibilityRuleGu: "૧૮ પરંપરાગત કારીગરો (સુથાર, કડિયા, લુહાર, સોની, દરજી, કુંભાર, મોચી વગેરે)",
-      verifiedEvidence: "e-Shram UAN: XXXX-XXXX-2190 (કારીગર શ્રેણી પ્રમાણિત)",
+      govtSource: "e-Shram પોર્ટલ",
+      shortRule: "૧૮ પરંપરાગત કારીગરો (સુથાર, કડિયા, દરજી વગેરે)",
+      verifiedEvidence: "કારીગર શ્રેણી પ્રમાણિત",
     },
   ];
 
@@ -637,59 +637,68 @@ export default function BenefitCalculatorPage() {
                       <span className="text-[10px] text-gray-400">ટેપ કરીને પસંદ કરો</span>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3.5">
                       {CONDITIONS.map((cond) => {
                         const Icon = cond.Icon;
                         return (
                           <div
                             key={cond.id}
                             onClick={cond.toggle}
-                            className={`p-3 rounded-2xl border-2 cursor-pointer transition select-none flex items-start gap-2.5 active:scale-98 ${
+                            className={`p-3.5 sm:p-4 rounded-2xl border-2 cursor-pointer transition select-none flex flex-col justify-between gap-3 active:scale-[0.99] ${
                               cond.active
-                                ? `${cond.color} shadow-xs ring-1 ring-orange-400/30`
-                                : "border-gray-200 bg-gray-50/70 hover:bg-gray-100/60 text-gray-600"
+                                ? `${cond.color} shadow-sm ring-2 ring-orange-500/20`
+                                : "border-gray-200 bg-white hover:bg-gray-50/80 text-gray-700 hover:border-gray-300"
                             }`}
                           >
-                            <div
-                              className={`w-5 h-5 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 text-xs font-bold ${
-                                cond.active ? "bg-orange-500 text-white" : "border border-gray-300 bg-white"
-                              }`}
-                            >
-                              {cond.active && <Check size={13} strokeWidth={3} />}
+                            {/* Top Row: Checkbox + Title + Amount Pill */}
+                            <div className="flex items-start justify-between gap-2.5">
+                              <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                                <div
+                                  className={`w-5 h-5 rounded-lg flex items-center justify-center shrink-0 mt-0.5 text-xs font-bold transition ${
+                                    cond.active ? "bg-orange-500 text-white shadow-xs" : "border-2 border-gray-300 bg-white"
+                                  }`}
+                                >
+                                  {cond.active && <Check size={13} strokeWidth={3} />}
+                                </div>
+                                <div className="min-w-0">
+                                  <h4 className="text-xs sm:text-sm font-bold text-gray-900 leading-snug break-words">
+                                    {cond.label}
+                                  </h4>
+                                  <p className="text-[11px] text-orange-600 font-semibold mt-0.5">
+                                    📋 {cond.scheme}
+                                  </p>
+                                </div>
+                              </div>
+
+                              <span
+                                className={`text-[11px] font-black px-2.5 py-1 rounded-xl shrink-0 ${
+                                  cond.active
+                                    ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                                    : "bg-gray-100 text-gray-600 border border-gray-200"
+                                }`}
+                              >
+                                {cond.amount}
+                              </span>
                             </div>
 
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-start justify-between gap-1">
-                                <p className="text-xs font-bold leading-tight truncate text-gray-900">
-                                  {cond.label}
-                                </p>
-                                <span className={`text-[10.5px] font-black shrink-0 ${cond.active ? "text-green-700" : "text-gray-400"}`}>
-                                  {cond.amount}
+                            {/* Middle Row: Crisp Government Rule (NO word breaking) */}
+                            <div className="text-[11px] text-gray-700 bg-white/80 border border-gray-100 rounded-xl px-2.5 py-1.5 flex items-center gap-1.5 shadow-2xs">
+                              <span className="font-bold text-gray-900 shrink-0">📌 શરત:</span>
+                              <span className="truncate">{cond.shortRule}</span>
+                            </div>
+
+                            {/* Bottom Row: Government Source & Verified Proof Badge */}
+                            <div className="pt-2 border-t border-black/5 flex items-center justify-between gap-2 text-[10px]">
+                              <span className="text-gray-500 font-medium flex items-center gap-1 truncate">
+                                🏛️ {cond.govtSource}
+                              </span>
+                              {cond.active ? (
+                                <span className="bg-emerald-600 text-white font-bold px-2 py-0.5 rounded-full text-[9.5px] flex items-center gap-1 shrink-0 shadow-2xs">
+                                  <CheckCircle2 size={10} /> {cond.verifiedEvidence}
                                 </span>
-                              </div>
-
-                              <p className="text-[10px] text-gray-500 font-medium truncate mt-0.5">
-                                📋 યોજના: {cond.scheme}
-                              </p>
-
-                              {/* Official Government Rule */}
-                              <p className="text-[9.5px] text-gray-600 mt-1 leading-snug line-clamp-2 bg-white/60 p-1.5 rounded-lg border border-gray-100">
-                                <span className="font-bold text-gray-700">પાત્રતા શરત:</span> {cond.eligibilityRuleGu}
-                              </p>
-
-                              {/* Official Government Validation Source & Proof */}
-                              <div className="mt-1.5 pt-1 border-t border-black/5 flex flex-wrap items-center justify-between gap-1 text-[9px]">
-                                <span className="text-gray-500 font-semibold truncate flex items-center gap-1">
-                                  🏛️ {cond.govtSource}
-                                </span>
-                                {cond.active ? (
-                                  <span className="text-emerald-800 bg-emerald-100/90 font-bold px-1.5 py-0.5 rounded text-[8.5px] truncate max-w-full">
-                                    ✅ {cond.verifiedEvidence}
-                                  </span>
-                                ) : (
-                                  <span className="text-gray-400 text-[8.5px]">અપ્રમાણિત / બાકી</span>
-                                )}
-                              </div>
+                              ) : (
+                                <span className="text-gray-400 text-[9.5px]">ચકાસણી બાકી</span>
+                              )}
                             </div>
                           </div>
                         );
