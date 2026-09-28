@@ -8,6 +8,7 @@ import CitizenPortalHeader from "@/components/CitizenPortalHeader";
 import TrackVaultView from "@/components/TrackVaultView";
 import DocumentServicePortal from "@/components/DocumentServicePortal";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
+import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
 import { User, Building2, LogOut } from "lucide-react";
 
 export type PortalTabType = "track" | "documents" | "eligibility";
@@ -194,6 +195,8 @@ export default function UnifiedCitizenPortal({
             onTabChange={handleTabChange}
             onLogout={handleCitizenLogout}
           />
+
+          <SmartKacheriLocatorBanner citizen={citizenSession} />
 
           {activeTab === "track" && (
             <TrackVaultView
