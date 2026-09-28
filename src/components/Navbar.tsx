@@ -160,7 +160,7 @@ export default function Navbar() {
                 title="કચેરી એડમિન સ્ક્રુટિની ડેસ્ક ખોલો"
               >
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                <span className="max-w-[130px] truncate">{officerSession.name || "કચેરી એડમિન"} (મામલતદાર)</span>
+                <span className="max-w-[220px] truncate">{officerSession.name || "કચેરી એડમિન"} (મામલતદાર)</span>
               </Link>
             ) : citizenSession ? (
               <Link
@@ -169,7 +169,7 @@ export default function Navbar() {
                 title="તમારું નાગરિક પોર્ટલ અને વોલ્ટ ખોલો"
               >
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="max-w-[130px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)</span>
+                <span className="max-w-[220px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)</span>
               </Link>
             ) : (
               <div

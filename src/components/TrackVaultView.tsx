@@ -9,12 +9,13 @@ import {
 import {
   Search,
   Loader2,
-  Building2,
-  User,
   Sparkles,
   Printer,
   Lock,
   Receipt,
+  ChevronDown,
+  ChevronUp,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -170,9 +171,6 @@ export default function TrackVaultView({
         if (targetId) {
           const found = myApps.find((a) => a.id.toLowerCase() === targetId.toLowerCase());
           if (found) setSelectedApp(found);
-          else if (myApps.length > 0) setSelectedApp(myApps[0]);
-        } else if (myApps.length > 0) {
-          setSelectedApp(myApps[0]);
         }
       } else {
         setError(data.error || "તમારી અરજીઓ લોડ કરવામાં સમસ્યા આવી.");
@@ -372,48 +370,7 @@ export default function TrackVaultView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
-      {/* ── Mode Switch Banner (Citizen Vault vs Mamlatdar Officer Mode) ── */}
-      <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-orange-200 rounded-2xl p-3 sm:p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
-        <div className="flex items-center gap-2.5">
-          <span className="p-2 bg-orange-600 text-white rounded-xl text-xs font-bold shrink-0">
-            {authMode === "officer" ? "🏛️" : "🔐"}
-          </span>
-          <div>
-            <h3 className="font-extrabold text-slate-900 text-xs sm:text-sm">
-              {authMode === "officer"
-                ? "તાલુકા મામલતદાર કચેરી એડમિન પોર્ટલ (Officer Mode)"
-                : "નાગરિક સુરક્ષિત વોલ્ટ (My Applications Tracking)"}
-            </h3>
-            <p className="text-[11px] text-slate-600">
-              {authMode === "officer"
-                ? "સમગ્ર તાલુકાના ૫,૪૦૦+ અરજીઓની ચકાસણી, e-Sign મંજૂરી અને કચેરી વર્કફ્લો સંચાલન."
-                : "તમારી તમામ સરકારી અરજીઓ, દસ્તાવેજ સુધારા અને પહોંચ અહીં ઉપલબ્ધ છે."}
-            </p>
-          </div>
-        </div>
 
-        <div className="flex items-center gap-2 shrink-0">
-          {authMode !== "officer" ? (
-            <button
-              type="button"
-              onClick={() => setShowOfficerModal(true)}
-              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-400/40 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-            >
-              <Building2 size={13} />
-              <span>🏛️ કચેરી એડમિન પોર્ટલ (Mamlatdar)</span>
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleOfficerLogout}
-              className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs"
-            >
-              <User size={13} />
-              <span>👤 નાગરિક વ્યૂ પર પાછા જાઓ</span>
-            </button>
-          )}
-        </div>
-      </div>
 
       {/* ── Dynamic Alerts & Scrutiny Confirmation Notifications ── */}
       {cashConfirmedAlert && (
@@ -514,11 +471,11 @@ export default function TrackVaultView({
                     key={app.id}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelectedApp(app)}
+                    onClick={() => setSelectedApp(isSelected ? null : app)}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedApp(app);
+                        setSelectedApp(isSelected ? null : app);
                       }
                     }}
                     className={`group bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md ${
@@ -528,7 +485,7 @@ export default function TrackVaultView({
                     }`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2.5 min-w-0">
+                      <div className="flex items-center gap-3 min-w-0">
                         <span className="text-2xl p-2 bg-slate-50 rounded-xl border border-slate-100 shrink-0">
                           {app.schemeEmoji}
                         </span>
@@ -536,36 +493,46 @@ export default function TrackVaultView({
                           <span className="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
                             {app.id}
                           </span>
-                          <h4 className="font-bold text-sm text-slate-800 mt-1 truncate break-words">
+                          <h4 className="font-bold text-sm sm:text-base text-slate-800 mt-1 leading-snug">
                             {app.schemeNameGu}
                           </h4>
-                          <p className="text-[11px] text-slate-500 truncate">{app.schemeName}</p>
+                          <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{app.schemeName}</p>
                         </div>
                       </div>
 
                       <span
-                        className={`text-[10px] px-2.5 py-1 rounded-full font-bold border shrink-0 ${cfg.badgeBg}`}
+                        className={`text-[10.5px] px-2.5 py-1 rounded-full font-bold border shrink-0 ${cfg.badgeBg}`}
                       >
                         {cfg.labelGu}
                       </span>
                     </div>
 
                     <div className="mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-[11px] text-slate-500">
-                        તારીખ: <strong>{app.appliedDate}</strong>
+                      <span className="text-[11px] text-slate-500 font-medium">
+                        તારીખ: <strong className="text-slate-700">{app.appliedDate}</strong>
                       </span>
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedApp(app);
-                          setShowPrintModal(true);
-                        }}
-                        className="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center gap-1 underline"
-                      >
-                        <Printer size={13} />
-                        <span>પહોંચ જુઓ / PDF</span>
-                      </button>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedApp(app);
+                            setShowPrintModal(true);
+                          }}
+                          className="text-xs font-bold text-slate-600 hover:text-orange-600 flex items-center gap-1 transition"
+                        >
+                          <Printer size={13} />
+                          <span>પહોંચ (PDF)</span>
+                        </button>
+                        <span
+                          className={`text-xs font-bold flex items-center gap-1 transition ${
+                            isSelected ? "text-orange-600" : "text-slate-500 group-hover:text-orange-600"
+                          }`}
+                        >
+                          <span>{isSelected ? "વિગતો છુપાવો" : "લાઈવ ટ્રેકિંગ જુઓ"}</span>
+                          {isSelected ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 );
@@ -575,33 +542,47 @@ export default function TrackVaultView({
 
           {/* Selected Application Timeline & Stages Detail Card */}
           {selectedApp && (
-            <div className="bg-white rounded-3xl p-5 sm:p-7 border-2 border-orange-400 shadow-md space-y-6">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-orange-400 shadow-lg space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <span className="text-3xl p-2.5 bg-orange-50 rounded-2xl border border-orange-200 shrink-0">
                     {selectedApp.schemeEmoji}
                   </span>
-                  <div>
-                    <span className="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
-                      અરજી નં: {selectedApp.id}
-                    </span>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1">
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
+                        અરજી નં: {selectedApp.id}
+                      </span>
+                      <span className="text-[10px] bg-emerald-50 text-emerald-700 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
+                        લાઈવ સ્ક્રુટિની વિગતો
+                      </span>
+                    </div>
+                    <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 leading-snug">
                       {selectedApp.schemeNameGu}
                     </h3>
-                    <p className="text-xs text-slate-500">
+                    <p className="text-xs text-slate-500 leading-normal">
                       અરજદાર: {selectedApp.citizenNameGu} ({selectedApp.citizenName}) &bull; 📱 +91 {selectedApp.mobile}
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 shrink-0">
                   <button
                     type="button"
                     onClick={() => setShowPrintModal(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5"
+                    className="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center gap-1.5 cursor-pointer"
                   >
                     <Printer size={14} />
-                    <span>સત્તાવાર પહોંચ ડાઉનલોડ (PDF)</span>
+                    <span>પહોંચ ડાઉનલોડ (PDF)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedApp(null)}
+                    className="px-3 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 hover:text-slate-900 font-bold rounded-xl text-xs transition flex items-center gap-1 cursor-pointer"
+                    title="વિગતો બંધ કરો"
+                  >
+                    <X size={14} />
+                    <span>બંધ કરો</span>
                   </button>
                 </div>
               </div>
@@ -782,6 +763,15 @@ export default function TrackVaultView({
                   </option>
                 ))}
               </select>
+
+              <button
+                type="button"
+                onClick={handleOfficerLogout}
+                className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition whitespace-nowrap cursor-pointer"
+                title="કચેરી સત્ર સમાપ્ત કરો"
+              >
+                લૉગઆઉટ
+              </button>
 
               <select
                 value={selectedStatus}
