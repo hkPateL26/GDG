@@ -6,9 +6,18 @@ import SchemeCard from "@/components/SchemeCard";
 import { SkeletonCard } from "@/components/Skeleton";
 import Navbar from "@/components/Navbar";
 import { Scheme } from "@/types";
-import { Server, Activity, RefreshCw, Sparkles, CheckCircle2 } from "lucide-react";
+import {
+  Server,
+  Activity,
+  RefreshCw,
+  Sparkles,
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 const CATEGORIES = Object.keys(CATEGORY_LABELS);
+const PAGE_SIZE = 12;
 
 interface DbClusterMeta {
   source: string;
@@ -24,6 +33,7 @@ export default function SchemesPage() {
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [page, setPage] = useState(1);
   const [clusterMeta, setClusterMeta] = useState<DbClusterMeta>({
     source: "cloud-firestore",
     serverCluster: "GSDC-Gandhinagar-Node-01",
@@ -31,6 +41,11 @@ export default function SchemesPage() {
     latencyMs: 32,
     totalInCluster: 26,
   });
+
+  // Reset to page 1 when filter/search changes
+  useEffect(() => {
+    setPage(1);
+  }, [search, selectedCategory]);
 
   // Dynamic fetch connected to Cloud Firestore with debouncing and race-condition safety
   useEffect(() => {
@@ -79,6 +94,10 @@ export default function SchemesPage() {
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  // Pagination
+  const totalPages = Math.ceil(schemes.length / PAGE_SIZE);
+  const paginatedSchemes = schemes.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
   return (
     <>
       <Navbar />
@@ -121,17 +140,17 @@ export default function SchemesPage() {
         </div>
 
         {/* Hero Section */}
-        <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-green-700 text-white py-8 sm:py-12 px-4 shadow-inner">
+        <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-green-700 text-white py-7 sm:py-10 px-4 shadow-inner">
           <div className="max-w-4xl mx-auto text-center">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/15 backdrop-blur-xs text-xs font-semibold mb-3 border border-white/20">
               <Sparkles size={13} className="text-amber-300" />
               સત્તાવાર સરકારી કલ્યાણકારી યોજનાઓ ડેટાબેઝ
             </div>
-            <h1 className="text-2xl sm:text-4xl font-black mb-2 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-black mb-2 tracking-tight">
               🏛️ Government Schemes Directory
             </h1>
-            <p className="text-orange-100 text-xs sm:text-base mb-6 max-w-2xl mx-auto">
-              ગુજરાત અને કેન્દ્ર સરકારની ખેડૂત, આરોગ્ય, શિક્ષણ, આવાસ અને મહિલા કલ્યાણ યોજનાઓ લાઈવ ડેટાબેઝમાંથી શોધો
+            <p className="text-orange-100 text-xs sm:text-sm mb-5 max-w-2xl mx-auto">
+              ગુજરાત અને કેન્દ્ર સરકારની ખેડૂત, આરોગ્ય, શિક્ષણ, આવાસ અને મહિલા કલ્યાણ યોજનાઓ
             </p>
 
             {/* Live Search Input */}
@@ -141,8 +160,8 @@ export default function SchemesPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="યોજના શોધો: PM Kisan, આયુષ્માન, MYSY, સૂર્ય ઘર, આવાસ..."
-                className="w-full pl-11 pr-10 py-3.5 rounded-2xl text-gray-900 text-sm bg-white shadow-xl focus:outline-none focus:ring-3 focus:ring-orange-300 font-medium placeholder-gray-400"
+                placeholder="PM Kisan, આયુષ્માન, MYSY, સૂર્ય ઘર, આવાસ..."
+                className="w-full pl-11 pr-10 py-3 rounded-2xl text-gray-900 text-sm bg-white shadow-xl focus:outline-none focus:ring-3 focus:ring-orange-300 font-medium placeholder-gray-400"
               />
               {search && (
                 <button
@@ -157,18 +176,19 @@ export default function SchemesPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-6 sm:py-8">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-7">
+
           {/* Category Filter Pills (Horizontal Scroll) */}
-          <div className="flex gap-2 overflow-x-auto pb-3 mb-6 -mx-1 px-1 scrollbar-hide">
+          <div className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-1 px-1 scrollbar-hide">
             <button
               onClick={() => handleCategoryChange("all")}
-              className={`flex-shrink-0 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition flex items-center gap-1.5 shadow-2xs ${
+              className={`flex-shrink-0 px-4 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs ${
                 selectedCategory === "all"
                   ? "bg-orange-600 text-white shadow-md ring-2 ring-orange-300"
                   : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300 hover:bg-orange-50/50"
               }`}
             >
-              🌐 બધી યોજનાઓ ({clusterMeta.totalInCluster})
+              🌐 બધી ({clusterMeta.totalInCluster})
             </button>
             {CATEGORIES.map((cat) => {
               const info = CATEGORY_LABELS[cat];
@@ -177,7 +197,7 @@ export default function SchemesPage() {
                 <button
                   key={cat}
                   onClick={() => handleCategoryChange(cat)}
-                  className={`flex-shrink-0 px-3.5 py-2 rounded-xl text-xs sm:text-sm font-semibold transition flex items-center gap-1.5 shadow-2xs ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold transition flex items-center gap-1 shadow-2xs ${
                     isSelected
                       ? "bg-orange-600 text-white shadow-md ring-2 ring-orange-300"
                       : "bg-white text-gray-700 border border-gray-200 hover:border-orange-300 hover:bg-orange-50/50"
@@ -190,51 +210,103 @@ export default function SchemesPage() {
             })}
           </div>
 
-          {/* Results Summary Bar */}
-          <div className="flex items-center justify-between mb-5 px-1 text-xs text-gray-500">
-            <p className="font-semibold text-gray-700">
+          {/* Results + Pagination top row */}
+          <div className="flex items-center justify-between mb-4 px-1">
+            <p className="text-xs font-semibold text-gray-700">
               {isLoading ? (
                 <span className="flex items-center gap-1 text-orange-600">
-                  <RefreshCw size={13} className="animate-spin" /> ક્લાઉડ ફાયરસ્ટોરમાંથી લોડ થઈ રહ્યું છે...
+                  <RefreshCw size={12} className="animate-spin" /> લોડ થઈ રહ્યું છે...
                 </span>
               ) : (
-                `કુલ ${schemes.length} યોજનાઓ મળી`
+                <span className="flex items-center gap-1.5">
+                  <CheckCircle2 size={13} className="text-emerald-500" />
+                  {schemes.length} યોજનાઓ — પૃષ્ઠ {page}/{totalPages || 1}
+                </span>
               )}
             </p>
-            <div className="flex items-center gap-2 text-[11px] text-gray-400">
-              <CheckCircle2 size={13} className="text-emerald-500" />
-              <span>૧૦૦% સત્તાવાર સરકારી માહિતી</span>
-            </div>
+            {!isLoading && totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  <ChevronLeft size={15} />
+                </button>
+                {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setPage(p)}
+                    className={`w-7 h-7 rounded-lg text-xs font-bold transition ${
+                      p === page
+                        ? "bg-orange-600 text-white shadow-sm"
+                        : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-300"
+                    }`}
+                  >
+                    {p}
+                  </button>
+                ))}
+                <button
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="p-1.5 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-orange-50 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                >
+                  <ChevronRight size={15} />
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Schemes Grid or Skeletons */}
           {isLoading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {[...Array(6)].map((_, i) => (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+              {[...Array(8)].map((_, i) => (
                 <SkeletonCard key={i} />
               ))}
             </div>
-          ) : schemes.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {schemes.map((scheme) => (
-                <SchemeCard key={scheme.id} scheme={scheme} />
-              ))}
-            </div>
+          ) : paginatedSchemes.length > 0 ? (
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+                {paginatedSchemes.map((scheme) => (
+                  <SchemeCard key={scheme.id} scheme={scheme} />
+                ))}
+              </div>
+
+              {/* Bottom Pagination */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-center gap-2 mt-8">
+                  <button
+                    onClick={() => { setPage((p) => Math.max(1, p - 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={page === 1}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 text-xs font-bold hover:bg-orange-50 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    <ChevronLeft size={14} /> પાછળ
+                  </button>
+                  <span className="text-xs text-gray-500 font-medium px-2">
+                    {page} / {totalPages}
+                  </span>
+                  <button
+                    onClick={() => { setPage((p) => Math.min(totalPages, p + 1)); window.scrollTo({ top: 0, behavior: "smooth" }); }}
+                    disabled={page === totalPages}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl border border-gray-200 bg-white text-gray-600 text-xs font-bold hover:bg-orange-50 hover:border-orange-300 disabled:opacity-40 disabled:cursor-not-allowed transition"
+                  >
+                    આગળ <ChevronRight size={14} />
+                  </button>
+                </div>
+              )}
+            </>
           ) : (
-            <div className="text-center py-20 bg-white rounded-3xl border border-gray-200 shadow-xs max-w-lg mx-auto p-6">
-              <div className="text-6xl mb-4">🔍</div>
-              <h3 className="text-base font-bold text-gray-900 mb-1">
+            <div className="text-center py-16 bg-white rounded-3xl border border-gray-200 shadow-xs max-w-lg mx-auto p-6">
+              <div className="text-5xl mb-3">🔍</div>
+              <h3 className="text-sm font-bold text-gray-900 mb-1">
                 કોઈ મેળ ખાતી યોજના મળી નથી
               </h3>
-              <p className="text-xs text-gray-500 mb-5">
-                તમે શોધેલ શબ્દ અથવા કેટેગરીમાં હાલ કોઈ સક્રિય યોજના નથી. કૃપા કરીને અન્ય નામથી શોધો.
+              <p className="text-xs text-gray-500 mb-4">
+                અન્ય કેટેગરી અથવા અલગ શબ્દથી શોધો.
               </p>
               <button
-                onClick={() => {
-                  setSearch("");
-                  setSelectedCategory("all");
-                }}
-                className="bg-orange-600 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-md hover:bg-orange-700 transition cursor-pointer"
+                onClick={() => { setSearch(""); setSelectedCategory("all"); }}
+                className="bg-orange-600 text-white font-bold px-5 py-2 rounded-xl text-xs shadow-md hover:bg-orange-700 transition cursor-pointer"
               >
                 બધા ફિલ્ટર દૂર કરો
               </button>

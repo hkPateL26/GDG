@@ -25,84 +25,74 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
   const cat = CATEGORY_LABELS[scheme.category];
   const badgeStyle = CATEGORY_BADGE_STYLES[scheme.category] ?? "bg-gray-100 text-gray-700";
 
-  /* ── COMPACT MODE ── */
+  /* ── COMPACT MODE (used in sidebars / small lists) ── */
   if (compact) {
     return (
       <Link href={`/schemes/${scheme.id}`}>
         <div className="bg-white rounded-xl p-3 shadow-sm border border-gray-100 flex items-center gap-3 hover:shadow-md hover:border-orange-200 transition cursor-pointer group">
-          {/* Icon */}
           <span className="text-2xl flex-shrink-0 w-9 text-center">{scheme.icon}</span>
-
-          {/* Text – min-w-0 prevents overflow */}
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-sm text-gray-800 truncate group-hover:text-orange-600 leading-tight">
               {scheme.nameGu || scheme.name}
             </p>
-            <p className="text-xs text-gray-500 truncate mt-0.5">
-              {scheme.benefits[0]}
-            </p>
+            <p className="text-xs text-gray-500 truncate mt-0.5">{scheme.benefits[0]}</p>
           </div>
-
-          {/* Arrow */}
           <span className="text-gray-300 group-hover:text-orange-400 flex-shrink-0">›</span>
         </div>
       </Link>
     );
   }
 
-  /* ── FULL CARD MODE ── */
+  /* ── FULL CARD MODE (compact height, no info loss) ── */
   return (
-    <div className="bg-white rounded-2xl shadow-md border border-gray-100 overflow-hidden hover:shadow-lg transition flex flex-col">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-orange-50 to-green-50 p-4 border-b border-gray-100">
-        <div className="flex items-start gap-3">
-          <span className="text-4xl flex-shrink-0 leading-none mt-0.5">{scheme.icon}</span>
-          <div className="min-w-0 flex-1">
-            <h3 className="font-bold text-gray-800 text-base leading-snug break-words">
-              {scheme.name}
-            </h3>
-            <p className="text-orange-600 text-sm font-medium mt-0.5 break-words">
-              {scheme.nameGu}
-            </p>
-            {/* Static badge class */}
-            <span className={`inline-block mt-1.5 text-xs px-2.5 py-0.5 rounded-full font-medium ${badgeStyle}`}>
-              {cat.icon} {cat.label}
-            </span>
-          </div>
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md hover:border-orange-200 transition flex flex-col group">
+
+      {/* Header — tighter, smaller icon */}
+      <div className="p-3.5 border-b border-gray-100 flex items-start gap-2.5">
+        <span className="text-3xl flex-shrink-0 leading-none mt-0.5">{scheme.icon}</span>
+        <div className="min-w-0 flex-1">
+          <h3 className="font-bold text-gray-800 text-sm leading-snug line-clamp-1 group-hover:text-orange-600 transition">
+            {scheme.nameGu || scheme.name}
+          </h3>
+          <p className="text-orange-600 text-[11px] font-medium mt-0.5 line-clamp-1">
+            {scheme.name !== scheme.nameGu ? scheme.name : ""}
+          </p>
+          <span className={`inline-block mt-1 text-[10px] px-2 py-0.5 rounded-full font-semibold ${badgeStyle}`}>
+            {cat.icon} {cat.labelGu || cat.label}
+          </span>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="p-4 space-y-3 flex-1">
-        <p className="text-gray-600 text-sm leading-relaxed">{scheme.description}</p>
+      {/* Body — clamped description + max 2 benefits */}
+      <div className="px-3.5 pt-3 pb-2 flex-1 space-y-2">
+        <p className="text-gray-600 text-xs leading-relaxed line-clamp-2">{scheme.description}</p>
 
-        {/* Benefits */}
-        <div>
-          <h4 className="text-[10px] font-bold text-gray-500 uppercase tracking-wide mb-1.5">
-            ✨ મુખ્ય લાભો (Benefits)
-          </h4>
-          <ul className="space-y-1">
-            {scheme.benefits.slice(0, 3).map((benefit, i) => (
-              <li key={i} className="text-sm text-gray-700 flex items-start gap-1.5">
-                <span className="text-green-500 flex-shrink-0 mt-0.5 text-xs">✓</span>
-                <span className="break-words">{benefit}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <ul className="space-y-0.5">
+          {scheme.benefits.slice(0, 2).map((benefit, i) => (
+            <li key={i} className="text-xs text-gray-700 flex items-start gap-1.5">
+              <span className="text-green-500 flex-shrink-0 mt-0.5">✓</span>
+              <span className="line-clamp-1">{benefit}</span>
+            </li>
+          ))}
+          {scheme.benefits.length > 2 && (
+            <li className="text-[11px] text-orange-500 font-medium pl-4">
+              +{scheme.benefits.length - 2} વધુ લાભ →
+            </li>
+          )}
+        </ul>
 
-        {/* Meta */}
-        <div className="flex flex-wrap items-center justify-between gap-1 text-xs text-gray-500 pt-1 border-t border-gray-50">
-          <span>📄 {scheme.documents.length} પુરાવા / દસ્તાવેજ</span>
-          <span className="text-blue-600 truncate max-w-[140px]">{scheme.ministry}</span>
+        {/* Meta row */}
+        <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-50">
+          <span>📄 {scheme.documents.length} દસ્તાવેજ</span>
+          <span className="text-blue-500 truncate max-w-[130px] text-right">{scheme.ministry}</span>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="px-4 pb-4 flex gap-2">
+      {/* Footer — single row of buttons */}
+      <div className="px-3.5 pb-3.5 pt-1 flex gap-2">
         <Link
           href={`/schemes/${scheme.id}`}
-          className="flex-1 text-center bg-orange-500 text-white py-2 rounded-lg text-sm font-semibold hover:bg-orange-600 active:scale-95 transition"
+          className="flex-1 text-center bg-orange-500 hover:bg-orange-600 text-white py-1.5 rounded-lg text-xs font-bold active:scale-95 transition"
         >
           વિગત જુઓ
         </Link>
@@ -111,9 +101,9 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
             href={scheme.applicationUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex-1 text-center border border-green-600 text-green-700 py-2 rounded-lg text-sm font-semibold hover:bg-green-50 active:scale-95 transition"
+            className="flex-1 text-center border border-green-600 text-green-700 hover:bg-green-50 py-1.5 rounded-lg text-xs font-bold active:scale-95 transition"
           >
-            અરજી કરો →
+            અરજી →
           </a>
         )}
       </div>
