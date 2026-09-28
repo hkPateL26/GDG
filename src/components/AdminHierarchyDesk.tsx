@@ -292,7 +292,7 @@ export default function AdminHierarchyDesk({
           stage: 3,
           officerRole: `${currentOfficer.designation} (${currentOfficer.name})`,
           officerName: currentOfficer.name,
-          officerId: currentOfficer.id,
+          officerId: currentOfficer.id || "GUJ-GOV-9012",
           pin: "GJ2026",
         }),
       });
@@ -302,9 +302,40 @@ export default function AdminHierarchyDesk({
           prev.map((a) => (a.id === data.application.id ? data.application : a))
         );
         setSelectedApp(data.application);
+
+        // Also update local storage so citizen side reflects approval instantly
+        if (typeof window !== "undefined") {
+          try {
+            const raw = localStorage.getItem("nagrik_user_applications");
+            if (raw) {
+              const localApps: CitizenApplication[] = JSON.parse(raw);
+              const updated = localApps.map((a) =>
+                a.id === data.application.id ? data.application : a
+              );
+              localStorage.setItem("nagrik_user_applications", JSON.stringify(updated));
+            }
+            const savedSessionStr = localStorage.getItem("nagrik_citizen_session");
+            if (savedSessionStr) {
+              const session = JSON.parse(savedSessionStr);
+              if (session.activeApplications) {
+                session.activeApplications = session.activeApplications.map((a: { id?: string }) =>
+                  a.id === data.application.id ? data.application : a
+                );
+                localStorage.setItem("nagrik_citizen_session", JSON.stringify(session));
+              }
+            }
+            window.dispatchEvent(new Event("storage"));
+          } catch (storageErr) {
+            console.warn("Storage sync error:", storageErr);
+          }
+        }
+
         setActionSuccessMsg(
-          "તાલુકા મામલતદાર ડિજિટલ સહી (e-Sign) સફળ! સત્તાવાર પ્રમાણપત્ર જનરેટ થઈ ગયું છે અને નાગરિક માટે અનલૉક થયું."
+          "તાલુકા મામલતદાર ડિજિટલ સહી (e-Sign) સફળ! સત્તાવાર પ્રમાણપત્ર જનરેટ થઈ ગયું છે."
         );
+
+        // Automatically open the official certificate modal for instant viewing & printing!
+        setCertificateModalApp(data.application);
       } else {
         alert(data.error || "મંજૂરી પ્રક્રિયામાં ક્ષતિ આવી.");
       }
@@ -1272,18 +1303,19 @@ export default function AdminHierarchyDesk({
                     <button
                       type="button"
                       onClick={() => setCertificateModalApp(selectedApp)}
-                      className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs rounded-lg transition cursor-pointer flex items-center justify-center gap-1 shadow-xs"
+                      className="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-xl transition cursor-pointer flex items-center justify-center gap-1.5 shadow-md active:scale-95"
                     >
-                      <Award size={13} /> સત્તાવાર પ્રમાણપત્ર ખોલો
+                      <Award size={14} /> <span>📜 સત્તાવાર પ્રમાણપત્ર જુઓ / પ્રિન્ટ</span>
                     </button>
                   ) : (
                     <button
                       type="button"
-                      disabled={isProcessingAction || !currentOfficer.canApproveEsign}
+                      disabled={isProcessingAction}
                       onClick={() => handleApproveEsign(selectedApp)}
-                      className="w-full py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs rounded-lg transition cursor-pointer active:scale-95 disabled:opacity-50"
+                      className="w-full py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-black text-xs rounded-xl transition cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-1.5 disabled:opacity-75"
                     >
-                      🖋️ ડિજિટલ સહી (e-Sign) મંજૂર કરો
+                      <Award size={14} />
+                      <span>{isProcessingAction ? "ડિજિટલ સહી થઈ રહી છે..." : "🖋️ ડિજિટલ સહી (e-Sign) મંજૂર કરો"}</span>
                     </button>
                   )}
                 </div>
@@ -1353,7 +1385,7 @@ export default function AdminHierarchyDesk({
       {/* ── DOCUMENT ZOOM LIGHTBOX MODAL ── */}
       {zoomDocImage && (
         <div
-          className="fixed inset-0 z-60 bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
+          className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
           onClick={() => setZoomDocImage(null)}
         >
           <div
@@ -1365,7 +1397,7 @@ export default function AdminHierarchyDesk({
               <button
                 type="button"
                 onClick={() => setZoomDocImage(null)}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-600"
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 cursor-pointer"
               >
                 <X size={18} />
               </button>
@@ -1398,7 +1430,7 @@ export default function AdminHierarchyDesk({
           OFFICIAL CERTIFICATE MODAL PREVIEW
           ══════════════════════════════════════════════════════════════ */}
       {certificateModalApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
           <OfficialGovernmentCertificate
             app={certificateModalApp}
             onClose={() => setCertificateModalApp(null)}
@@ -1410,7 +1442,7 @@ export default function AdminHierarchyDesk({
           OFFICIAL RECEIPT SLIP MODAL PREVIEW
           ══════════════════════════════════════════════════════════════ */}
       {receiptModalApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
           <GovernmentReceiptSlip
             app={receiptModalApp}
             onClose={() => setReceiptModalApp(null)}
