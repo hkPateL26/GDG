@@ -766,7 +766,7 @@ export default function ChatBot() {
       onDragEnter={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative flex flex-col h-[650px] sm:h-[700px] bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden"
+      className="relative flex flex-col h-[calc(100dvh-12rem)] sm:h-[720px] md:h-[760px] min-h-[440px] max-h-[85dvh] w-full bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-slate-200 overflow-hidden"
     >
       {/* ── DRAG & DROP OVERLAY ── */}
       {isDragging && (
@@ -905,10 +905,11 @@ export default function ChatBot() {
         </div>
       )}
 
-      {/* ── HEADER ── */}
-      <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-green-700 p-3 sm:p-4 text-white flex-shrink-0 shadow-sm">
-        <div className="flex items-center justify-between gap-2 sm:gap-3">
-          <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
+      {/* ── RESPONSIVE HEADER ── */}
+      <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-green-700 p-2.5 sm:p-4 text-white flex-shrink-0 shadow-sm">
+        {/* DESKTOP VIEW (>= 640px) */}
+        <div className="hidden sm:flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5 min-w-0">
             {/* History Toggle Button */}
             <button
               type="button"
@@ -919,43 +920,43 @@ export default function ChatBot() {
               <HistoryIcon size={16} />
             </button>
 
-            <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-lg sm:text-xl shrink-0 border border-white/25 shadow-inner">
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center text-xl shrink-0 border border-white/25 shadow-inner">
               🤖
             </div>
             <div className="min-w-0">
-              <h2 className="font-black text-xs sm:text-base leading-tight flex items-center gap-1 truncate">
-                NagrikSeva AI <Sparkles size={13} className="text-yellow-300 shrink-0" />
+              <h2 className="font-black text-base leading-tight flex items-center gap-1 truncate">
+                NagrikSeva AI <Sparkles size={14} className="text-yellow-300 shrink-0" />
               </h2>
-              <p className="text-[10px] sm:text-[11px] text-orange-100 truncate flex items-center gap-1">
+              <p className="text-[11px] text-orange-100 truncate flex items-center gap-1">
                 <span>સત્તાવાર ઈ-ગવર્નન્સ સહાયક &bull; {currentLang.toUpperCase()} Mode</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {/* New Chat Top Shortcut */}
             <button
               type="button"
               onClick={handleNewChat}
               title="નવી ચેટ શરૂ કરો"
-              className="px-2 sm:px-2.5 py-1 rounded-xl bg-white/20 hover:bg-white/30 text-white font-black text-[10.5px] border border-white/25 transition flex items-center gap-1 active:scale-95 cursor-pointer"
+              className="px-2.5 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-black text-xs border border-white/25 transition flex items-center gap-1 active:scale-95 cursor-pointer"
             >
-              <Plus size={13} />
-              <span className="hidden sm:inline">નવી ચેટ</span>
+              <Plus size={14} />
+              <span>નવી ચેટ</span>
             </button>
 
             {citizenSession ? (
-              <span className="inline-flex items-center gap-1 text-[10px] bg-white/20 text-white font-bold px-2 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[120px] sm:max-w-none truncate">
-                <UserCheck size={11} className="text-amber-300 shrink-0" />
+              <span className="inline-flex items-center gap-1 text-[11px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[150px] truncate">
+                <UserCheck size={12} className="text-amber-300 shrink-0" />
                 <span className="truncate">{citizenSession.citizenNameGu || citizenSession.citizenName}</span>
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => setIsLoginModalOpen(true)}
-                className="inline-flex items-center gap-1 text-[10.5px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2.5 py-1 rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2.5 py-1.5 rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
               >
-                <LogIn size={12} />
+                <LogIn size={13} />
                 <span>લૉગિન</span>
               </button>
             )}
@@ -967,37 +968,120 @@ export default function ChatBot() {
                   ? `નજીકની કચેરી: ${liveLocation.nearestOfficeGu}`
                   : "લાઈવ લોકેશન ટ્રેકિંગ સક્રિય"
               }
-              className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1 rounded-xl bg-black/25 text-[10px] sm:text-[10.5px] font-bold border border-white/20 backdrop-blur-xs text-white shadow-xs"
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/25 text-[11px] font-bold border border-white/20 backdrop-blur-xs text-white shadow-xs"
             >
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="truncate max-w-[85px] sm:max-w-[130px]">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="truncate max-w-[130px]">
                 📍 {liveLocation ? `${liveLocation.villageGu}, ${liveLocation.talukaGu}` : citizenSession?.village ? `${citizenSession.village}, ${citizenSession.taluka || "ગોંડલ"}` : "ગોમટા, ગોંડલ"}
               </span>
               <button
                 type="button"
                 onClick={requestLiveLocation}
                 title="લાઈવ લોકેશન રિફ્રેશ કરો"
-                className="hover:text-amber-300 text-[11px] transition cursor-pointer shrink-0 ml-0.5"
+                className="hover:text-amber-300 text-xs transition cursor-pointer shrink-0 ml-0.5"
               >
                 {locationLoading ? "..." : "🔄"}
               </button>
             </div>
 
-            <div className="flex items-center gap-1 px-2 py-1 rounded-full bg-black/20 text-[10px] sm:text-[11px] font-bold border border-white/10">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-emerald-400 rounded-full animate-pulse" />
-              <span className="hidden sm:inline">Online</span>
+            <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-black/20 text-[11px] font-bold border border-white/10">
+              <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse" />
+              <span>Online</span>
             </div>
           </div>
         </div>
 
-        {/* Top Guided Topic Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pt-2.5 pb-0.5 -mx-1 px-1 scrollbar-none">
+        {/* MOBILE VIEW (< 640px) */}
+        <div className="sm:hidden space-y-2">
+          {/* Row 1: Brand & Key Actions */}
+          <div className="flex items-center justify-between gap-1.5">
+            <div className="flex items-center gap-1.5 min-w-0">
+              {/* History Toggle */}
+              <button
+                type="button"
+                onClick={() => setIsHistoryOpen((prev) => !prev)}
+                title="ચેટ ઇતિહાસ જુઓ"
+                className="p-1.5 rounded-xl bg-white/20 hover:bg-white/30 border border-white/25 transition cursor-pointer text-white shrink-0 active:scale-95"
+              >
+                <HistoryIcon size={15} />
+              </button>
+
+              <div className="w-8 h-8 rounded-xl bg-white/20 flex items-center justify-center text-base shrink-0 border border-white/25 relative">
+                🤖
+                <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-green-800 animate-pulse" />
+              </div>
+
+              <div className="min-w-0">
+                <h2 className="font-black text-xs leading-tight flex items-center gap-1 truncate">
+                  NagrikSeva AI <Sparkles size={11} className="text-yellow-300 shrink-0" />
+                </h2>
+                <p className="text-[9.5px] text-orange-100 truncate">
+                  સત્તાવાર ઈ-ગવર્નન્સ • {currentLang.toUpperCase()}
+                </p>
+              </div>
+            </div>
+
+            {/* Right: New Chat + Citizen / Login */}
+            <div className="flex items-center gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={handleNewChat}
+                title="નવી ચેટ"
+                className="p-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white font-bold text-[10px] border border-white/25 transition flex items-center gap-0.5 active:scale-95 cursor-pointer"
+              >
+                <Plus size={13} />
+                <span className="text-[10px]">નવી</span>
+              </button>
+
+              {citizenSession ? (
+                <span className="inline-flex items-center gap-1 text-[10px] bg-white/20 text-white font-bold px-2 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[100px] truncate">
+                  <UserCheck size={10} className="text-amber-300 shrink-0" />
+                  <span className="truncate">{citizenSession.citizenNameGu || citizenSession.citizenName}</span>
+                </span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setIsLoginModalOpen(true)}
+                  className="inline-flex items-center gap-1 text-[10px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2 py-1 rounded-xl shadow-xs transition active:scale-95 cursor-pointer"
+                >
+                  <LogIn size={11} />
+                  <span>લૉગિન</span>
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Row 2: Live Location & Citizen Administrative Area */}
+          <div className="flex items-center justify-between gap-1.5 pt-0.5 border-t border-white/15 text-[10px]">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-lg bg-black/25 border border-white/15 text-white min-w-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="truncate font-bold">
+                📍 {liveLocation ? `${liveLocation.villageGu}, ${liveLocation.talukaGu}` : citizenSession?.village ? `${citizenSession.village}, ${citizenSession.taluka || "ગોંડલ"}` : "ગોમટા, ગોંડલ"}
+              </span>
+              <button
+                type="button"
+                onClick={requestLiveLocation}
+                title="લાઈવ લોકેશન રિફ્રેશ કરો"
+                className="hover:text-amber-300 text-[10px] transition cursor-pointer shrink-0 ml-0.5"
+              >
+                {locationLoading ? "..." : "🔄"}
+              </button>
+            </div>
+
+            <span className="text-[9.5px] text-orange-100 font-medium truncate shrink-0 bg-white/10 px-1.5 py-0.5 rounded">
+              GRTSA ૨૦૧૩ માન્ય
+            </span>
+          </div>
+        </div>
+
+        {/* Top Guided Topic Pills (Smooth touch-scrollable for all screens) */}
+        <div className="flex items-center gap-1.5 overflow-x-auto pt-2 pb-0.5 -mx-1 px-1 scrollbar-none touch-pan-x">
           {activePills.map((pill) => (
             <button
               key={pill.label}
               type="button"
               onClick={() => sendMessage(pill.query)}
-              className="shrink-0 px-2.5 py-1 rounded-xl text-[10.5px] font-bold bg-white/15 hover:bg-white/25 text-white border border-white/20 transition flex items-center gap-1 active:scale-95 cursor-pointer"
+              className="shrink-0 px-2 sm:px-2.5 py-1 rounded-xl text-[10px] sm:text-[10.5px] font-bold bg-white/15 hover:bg-white/25 active:bg-white/30 text-white border border-white/20 transition flex items-center gap-1 active:scale-95 cursor-pointer touch-manipulation whitespace-nowrap"
             >
               <span>{pill.icon}</span>
               <span>{pill.label}</span>
@@ -1227,19 +1311,19 @@ export default function ChatBot() {
 
               {/* ── BOTTOM UTILITY BAR (Native Voice Speak + WhatsApp Share) ── */}
               {msg.role === "model" && (
-                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between text-[11px]">
-                  <span className="text-[10px] text-slate-400 flex items-center gap-1 font-semibold">
-                    <ShieldCheck size={11} className="text-emerald-600" />
+                <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between gap-1 text-[11px]">
+                  <span className="text-[10px] text-slate-400 hidden xs:flex items-center gap-1 font-semibold truncate">
+                    <ShieldCheck size={11} className="text-emerald-600 shrink-0" />
                     પ્રમાણિત સરકારી સહાય
                   </span>
 
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 ml-auto">
                     {/* WhatsApp Share Button */}
                     <button
                       type="button"
                       onClick={() => handleShareWhatsApp(msg.text, msg.applicationCard)}
                       title="આ માહિતી WhatsApp પર મેળવો"
-                      className="inline-flex items-center gap-1 text-[11px] text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-lg font-bold transition cursor-pointer"
+                      className="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2 py-0.5 rounded-lg font-bold transition cursor-pointer touch-manipulation"
                     >
                       <Share2 size={11} />
                       <span className="hidden sm:inline">WhatsApp</span>
@@ -1249,8 +1333,8 @@ export default function ChatBot() {
                     <button
                       type="button"
                       onClick={() => speakMessage(msg.text, i)}
-                      title={isSpeaking === i ? "અવાજ બંધ કરો" : "સાંભળો (Listen in genuine native voice)"}
-                      className="inline-flex items-center gap-1 text-[11px] text-orange-700 hover:text-orange-800 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-0.5 rounded-lg font-bold transition cursor-pointer"
+                      title={isSpeaking === i ? "અવાજ બંધ કરો" : "સાંભળો"}
+                      className="inline-flex items-center gap-1 text-[10.5px] sm:text-[11px] text-orange-700 hover:text-orange-800 bg-orange-50 hover:bg-orange-100 border border-orange-200 px-2 py-0.5 rounded-lg font-bold transition cursor-pointer touch-manipulation"
                     >
                       {isSpeaking === i ? (
                         <>
@@ -1277,23 +1361,23 @@ export default function ChatBot() {
 
       {/* ── ATTACHMENT PREVIEW CHIP ── */}
       {attachment && (
-        <div className="px-4 py-2 bg-amber-50/90 border-t border-amber-200 flex items-center justify-between gap-3">
+        <div className="px-3 sm:px-4 py-1.5 sm:py-2 bg-amber-50/90 border-t border-amber-200 flex items-center justify-between gap-2 sm:gap-3">
           <div className="flex items-center gap-2 min-w-0">
             {attachment.type.startsWith("image/") ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={attachment.base64}
                 alt={attachment.name}
-                className="w-8 h-8 rounded-lg object-cover border border-amber-300 shrink-0"
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover border border-amber-300 shrink-0"
               />
             ) : (
-              <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
-                <FileText size={16} />
+              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center shrink-0">
+                <FileText size={15} />
               </div>
             )}
             <div className="min-w-0 text-xs">
-              <span className="font-bold text-slate-800 block truncate">{attachment.name}</span>
-              <span className="text-[10px] text-slate-500">
+              <span className="font-bold text-slate-800 block truncate text-[11px] sm:text-xs">{attachment.name}</span>
+              <span className="text-[9.5px] sm:text-[10px] text-slate-500">
                 {(attachment.size / 1024).toFixed(1)} KB • સરકારી માર્ગદર્શિકા મુજબ ચકાસવા તૈયાર
               </span>
             </div>
@@ -1305,14 +1389,14 @@ export default function ChatBot() {
             className="p-1 rounded-full hover:bg-amber-200 text-slate-600 transition cursor-pointer shrink-0"
             title="દસ્તાવેજ દૂર કરો"
           >
-            <X size={15} />
+            <X size={14} />
           </button>
         </div>
       )}
 
       {/* ── INPUT + CONTROLS ── */}
-      <div className="p-3 sm:p-4 bg-white border-t border-slate-200 flex-shrink-0">
-        <div className="flex gap-1.5 sm:gap-2 items-center">
+      <div className="p-2 sm:p-3 bg-white border-t border-slate-200 flex-shrink-0">
+        <div className="flex gap-1 sm:gap-2 items-center">
           {/* Hidden File Input */}
           <input
             ref={fileInputRef}
@@ -1331,9 +1415,9 @@ export default function ChatBot() {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             title="સરકારી દસ્તાવેજ અથવા ફોટો અપલોડ કરો (Upload Document)"
-            className="p-2.5 rounded-2xl bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border border-slate-200 transition flex-shrink-0 cursor-pointer shadow-xs active:scale-95"
+            className="p-2 sm:p-2.5 rounded-xl sm:rounded-2xl bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border border-slate-200 transition flex-shrink-0 cursor-pointer shadow-xs active:scale-95 touch-manipulation"
           >
-            <Paperclip size={18} />
+            <Paperclip size={17} />
           </button>
 
           {/* Microphone button */}
@@ -1341,13 +1425,13 @@ export default function ChatBot() {
             type="button"
             onClick={toggleListening}
             title={isListening ? "સાંભળી રહ્યું છે... બંધ કરવા ક્લિક કરો" : `બોલીને પૂછો (${currentLang.toUpperCase()} Voice)`}
-            className={`p-2.5 rounded-2xl transition flex-shrink-0 cursor-pointer shadow-xs ${
+            className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl transition flex-shrink-0 cursor-pointer shadow-xs touch-manipulation ${
               isListening
                 ? "bg-rose-600 text-white animate-pulse ring-4 ring-rose-200"
                 : "bg-slate-100 hover:bg-orange-50 text-slate-700 hover:text-orange-600 border border-slate-200"
             }`}
           >
-            {isListening ? <MicOff size={18} /> : <Mic size={18} />}
+            {isListening ? <MicOff size={17} /> : <Mic size={17} />}
           </button>
 
           <input
@@ -1358,12 +1442,12 @@ export default function ChatBot() {
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage()}
             placeholder={
               attachment
-                ? "આ દસ્તાવેજ વિશે સવાલ લખો અથવા મોકલો પર ક્લિક કરો..."
+                ? "આ દસ્તાવેજ વિશે સવાલ લખો..."
                 : isListening
-                ? `સ્પષ્ટ બોલો (${currentLang.toUpperCase()} Voice listening)...`
-                : "યોજના, કાયદો, અરજી નં પૂછો અથવા દસ્તાવેજ ડ્રોપ કરો..."
+                ? `સ્પષ્ટ બોલો (${currentLang.toUpperCase()})...`
+                : "સવાલ પૂછો અથવા દસ્તાવેજ ડ્રોપ કરો..."
             }
-            className="flex-1 min-w-0 border border-slate-300 rounded-2xl px-3 sm:px-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent placeholder:text-slate-400 bg-slate-50 focus:bg-white transition"
+            className="flex-1 min-w-0 border border-slate-300 rounded-xl sm:rounded-2xl px-2.5 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent placeholder:text-slate-400 bg-slate-50 focus:bg-white transition"
             disabled={loading}
           />
 
@@ -1371,17 +1455,17 @@ export default function ChatBot() {
             type="button"
             onClick={() => sendMessage()}
             disabled={loading || (!input.trim() && !attachment)}
-            className="flex-shrink-0 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-2xl px-3.5 sm:px-4 py-2.5 text-xs sm:text-sm font-black transition active:scale-95 flex items-center gap-1.5 shadow-sm cursor-pointer"
+            className="flex-shrink-0 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-black transition active:scale-95 flex items-center gap-1 shadow-sm cursor-pointer touch-manipulation"
           >
-            <Send size={15} />
+            <Send size={14} />
             <span className="hidden sm:inline">મોકલો</span>
           </button>
         </div>
 
         {isListening && (
-          <p className="text-[11px] text-rose-600 mt-1.5 text-center font-bold animate-pulse flex items-center justify-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-rose-600" />
-            તમારો અવાજ રેકોર્ડ થઈ રહ્યો છે... સ્પષ્ટ {currentLang.toUpperCase()} માં બોલો...
+          <p className="text-[10px] sm:text-[11px] text-rose-600 mt-1 text-center font-bold animate-pulse flex items-center justify-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-rose-600" />
+            તમારો અવાજ રેકોર્ડ થઈ રહ્યો છે... {currentLang.toUpperCase()} માં બોલો...
           </p>
         )}
       </div>
