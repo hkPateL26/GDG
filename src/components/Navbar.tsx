@@ -40,6 +40,7 @@ export default function Navbar() {
     name?: string;
     designation?: string;
     id?: string;
+    role?: string;
   } | null>(null);
   const [showLoginDropdown, setShowLoginDropdown] = useState(false);
   const pathname = usePathname();
@@ -160,7 +161,19 @@ export default function Navbar() {
                 title="કચેરી એડમિન સ્ક્રુટિની ડેસ્ક ખોલો"
               >
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                <span className="max-w-[220px] truncate">{officerSession.name || "કચેરી એડમિન"} (મામલતદાર)</span>
+                <span className="max-w-[220px] truncate">
+                  {officerSession.name || "કચેરી એડમિન"} (
+                  {officerSession.role === "talati"
+                    ? "તલાટી"
+                    : officerSession.role === "district_collector"
+                    ? "કલેક્ટર"
+                    : officerSession.role === "sdm_prant"
+                    ? "SDM/પ્રાંત"
+                    : officerSession.role === "state_admin"
+                    ? "મુખ્ય સચિવ"
+                    : "મામલતદાર"}
+                  )
+                </span>
               </Link>
             ) : citizenSession ? (
               <Link

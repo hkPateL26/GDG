@@ -1411,179 +1411,6 @@ export default function DocumentServicePortal({
         </div>
       )}
 
-      {/* ── Submission Success & Real-Time Alert Modal ── */}
-      {submittedApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <div className={`bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-5 shadow-2xl border-2 relative ${
-            submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
-          }`}>
-            {/* Header */}
-            <div className="text-center space-y-1.5">
-              <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto shadow-inner ${
-                submittedApp.paymentStatus === "pending_challan"
-                  ? "bg-amber-100 text-amber-700"
-                  : "bg-emerald-100 text-emerald-600"
-              }`}>
-                {submittedApp.paymentStatus === "pending_challan" ? <Landmark size={30} /> : <CheckCircle2 size={32} />}
-              </div>
-              <span className={`text-[11px] font-bold uppercase tracking-wider px-3 py-0.5 rounded-full border ${
-                submittedApp.paymentStatus === "pending_challan"
-                  ? "text-amber-800 bg-amber-50 border-amber-300"
-                  : "text-emerald-700 bg-emerald-50 border-emerald-200"
-              }`}>
-                {submittedApp.paymentStatus === "pending_challan"
-                  ? "સત્તાવાર રોકડ ચલણ જનરેટ થયું • Cash Challan Issued"
-                  : "સત્તાવાર અરજી નોંધણી સફળ • Govt Registered"}
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
-                {submittedApp.paymentStatus === "pending_challan"
-                  ? "ઓફલાઇન રોકડ ચલણ પાવતી સફળતાપૂર્વક જનરેટ થઈ!"
-                  : "અરજી સફળતાપૂર્વક સ્વીકારાઈ ગઈ છે!"}
-              </h2>
-              <p className="text-xs sm:text-sm text-slate-600 font-medium">
-                અરજી ક્રમાંક (Tracking ID):{" "}
-                <span className="font-mono font-black text-orange-600 text-base">{submittedApp.id}</span>
-              </p>
-            </div>
-
-            {/* Treasury Payment Badge */}
-            {submittedApp.paymentStatus === "pending_challan" ? (
-              <div className="bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <Receipt size={16} className="text-amber-700 shrink-0" />
-                  <div>
-                    <span className="font-bold text-amber-950 block">કચેરીએ ઓફલાઇન રોકડ ચલણ (Jan Seva Kendra Cash Counter)</span>
-                    <span className="text-[11px] text-amber-800 font-mono">
-                      GRN / ચલણ નં: <strong>{submittedApp.challanNo || activeChallanNo}</strong>
-                    </span>
-                  </div>
-                </div>
-                <span className="bg-amber-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs whitespace-nowrap">
-                  ₹ {submittedApp.feeAmount || service.fee} ભરપાઈ બાકી
-                </span>
-              </div>
-            ) : (
-              <div className="bg-emerald-50 border border-emerald-300 rounded-2xl p-3 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <Receipt size={16} className="text-emerald-700 shrink-0" />
-                  <div>
-                    <span className="font-bold text-emerald-900 block">
-                      સરકારી ફી ભરપાઈ (Paid via {submittedApp.paymentMethod === "upi" ? "UPI Bharat QR" : "NetBanking/Card"})
-                    </span>
-                    <span className="text-[11px] text-emerald-700 font-mono">
-                      Txn: {submittedApp.txnId || activeTxnId} • GRN: {submittedApp.challanNo || activeChallanNo}
-                    </span>
-                  </div>
-                </div>
-                <span className="bg-emerald-600 text-white font-mono font-bold px-2.5 py-1 rounded-lg text-xs whitespace-nowrap">
-                  ₹ {submittedApp.feeAmount || service.fee} PAID
-                </span>
-              </div>
-            )}
-
-            {/* Strict Document Lock Protocol for Cash Challan */}
-            {submittedApp.paymentStatus === "pending_challan" && (
-              <div className="bg-amber-50/90 border-2 border-amber-400 rounded-2xl p-3.5 sm:p-4 space-y-2 text-xs text-amber-950">
-                <div className="flex items-center gap-2 font-black text-amber-900 text-sm">
-                  <span>🔒</span>
-                  <span>પ્રમાણપત્ર લૉક પ્રોટોકોલ (Document Release Locked):</span>
-                </div>
-                <p className="leading-relaxed text-amber-900 font-medium">
-                  સરકારી નિયમ અનુસાર ઓનલાઇન ફી ભરપાઈ ન હોવાથી તમારું નવું/સુધારેલ પ્રમાણપત્ર હાલ <strong>સંપૂર્ણ લૉક</strong> છે.
-                </p>
-                <div className="bg-white/90 p-2.5 rounded-xl border border-amber-200 space-y-1 text-[11px] text-slate-800">
-                  <p className="font-bold text-slate-900">📌 કચેરી ખાતે અનુસરવાની પ્રક્રિયા:</p>
-                  <p>૧. નીચે આપેલ બટનથી <strong>&apos;ઓફલાઇન રોકડ ચલણ&apos;</strong> ડાઉનલોડ અથવા પ્રિન્ટ કરો.</p>
-                  <p>૨. તાલુકા જન સેવા કેન્દ્રના રોકડ કાઉન્ટર પર ચલણ નં. <strong className="font-mono text-orange-700">{submittedApp.challanNo || activeChallanNo}</strong> સાથે નિયત ફી <strong className="font-mono text-emerald-800">₹{submittedApp.feeAmount || service.fee}</strong> રોકડા ભરો.</p>
-                  <p>૩. કચેરી ઓપરેટર સિસ્ટમમાં &apos;Payment Confirmed&apos; કરશે ત્યાર બાદ જ તમારું પ્રમાણપત્ર રિલીઝ (અનલૉક) થશે.</p>
-                </div>
-              </div>
-            )}
-
-            {/* Biometric Appointment Slot if applicable */}
-            {submittedApp.biometricRequired && submittedApp.appointmentToken && (
-              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-2">
-                <div className="flex items-center gap-2 text-blue-900 font-extrabold text-sm">
-                  <Fingerprint size={18} className="text-blue-600" />
-                  <span>બાયોમેટ્રિક ફાસ્ટ-ટ્રેક એપોઇન્ટમેન્ટ સ્લોટ ફાળવાયો</span>
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
-                  <div className="bg-white p-2 rounded-xl border border-blue-100">
-                    <span className="text-slate-400 text-[10px] block">ટોકન નંબર</span>
-                    <span className="font-mono font-extrabold text-blue-700 text-sm">{submittedApp.appointmentToken}</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-xl border border-blue-100">
-                    <span className="text-slate-400 text-[10px] block">તારીખ & સમય</span>
-                    <span className="font-bold text-slate-800">{submittedApp.appointmentDate} (૧૧:૩૦ AM)</span>
-                  </div>
-                  <div className="bg-white p-2 rounded-xl border border-blue-100 col-span-2 sm:col-span-1">
-                    <span className="text-slate-400 text-[10px] block">કેન્દ્ર</span>
-                    <span className="font-semibold text-slate-800 text-[11px] truncate block">જન સેવા કેન્દ્ર, {taluka}</span>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Live Citizen Notifications (SMS & Email Preview) */}
-            {notificationPayload && (
-              <div className="space-y-3">
-                <h4 className="font-bold text-xs text-slate-700 flex items-center gap-1.5">
-                  <Smartphone size={15} className="text-orange-600" />
-                  <span>ઓટોમેટેડ નાગરિક સૂચનાઓ (Live SMS & Email Alert Simulated):</span>
-                </h4>
-
-                {/* SMS Simulation */}
-                {notificationPayload.sms && (
-                  <div className="bg-slate-900 text-slate-100 rounded-2xl p-3.5 space-y-1.5 shadow-md">
-                    <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1">
-                      <span className="font-mono text-orange-400 font-bold">📱 GOVT-GUJ SMS ALERT</span>
-                      <span>To: {notificationPayload.sms.sentTo}</span>
-                    </div>
-                    <p className="text-xs font-mono leading-relaxed text-slate-200">
-                      {notificationPayload.sms.message}
-                    </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Action Buttons - Hard Responsive with Direct PDF Download */}
-            <div className="flex flex-col sm:flex-row gap-2.5 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowSlipModal(true)}
-                className={`flex-1 py-3 px-4 active:scale-95 text-white rounded-xl text-center font-black text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap ${
-                  submittedApp.paymentStatus === "pending_challan"
-                    ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-                    : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
-                }`}
-              >
-                <Printer size={16} />
-                <span>
-                  {submittedApp.paymentStatus === "pending_challan"
-                    ? "🖨️ ઓફલાઇન રોકડ ચલણ (PDF / પ્રિન્ટ કરો)"
-                    : "🖨️ સત્તાવાર સરકારી પહોંચ / PDF ડાઉનલોડ"}
-                </span>
-              </button>
-
-              <Link
-                href={`/track?id=${encodeURIComponent(submittedApp.id)}`}
-                className="py-3 px-4 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-center font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
-              >
-                <Eye size={15} />
-                <span>લાઈવ સ્ટેટસ</span>
-              </Link>
-
-              <button
-                onClick={() => setSubmittedApp(null)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition whitespace-nowrap"
-              >
-                નવી અરજી
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* ── Step 1: Select Document Service ── */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">
@@ -1613,7 +1440,7 @@ export default function DocumentServicePortal({
             )}
           </div>
 
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs">
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x pb-1.5 text-xs">
             {[
               { id: "all", label: `તમામ સેવાઓ (${DOCUMENT_SERVICES.length})` },
               { id: "revenue", label: "🌾 મહેસૂલ & જમીન (૧૮)" },
@@ -1630,10 +1457,10 @@ export default function DocumentServicePortal({
                 key={cat.id}
                 type="button"
                 onClick={() => setServiceCategoryFilter(cat.id)}
-                className={`px-3 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer shrink-0 ${
+                className={`px-3.5 py-2 rounded-xl font-bold transition whitespace-nowrap cursor-pointer shrink-0 min-h-[38px] flex items-center justify-center select-none active:scale-95 ${
                   serviceCategoryFilter === cat.id
-                    ? "bg-orange-600 text-white shadow-xs"
-                    : "bg-slate-100 hover:bg-slate-200 text-slate-600"
+                    ? "bg-orange-600 text-white shadow-xs font-black ring-1 ring-orange-500"
+                    : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                 }`}
               >
                 {cat.label}
@@ -2224,7 +2051,7 @@ export default function DocumentServicePortal({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1">
                       મોબાઈલ નંબર (SMS એલર્ટ) *
@@ -2236,7 +2063,7 @@ export default function DocumentServicePortal({
                       value={mobileNumber}
                       onChange={(e) => setMobileNumber(e.target.value)}
                       placeholder="9825012345"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
                     />
                   </div>
 
@@ -2250,7 +2077,7 @@ export default function DocumentServicePortal({
                         value={emailAddress}
                         onChange={(e) => setEmailAddress(e.target.value)}
                         placeholder="citizen@gujarat.gov.in"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 min-h-[42px]"
                       />
                     </div>
                   ) : (
@@ -2266,7 +2093,7 @@ export default function DocumentServicePortal({
                         value={aadhaarNumber}
                         onChange={(e) => setAadhaarNumber(e.target.value)}
                         placeholder="4829"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
                       />
                     </div>
                   )}
@@ -2288,7 +2115,7 @@ export default function DocumentServicePortal({
                 )}
 
                 {/* District & Taluka Selectors */}
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
                     <label className="block text-xs font-semibold text-slate-600 mb-1">જિલ્લો (District) *</label>
                     <select

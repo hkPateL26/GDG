@@ -52,6 +52,224 @@ import {
   SkeletonReviewModal,
 } from "@/components/Skeleton";
 
+const GUJARATI_NAME_MAP: Record<string, string> = {
+  "rameshbhai kantilal patel": "રમેશભાઈ કાંતિલાલ પટેલ",
+  "rameshbhai k. patel": "રમેશભાઈ કે. પટેલ",
+  "ramesh patel": "રમેશ પટેલ",
+  "hari vinodrai patel": "હરી વિનોદરાઈ પટેલ",
+  "aartiben m. solanki": "આરતીબેન એમ. સોલંકી",
+  "dineshbhai p. rabari": "દિનેશભાઈ પી. રબારી",
+  "mansukhbhai g. vaghani": "મનસુખભાઈ જી. વાઘાણી",
+  "bhavnaben j. radadiya": "ભાવનાબેન જે. રાદડિયા",
+  "jayeshbhai l. sojitra": "જયેશભાઈ એલ. સોજીત્રા",
+  "kantibhai p. savaliya": "કાંતિભાઈ પી. સાવલિયા",
+  "ashwinbhai d. vaghasia": "અશ્વિનભાઈ ડી. વઘાસિયા",
+  "maheshbhai v. gajera": "મહેશભાઈ વી. ગજેરા",
+  "prakashbhai r. khunt": "પ્રકાશભાઈ આર. ખૂંટ",
+  "nareshbhai d. chovatiya": "નરેશભાઈ ડી. ચોવટીયા",
+  "gitaben r. patel": "ગીતાબેન આર. પટેલ",
+  "vipulbhai m. thummar": "વિપુલભાઈ એમ. ઠુમ્મર",
+  "dharmendrasinh j. jadeja": "ધર્મેન્દ્રસિંહ જે. જાડેજા",
+};
+
+function formatCitizenNameGu(app: CitizenApplication): string {
+  if (app.citizenNameGu && /[\u0A80-\u0AFF]/.test(app.citizenNameGu)) {
+    return app.citizenNameGu;
+  }
+  const raw = (app.citizenName || (app as unknown as { applicantName?: string }).applicantName || "").trim();
+  const lower = raw.toLowerCase();
+  if (GUJARATI_NAME_MAP[lower]) return GUJARATI_NAME_MAP[lower];
+  if (app.citizenNameGu) return app.citizenNameGu;
+  if (raw) return raw;
+  return "હરી વિનોદરાઈ પટેલ";
+}
+
+function cleanVillageOnly(village?: string): string {
+  if (!village) return "ગોમતા";
+  const v = village.replace(/\s*\([^)]*\)/g, "").trim();
+  const villageMap: Record<string, string> = {
+    gomta: "ગોમતા",
+    movaiya: "મોવૈયા",
+    biliyala: "બીલીયાળા",
+    charakhadi: "ચરખડી",
+    derdi: "ડેરડી કુંભાજી",
+    shrinathgadh: "શ્રીનાથગઢ",
+    ribda: "રીબડા",
+    hadamtala: "હડમતાળા",
+    bandra: "બાંદ્રા",
+    daiya: "દૈય્યા",
+    kolithad: "કોલીથડ",
+    gondal: "ગોંડલ",
+    anandpar: "આનંદપર",
+    kuha: "કુહા",
+    madhapar: "માધાપર",
+  };
+  return villageMap[v.toLowerCase()] || v;
+}
+
+function formatGujaratiLocation(
+  village?: string,
+  taluka?: string,
+  districtGu?: string,
+  district?: string
+): string {
+  const cleanV = cleanVillageOnly(village);
+  const t = (taluka || "").trim();
+  const talukaMap: Record<string, string> = {
+    gondal: "ગોંડલ",
+    "rajkot rural": "રાજકોટ ગ્રામ્ય",
+    "rajkot urban": "રાજકોટ શહેર",
+    jetpur: "જેતપુર",
+    dhoraji: "ધોરાજી",
+    upleta: "ઉપલેટા",
+    "kotda sangani": "કોટડા સાંગાણી",
+    lodhika: "લોધિકા",
+    jasdan: "જસદણ",
+    vinchhiya: "વીંછીયા",
+    paddhari: "પડધરી",
+    jamkandorna: "જામકંડોરણા",
+    daskroi: "દસક્રોઈ",
+    sanand: "સાણંદ",
+    dholka: "ધોળકા",
+    bavla: "બાવળા",
+    "ahmedabad city": "અમદાવાદ શહેર",
+    "surat city": "સુરત શહેર",
+    choryasi: "ચોર્યાસી",
+    kamrej: "કામરેજ",
+    bardoli: "બારડોલી",
+    "vadodara urban": "વડોદરા શહેર",
+    "vadodara rural": "વડોદરા ગ્રામ્ય",
+    padra: "પાદરા",
+    bhuj: "ભુજ",
+    anjar: "અંજાર",
+    gandhidham: "ગાંધીધામ",
+    morbi: "મોરબી",
+    amreli: "અમરેલી",
+    anand: "આણંદ",
+  };
+  const tLower = t.toLowerCase();
+  const tGu = talukaMap[tLower] || t || "ગોંડલ";
+  const dist = getDistrictForTaluka(t, districtGu, district);
+
+  if (!cleanV || cleanV.toLowerCase() === tLower || cleanV === tGu || cleanV === `${tGu} શહેર`) {
+    return `તા. ${tGu} (જિ. ${dist})`;
+  }
+
+  return `મુ. ${cleanV}, તા. ${tGu} (જિ. ${dist})`;
+}
+
+function getDistrictForTaluka(
+  taluka?: string,
+  fallbackDistGu?: string,
+  fallbackDist?: string
+): string {
+  if (!taluka) return fallbackDistGu || fallbackDist || "રાજકોટ";
+  const tClean = taluka.toLowerCase().replace(/\s*\(.*\)/g, "").trim();
+  for (const d of GUJARAT_DISTRICTS) {
+    if (
+      d.talukas.some(
+        (t) =>
+          t.toLowerCase() === tClean ||
+          tClean.includes(t.toLowerCase()) ||
+          t.toLowerCase().includes(tClean)
+      )
+    ) {
+      return d.gu;
+    }
+  }
+  return fallbackDistGu || fallbackDist || "રાજકોટ";
+}
+
+function cleanTalukaName(taluka?: string): string {
+  if (!taluka) return "ગોંડલ";
+  const talukaMap: Record<string, string> = {
+    gondal: "ગોંડલ",
+    "rajkot rural": "રાજકોટ ગ્રામ્ય",
+    "rajkot urban": "રાજકોટ શહેર",
+    jetpur: "જેતપુર",
+    dhoraji: "ધોરાજી",
+    upleta: "ઉપલેટા",
+    "kotda sangani": "કોટડા સાંગાણી",
+    lodhika: "લોધિકા",
+    jasdan: "જસદણ",
+    vinchhiya: "વીંછીયા",
+    paddhari: "પડધરી",
+    jamkandorna: "જામકંડોરણા",
+    daskroi: "દસક્રોઈ",
+    sanand: "સાણંદ",
+    dholka: "ધોળકા",
+    bavla: "બાવળા",
+    "ahmedabad city": "અમદાવાદ શહેર",
+    "surat city": "સુરત શહેર",
+    choryasi: "ચોર્યાસી",
+    kamrej: "કામરેજ",
+    bardoli: "બારડોલી",
+    "vadodara urban": "વડોદરા શહેર",
+    "vadodara rural": "વડોદરા ગ્રામ્ય",
+    padra: "પાદરા",
+    bhuj: "ભુજ",
+    anjar: "અંજાર",
+    gandhidham: "ગાંધીધામ",
+    morbi: "મોરબી",
+    amreli: "અમરેલી",
+    anand: "આણંદ",
+  };
+  return talukaMap[taluka.toLowerCase().trim()] || taluka;
+}
+
+function getOfficerJurisdictionInfo(officer: OfficerNode) {
+  switch (officer.role) {
+    case "talati":
+      return {
+        badge: "ગોમતા ગ્રામ પંચાયત (માત્ર ગોમતા ગામ)",
+        description: "અધિકારક્ષેત્ર: માત્ર ગોમતા ગ્રામ પંચાયત",
+        icon: "📋",
+      };
+    case "mamlatdar":
+      return {
+        badge: "ગોંડલ તાલુકો (તમામ ગામડાં & શહેર)",
+        description: "અધિકારક્ષેત્ર: ગોંડલ તાલુકો",
+        icon: "🖋️",
+      };
+    case "sdm_prant":
+      return {
+        badge: "ગોંડલ સબ-ડિવિઝન (ગોંડલ, કોટડા સાંગાણી, લોધિકા)",
+        description: "અધિકારક્ષેત્ર: ગોંડલ પ્રાંતના ૩ તાલુકા",
+        icon: "⚖️",
+      };
+    case "district_collector":
+      return {
+        badge: "રાજકોટ જિલ્લો (૧૧ તાલુકા)",
+        description: "અધિકારક્ષેત્ર: સમગ્ર રાજકોટ જિલ્લો",
+        icon: "🏢",
+      };
+    default:
+      return {
+        badge: "સમગ્ર ગુજરાત રાજ્ય (૩૩ જિલ્લા)",
+        description: "અધિકારક્ષેત્ર: સમગ્ર ગુજરાત",
+        icon: "🏛️",
+      };
+  }
+}
+
+function resolveOfficerNode(raw?: Partial<OfficerNode> | null): OfficerNode {
+  if (!raw) return HIERARCHICAL_OFFICERS[3]; // Default: Taluka Mamlatdar (H.V. Patel, GAS)
+  const match = HIERARCHICAL_OFFICERS.find(
+    (o) => (raw.id && o.id === raw.id) || (raw.role && o.role === raw.role)
+  );
+  if (match) {
+    return {
+      ...match,
+      ...raw,
+      avatarEmoji: match.avatarEmoji,
+      tierNameGu: match.tierNameGu,
+      officeGu: match.officeGu,
+      tierLevel: match.tierLevel,
+    };
+  }
+  return HIERARCHICAL_OFFICERS[3];
+}
+
 interface AdminHierarchyDeskProps {
   initialOfficer?: OfficerNode;
   onLogout: () => void;
@@ -61,36 +279,26 @@ export default function AdminHierarchyDesk({
   initialOfficer,
   onLogout,
 }: AdminHierarchyDeskProps) {
-  // Current active officer state (allows switching between 5 tiers)
-  const [currentOfficer, setCurrentOfficer] = useState<OfficerNode>(() => {
-    if (initialOfficer) {
-      const match = HIERARCHICAL_OFFICERS.find((o) => o.id === initialOfficer.id);
-      if (match) {
-        return {
-          ...match,
-          ...initialOfficer,
-          avatarEmoji: match.avatarEmoji,
-          tierNameGu: match.tierNameGu,
-          officeGu: match.officeGu,
-        };
+  // Authenticated base officer who originally logged in (determines supervisory clearance)
+  const [authenticatedOfficer] = useState<OfficerNode>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const savedAuth = sessionStorage.getItem("nagrik_authenticated_officer");
+        if (savedAuth) {
+          return resolveOfficerNode(JSON.parse(savedAuth));
+        }
+      } catch {
+        // fallback
       }
-      return initialOfficer;
+    }
+    if (initialOfficer) {
+      return resolveOfficerNode(initialOfficer);
     }
     if (typeof window !== "undefined") {
       try {
         const saved = sessionStorage.getItem("nagrik_officer_session");
         if (saved) {
-          const parsed = JSON.parse(saved);
-          const found = HIERARCHICAL_OFFICERS.find((o) => o.id === parsed.id);
-          if (found) {
-            return {
-              ...found,
-              ...parsed,
-              avatarEmoji: found.avatarEmoji,
-              tierNameGu: found.tierNameGu,
-              officeGu: found.officeGu,
-            };
-          }
+          return resolveOfficerNode(JSON.parse(saved));
         }
       } catch {
         // fallback
@@ -98,6 +306,49 @@ export default function AdminHierarchyDesk({
     }
     return HIERARCHICAL_OFFICERS[3]; // Default: Taluka Mamlatdar (H.V. Patel, GAS)
   });
+
+  // Current active officer state (allows switching only between allowed subordinate tiers)
+  const [currentOfficer, setCurrentOfficer] = useState<OfficerNode>(() => {
+    let officer = authenticatedOfficer;
+    if (typeof window !== "undefined") {
+      try {
+        const savedSession = sessionStorage.getItem("nagrik_officer_session");
+        if (savedSession) {
+          officer = resolveOfficerNode(JSON.parse(savedSession));
+        }
+      } catch {
+        // fallback
+      }
+    } else if (initialOfficer) {
+      officer = resolveOfficerNode(initialOfficer);
+    }
+
+    // Security check: Never allow active officer to exceed authenticated officer's tier rank
+    if (officer.tierLevel < authenticatedOfficer.tierLevel) {
+      return authenticatedOfficer;
+    }
+    return officer;
+  });
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!sessionStorage.getItem("nagrik_authenticated_officer")) {
+        sessionStorage.setItem("nagrik_authenticated_officer", JSON.stringify(authenticatedOfficer));
+      }
+    }
+  }, [authenticatedOfficer]);
+
+  // Strict Hierarchical RBAC:
+  // An officer can only inspect / switch down to subordinate desks within their authority hierarchy.
+  // Tier 1 (State Super Admin / Chief Secretary): Can inspect Tiers 1, 2, 3, 4, 5.
+  // Tier 2 (Collector): Can inspect Tiers 2, 3, 4, 5 (Cannot access Tier 1).
+  // Tier 3 (SDM / Prant): Can inspect Tiers 3, 4, 5 (Cannot access Tiers 1, 2).
+  // Tier 4 (Mamlatdar): Can inspect Tiers 4, 5 (Cannot access Tiers 1, 2, 3).
+  // Tier 5 (Talati Mantri): Can ONLY access Tier 5 (his own village desk, cannot access any higher office).
+  const allowedOfficersToSwitch = useMemo(() => {
+    const authLevel = authenticatedOfficer.tierLevel || 5;
+    return HIERARCHICAL_OFFICERS.filter((o) => o.tierLevel >= authLevel);
+  }, [authenticatedOfficer.tierLevel]);
 
   const [isOnLeave, setIsOnLeave] = useState<boolean>(currentOfficer.isOnLeave || false);
   const [actingOfficerName, setActingOfficerName] = useState<string>(
@@ -107,22 +358,41 @@ export default function AdminHierarchyDesk({
   // Active Desk Tab
   const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy">("queue");
 
-  // Cascading Filters
+  // Cascading Filters scoped by Officer Jurisdiction
   const [selectedDistrict, setSelectedDistrict] = useState<string>(() => {
-    return currentOfficer.canViewAllDistricts || currentOfficer.district === "All"
-      ? "all"
-      : currentOfficer.district;
+    return currentOfficer.role === "state_admin" ? "all" : (currentOfficer.district || "Rajkot");
   });
-  const [selectedTaluka, setSelectedTaluka] = useState<string>(
-    currentOfficer.taluka || "all"
-  );
-  const [selectedVillage, setSelectedVillage] = useState<string>("all");
+  const [selectedTaluka, setSelectedTaluka] = useState<string>(() => {
+    if (currentOfficer.role === "mamlatdar" || currentOfficer.role === "talati") {
+      return currentOfficer.taluka || "Gondal";
+    }
+    return "all";
+  });
+  const [selectedVillage, setSelectedVillage] = useState<string>(() => {
+    if (currentOfficer.role === "talati") {
+      return "ગોમતા (Gomta)";
+    }
+    return "all";
+  });
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [slaFilterOnly, setSlaFilterOnly] = useState<boolean>(false);
 
-  // Dynamic real talukas for the selected district
+  // Dynamic real talukas based on officer's jurisdiction zone
   const availableTalukas = useMemo(() => {
+    if (currentOfficer.role === "talati" || currentOfficer.role === "mamlatdar") {
+      return ["Gondal"];
+    }
+    if (currentOfficer.role === "sdm_prant") {
+      return ["Gondal", "Kotda Sangani", "Lodhika"];
+    }
+    if (currentOfficer.role === "district_collector") {
+      const distObj = GUJARAT_DISTRICTS.find(
+        (d) => d.en.toLowerCase() === "rajkot" || d.gu === "રાજકોટ"
+      );
+      return distObj ? distObj.talukas : ["Gondal", "Kotda Sangani", "Lodhika", "Rajkot Rural", "Rajkot Urban", "Jetpur", "Dhoraji", "Upleta", "Jasdan", "Vinchhiya", "Paddhari", "Jamkandorna"];
+    }
+    // state_admin: shows talukas of selected district or all 248 talukas
     if (selectedDistrict === "all") {
       return Array.from(new Set(GUJARAT_DISTRICTS.flatMap((d) => d.talukas))).sort();
     }
@@ -130,11 +400,15 @@ export default function AdminHierarchyDesk({
       (d) => d.en.toLowerCase() === selectedDistrict.toLowerCase() || d.gu === selectedDistrict
     );
     return distObj ? distObj.talukas : [];
-  }, [selectedDistrict]);
+  }, [currentOfficer.role, selectedDistrict]);
 
   // Dynamic real villages for the selected taluka
   const availableVillages = useMemo(() => {
-    if (selectedTaluka === "all") {
+    if (currentOfficer.role === "talati") {
+      return ["ગોમતા (Gomta)"];
+    }
+    const effectiveT = (currentOfficer.role === "mamlatdar") ? "Gondal" : selectedTaluka;
+    if (effectiveT === "all") {
       if (selectedDistrict !== "all") {
         const distObj = GUJARAT_DISTRICTS.find(
           (d) => d.en.toLowerCase() === selectedDistrict.toLowerCase() || d.gu === selectedDistrict
@@ -145,8 +419,8 @@ export default function AdminHierarchyDesk({
       }
       return [];
     }
-    return getVillagesForTaluka(selectedTaluka);
-  }, [selectedDistrict, selectedTaluka]);
+    return getVillagesForTaluka(effectiveT);
+  }, [currentOfficer.role, selectedDistrict, selectedTaluka]);
 
   // Data & Modal States
   const [applications, setApplications] = useState<CitizenApplication[]>([]);
@@ -177,14 +451,30 @@ export default function AdminHierarchyDesk({
     setPolicyConfigs(getPolicyConfigs());
   }, []);
 
-  // Fetch applications list
+  // Fetch applications list with strict jurisdiction parameters
   const fetchApplications = useCallback(async () => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      if (selectedDistrict !== "all") params.append("district", selectedDistrict);
-      if (selectedTaluka !== "all") params.append("taluka", selectedTaluka);
-      if (selectedVillage !== "all") params.append("village", selectedVillage);
+
+      let qDistrict = selectedDistrict;
+      let qTaluka = selectedTaluka;
+      let qVillage = selectedVillage;
+
+      if (currentOfficer.role === "district_collector" || currentOfficer.role === "sdm_prant") {
+        qDistrict = "Rajkot";
+      } else if (currentOfficer.role === "mamlatdar") {
+        qDistrict = "Rajkot";
+        qTaluka = "Gondal";
+      } else if (currentOfficer.role === "talati") {
+        qDistrict = "Rajkot";
+        qTaluka = "Gondal";
+        qVillage = "Gomta";
+      }
+
+      if (qDistrict !== "all") params.append("district", qDistrict);
+      if (qTaluka !== "all") params.append("taluka", qTaluka);
+      if (qVillage !== "all") params.append("village", qVillage);
       if (selectedStatus !== "all") params.append("status", selectedStatus);
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
       params.append("limit", "100");
@@ -194,7 +484,7 @@ export default function AdminHierarchyDesk({
       if (data.success && data.records) {
         let serverRecords: CitizenApplication[] = data.records;
 
-        // Also merge client-side locally submitted applications so new submissions show immediately
+        // Merge and sanitize local applications
         if (typeof window !== "undefined") {
           try {
             const raw = localStorage.getItem("nagrik_user_applications");
@@ -222,7 +512,7 @@ export default function AdminHierarchyDesk({
     } finally {
       setLoading(false);
     }
-  }, [selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery]);
+  }, [currentOfficer.role, selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -231,25 +521,52 @@ export default function AdminHierarchyDesk({
     return () => clearTimeout(timer);
   }, [fetchApplications]);
 
-  // Role Switcher Handler
+  // Role Switcher Handler (Auto-locks filters to the officer's administrative jurisdiction)
   const handleRoleSwitch = (officerId: string) => {
     const target = HIERARCHICAL_OFFICERS.find((o) => o.id === officerId);
     if (!target) return;
+
+    // Strict Authority Validation: Cannot access desks above authenticated officer's tier rank
+    if (target.tierLevel < authenticatedOfficer.tierLevel) {
+      alert("⚠️ અનધિકૃત પ્રવેશ: તમને ઉચ્ચ કક્ષાના અધિકારીના ડેસ્ક પર પ્રવેશવાની વહીવટી સત્તા નથી.");
+      return;
+    }
+
     setCurrentOfficer(target);
     setIsOnLeave(target.isOnLeave);
     setActingOfficerName(target.actingOfficerName || "ઇન-ચાર્જ અધિકારી");
 
-    if (target.canViewAllDistricts || target.district === "All") {
+    if (target.role === "state_admin") {
       setSelectedDistrict("all");
-    } else {
-      setSelectedDistrict(target.district);
+      setSelectedTaluka("all");
+      setSelectedVillage("all");
+    } else if (target.role === "district_collector") {
+      setSelectedDistrict(target.district || "Rajkot");
+      setSelectedTaluka("all");
+      setSelectedVillage("all");
+    } else if (target.role === "sdm_prant") {
+      setSelectedDistrict(target.district || "Rajkot");
+      setSelectedTaluka("all");
+      setSelectedVillage("all");
+    } else if (target.role === "mamlatdar") {
+      setSelectedDistrict(target.district || "Rajkot");
+      setSelectedTaluka(target.taluka || "Gondal");
+      setSelectedVillage("all");
+    } else if (target.role === "talati") {
+      setSelectedDistrict(target.district || "Rajkot");
+      setSelectedTaluka(target.taluka || "Gondal");
+      setSelectedVillage("ગોમતા (Gomta)");
     }
 
-    // Default to officer taluka or "all"
-    setSelectedTaluka(target.taluka || "all");
-    setSelectedVillage("all");
-
     sessionStorage.setItem("nagrik_officer_session", JSON.stringify(target));
+  };
+
+  const handleLogoutClick = () => {
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("nagrik_authenticated_officer");
+      sessionStorage.removeItem("nagrik_officer_session");
+    }
+    onLogout();
   };
 
   // Toggle Leave Protocol
@@ -409,34 +726,81 @@ export default function AdminHierarchyDesk({
     setTimeout(() => setPolicySavedAlert(false), 4000);
   };
 
-  // Filtered List with 15-Min SLA condition, Taluka & Village/City filtering
+  // Filtered List strictly scoped to Officer's Jurisdictional Zone
   const filteredApplications = useMemo(() => {
     const seen = new Set<string>();
     return applications.filter((app) => {
       if (!app || !app.id || seen.has(app.id)) return false;
-      seen.add(app.id);
 
+      // Determine authentic district & taluka of this application
+      const resolvedDistGu = getDistrictForTaluka(app.taluka, app.districtGu, app.district);
+      const appTaluka = (app.taluka || "").toLowerCase().trim();
+      const appVillage = (app.village || "").toLowerCase().trim();
+
+      // ── STRICT OFFICER JURISDICTION ENFORCEMENT ──
+      if (currentOfficer.role === "talati") {
+        // Talati only sees Gomta village applications
+        const isGomta = appVillage.includes("gomta") || appVillage.includes("ગોમતા");
+        if (!isGomta) return false;
+      } else if (currentOfficer.role === "mamlatdar") {
+        // Mamlatdar only sees Gondal taluka applications
+        if (appTaluka !== "gondal") return false;
+      } else if (currentOfficer.role === "sdm_prant") {
+        // SDM / Prant Officer sees Gondal Prant talukas: Gondal, Kotda Sangani, Lodhika
+        const prantTalukas = ["gondal", "kotda sangani", "lodhika"];
+        if (!prantTalukas.includes(appTaluka)) return false;
+      } else if (currentOfficer.role === "district_collector") {
+        // Collector only sees Rajkot district applications
+        const isRajkot =
+          (app.district || "").toLowerCase() === "rajkot" ||
+          resolvedDistGu === "રાજકોટ" ||
+          (app.districtGu && app.districtGu === "રાજકોટ");
+        if (!isRajkot) return false;
+      }
+
+      // ── USER UI FILTERS ──
       // District filter
       if (selectedDistrict !== "all") {
         const matchDist =
-          app.district.toLowerCase() === selectedDistrict.toLowerCase() ||
+          (app.district || "").toLowerCase() === selectedDistrict.toLowerCase() ||
+          resolvedDistGu === selectedDistrict ||
           (app.districtGu && app.districtGu === selectedDistrict);
         if (!matchDist) return false;
       }
 
       // Taluka filter
-      if (selectedTaluka !== "all" && app.taluka.toLowerCase() !== selectedTaluka.toLowerCase()) return false;
+      if (selectedTaluka !== "all" && appTaluka !== selectedTaluka.toLowerCase().trim()) {
+        return false;
+      }
 
       // Village / City filter
       if (selectedVillage !== "all") {
-        const appV = (app.village || "").toLowerCase();
         const vPure = selectedVillage.split("(")[0].trim().toLowerCase();
-        const appVPure = appV.split("(")[0].trim().toLowerCase();
+        const appVPure = appVillage.split("(")[0].trim();
         const matchesVillage =
-          appV.includes(vPure) ||
+          appVillage.includes(vPure) ||
           vPure.includes(appVPure) ||
-          appV === selectedVillage.toLowerCase();
+          appVillage === selectedVillage.toLowerCase().trim();
         if (!matchesVillage) return false;
+      }
+
+      // Status filter
+      if (selectedStatus !== "all" && app.status !== selectedStatus) {
+        return false;
+      }
+
+      // Search query
+      if (searchQuery.trim()) {
+        const q = searchQuery.trim().toLowerCase();
+        const matchesQ =
+          app.id.toLowerCase().includes(q) ||
+          (app.citizenName || "").toLowerCase().includes(q) ||
+          (app.citizenNameGu || "").toLowerCase().includes(q) ||
+          (app.schemeName || "").toLowerCase().includes(q) ||
+          (app.schemeNameGu || "").toLowerCase().includes(q) ||
+          appVillage.includes(q) ||
+          appTaluka.includes(q);
+        if (!matchesQ) return false;
       }
 
       // 15-Minute SLA check
@@ -444,9 +808,11 @@ export default function AdminHierarchyDesk({
         const sla = analyzeApplicationSla(app);
         if (!sla.isBreached) return false;
       }
+
+      seen.add(app.id);
       return true;
     });
-  }, [applications, selectedDistrict, selectedTaluka, selectedVillage, slaFilterOnly]);
+  }, [applications, currentOfficer.role, selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery, slaFilterOnly]);
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-2 sm:px-4 animate-in fade-in duration-200">
@@ -475,11 +841,19 @@ export default function AdminHierarchyDesk({
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 mt-0.5 truncate">
+              <p className="text-[11px] text-slate-300 mt-0.5 break-words">
                 {currentOfficer.designation} &bull; ID:{" "}
                 <strong className="font-mono text-amber-300">{currentOfficer.id}</strong> (
                 {currentOfficer.officeGu || currentOfficer.office || "કચેરી ડેસ્ક"})
               </p>
+              <div className="flex items-center gap-2 flex-wrap mt-1">
+                <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+                  {getOfficerJurisdictionInfo(currentOfficer).icon} અધિકારક્ષેત્ર: {getOfficerJurisdictionInfo(currentOfficer).badge}
+                </span>
+                <span className="text-[10px] text-amber-200/90 font-medium hidden sm:inline">
+                  &bull; {getOfficerJurisdictionInfo(currentOfficer).description}
+                </span>
+              </div>
             </div>
           </div>
 
@@ -499,7 +873,7 @@ export default function AdminHierarchyDesk({
 
             <button
               type="button"
-              onClick={onLogout}
+              onClick={handleLogoutClick}
               className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
             >
               <LogOut size={12} />
@@ -508,29 +882,76 @@ export default function AdminHierarchyDesk({
           </div>
         </div>
 
-        {/* ── Role Switcher Bar (Play Store Grade Horizontal Touch Carousel) ── */}
-        <div className="bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x snap-x text-xs">
-          <span className="text-[11px] text-slate-400 font-bold px-1.5 shrink-0 flex items-center gap-1.5 whitespace-nowrap">
-            <Shield size={13} className="text-amber-400" /> સ્તર બદલો:
-          </span>
-
-          {HIERARCHICAL_OFFICERS.map((officer) => (
+        {/* ── Supervisor Inspection Alert Banner (When a Higher Authority is inspecting a subordinate desk) ── */}
+        {currentOfficer.id !== authenticatedOfficer.id && (
+          <div className="bg-amber-500/15 border border-amber-400/60 p-2.5 rounded-xl text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-200 shadow-inner">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-base shrink-0">👁️</span>
+              <p className="leading-snug text-[11.5px]">
+                <strong className="text-amber-300">ઉચ્ચ અધિકારી નિરીક્ષણ મોડ:</strong> આપ{" "}
+                <strong className="text-white underline">{authenticatedOfficer.name}</strong> ({authenticatedOfficer.tierNameGu.split("-")[1] || authenticatedOfficer.tierNameGu}) તરીકે લૉગિન છો અને હાલ{" "}
+                <strong className="text-white">{currentOfficer.name}</strong> ({currentOfficer.tierNameGu}) ના ડેસ્કનું નિરીક્ષણ કરી રહ્યા છો.
+              </p>
+            </div>
             <button
-              key={officer.id}
               type="button"
-              onClick={() => handleRoleSwitch(officer.id)}
-              className={`px-3 py-2 rounded-xl font-bold whitespace-nowrap transition cursor-pointer text-xs shrink-0 snap-start min-h-[38px] flex items-center gap-1.5 ${
-                currentOfficer.id === officer.id
-                  ? "bg-amber-400 text-slate-950 shadow-md font-black ring-1 ring-amber-300"
-                  : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 active:scale-95"
-              }`}
+              onClick={() => handleRoleSwitch(authenticatedOfficer.id)}
+              className="px-3 py-1 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black rounded-lg text-xs shrink-0 transition shadow-xs cursor-pointer self-start sm:self-auto active:scale-95"
             >
-              <span>
-                {officer.avatarEmoji} {officer.tierNameGu.split("-")[1] || officer.tierNameGu}
-              </span>
+              મુખ્ય ડેસ્ક પર પરત ફરો ↩
             </button>
-          ))}
-        </div>
+          </div>
+        )}
+
+        {/* ── Role Switcher Bar / Administrative Clearance Lock ── */}
+        {allowedOfficersToSwitch.length > 1 ? (
+          <div className="bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x snap-x text-xs">
+            <span className="text-[11px] text-slate-400 font-bold px-1.5 shrink-0 flex items-center gap-1.5 whitespace-nowrap">
+              <Shield size={13} className="text-amber-400" /> કચેરી સ્તર નિરીક્ષણ:
+            </span>
+
+            {allowedOfficersToSwitch.map((officer) => {
+              const isSelf = officer.id === authenticatedOfficer.id;
+              const isSelected = currentOfficer.id === officer.id;
+              return (
+                <button
+                  key={officer.id}
+                  type="button"
+                  onClick={() => handleRoleSwitch(officer.id)}
+                  className={`px-3 py-2 rounded-xl font-bold whitespace-nowrap transition cursor-pointer text-xs shrink-0 snap-start min-h-[38px] flex items-center gap-1.5 ${
+                    isSelected
+                      ? "bg-amber-400 text-slate-950 shadow-md font-black ring-1 ring-amber-300"
+                      : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 active:scale-95"
+                  }`}
+                >
+                  <span>
+                    {officer.avatarEmoji} {officer.tierNameGu.split("-")[1] || officer.tierNameGu}
+                    {isSelf ? " (પોતાનું ડેસ્ક)" : " (નિરીક્ષણ)"}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="bg-slate-950/90 p-2.5 sm:p-3 rounded-xl border border-emerald-500/40 flex items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-base">
+                🔒
+              </div>
+              <div className="min-w-0">
+                <p className="text-emerald-300 font-bold text-xs truncate">
+                  સત્તાવાર વહીવટી અધિકારક્ષેત્ર: {authenticatedOfficer.panchayatGu || authenticatedOfficer.officeGu}
+                </p>
+                <p className="text-[10.5px] text-slate-400 hidden sm:block">
+                  ગ્રામ સ્તરે માત્ર આપના સ્થાનિક અધિકારક્ષેત્રનું ડેસ્ક સક્રિય છે. ઉચ્ચ કચેરીઓનો વહીવટ માત્ર સક્ષમ ઉચ્ચ અધિકારીઓ પાસે સુરક્ષિત છે.
+                </p>
+              </div>
+            </div>
+            <span className="shrink-0 text-[10px] font-black uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-2.5 py-1 rounded-md">
+              સિંગલ ડેસ્ક લૉક
+            </span>
+          </div>
+        )}
 
         {/* Leave Protocol Alert Banner if Officer is on Leave */}
         {isOnLeave && (
@@ -606,23 +1027,43 @@ export default function AdminHierarchyDesk({
         <div className="space-y-3">
           {/* Dynamic Cascading Filter Bar */}
           <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
+            {/* Officer Jurisdiction Live Status Strip */}
+            <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-100 text-xs">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                <span className="text-slate-600 font-bold">અધિકારક્ષેત્ર ઝોન:</span>
+                <span className="text-[11px] bg-amber-100 text-amber-950 border border-amber-300 font-black px-2.5 py-0.5 rounded-md inline-flex items-center gap-1 shadow-2xs">
+                  {getOfficerJurisdictionInfo(currentOfficer).icon} {getOfficerJurisdictionInfo(currentOfficer).badge}
+                </span>
+                <span className="text-[10.5px] text-slate-500 hidden sm:inline">
+                  ({getOfficerJurisdictionInfo(currentOfficer).description})
+                </span>
+              </div>
+              <div className="text-[11px] text-slate-600 font-medium">
+                અધિકારક્ષેત્ર હેઠળ અરજીઓ: <strong className="text-slate-900 font-mono font-black text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{filteredApplications.length}</strong>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
               {/* District Dropdown */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
-                  જિલ્લો (District)
+                <label className="block text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>જિલ્લો (District)</span>
+                  {currentOfficer.role !== "state_admin" && (
+                    <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono">🔒 લૉક</span>
+                  )}
                 </label>
                 <select
                   value={selectedDistrict}
-                  disabled={!currentOfficer.canViewAllDistricts}
+                  disabled={currentOfficer.role !== "state_admin"}
                   onChange={(e) => {
                     setSelectedDistrict(e.target.value);
                     setSelectedTaluka("all");
                     setSelectedVillage("all");
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-60 text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-xs"
                 >
-                  {currentOfficer.canViewAllDistricts && <option value="all">તમામ ૩૩ જિલ્લા</option>}
+                  {currentOfficer.role === "state_admin" && <option value="all">તમામ ૩૩ જિલ્લા</option>}
                   {GUJARAT_DISTRICTS.map((d) => (
                     <option key={d.en} value={d.en}>
                       {d.gu} ({d.en})
@@ -633,21 +1074,31 @@ export default function AdminHierarchyDesk({
 
               {/* Dynamic Real Talukas Dropdown */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
-                  તાલુકો (Taluka - {availableTalukas.length})
+                <label className="block text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>તાલુકો (Taluka - {availableTalukas.length})</span>
+                  {(currentOfficer.role === "talati" || currentOfficer.role === "mamlatdar") && (
+                    <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono">🔒 લૉક</span>
+                  )}
                 </label>
                 <select
                   value={selectedTaluka}
+                  disabled={currentOfficer.role === "talati" || currentOfficer.role === "mamlatdar"}
                   onChange={(e) => {
                     setSelectedTaluka(e.target.value);
                     setSelectedVillage("all");
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-xs"
                 >
-                  <option value="all">તમામ તાલુકા ({availableTalukas.length})</option>
+                  {currentOfficer.role !== "talati" && currentOfficer.role !== "mamlatdar" && (
+                    <option value="all">
+                      {currentOfficer.role === "sdm_prant"
+                        ? "ગોંડલ સબ-ડિવિઝન (તમામ ૩ તાલુકા)"
+                        : `તમામ તાલુકા (${availableTalukas.length})`}
+                    </option>
+                  )}
                   {availableTalukas.map((t) => (
                     <option key={t} value={t}>
-                      {t}
+                      {cleanTalukaName(t)} ({t})
                     </option>
                   ))}
                 </select>
@@ -655,21 +1106,26 @@ export default function AdminHierarchyDesk({
 
               {/* Dynamic Real Villages & Cities Dropdown */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
-                  ગામ / શહેર (Village / City{availableVillages.length > 0 ? ` - ${availableVillages.length}` : ""})
+                <label className="block text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span>ગામ / શહેર (Village / City)</span>
+                  {currentOfficer.role === "talati" && (
+                    <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono">🔒 લૉક</span>
+                  )}
                 </label>
                 <select
                   value={selectedVillage}
+                  disabled={currentOfficer.role === "talati" || availableVillages.length === 0}
                   onChange={(e) => setSelectedVillage(e.target.value)}
-                  disabled={availableVillages.length === 0}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs disabled:opacity-50"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-xs"
                 >
-                  <option value="all">
-                    {selectedTaluka === "all" ? "તમામ ગામડા / શહેર" : `તમામ ગામ / શહેર (${availableVillages.length})`}
-                  </option>
+                  {currentOfficer.role !== "talati" && (
+                    <option value="all">
+                      {selectedTaluka === "all" ? "તમામ ગામડા / શહેર" : `તમામ ગામ / શહેર (${availableVillages.length})`}
+                    </option>
+                  )}
                   {availableVillages.map((v) => (
                     <option key={v} value={v}>
-                      {v}
+                      {cleanVillageOnly(v)}
                     </option>
                   ))}
                 </select>
@@ -746,8 +1202,16 @@ export default function AdminHierarchyDesk({
           ) : (
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
               {/* Desktop Table View (Max Height Capped for Clean Viewport) */}
-              <div className="hidden md:block max-h-[560px] overflow-y-auto">
-                <table className="w-full text-left text-xs">
+              <div className="hidden md:block max-h-[580px] overflow-y-auto">
+                <table className="w-full text-left text-xs table-fixed">
+                  <colgroup>
+                    <col className="w-[20%]" />
+                    <col className="w-[23%]" />
+                    <col className="w-[17%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[10%]" />
+                  </colgroup>
                   <thead className="sticky top-0 z-10 bg-slate-900 text-white font-bold text-[11px]">
                     <tr>
                       <th className="p-3">અરજી ક્રમાંક & નાગરિક</th>
@@ -763,63 +1227,62 @@ export default function AdminHierarchyDesk({
                       const sla = analyzeApplicationSla(app);
                       const isPaid = app.paymentStatus === "paid";
                       const isApproved = app.status === "approved" || app.workflowStage === 3;
-                      const citizenNameDisplay = app.citizenNameGu || app.citizenName || "હરી વિનોદરાઈ પટેલ";
+                      const citizenNameDisplay = formatCitizenNameGu(app);
                       const schemeNameDisplay = app.schemeNameGu || app.schemeName || "આવકનું પ્રમાણપત્ર";
-                      const locationDisplay = `${app.taluka || "ગોંડલ"}, ${app.districtGu || app.district || "રાજકોટ"}`;
 
                       return (
                         <tr key={`${app.id}-${idx}`} className="hover:bg-slate-50/80 transition">
                           {/* App ID & Citizen */}
-                          <td className="p-3">
-                            <span className="font-mono font-black text-slate-900 block">{app.id}</span>
-                            <span className="font-bold text-slate-700 text-xs">
+                          <td className="p-3 align-top">
+                            <span className="font-mono font-black text-slate-900 block tracking-wide">{app.id}</span>
+                            <span className="font-bold text-slate-800 text-xs block leading-snug break-words">
                               {citizenNameDisplay}
                             </span>
-                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
-                              <span className="text-[10px] text-slate-400 font-mono">
+                            <div className="flex items-center gap-1.5 flex-wrap mt-1">
+                              <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                                 UID: XXXX-{app.aadhaarLast4 || "1413"}
                               </span>
-                              <span className="text-[9.5px] bg-amber-50 text-amber-900 border border-amber-200/80 px-1.5 py-0.2 rounded font-bold inline-flex items-center gap-0.5">
-                                🏡 {app.village || "ગોમતા"}
+                              <span className="text-[9.5px] bg-amber-50 text-amber-900 border border-amber-200/80 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-0.5">
+                                🏡 {cleanVillageOnly(app.village)}
                               </span>
                             </div>
                           </td>
 
                           {/* Scheme & Office */}
-                          <td className="p-3">
-                            <span className="font-bold text-slate-900 block truncate max-w-[200px]">
+                          <td className="p-3 align-top">
+                            <span className="font-bold text-slate-900 block leading-snug break-words">
                               {schemeNameDisplay}
                             </span>
-                            <span className="text-[10.5px] text-slate-600 font-medium block">
-                              📍 {app.village ? `${app.village}, ` : ""}{app.taluka || "ગોંડલ"} ({app.districtGu || app.district || "રાજકોટ"})
+                            <span className="text-[11px] text-slate-600 font-medium block leading-normal mt-1">
+                              📍 {formatGujaratiLocation(app.village, app.taluka, app.districtGu, app.district)}
                             </span>
                           </td>
 
                           {/* Payment & Receipt Gate */}
-                          <td className="p-3">
+                          <td className="p-3 align-top">
                             {isPaid ? (
-                              <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200">
-                                  <CheckCircle2 size={10} /> ચુકવણી પ્રમાણિત
+                              <div className="space-y-1.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-200 whitespace-nowrap">
+                                  <CheckCircle2 size={11} className="text-emerald-700" /> ચુકવણી પ્રમાણિત
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => setReceiptModalApp(app)}
-                                  className="text-[10.5px] text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 block cursor-pointer"
+                                  className="text-[10.5px] text-blue-700 hover:text-blue-900 font-bold flex items-center gap-1 cursor-pointer block hover:underline"
                                 >
-                                  <Receipt size={10} /> સરકારી પાવતી જુઓ
+                                  <Receipt size={11} /> સરકારી પાવતી જુઓ
                                 </button>
                               </div>
                             ) : (
-                              <div className="space-y-1">
-                                <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200">
-                                  <Clock size={10} /> ચલણ ભરપાઈ બાકી
+                              <div className="space-y-1.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full border border-amber-200 whitespace-nowrap">
+                                  <Clock size={11} className="text-amber-700" /> ચલણ ભરપાઈ બાકી
                                 </span>
                                 {currentOfficer.canVerifyPayment && (
                                   <button
                                     type="button"
                                     onClick={() => handleVerifyPayment(app)}
-                                    className="text-[10px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2 py-0.5 rounded-lg transition cursor-pointer block"
+                                    className="text-[10px] bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2.5 py-1 rounded-lg transition cursor-pointer shadow-xs whitespace-nowrap active:scale-95 block"
                                   >
                                     ચુકવણી કન્ફર્મ કરો
                                   </button>
@@ -829,59 +1292,59 @@ export default function AdminHierarchyDesk({
                           </td>
 
                           {/* 15-Minute SLA Status */}
-                          <td className="p-3">
-                            <div className="space-y-0.5">
+                          <td className="p-3 align-top">
+                            <div className="space-y-1">
                               <span
-                                className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full ${
+                                className={`inline-flex items-center gap-1 text-[10px] font-black px-2 py-0.5 rounded-full whitespace-nowrap ${
                                   sla.isBreached
                                     ? "bg-rose-100 text-rose-800 border border-rose-300"
-                                    : "bg-slate-100 text-slate-700"
+                                    : "bg-slate-100 text-slate-700 border border-slate-200"
                                 }`}
                               >
-                                <Clock size={10} />
+                                <Clock size={11} />
                                 {sla.elapsedMinutes} મિ. પેન્ડિંગ
                               </span>
-                              <span className="text-[10px] text-slate-500 block truncate max-w-[150px]">
+                              <span className="text-[10.5px] text-slate-600 block leading-snug whitespace-normal break-words">
                                 {sla.currentDeskGu}
                               </span>
                             </div>
                           </td>
 
                           {/* Workflow Stage */}
-                          <td className="p-3">
+                          <td className="p-3 align-top">
                             {isApproved ? (
-                              <div className="space-y-0.5">
-                                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
-                                  <Award size={10} /> e-Signed (મંજૂર)
+                              <div className="space-y-1.5">
+                                <span className="inline-flex items-center gap-1 text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300 whitespace-nowrap">
+                                  <Award size={11} className="text-emerald-700" /> e-Signed (મંજૂર)
                                 </span>
                                 <button
                                   type="button"
                                   onClick={() => setCertificateModalApp(app)}
-                                  className="text-[10.5px] text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1 block cursor-pointer"
+                                  className="text-[10.5px] text-emerald-700 hover:text-emerald-900 font-bold flex items-center gap-1 cursor-pointer block hover:underline"
                                 >
-                                  <Award size={10} /> સત્તાવાર પ્રમાણપત્ર
+                                  <Award size={11} /> સત્તાવાર પ્રમાણપત્ર
                                 </button>
                               </div>
                             ) : app.status === "rejected" ? (
-                              <span className="inline-flex items-center gap-1 text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-200">
+                              <span className="inline-flex items-center gap-1 text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-200 whitespace-nowrap">
                                 સુધારણા જરૂરી
                               </span>
                             ) : (
-                              <span className="inline-flex items-center gap-1 text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full border border-blue-200">
+                              <span className="inline-flex items-center gap-1 text-[10px] bg-blue-100 text-blue-800 font-bold px-2 py-0.5 rounded-full border border-blue-200 whitespace-nowrap">
                                 તબક્કો {app.workflowStage || 1}: સ્ક્રુટિની
                               </span>
                             )}
                           </td>
 
                           {/* Action Button */}
-                          <td className="p-3 text-right">
+                          <td className="p-3 align-top text-right">
                             <button
                               type="button"
                               onClick={() => {
                                 setSelectedApp(app);
                                 setReviewModalOpen(true);
                               }}
-                              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer active:scale-95 shadow-xs"
+                              className="px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer active:scale-95 shadow-xs whitespace-nowrap"
                             >
                               ફાઇલ ખોલો
                             </button>
@@ -899,7 +1362,7 @@ export default function AdminHierarchyDesk({
                   const sla = analyzeApplicationSla(app);
                   const isPaid = app.paymentStatus === "paid";
                   const isApproved = app.status === "approved" || app.workflowStage === 3;
-                  const citizenNameDisplay = app.citizenNameGu || app.citizenName || "હરી વિનોદરાઈ પટેલ";
+                  const citizenNameDisplay = formatCitizenNameGu(app);
                   const schemeNameDisplay = app.schemeNameGu || app.schemeName || "આવકનું પ્રમાણપત્ર";
 
                   return (
@@ -940,10 +1403,10 @@ export default function AdminHierarchyDesk({
                         </p>
                         <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
                           <span className="text-[10px] bg-amber-50 text-amber-950 border border-amber-300 px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1">
-                            🏡 {app.village || "ગોમતા"}
+                            🏡 {cleanVillageOnly(app.village)}
                           </span>
                           <span className="text-[11px] text-slate-600 font-medium">
-                            📍 {app.taluka || "ગોંડલ"}, {app.districtGu || app.district || "રાજકોટ"}
+                            📍 {formatGujaratiLocation(app.village, app.taluka, app.districtGu, app.district)}
                           </span>
                         </div>
                       </div>
@@ -1219,8 +1682,8 @@ export default function AdminHierarchyDesk({
             <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
               <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
                 <span className="text-slate-500 block text-[11px] font-medium">અરજદારનું નામ:</span>
-                <strong className="font-black text-slate-900 text-xs sm:text-sm block truncate">
-                  {selectedApp.citizenNameGu || selectedApp.citizenName || "હરી વિનોદરાઈ પટેલ"}
+                <strong className="font-black text-slate-900 text-xs sm:text-sm block break-words">
+                  {formatCitizenNameGu(selectedApp)}
                 </strong>
               </div>
               <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
@@ -1231,8 +1694,8 @@ export default function AdminHierarchyDesk({
               </div>
               <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
                 <span className="text-slate-500 block text-[11px] font-medium">સ્થળ (ગામ / શહેર):</span>
-                <strong className="font-bold text-slate-900 block truncate">
-                  🏡 {selectedApp.village || "ગોમતા"}, {selectedApp.taluka || "ગોંડલ"} ({selectedApp.districtGu || selectedApp.district || "રાજકોટ"})
+                <strong className="font-bold text-slate-900 block break-words">
+                  📍 {formatGujaratiLocation(selectedApp.village, selectedApp.taluka, selectedApp.districtGu, selectedApp.district)}
                 </strong>
               </div>
               <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
@@ -1340,7 +1803,7 @@ export default function AdminHierarchyDesk({
                             title: "રહેઠાણ પુરાવો (PGVCL લાઈટ બિલ)",
                             ocrData: {
                               "કન્ઝ્યુમર નં.": "PGVCL-8921-0421",
-                              "સરનામું": `${selectedApp.village || "ગોમતા"}, ${selectedApp.taluka || "ગોંડલ"}`,
+                              "સરનામું": formatGujaratiLocation(selectedApp.village, selectedApp.taluka, selectedApp.districtGu, selectedApp.district),
                               "બિલ તારીખ": "ઓગસ્ટ ૨૦૨૬",
                               "AI મેળ": "સરનામું ૧૦૦% મેળ ખાય છે",
                             },

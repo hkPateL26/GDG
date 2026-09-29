@@ -4493,6 +4493,8 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
     fallbackSchemeEmoji = "🌾";
     fallbackTaluka = "Rajkot Rural";
     fallbackVillage = "આનંદપર (Anandpar)";
+    fallbackDistrict = "Rajkot";
+    fallbackDistrictGu = "રાજકોટ";
   } else if (id === "APP002") {
     fallbackName = "આરતીબેન એમ. સોલંકી";
     fallbackNameEn = "Aartiben M. Solanki";
@@ -4501,6 +4503,8 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
     fallbackSchemeEmoji = "🏥";
     fallbackTaluka = "Daskroi";
     fallbackVillage = "કુહા (Kuha)";
+    fallbackDistrict = "Ahmedabad";
+    fallbackDistrictGu = "અમદાવાદ";
   } else if (id === "APP003") {
     fallbackName = "દિનેશભાઈ પી. રબારી";
     fallbackNameEn = "Dineshbhai P. Rabari";
@@ -4509,6 +4513,8 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
     fallbackSchemeEmoji = "🏠";
     fallbackTaluka = "Bhuj";
     fallbackVillage = "માધાપર (Madhapar)";
+    fallbackDistrict = "Kutch";
+    fallbackDistrictGu = "કચ્છ";
   } else if (id === "APP004") {
     fallbackName = "મનસુખભાઈ જી. વાઘાણી";
     fallbackNameEn = "Mansukhbhai G. Vaghani";
@@ -4517,9 +4523,26 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
     fallbackSchemeEmoji = "💼";
     fallbackTaluka = "Gondal";
     fallbackVillage = "મોવૈયા (Movaiya)";
+    fallbackDistrict = "Rajkot";
+    fallbackDistrictGu = "રાજકોટ";
   }
 
   const effectiveTaluka = (app.taluka && app.taluka.trim()) ? app.taluka : fallbackTaluka;
+
+  // Dynamically resolve district strictly from taluka
+  let effectiveDistrict = fallbackDistrict;
+  let effectiveDistrictGu = fallbackDistrictGu;
+  const matchedDist = GUJARAT_DISTRICTS.find((d) =>
+    d.talukas.some((t) => t.toLowerCase() === effectiveTaluka.toLowerCase())
+  );
+  if (matchedDist) {
+    effectiveDistrict = matchedDist.en;
+    effectiveDistrictGu = matchedDist.gu;
+  } else if (app.district && app.district.trim()) {
+    effectiveDistrict = app.district;
+    effectiveDistrictGu = app.districtGu || app.district;
+  }
+
   const effectiveVillage = (app.village && app.village.trim() && !app.village.includes("Rural"))
     ? app.village
     : (fallbackVillage || getVillagesForTaluka(effectiveTaluka)[0] || "ગોમતા (Gomta)");
@@ -4533,8 +4556,8 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
     schemeName: (app.schemeName && app.schemeName.trim()) ? app.schemeName : fallbackSchemeEn,
     schemeNameGu: (app.schemeNameGu && app.schemeNameGu.trim()) ? app.schemeNameGu : fallbackSchemeGu,
     schemeEmoji: app.schemeEmoji || fallbackSchemeEmoji,
-    district: (app.district && app.district.trim()) ? app.district : fallbackDistrict,
-    districtGu: (app.districtGu && app.districtGu.trim()) ? app.districtGu : fallbackDistrictGu,
+    district: effectiveDistrict,
+    districtGu: effectiveDistrictGu,
     taluka: effectiveTaluka,
     village: effectiveVillage,
     aadhaarLast4: app.aadhaarLast4 || "1413",
@@ -5298,6 +5321,9 @@ export function verifyOfficerPin(officerId: string, pin: string) {
           districtGu: "સમગ્ર ગુજરાત (૩૩ જિલ્લા)",
           office: "સ્વર્ણિમ સંકુલ-૧, સચિવાલય, ગાંધીનગર",
           role: "state_admin",
+          tierLevel: 1,
+          tierNameGu: "રાજ્ય સ્તર - મુખ્ય સચિવાલય",
+          avatarEmoji: "🏛️",
         },
       };
     }
@@ -5312,6 +5338,9 @@ export function verifyOfficerPin(officerId: string, pin: string) {
           districtGu: "રાજકોટ",
           office: "જિલ્લા કલેક્ટર કચેરી, રાજકોટ",
           role: "district_collector",
+          tierLevel: 2,
+          tierNameGu: "જિલ્લા સ્તર - કલેક્ટર કચેરી",
+          avatarEmoji: "🏢",
         },
       };
     }
@@ -5325,8 +5354,12 @@ export function verifyOfficerPin(officerId: string, pin: string) {
           district: "Rajkot",
           districtGu: "રાજકોટ",
           taluka: "Gondal",
+          talukaGu: "ગોંડલ",
           office: "સબ-ડિવિઝનલ મેજિસ્ટ્રેટ (પ્રાંત) કચેરી, ગોંડલ",
           role: "sdm_prant",
+          tierLevel: 3,
+          tierNameGu: "સબ-ડિવિઝન સ્તર - પ્રાંત કચેરી",
+          avatarEmoji: "⚖️",
         },
       };
     }
@@ -5340,8 +5373,14 @@ export function verifyOfficerPin(officerId: string, pin: string) {
           district: "Rajkot",
           districtGu: "રાજકોટ",
           taluka: "Gondal",
+          talukaGu: "ગોંડલ",
+          panchayat: "Gomta",
+          panchayatGu: "ગોમતા ગ્રામ પંચાયત",
           office: "ગ્રામ પંચાયત કચેરી, ગોમતા",
           role: "talati",
+          tierLevel: 5,
+          tierNameGu: "પંચાયત સ્તર - તલાટી કમ મંત્રી",
+          avatarEmoji: "📋",
         },
       };
     }
@@ -5351,12 +5390,17 @@ export function verifyOfficerPin(officerId: string, pin: string) {
       success: true,
       officer: {
         id: "GUJ-GOV-9012",
-        name: "H. V. Patel, GAS",
+        name: "એચ. વી. પટેલ, GAS",
         designation: "તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ગોંડલ",
         district: "Rajkot",
+        districtGu: "રાજકોટ",
         taluka: "Gondal",
-        office: "જન સેવા કેન્દ્ર & તાલુકા સેવા સદન",
+        talukaGu: "ગોંડલ",
+        office: "જન સેવા કેન્દ્ર & તાલુકા સેવા સદન, ગોંડલ",
         role: "mamlatdar",
+        tierLevel: 4,
+        tierNameGu: "તાલુકા સ્તર - મામલતદાર કચેરી",
+        avatarEmoji: "🖋️",
       },
     };
   }

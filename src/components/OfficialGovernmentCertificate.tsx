@@ -177,7 +177,7 @@ export default function OfficialGovernmentCertificate({
       id={id}
       className={`${
         isPvcCard ? "pvc-card-page-1" : ""
-      } relative w-full max-w-[340px] sm:max-w-[360px] mx-auto h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2.5 sm:p-3 flex flex-col justify-between select-none`}
+      } relative w-full max-w-[315px] sm:max-w-[360px] mx-auto min-h-[210px] h-auto sm:h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2 sm:p-3 flex flex-col justify-between select-none`}
     >
       {/* Background Guilloche Security Layer */}
       <div className="absolute inset-0 pointer-events-none">
@@ -277,7 +277,7 @@ export default function OfficialGovernmentCertificate({
       id={id}
       className={`${
         isPvcCard ? "pvc-card-page-2" : ""
-      } relative w-full max-w-[340px] sm:max-w-[360px] mx-auto h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2.5 sm:p-3 flex flex-col justify-between select-none`}
+      } relative w-full max-w-[315px] sm:max-w-[360px] mx-auto min-h-[210px] h-auto sm:h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2 sm:p-3 flex flex-col justify-between select-none`}
     >
       {/* Background Guilloche Security Layer */}
       <div className="absolute inset-0 pointer-events-none">

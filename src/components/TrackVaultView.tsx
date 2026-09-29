@@ -302,6 +302,7 @@ export default function TrackVaultView({
       const data = await res.json();
       if (data.success && data.officer) {
         sessionStorage.setItem("nagrik_officer_session", JSON.stringify(data.officer));
+        sessionStorage.setItem("nagrik_authenticated_officer", JSON.stringify(data.officer));
         setOfficerSession(data.officer);
         setAuthMode("officer");
         setShowOfficerModal(false);
@@ -318,6 +319,7 @@ export default function TrackVaultView({
 
   const handleOfficerLogout = () => {
     sessionStorage.removeItem("nagrik_officer_session");
+    sessionStorage.removeItem("nagrik_authenticated_officer");
     setOfficerSession(null);
     setAuthMode("citizen");
     if (citizen) loadCitizenVault(citizen.mobile, citizen.aadhaarLast4);
@@ -820,7 +822,7 @@ export default function TrackVaultView({
                       </div>
                       <div className="bg-white/90 p-2.5 rounded-xl border border-orange-100 shadow-2xs">
                         <span className="text-[10px] text-slate-500 font-bold block uppercase">સક્ષમ કચેરી / સત્તાધિકારી</span>
-                        <strong className="text-slate-800 text-[11.5px] truncate block" title={sla.authorityGu}>{sla.authorityGu}</strong>
+                        <strong className="text-slate-800 text-[11.5px] leading-tight block break-words" title={sla.authorityGu}>{sla.authorityGu}</strong>
                       </div>
                       <div className="bg-white/90 p-2.5 rounded-xl border border-orange-100 shadow-2xs">
                         <span className="text-[10px] text-slate-500 font-bold block uppercase">છેલ્લું સ્થિતિ અપડેટ</span>

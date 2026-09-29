@@ -68,6 +68,7 @@ export default function OfficerLoginShield({
       if (data.success && data.officer) {
         setSuccessMsg("અધિકૃત પ્રમાણીકરણ સફળ! કચેરી ડેસ્ક ખુલી રહ્યું છે...");
         sessionStorage.setItem("nagrik_officer_session", JSON.stringify(data.officer));
+        sessionStorage.setItem("nagrik_authenticated_officer", JSON.stringify(data.officer));
         window.dispatchEvent(new Event("storage"));
         setTimeout(() => {
           onSuccess(data.officer);
