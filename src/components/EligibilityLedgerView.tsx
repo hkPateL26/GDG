@@ -428,9 +428,9 @@ export default function EligibilityLedgerView({
               {citizen.availedBenefits.map((b, idx) => (
                 <div key={idx} className="bg-slate-800/70 border border-slate-700 rounded-xl p-2.5">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-xs text-slate-200 truncate">{b.schemeNameGu}</span>
+                    <span className="font-bold text-xs text-slate-200 truncate">{b.schemeNameGu || (b as any).schemeName || "યોજના"}</span>
                     <span className="font-mono text-emerald-400 font-bold text-xs ml-2 shrink-0">
-                      ₹{b.amountDisbursed.toLocaleString("en-IN")}
+                      ₹{(b.amountDisbursed ?? (b as any).amount ?? 0).toLocaleString("en-IN")}
                     </span>
                   </div>
                   <div className="text-[10px] text-slate-500 font-mono mt-0.5 flex justify-between">

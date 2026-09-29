@@ -21,7 +21,7 @@ import {
   ClipboardCheck,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useIsPwaInstalled } from "@/lib/usePwaInstall";
+import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
 import { useLanguage } from "@/context/LanguageContext";
 import { DEFAULT_LANGUAGE } from "@/lib/translation";
 import LanguageSelector from "./LanguageSelector";
@@ -36,6 +36,16 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   useBodyScrollLock(isOpen);
   const [showInstallModal, setShowInstallModal] = useState(false);
+
+  const handleInstallClick = async () => {
+    // 1. Direct 1-Click native install on Android / Chromium
+    const outcome = await executeNativePwaInstall();
+    if (outcome === "installed" || outcome === "dismissed") {
+      return;
+    }
+    // 2. If iOS Safari or desktop, open the guided modal
+    setShowInstallModal(true);
+  };
   const [citizenSession, setCitizenSession] = useState<{
     citizenNameGu?: string;
     citizenName?: string;
@@ -269,7 +279,7 @@ export default function Navbar() {
             {!isInstalled && (
               <button
                 data-pwa-install="true"
-                onClick={() => setShowInstallModal(true)}
+                onClick={handleInstallClick}
                 className="pwa-install-element ml-1 flex items-center gap-1 bg-gradient-to-r from-orange-600 to-amber-500 hover:from-orange-700 hover:to-amber-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs active:scale-95 cursor-pointer"
                 title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
               >
@@ -287,7 +297,7 @@ export default function Navbar() {
             {!isInstalled && (
               <button
                 data-pwa-install="true"
-                onClick={() => setShowInstallModal(true)}
+                onClick={handleInstallClick}
                 className="pwa-install-element flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 shadow-xs active:scale-95 cursor-pointer"
                 title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
               >

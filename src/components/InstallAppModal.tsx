@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Download, QrCode, X, CheckCircle2, Sparkles, Share2 } from "lucide-react";
 
-import { markPwaInstalled, useIsPwaInstalled } from "@/lib/usePwaInstall";
+import { markPwaInstalled, useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 interface BeforeInstallPromptEvent extends Event {
@@ -65,6 +65,11 @@ export default function InstallAppModal({
   }, [onClose]);
 
   const handleInstallClick = async () => {
+    const outcome = await executeNativePwaInstall();
+    if (outcome === "installed" || outcome === "dismissed") {
+      onClose();
+      return;
+    }
     const prompt = deferredPrompt || (typeof window !== "undefined" ? (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt : null);
     if (prompt) {
       await prompt.prompt();
@@ -139,16 +144,50 @@ export default function InstallAppModal({
               </div>
 
               {isIos ? (
-                /* iOS Safari Instructions */
-                <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4 text-xs text-blue-900 space-y-2">
-                  <p className="font-bold flex items-center gap-1.5">
-                    <Share2 size={15} /> iPhone / Safari માં ઇન્સ્ટોલ કરવા:
-                  </p>
-                  <ol className="list-decimal list-inside space-y-1 text-[11px] text-blue-800">
-                    <li>સફારીમાં નીચે <strong>Share</strong> બટન (⎋) પર ટેપ કરો.</li>
-                    <li>નીચે સ્ક્રોલ કરી <strong>&apos;Add to Home Screen&apos; (+)</strong> પસંદ કરો.</li>
-                    <li>ઉપર <strong>&apos;Add&apos;</strong> પર ક્લિક કરો — એપ ઇન્સ્ટોલ થઈ જશે!</li>
-                  </ol>
+                /* iOS Safari Interactive Visual Card */
+                <div className="bg-gradient-to-b from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-3xl p-4 text-xs text-blue-950 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <p className="font-black text-sm flex items-center gap-1.5 text-blue-900">
+                      <Share2 size={16} className="text-blue-600" />
+                      <span>iPhone પર ૧-સેકન્ડ ઇન્સ્ટોલ:</span>
+                    </p>
+                    <span className="text-[10px] bg-blue-200 text-blue-900 font-bold px-2 py-0.5 rounded-full">
+                      Apple Safari
+                    </span>
+                  </div>
+
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-3 bg-white p-2.5 rounded-2xl border border-blue-200 shadow-2xs">
+                      <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        ૧
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs">સફારીમાં નીચે Share બટન દબાવો</p>
+                        <p className="text-[10.5px] text-blue-600 font-mono mt-0.5">
+                          સ્ક્રીનમાં નીચેનું ચોરસ તીર વાળું [ ⎋ ] આઇકોન
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-3 bg-white p-2.5 rounded-2xl border border-blue-200 shadow-2xs">
+                      <div className="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        ૨
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-xs">&apos;Add to Home Screen&apos; (+) દબાવો</p>
+                        <p className="text-[10.5px] text-gray-500 mt-0.5">
+                          ઉપર &apos;Add&apos; ક્લિક કરો — એપ હોમ સ્ક્રીન પર આવી જશે!
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Pulsing indicator pointing down to Safari toolbar */}
+                  <div className="text-center pt-1 animate-bounce">
+                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-blue-600 bg-white px-3 py-1 rounded-full border border-blue-200 shadow-xs">
+                      👇 નીચે સફારીના Share બટન (⎋) પર ટેપ કરો
+                    </span>
+                  </div>
                 </div>
               ) : (
                 /* Android 1-Click Install Button */

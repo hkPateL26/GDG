@@ -231,3 +231,22 @@ main {
 .animate-dpi-ticker:active {
   animation-play-state: paused;
 }
+
+/* ── iOS Safari Input Auto-Zoom Prevention (Requires 16px to prevent intrusive viewport zoom) ── */
+@media screen and (max-width: 767px) {
+  input[type="text"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ── iOS WebKit Momentum Scrolling ── */
+* {
+  -webkit-overflow-scrolling: touch;
+}

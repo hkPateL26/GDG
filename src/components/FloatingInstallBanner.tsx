@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { Download, X } from "lucide-react";
 import dynamic from "next/dynamic";
 
-import { useIsPwaInstalled } from "@/lib/usePwaInstall";
+import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
@@ -31,6 +31,15 @@ export default function FloatingInstallBanner() {
   const handleDismiss = () => {
     setShowBanner(false);
     sessionStorage.setItem("pwa_install_banner_dismissed", "true");
+  };
+
+  const handleInstallClick = async () => {
+    const outcome = await executeNativePwaInstall();
+    if (outcome === "installed" || outcome === "dismissed") {
+      setShowBanner(false);
+      return;
+    }
+    setShowModal(true);
   };
 
   // If already installed or in standalone app mode, hide completely
@@ -61,7 +70,7 @@ export default function FloatingInstallBanner() {
 
             <div className="flex items-center gap-1.5 shrink-0">
               <button
-                onClick={() => setShowModal(true)}
+                onClick={handleInstallClick}
                 className="bg-orange-500 hover:bg-orange-600 active:scale-95 text-white font-black text-xs px-3 py-2 rounded-xl flex items-center gap-1 transition shadow-sm cursor-pointer"
               >
                 <Download size={13} /> ઇન્સ્ટોલ

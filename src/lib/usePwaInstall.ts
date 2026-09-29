@@ -2,6 +2,48 @@
 
 import { useState, useEffect } from "react";
 
+export interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
+let globalPrompt: BeforeInstallPromptEvent | null = null;
+
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e: Event) => {
+    e.preventDefault();
+    globalPrompt = e as BeforeInstallPromptEvent;
+    (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt = globalPrompt;
+    window.dispatchEvent(new CustomEvent("nagrik_pwa_prompt_ready"));
+  });
+}
+
+export function getNativeInstallPrompt(): BeforeInstallPromptEvent | null {
+  if (typeof window === "undefined") return null;
+  return globalPrompt || (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt || null;
+}
+
+export async function executeNativePwaInstall(): Promise<"installed" | "dismissed" | "unavailable"> {
+  const prompt = getNativeInstallPrompt();
+  if (!prompt) return "unavailable";
+
+  try {
+    await prompt.prompt();
+    const result = await prompt.userChoice;
+    if (result.outcome === "accepted") {
+      markPwaInstalled();
+      globalPrompt = null;
+      if (typeof window !== "undefined") {
+        (window as unknown as { __pwaPrompt?: null }).__pwaPrompt = null;
+      }
+      return "installed";
+    }
+    return "dismissed";
+  } catch {
+    return "unavailable";
+  }
+}
+
 export function useIsPwaInstalled() {
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);

@@ -30,7 +30,7 @@ async function run() {
         hasLand: true,
         hasBPL: false,
         availedBenefits: [
-          { schemeId: "pm-kisan", schemeName: "PM Kisan", amount: 6000, date: "2026-01-15" }
+          { schemeId: "pm-kisan", schemeName: "PM Kisan", schemeNameGu: "PM કિસાન સન્માન નિધિ", amountDisbursed: 6000, disbursedDate: "2026-01-15", certOrInstallmentNo: "16th Installment" }
         ]
       })
     );
@@ -39,9 +39,10 @@ async function run() {
   await page.goto("http://localhost:3000/eligibility", { waitUntil: "networkidle2" });
   await new Promise((r) => setTimeout(r, 1500));
 
+  // Switch to eligible tab or keep profile tab
   const outPath = path.join("D:\\Movies and Web se\\atmiya\\perfect_screenshots", "09_eligibility_calculator.png");
   await page.screenshot({ path: outPath });
-  console.log("Logged-in eligibility captured at:", outPath);
+  console.log("Recaptured clean eligibility screenshot at:", outPath);
 
   await browser.close();
 }
