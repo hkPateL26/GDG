@@ -6,37 +6,82 @@
 .scrollbar-hide,
 .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-/* ── Default scrolling & Viewport Overflow Safety (Zero Horizontal Wobble) ── */
+/* ── Default scrolling & Viewport Overflow Safety ── */
 html {
-  scroll-behavior: auto;
-  max-width: 100vw;
-  overflow-x: hidden;
-  width: 100%;
+  scroll-behavior: smooth;
 }
 
 /* ── Base body ── */
 body {
-  background: #f9fafb;
-  color: #111827;
+  background: #f8fafc;
+  color: #0f172a;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  max-width: 100vw;
-  overflow-x: hidden;
+  overflow-x: clip;
   width: 100%;
   position: relative;
+}
+
+/* ── Native App Touch Lock on Mobile (Disables accidental website text highlight) ── */
+@media screen and (max-width: 1024px) {
+  nav,
+  header,
+  footer,
+  button,
+  a,
+  .app-touch-card {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  /* Keep inputs, textareas, and chat/receipt copyable text selectable */
+  input,
+  textarea,
+  select,
+  code,
+  pre,
+  [data-selectable="true"] {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+  }
+}
+
+/* ── Native Spring Press Micro-Interaction ── */
+.app-touch-card {
+  transition: transform 0.15s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.15s ease;
+}
+.app-touch-card:active {
+  transform: scale(0.96);
+}
+
+/* ── Native Bottom Sheet Slide-Up Animation (GPay / PhonePe Style) ── */
+@keyframes bottomSheetSlideUp {
+  0% {
+    transform: translate3d(0, 100%, 0);
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate3d(0, 0, 0);
+    opacity: 1;
+  }
+}
+
+@media screen and (max-width: 639px) {
+  .animate-bottom-sheet {
+    animation: bottomSheetSlideUp 0.24s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    will-change: transform;
+  }
 }
 
 /* ── Overscroll contain for chat ── */
 .overscroll-contain { overscroll-behavior: contain; }
 
-/* ── Modal Scroll Lock (Strict Background Freeze on Web & App) ── */
+/* ── Modal Scroll Lock (Only when a real modal is open) ── */
 html.modal-open,
 body.modal-open {
   overflow: hidden !important;
-  overscroll-behavior: none !important;
-  touch-action: none !important;
-  height: 100% !important;
 }
 
 /* Modal containers retain smooth scrolling */
@@ -44,15 +89,14 @@ body.modal-open {
 [role="alertdialog"],
 [aria-modal="true"],
 .modal-scrollable {
-  overscroll-behavior: contain !important;
-  -webkit-overflow-scrolling: touch !important;
-  touch-action: pan-y !important;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Mobile Touch & Smooth Native Feel ── */
 .touch-pan-x {
   -webkit-overflow-scrolling: touch;
-  touch-action: pan-x;
+  touch-action: pan-x pan-y;
 }
 .touch-pan-y {
   -webkit-overflow-scrolling: touch;

@@ -2,37 +2,32 @@
 
 import { useEffect } from "react";
 
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    (window as unknown as { __pwaPrompt?: Event }).__pwaPrompt = e;
+    window.dispatchEvent(new CustomEvent("nagrik_pwa_prompt_ready"));
+  });
+}
+
 export default function ServiceWorkerRegister() {
   useEffect(() => {
     if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      // In development (localhost), unregister ALL service workers and clear caches
-      // to ensure Turbopack HMR chunks never conflict with stale service worker cache!
-      if (
-        window.location.hostname === "localhost" ||
-        window.location.hostname === "127.0.0.1" ||
-        process.env.NODE_ENV !== "production"
-      ) {
-        navigator.serviceWorker.getRegistrations().then((registrations) => {
-          for (const reg of registrations) {
-            reg.unregister();
-          }
-        });
-        if ("caches" in window) {
-          caches.keys().then((names) => {
-            for (const name of names) {
-              caches.delete(name);
-            }
-          });
-        }
-        return;
-      }
-
-      // In production (Vercel / live domain), register the service worker
-      window.addEventListener("load", () => {
+      const registerSw = () => {
         navigator.serviceWorker
-          .register("/sw.js")
+          .register("/sw.js", { scope: "/" })
+          .then((reg) => {
+            reg.update().catch(() => {});
+          })
           .catch((err) => console.warn("PWA SW:", err));
-      });
+      };
+
+      if (document.readyState === "complete") {
+        registerSw();
+      } else {
+        window.addEventListener("load", registerSw);
+        return () => window.removeEventListener("load", registerSw);
+      }
     }
   }, []);
 

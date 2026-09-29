@@ -5,9 +5,9 @@ import Navbar from "@/components/Navbar";
 
 export default function ChatPage() {
   return (
-    <>
+    <div className="fixed inset-x-0 top-0 bottom-[calc(4.45rem+env(safe-area-inset-bottom,0px))] sm:static sm:h-auto sm:min-h-screen sm:pb-20 xl:pb-0 flex flex-col overflow-hidden sm:overflow-visible bg-slate-100 sm:bg-gradient-to-br sm:from-orange-50 sm:via-white sm:to-green-50 z-30 sm:z-auto">
       <Navbar />
-      <main className="h-[calc(100dvh-4rem-4rem)] sm:h-auto sm:min-h-[calc(100dvh-4rem)] overflow-hidden sm:overflow-visible bg-slate-100 sm:bg-gradient-to-br sm:from-orange-50 sm:via-white sm:to-green-50 p-0 sm:py-5 lg:py-6 sm:px-4 flex flex-col">
+      <main className="flex-1 min-h-0 overflow-hidden sm:overflow-visible p-0 sm:py-5 lg:py-6 sm:px-4 flex flex-col">
         <div className="w-full max-w-4xl lg:max-w-5xl mx-auto flex-1 min-h-0 flex flex-col h-full">
           {/* Desktop Heading - Hidden on mobile to let ChatBot header be the clean single native title */}
           <div className="hidden sm:block text-center mb-3 px-2">
@@ -30,6 +30,6 @@ export default function ChatPage() {
           </div>
         </div>
       </main>
-    </>
+    </div>
   );
 }

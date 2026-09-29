@@ -119,7 +119,7 @@ export default function Navbar() {
     <>
       <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50" suppressHydrationWarning>
       <div className="w-full px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-14 sm:h-16">
           {/* ── Logo ── */}
           <Link
             href="/"
@@ -314,45 +314,80 @@ export default function Navbar() {
             )}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition shrink-0"
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:scale-92 transition shrink-0 cursor-pointer"
               aria-label="Toggle menu"
             >
-              {isOpen ? <X size={22} /> : <Menu size={22} />}
+              {isOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
           </div>
         </div>
+      </div>
+      </nav>
 
-        {/* ── Mobile & Tablet Dropdown ── */}
-        {isOpen && (
-          <div className="xl:hidden border-t border-gray-100 py-2.5 space-y-1.5 max-h-[80vh] overflow-y-auto">
+      <EnterpriseSystemHealthBar />
 
-            {/* 📌 વિશેષ નાગરિક સેવાઓ (Dedicated Services - Login is moved exclusively to Bottom Dock) */}
-            <div className="space-y-1">
-              <p className="text-[10.5px] font-bold text-gray-500 uppercase tracking-wider px-1">
-                📌 નાગરિક સેવાઓ:
+      {/* ── Mobile & Tablet Native Bottom Sheet Drawer (GPay / DigiLocker Style) ── */}
+      {isOpen && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="xl:hidden fixed inset-0 z-[9990] bg-slate-950/60 backdrop-blur-xs flex items-end justify-center animate-in fade-in duration-150"
+          onClick={() => setIsOpen(false)}
+        >
+          <div
+            className="bg-white w-full rounded-t-3xl shadow-2xl border-t border-slate-200 p-4 pb-[max(env(safe-area-inset-bottom,20px),20px)] space-y-3.5 animate-bottom-sheet"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Bottom Sheet Drag Handle */}
+            <div className="w-full flex justify-center pb-0.5">
+              <div className="w-11 h-1.5 bg-slate-300 rounded-full" />
+            </div>
+
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <p className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                📌 {currentLang === "en" ? "Quick Citizen Services" : currentLang === "hi" ? "त्वरित नागरिक सेवाएं" : "ઝડપી નાગરિક સેવાઓ"}
               </p>
+              <button
+                onClick={() => setIsOpen(false)}
+                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
+                aria-label="Close drawer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* 2x2 Bento Quick Service Grid inside Bottom Sheet */}
+            <div className="grid grid-cols-2 gap-2.5">
               {[
                 {
                   href: "/benefit-calculator",
-                  label: currentLang === "en" ? "Eligibility & Benefit Calculator" : currentLang === "hi" ? "पात्रता और लाभ कैलकुलेटर" : "💰 લાભ ગણો (સહાય કેલ્ક્યુલેટર)",
+                  label: currentLang === "en" ? "Benefit Calculator" : currentLang === "hi" ? "लाभ कैलकुलेटर" : "લાભ ગણો (કેલ્ક્યુલેટર)",
+                  sub: currentLang === "en" ? "Family Pass" : currentLang === "hi" ? "परिवार पास" : "કુટુંબ સહાય પાસ",
                   Icon: IndianRupee,
+                  bg: "bg-emerald-50 border-emerald-200/80 text-emerald-700",
                 },
                 {
                   href: "/track",
-                  label: currentLang === "en" ? "Track Application Status" : currentLang === "hi" ? "आवेदन स्थिति ट्रैक करें" : "અરજી ટ્રેકિંગ (Track Status)",
+                  label: currentLang === "en" ? "Track Status" : currentLang === "hi" ? "आवेदन ट्रैक करें" : "અરજી ટ્રેકિંગ",
+                  sub: currentLang === "en" ? "Live SLA Stage" : currentLang === "hi" ? "लाइव स्थिति" : "લાઈવ સ્ટેટસ",
                   Icon: Search,
+                  bg: "bg-blue-50 border-blue-200/80 text-blue-700",
                 },
                 {
                   href: "/documents",
-                  label: currentLang === "en" ? "Digital Vault & Certificates" : currentLang === "hi" ? "डिजिटल वॉल्ट और दस्तावेज़" : "ડિજિટલ વોલ્ટ & પ્રમાણપત્રો",
+                  label: currentLang === "en" ? "Document Guide" : currentLang === "hi" ? "दस्तावेज़ गाइड" : "દસ્તાવેજ ગાઈડ",
+                  sub: currentLang === "en" ? "Ration & Health" : currentLang === "hi" ? "राशन व आयुष्मान" : "રેશન & આયુષ્માન",
                   Icon: FolderLock,
+                  bg: "bg-purple-50 border-purple-200/80 text-purple-700",
                 },
                 {
                   href: "/eligibility",
-                  label: currentLang === "en" ? "Scheme Eligibility Check" : currentLang === "hi" ? "योजना पात्रता जांचें" : "યોજના પાત્રતા ચકાસો",
+                  label: currentLang === "en" ? "Check Eligibility" : currentLang === "hi" ? "पात्रता जांचें" : "પાત્રતા ચકાસો",
+                  sub: currentLang === "en" ? "1-Min AI Check" : currentLang === "hi" ? "१ मिनट में जांचें" : "૧ મિનિટમાં ચેક",
                   Icon: ClipboardCheck,
+                  bg: "bg-orange-50 border-orange-200/80 text-orange-700",
                 },
-              ].map(({ href, label, Icon }) => {
+              ].map(({ href, label, sub, Icon, bg }) => {
                 const active = pathname === href;
                 return (
                   <Link
@@ -362,32 +397,50 @@ export default function Navbar() {
                       setIsOpen(false);
                       handleNavClick(e, href);
                     }}
-                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                    className={`app-touch-card flex items-center gap-2.5 p-3 rounded-2xl border transition ${
                       active
-                        ? "bg-orange-50 text-orange-600 font-bold"
-                        : "text-gray-700 hover:bg-gray-50 hover:text-orange-500"
+                        ? "bg-orange-600 text-white border-orange-600 shadow-sm"
+                        : "bg-slate-50/90 hover:bg-slate-100 border-slate-200/80 text-slate-800"
                     }`}
                   >
-                    <Icon size={16} strokeWidth={active ? 2.5 : 2} className="shrink-0 text-orange-600" />
-                    <span suppressHydrationWarning>{label}</span>
+                    <div
+                      className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                        active ? "bg-white/20 border-white/30 text-white" : bg
+                      }`}
+                    >
+                      <Icon size={17} strokeWidth={2.2} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-extrabold truncate leading-tight" suppressHydrationWarning>
+                        {label}
+                      </p>
+                      <p
+                        className={`text-[10px] truncate mt-0.5 ${
+                          active ? "text-orange-100" : "text-slate-500"
+                        }`}
+                        suppressHydrationWarning
+                      >
+                        {sub}
+                      </p>
+                    </div>
                   </Link>
                 );
               })}
             </div>
 
-            <div className="pt-2 border-t border-gray-100">
+            <div className="pt-1">
               <a
                 href="tel:14567"
                 onClick={() => setIsOpen(false)}
-                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-orange-600 bg-orange-50/60 hover:bg-orange-100 whitespace-nowrap transition"
+                className="app-touch-card flex items-center justify-center gap-2 w-full py-3 rounded-2xl text-xs font-extrabold text-orange-700 bg-orange-50 border border-orange-200/80 hover:bg-orange-100 whitespace-nowrap transition"
               >
                 <Phone size={15} className="shrink-0 text-orange-600" />
                 <span suppressHydrationWarning>{t.nav.helpline} – 14567 (Free 24/7)</span>
               </a>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* 📱 Interactive Install App Modal with QR Code Scanner */}
       {!isInstalled && (
@@ -396,8 +449,6 @@ export default function Navbar() {
           onClose={() => setShowInstallModal(false)}
         />
       )}
-      </nav>
-      <EnterpriseSystemHealthBar />
     </>
   );
 }

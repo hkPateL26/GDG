@@ -10,15 +10,18 @@ export default function AppSplashScreen() {
   const { currentLang } = useLanguage();
 
   useEffect(() => {
+    let removeTimer: ReturnType<typeof setTimeout>;
     const timer = setTimeout(() => {
       setIsFading(true);
-      const removeTimer = setTimeout(() => {
+      removeTimer = setTimeout(() => {
         setIsVisible(false);
-      }, 500);
-      return () => clearTimeout(removeTimer);
-    }, 1100);
+      }, 450);
+    }, 1000);
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      clearTimeout(removeTimer);
+    };
   }, []);
 
   if (!isVisible) return null;
@@ -36,7 +39,6 @@ export default function AppSplashScreen() {
 
   return (
     <div
-      role="dialog"
       aria-label="App Launching Splash Screen"
       className={`fixed inset-0 z-[99999] bg-slate-950 flex flex-col items-center justify-between text-white select-none px-4 pt-[max(env(safe-area-inset-top,24px),24px)] pb-[max(env(safe-area-inset-bottom,28px),28px)] transition-opacity duration-500 ease-out ${
         isFading ? "opacity-0 pointer-events-none" : "opacity-100"

@@ -34,6 +34,7 @@ import {
   UploadCloud,
 } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "@/context/LanguageContext";
 
 let globalSessionSequence = 1000;
@@ -163,41 +164,17 @@ function renderFormattedMessage(text: string) {
 }
 
 export default function ChatBot() {
+  const pathname = usePathname();
+  const isChatPage = pathname === "/chat";
   const { currentLang } = useLanguage();
 
-  // Citizen Session
-  const [citizenSession, setCitizenSession] = useState<CitizenSession | null>(() => {
-    if (typeof window === "undefined") return null;
-    try {
-      const raw = localStorage.getItem("nagrik_citizen_session");
-      if (raw) {
-        const parsed = JSON.parse(raw);
-        return parsed.citizen || parsed;
-      }
-    } catch {
-      // ignore
-    }
-    return null;
-  });
+  // Citizen Session (initialized null so SSR and initial client hydration match 100%)
+  const [citizenSession, setCitizenSession] = useState<CitizenSession | null>(null);
 
   // ChatGPT-style Chat Sessions & Active Session (Strictly isolated by user session)
-  const [chatSessions, setChatSessions] = useState<ChatSessionRecord[]>(() => {
-    if (typeof window === "undefined") return [];
-    try {
-      const rawCit = localStorage.getItem("nagrik_citizen_session");
-      if (!rawCit) return []; // Guest / Logged out: zero history visible
-      const parsedCit = JSON.parse(rawCit);
-      const mobile = parsedCit.citizen?.mobile || parsedCit.mobile;
-      if (!mobile) return [];
-      const raw = localStorage.getItem(`nagrik_chat_sessions_${mobile}`);
-      if (raw) return JSON.parse(raw);
-    } catch {
-      // ignore
-    }
-    return [];
-  });
+  const [chatSessions, setChatSessions] = useState<ChatSessionRecord[]>([]);
 
-  const [activeSessionId, setActiveSessionId] = useState<string>(() => createNewSessionId());
+  const [activeSessionId, setActiveSessionId] = useState<string>("session-init");
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -338,6 +315,7 @@ export default function ChatBot() {
           const parsed = JSON.parse(raw);
           const cit = parsed.citizen || parsed;
           setCitizenSession(cit);
+          setActiveSessionId((prev) => (prev === "session-init" ? createNewSessionId() : prev));
           if (cit?.mobile) {
             // Load this citizen's cached sessions immediately
             try {
@@ -374,6 +352,7 @@ export default function ChatBot() {
       }
     };
 
+    handleAuthSync();
     window.addEventListener("storage", handleAuthSync);
     window.addEventListener("nagrik_auth_change", handleAuthSync);
     return () => {
@@ -890,7 +869,11 @@ export default function ChatBot() {
       onDragEnter={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative flex flex-col h-full sm:h-[720px] md:h-[760px] lg:h-[800px] w-full bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-2xl border-0 sm:border sm:border-slate-200 overflow-hidden"
+      className={`relative flex flex-col w-full bg-white overflow-hidden sm:h-[720px] md:h-[760px] lg:h-[800px] sm:rounded-3xl sm:shadow-2xl sm:border sm:border-slate-200 ${
+        isChatPage
+          ? "h-full rounded-none shadow-none border-0"
+          : "h-[540px] rounded-2xl shadow-md border border-slate-200"
+      }`}
     >
       {/* ── DRAG & DROP OVERLAY ── */}
       {isDragging && (

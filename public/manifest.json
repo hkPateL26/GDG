@@ -1,8 +1,10 @@
 {
+  "id": "/",
   "name": "NagrikSeva AI - નાગરિક સેવા e-Governance",
   "short_name": "NagrikSeva AI",
   "description": "ગુજરાત સરકાર e-Governance અને Digital Public Infrastructure (DPI) સરકારી સેવાઓ અને યોજના સહાયક",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#020617",
@@ -11,14 +13,26 @@
   "dir": "ltr",
   "icons": [
     {
-      "src": "/icon.svg",
-      "sizes": "192x192 512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/icon.svg",
-      "sizes": "512x512",
+      "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any"
     }

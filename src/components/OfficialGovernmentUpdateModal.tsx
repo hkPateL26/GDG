@@ -107,12 +107,16 @@ export default function OfficialGovernmentUpdateModal() {
       role="dialog"
       aria-modal="true"
       aria-label="Official Government Mandatory Update"
-      className="fixed inset-0 z-[99990] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md select-none"
+      className="fixed inset-0 z-[99990] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-md select-none"
     >
-      <div className="relative w-full max-w-sm sm:max-w-md bg-slate-900 border border-slate-700/80 rounded-3xl shadow-2xl text-white overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col">
+      <div className="relative w-full sm:max-w-md bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-3xl shadow-2xl text-white overflow-hidden animate-bottom-sheet sm:animate-in sm:fade-in sm:zoom-in-95 duration-200 flex flex-col pb-[env(safe-area-inset-bottom,0px)]">
         
         {/* ── Compact Official Gov Header ── */}
-        <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 p-4 sm:p-5 relative shrink-0">
+        <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 px-4 pt-2.5 pb-4 sm:p-5 relative shrink-0">
+          {/* Mobile Bottom Sheet Pill Indicator */}
+          <div className="w-full pb-2 flex justify-center sm:hidden">
+            <div className="w-11 h-1.5 bg-white/40 rounded-full" />
+          </div>
           <div className="flex items-center gap-3">
             <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 p-1.5 flex items-center justify-center shrink-0 shadow-inner">
               {/* Standard img avoids Next.js preload warning */}

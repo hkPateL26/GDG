@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { lockBodyScroll, unlockBodyScroll } from "@/lib/useBodyScrollLock";
+import { lockBodyScroll, forceUnlockBodyScroll } from "@/lib/useBodyScrollLock";
 
 export default function GlobalModalScrollLocker() {
   useEffect(() => {
@@ -12,16 +12,13 @@ export default function GlobalModalScrollLocker() {
     let isCurrentlyLocked = false;
 
     const checkModals = () => {
-      // Find any modal dialog, alert dialog, or fullscreen backdrop in the DOM
-      const modalElements = document.querySelectorAll(
-        '[role="dialog"], [role="alertdialog"], [aria-modal="true"], .fixed.inset-0.z-50, .fixed.inset-0.z-\\[60\\], .fixed.inset-0.z-\\[70\\]'
-      );
+      // Only lock when an explicit aria-modal="true" dialog is actively visible
+      const modalElements = document.querySelectorAll('[aria-modal="true"]');
 
       let hasVisibleModal = false;
       for (let i = 0; i < modalElements.length; i++) {
         const el = modalElements[i] as HTMLElement;
-        // Ignore mobile bottom nav bar or floating install banner
-        if (el.closest("nav") || el.getAttribute("data-pwa-install") === "true") {
+        if (el.getAttribute("data-pwa-install") === "true") {
           continue;
         }
         const style = window.getComputedStyle(el);
@@ -29,6 +26,7 @@ export default function GlobalModalScrollLocker() {
           style.display !== "none" &&
           style.visibility !== "hidden" &&
           style.opacity !== "0" &&
+          style.pointerEvents !== "none" &&
           el.offsetWidth > 0 &&
           el.offsetHeight > 0
         ) {
@@ -40,13 +38,20 @@ export default function GlobalModalScrollLocker() {
       if (hasVisibleModal && !isCurrentlyLocked) {
         lockBodyScroll();
         isCurrentlyLocked = true;
-      } else if (!hasVisibleModal && isCurrentlyLocked) {
-        unlockBodyScroll();
-        isCurrentlyLocked = false;
+      } else if (!hasVisibleModal) {
+        // Always ensure body is unlocked when no modal is visible
+        if (
+          isCurrentlyLocked ||
+          document.body.classList.contains("modal-open") ||
+          document.documentElement.classList.contains("modal-open") ||
+          document.body.style.overflow === "hidden"
+        ) {
+          forceUnlockBodyScroll();
+          isCurrentlyLocked = false;
+        }
       }
     };
 
-    // Initial evaluation
     checkModals();
 
     const observer = new MutationObserver(() => {
@@ -62,9 +67,7 @@ export default function GlobalModalScrollLocker() {
 
     return () => {
       observer.disconnect();
-      if (isCurrentlyLocked) {
-        unlockBodyScroll();
-      }
+      forceUnlockBodyScroll();
     };
   }, []);
 

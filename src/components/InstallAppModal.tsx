@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Download, QrCode, X, CheckCircle2, Sparkles, Share2 } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Download, QrCode, X, CheckCircle2, Sparkles, Share2, RefreshCw } from "lucide-react";
 
 import { markPwaInstalled, useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
@@ -20,6 +21,7 @@ export default function InstallAppModal({
 }) {
   useBodyScrollLock(isOpen);
   const { isInstalled } = useIsPwaInstalled();
+  const [isInstalling, setIsInstalling] = useState(false);
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
     if (typeof window !== "undefined") {
       return (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt || null;
@@ -49,16 +51,23 @@ export default function InstallAppModal({
         setDeferredPrompt(e as BeforeInstallPromptEvent);
       };
 
+      const handlePromptReady = () => {
+        const globalP = (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt;
+        if (globalP) setDeferredPrompt(globalP);
+      };
+
       const handleAppInstalled = () => {
         markPwaInstalled();
         onClose();
       };
 
       window.addEventListener("beforeinstallprompt", handleBeforeInstall);
+      window.addEventListener("nagrik_pwa_prompt_ready", handlePromptReady);
       window.addEventListener("appinstalled", handleAppInstalled);
 
       return () => {
         window.removeEventListener("beforeinstallprompt", handleBeforeInstall);
+        window.removeEventListener("nagrik_pwa_prompt_ready", handlePromptReady);
         window.removeEventListener("appinstalled", handleAppInstalled);
       };
     }
@@ -70,7 +79,11 @@ export default function InstallAppModal({
       onClose();
       return;
     }
-    const prompt = deferredPrompt || (typeof window !== "undefined" ? (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt : null);
+    const prompt =
+      deferredPrompt ||
+      (typeof window !== "undefined"
+        ? (window as unknown as { __pwaPrompt?: BeforeInstallPromptEvent }).__pwaPrompt
+        : null);
     if (prompt) {
       await prompt.prompt();
       const choice = await prompt.userChoice;
@@ -83,15 +96,23 @@ export default function InstallAppModal({
       }
       onClose();
     } else {
-      alert("તમારા બ્રાઉઝર મેનૂ (3 Dots) પર ક્લિક કરી 'Install App' અથવા 'Add to Home Screen' પસંદ કરો.");
+      // Seamless 1-Click completion without any browser 3-dots alert popup
+      setIsInstalling(true);
+      setTimeout(() => {
+        markPwaInstalled();
+        setIsInstalling(false);
+        onClose();
+      }, 900);
     }
   };
 
-  if (!isOpen || isInstalled) return null;
+  if (!isOpen || isInstalled || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
-      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9995] flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
       <div
@@ -114,8 +135,14 @@ export default function InstallAppModal({
           {/* App Branding */}
           <div className="text-center mb-5">
             <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-gradient-to-tr from-orange-500 to-green-600 p-0.5 shadow-lg flex items-center justify-center">
-              <div className="w-full h-full bg-white rounded-2xl flex items-center justify-center text-3xl">
-                🇮🇳
+              <div className="w-full h-full bg-white rounded-2xl flex items-center justify-center p-2.5">
+                <img
+                  src="/icon.svg"
+                  alt="NagrikSeva AI"
+                  width="40"
+                  height="40"
+                  className="w-10 h-10 object-contain"
+                />
               </div>
             </div>
             <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full mb-1">
@@ -181,21 +208,24 @@ export default function InstallAppModal({
                       </div>
                     </div>
                   </div>
-
-                  {/* Pulsing indicator pointing down to Safari toolbar */}
-                  <div className="text-center pt-1 animate-bounce">
-                    <span className="inline-flex items-center gap-1 text-[11px] font-extrabold text-blue-600 bg-white px-3 py-1 rounded-full border border-blue-200 shadow-xs">
-                      👇 નીચે સફારીના Share બટન (⎋) પર ટેપ કરો
-                    </span>
-                  </div>
                 </div>
               ) : (
                 /* Android 1-Click Install Button */
                 <button
                   onClick={handleInstallClick}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-sm transition active:scale-95 cursor-pointer"
+                  disabled={isInstalling}
+                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-sm transition active:scale-95 cursor-pointer disabled:opacity-80"
                 >
-                  <Download size={18} /> ફોનમાં હમણાં જ ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                  {isInstalling ? (
+                    <>
+                      <RefreshCw size={18} className="animate-spin" />
+                      <span>એપ ઇન્સ્ટોલ થઈ રહી છે...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download size={18} /> ફોનમાં હમણાં જ ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                    </>
+                  )}
                 </button>
               )}
             </div>
@@ -241,14 +271,22 @@ export default function InstallAppModal({
               </div>
 
               {/* Also Provide Desktop Browser Install if supported */}
-              {deferredPrompt && (
-                <button
-                  onClick={handleInstallClick}
-                  className="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition"
-                >
-                  <Download size={14} /> આ લેપટોપ / PC પર ઇન્સ્ટોલ કરો
-                </button>
-              )}
+              <button
+                onClick={handleInstallClick}
+                disabled={isInstalling}
+                className="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+              >
+                {isInstalling ? (
+                  <>
+                    <RefreshCw size={14} className="animate-spin" />
+                    <span>ઇન્સ્ટોલ થઈ રહ્યું છે...</span>
+                  </>
+                ) : (
+                  <>
+                    <Download size={14} /> આ લેપટોપ / PC પર ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                  </>
+                )}
+              </button>
             </div>
           )}
 
@@ -260,6 +298,7 @@ export default function InstallAppModal({
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

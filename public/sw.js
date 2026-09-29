@@ -1,7 +1,6 @@
-// NagrikSeva AI Service Worker
-const CACHE_NAME = 'nagrikseva-v2';
+// NagrikSeva AI Service Worker (Enables 1-Click Native PWA Install on Chrome/Android/Desktop)
+const CACHE_NAME = 'nagrikseva-v2.4.1';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
   '/icon.svg',
   '/favicon.ico',
@@ -29,35 +28,36 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
   const url = new URL(event.request.url);
-  // Never intercept /_next/ (Next.js chunks/HMR) or /api/
+  // Never intercept Next.js HMR/chunks or API routes
   if (url.pathname.startsWith('/_next/') || url.pathname.startsWith('/api/')) {
     return;
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        fetch(event.request).then((networkResponse) => {
-          if (networkResponse && networkResponse.status === 200) {
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, networkResponse));
-          }
-        }).catch(() => {
-          // Offline, cached version served
-        });
-        return cachedResponse;
-      }
+  // On localhost, always use network-first so live code edits appear immediately
+  // while still satisfying Chrome's fetch-handler requirement for 1-Click PWA Install
+  if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request))
+    );
+    return;
+  }
 
-      return fetch(event.request).then((networkResponse) => {
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
         if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith('http')) {
           const clone = networkResponse.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
         }
         return networkResponse;
-      }).catch(() => {
-        if (event.request.mode === 'navigate') {
-          return caches.match('/');
-        }
-      });
-    })
+      })
+      .catch(() => {
+        return caches.match(event.request).then((cachedResponse) => {
+          if (cachedResponse) return cachedResponse;
+          if (event.request.mode === 'navigate') {
+            return caches.match('/');
+          }
+        });
+      })
   );
 });
