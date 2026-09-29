@@ -115,6 +115,7 @@ export default function UnifiedCitizenPortal({
   const handleCitizenLogout = () => {
     localStorage.removeItem("nagrik_citizen_session");
     window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("nagrik_auth_change"));
     setCitizenSession(null);
   };
 

@@ -55,9 +55,14 @@ export async function GET(req: NextRequest) {
     }
 
     if (sessions.length === 0) {
-      // Fallback to in-memory store
+      // Fallback to in-memory store - STRICTLY ISOLATED BY userId
       for (const sess of globalMemorySessions.values()) {
-        if (!sess.citizenId || sess.citizenId === userId || userId === "guest") {
+        if (userId === "guest") {
+          // Do NOT leak authenticated citizen sessions to guests!
+          if (sess.citizenId === "guest") {
+            sessions.push(sess);
+          }
+        } else if (sess.citizenId === userId) {
           sessions.push(sess);
         }
       }
@@ -126,7 +131,11 @@ export async function DELETE(req: NextRequest) {
       }
 
       for (const [key, val] of globalMemorySessions.entries()) {
-        if (!val.citizenId || val.citizenId === userId || userId === "guest") {
+        if (userId === "guest") {
+          if (val.citizenId === "guest") {
+            globalMemorySessions.delete(key);
+          }
+        } else if (val.citizenId === userId) {
           globalMemorySessions.delete(key);
         }
       }

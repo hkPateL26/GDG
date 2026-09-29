@@ -83,7 +83,11 @@ export default function Navbar() {
 
     checkSession();
     window.addEventListener("storage", checkSession);
-    return () => window.removeEventListener("storage", checkSession);
+    window.addEventListener("nagrik_auth_change", checkSession);
+    return () => {
+      window.removeEventListener("storage", checkSession);
+      window.removeEventListener("nagrik_auth_change", checkSession);
+    };
   }, []);
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {

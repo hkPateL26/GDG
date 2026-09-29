@@ -25,22 +25,47 @@ export async function POST(req: NextRequest) {
       if (geoRes.ok) {
         const geoData = await geoRes.json();
         const address = geoData.address || {};
-        const village =
+        const rawCandidate =
           address.village ||
+          address.town ||
           address.suburb ||
           address.neighbourhood ||
-          address.town ||
           address.city ||
-          localResolved.village;
-        const district = address.state_district || address.county || localResolved.district;
+          "";
+
+        // Filter out generic admin words like 'તાલુકા', 'taluka', 'rural', 'district'
+        const isGenericWord =
+          !rawCandidate ||
+          rawCandidate.includes("તાલુકા") ||
+          rawCandidate.toLowerCase().includes("taluka") ||
+          rawCandidate.toLowerCase().includes("rural") ||
+          rawCandidate.includes("જિલ્લો") ||
+          rawCandidate.toLowerCase() === "gondal" ||
+          rawCandidate === "ગોંડલ";
+
+        const village = isGenericWord ? localResolved.village : rawCandidate;
+        const villageGu =
+          village === "Gomta" || village === "Momta" || village.includes("ગોમટા")
+            ? "ગોમટા"
+            : isGenericWord
+            ? localResolved.villageGu
+            : village;
+
+        const taluka = localResolved.taluka || "Gondal";
+        const talukaGu = localResolved.talukaGu || "ગોંડલ";
+        const district = (address.state_district || address.county || localResolved.district).replace(/ District| જિલ્લો/gi, "");
+        const districtGu = localResolved.districtGu || "રાજકોટ";
 
         return NextResponse.json({
           success: true,
           location: {
             ...localResolved,
-            village: village,
-            villageGu: village === "Gomta" || village === "Momta" ? "ગોમટા" : localResolved.villageGu,
-            district: district.replace(" District", ""),
+            village,
+            villageGu,
+            taluka,
+            talukaGu,
+            district,
+            districtGu,
             formattedAddress: geoData.display_name,
           },
         });

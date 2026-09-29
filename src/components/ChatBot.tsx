@@ -27,6 +27,9 @@ import {
   Trash2,
   History as HistoryIcon,
   LogIn,
+  LogOut,
+  User,
+  Lock,
   CheckCircle2,
   UploadCloud,
 } from "lucide-react";
@@ -177,11 +180,16 @@ export default function ChatBot() {
     return null;
   });
 
-  // ChatGPT-style Chat Sessions & Active Session
+  // ChatGPT-style Chat Sessions & Active Session (Strictly isolated by user session)
   const [chatSessions, setChatSessions] = useState<ChatSessionRecord[]>(() => {
     if (typeof window === "undefined") return [];
     try {
-      const raw = localStorage.getItem("nagrik_chat_sessions");
+      const rawCit = localStorage.getItem("nagrik_citizen_session");
+      if (!rawCit) return []; // Guest / Logged out: zero history visible
+      const parsedCit = JSON.parse(rawCit);
+      const mobile = parsedCit.citizen?.mobile || parsedCit.mobile;
+      if (!mobile) return [];
+      const raw = localStorage.getItem(`nagrik_chat_sessions_${mobile}`);
       if (raw) return JSON.parse(raw);
     } catch {
       // ignore
@@ -307,10 +315,88 @@ export default function ChatBot() {
     );
   }, []);
 
-  // Load backend sessions on citizen login
+  // Real-time Auth Sync: Listen for login/logout across tabs, components, and portals
   useEffect(() => {
-    const userId = citizenSession?.mobile || "guest";
-    fetch(`/api/chat/history?userId=${encodeURIComponent(userId)}`)
+    const handleAuthSync = () => {
+      if (typeof window === "undefined") return;
+      const raw = localStorage.getItem("nagrik_citizen_session");
+      if (!raw) {
+        // User is logged out: wipe all history, reset messages and active session immediately
+        setCitizenSession(null);
+        setChatSessions([]);
+        setMessages([]);
+        setActiveSessionId(createNewSessionId());
+        setIsHistoryOpen(false);
+        setAttachment(null);
+        if (currentAudioRef.current) {
+          currentAudioRef.current.pause();
+          currentAudioRef.current = null;
+        }
+        setIsSpeaking(null);
+      } else {
+        try {
+          const parsed = JSON.parse(raw);
+          const cit = parsed.citizen || parsed;
+          setCitizenSession(cit);
+          if (cit?.mobile) {
+            // Load this citizen's cached sessions immediately
+            try {
+              const localCitSessions = localStorage.getItem(`nagrik_chat_sessions_${cit.mobile}`);
+              if (localCitSessions) {
+                setChatSessions(JSON.parse(localCitSessions));
+              }
+            } catch {}
+
+            // Then sync latest from database
+            fetch(`/api/chat/history?userId=${encodeURIComponent(cit.mobile)}`)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success && Array.isArray(data.sessions)) {
+                  setChatSessions((prev) => {
+                    const map = new Map<string, ChatSessionRecord>();
+                    data.sessions.forEach((s: ChatSessionRecord) => map.set(s.id, s));
+                    prev.forEach((s) => map.set(s.id, s));
+                    const merged = Array.from(map.values()).sort(
+                      (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
+                    );
+                    try {
+                      localStorage.setItem(`nagrik_chat_sessions_${cit.mobile}`, JSON.stringify(merged));
+                    } catch {}
+                    return merged;
+                  });
+                }
+              })
+              .catch(() => {});
+          }
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleAuthSync);
+    window.addEventListener("nagrik_auth_change", handleAuthSync);
+    return () => {
+      window.removeEventListener("storage", handleAuthSync);
+      window.removeEventListener("nagrik_auth_change", handleAuthSync);
+    };
+  }, []);
+
+  // Fetch backend sessions when citizen session changes
+  useEffect(() => {
+    if (!citizenSession?.mobile) {
+      setChatSessions([]);
+      return;
+    }
+    const mobile = citizenSession.mobile;
+    const localRaw = localStorage.getItem(`nagrik_chat_sessions_${mobile}`);
+    if (localRaw) {
+      try {
+        setChatSessions(JSON.parse(localRaw));
+      } catch {}
+    }
+
+    fetch(`/api/chat/history?userId=${encodeURIComponent(mobile)}`)
       .then((res) => res.json())
       .then((data) => {
         if (data.success && Array.isArray(data.sessions) && data.sessions.length > 0) {
@@ -322,7 +408,9 @@ export default function ChatBot() {
               (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
             );
             if (typeof window !== "undefined") {
-              localStorage.setItem("nagrik_chat_sessions", JSON.stringify(merged));
+              try {
+                localStorage.setItem(`nagrik_chat_sessions_${mobile}`, JSON.stringify(merged));
+              } catch {}
             }
             return merged;
           });
@@ -330,6 +418,26 @@ export default function ChatBot() {
       })
       .catch(() => {});
   }, [citizenSession?.mobile]);
+
+  // Citizen Logout Handler - Cleanly clears active state & notifies all components
+  const handleCitizenLogout = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("nagrik_citizen_session");
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(new Event("nagrik_auth_change"));
+    }
+    setCitizenSession(null);
+    setChatSessions([]);
+    setMessages([]);
+    setActiveSessionId(createNewSessionId());
+    setIsHistoryOpen(false);
+    setAttachment(null);
+    if (currentAudioRef.current) {
+      currentAudioRef.current.pause();
+      currentAudioRef.current = null;
+    }
+    setIsSpeaking(null);
+  };
 
   // Derived messages: if user hasn't sent anything in this session, show dynamic greeting
   const displayMessages: Message[] =
@@ -357,9 +465,12 @@ export default function ChatBot() {
     }
   }, [displayMessages.length, loading]);
 
-  // Persist session to local storage & backend
+  // Persist session to local storage & backend (strictly per-user)
   const persistSession = useCallback((sessId: string, msgs: Message[]) => {
     if (msgs.length === 0) return;
+    const isCitizen = Boolean(citizenSession?.mobile);
+    const userId = citizenSession?.mobile || "guest";
+
     const firstUserMsg = msgs.find((m) => m.role === "user");
     const title = firstUserMsg
       ? firstUserMsg.text.slice(0, 36) + (firstUserMsg.text.length > 36 ? "..." : "")
@@ -371,29 +482,33 @@ export default function ChatBot() {
       messages: msgs,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      citizenId: citizenSession?.mobile || "guest",
+      citizenId: userId,
       citizenName: citizenSession?.citizenNameGu || citizenSession?.citizenName,
     };
 
-    setChatSessions((prev) => {
-      const idx = prev.findIndex((s) => s.id === sessId);
-      const nextList = idx !== -1 ? [...prev] : [sessionObj, ...prev];
-      if (idx !== -1) nextList[idx] = sessionObj;
-      if (typeof window !== "undefined") {
-        try {
-          localStorage.setItem("nagrik_chat_sessions", JSON.stringify(nextList));
-        } catch {
-          // ignore
+    // Only persist history if citizen is logged in to ensure complete logout privacy
+    if (isCitizen && citizenSession?.mobile) {
+      const storageKey = `nagrik_chat_sessions_${citizenSession.mobile}`;
+      setChatSessions((prev) => {
+        const idx = prev.findIndex((s) => s.id === sessId);
+        const nextList = idx !== -1 ? [...prev] : [sessionObj, ...prev];
+        if (idx !== -1) nextList[idx] = sessionObj;
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem(storageKey, JSON.stringify(nextList));
+          } catch {
+            // ignore
+          }
         }
-      }
-      return nextList;
-    });
+        return nextList;
+      });
 
-    fetch("/api/chat/history", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ session: sessionObj }),
-    }).catch(() => {});
+      fetch("/api/chat/history", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ session: sessionObj }),
+      }).catch(() => {});
+    }
   }, [citizenSession]);
 
   // New Chat Handler
@@ -424,8 +539,12 @@ export default function ChatBot() {
     e.stopPropagation();
     const updated = chatSessions.filter((s) => s.id !== sessId);
     setChatSessions(updated);
-    if (typeof window !== "undefined") {
-      localStorage.setItem("nagrik_chat_sessions", JSON.stringify(updated));
+    if (citizenSession?.mobile && typeof window !== "undefined") {
+      try {
+        localStorage.setItem(`nagrik_chat_sessions_${citizenSession.mobile}`, JSON.stringify(updated));
+      } catch {
+        // ignore
+      }
     }
     const userId = citizenSession?.mobile || "guest";
     try {
@@ -447,8 +566,12 @@ export default function ChatBot() {
   const handleClearAllHistory = async () => {
     if (!confirm("શું તમે બધી ચેટ હિસ્ટ્રી સાફ કરવા માંગો છો?")) return;
     setChatSessions([]);
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("nagrik_chat_sessions");
+    if (citizenSession?.mobile && typeof window !== "undefined") {
+      try {
+        localStorage.removeItem(`nagrik_chat_sessions_${citizenSession.mobile}`);
+      } catch {
+        // ignore
+      }
     }
     const userId = citizenSession?.mobile || "guest";
     try {
@@ -753,6 +876,7 @@ export default function ChatBot() {
     };
     localStorage.setItem("nagrik_citizen_session", JSON.stringify(demoCitizen));
     window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("nagrik_auth_change"));
     setCitizenSession(demoCitizen);
     setIsLoginModalOpen(false);
     requestLiveLocation();
@@ -766,7 +890,7 @@ export default function ChatBot() {
       onDragEnter={handleDragOver}
       onDragLeave={handleDragLeave}
       onDrop={handleDrop}
-      className="relative flex flex-col h-[calc(100dvh-12rem)] sm:h-[720px] md:h-[760px] min-h-[440px] max-h-[85dvh] w-full bg-white rounded-2xl sm:rounded-3xl shadow-xl sm:shadow-2xl border border-slate-200 overflow-hidden"
+      className="relative flex flex-col h-full sm:h-[720px] md:h-[760px] lg:h-[800px] w-full bg-white rounded-none sm:rounded-3xl shadow-none sm:shadow-2xl border-0 sm:border sm:border-slate-200 overflow-hidden"
     >
       {/* ── DRAG & DROP OVERLAY ── */}
       {isDragging && (
@@ -798,67 +922,118 @@ export default function ChatBot() {
             </button>
           </div>
 
-          {/* New Chat Button */}
-          <div className="p-3 border-b border-slate-800/80">
-            <button
-              type="button"
-              onClick={handleNewChat}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs shadow-md transition active:scale-95 cursor-pointer"
-            >
-              <Plus size={16} />
-              <span>➕ નવી ચેટ શરૂ કરો (New Chat)</span>
-            </button>
-          </div>
-
-          {/* Sessions List */}
-          <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
-            {chatSessions.length === 0 ? (
-              <div className="text-center py-10 px-4 text-xs text-slate-400">
-                <p>હજી કોઈ અગાઉની ચેટ નથી.</p>
-                <p className="text-[11px] text-slate-500 mt-1">તમે જે પણ ચેટ કરશો તે અહીં આપમેળે સેવ થશે.</p>
+          {!citizenSession ? (
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+              <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl mb-3 text-orange-400">
+                <Lock size={24} />
               </div>
-            ) : (
-              chatSessions.map((s) => (
-                <div
-                  key={s.id}
-                  onClick={() => handleSelectSession(s)}
-                  className={`group flex items-center justify-between p-2.5 rounded-xl text-xs transition cursor-pointer ${
-                    activeSessionId === s.id
-                      ? "bg-orange-600/20 text-orange-300 border border-orange-500/40"
-                      : "hover:bg-slate-800/80 text-slate-300"
-                  }`}
-                >
-                  <div className="min-w-0 flex-1 pr-2">
-                    <p className="font-bold truncate text-[11.5px] leading-tight">{s.title}</p>
-                    <span className="text-[9.5px] text-slate-500 block mt-0.5">
-                      {new Date(s.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={(e) => handleDeleteSession(s.id, e)}
-                    title="આ ચેટ ડિલીટ કરો"
-                    className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-rose-500/20 hover:text-rose-400 text-slate-500 transition cursor-pointer"
-                  >
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* Clear All Footer */}
-          {chatSessions.length > 0 && (
-            <div className="p-3 border-t border-slate-800 bg-slate-950/60">
+              <h4 className="font-bold text-sm text-white mb-1.5">🔐 લૉગિન જરૂરી છે</h4>
+              <p className="text-xs text-slate-400 mb-5 leading-relaxed">
+                તમારી ખાનગી ચેટ હિસ્ટ્રી અને અરજીઓ સુરક્ષિત રાખવા માટે કૃપા કરીને લૉગિન કરો.
+              </p>
               <button
                 type="button"
-                onClick={handleClearAllHistory}
-                className="w-full text-center text-[10.5px] text-rose-400 hover:text-rose-300 font-bold py-1 transition cursor-pointer"
+                onClick={() => {
+                  setIsHistoryOpen(false);
+                  setIsLoginModalOpen(true);
+                }}
+                className="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-bold text-xs shadow-md transition active:scale-95 cursor-pointer flex items-center justify-center gap-1.5"
               >
-                બધી હિસ્ટ્રી સાફ કરો (Clear All)
+                <LogIn size={14} />
+                <span>સત્તાવાર નાગરિક લૉગિન</span>
               </button>
             </div>
+          ) : (
+            <>
+              {/* Citizen info header with Logout button */}
+              <div className="p-3 bg-slate-800/70 border-b border-slate-800 flex items-center justify-between">
+                <div className="min-w-0 flex items-center gap-2">
+                  <div className="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0">
+                    <User size={14} />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-slate-200 truncate">
+                      {citizenSession.citizenNameGu || citizenSession.citizenName}
+                    </p>
+                    <p className="text-[10px] text-slate-400 truncate">
+                      📱 {citizenSession.mobile}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleCitizenLogout}
+                  title="ચેટ અને એકાઉન્ટમાંથી લૉગઆઉટ કરો"
+                  className="px-2 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 hover:text-white border border-rose-500/30 text-[10.5px] font-bold transition cursor-pointer flex items-center gap-1 shrink-0 active:scale-95"
+                >
+                  <LogOut size={12} />
+                  <span>લૉગઆઉટ</span>
+                </button>
+              </div>
+
+              {/* New Chat Button */}
+              <div className="p-3 border-b border-slate-800/80">
+                <button
+                  type="button"
+                  onClick={handleNewChat}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white font-black text-xs shadow-md transition active:scale-95 cursor-pointer"
+                >
+                  <Plus size={16} />
+                  <span>➕ નવી ચેટ શરૂ કરો (New Chat)</span>
+                </button>
+              </div>
+
+              {/* Sessions List */}
+              <div className="flex-1 overflow-y-auto p-2 space-y-1 scrollbar-thin">
+                {chatSessions.length === 0 ? (
+                  <div className="text-center py-10 px-4 text-xs text-slate-400">
+                    <p>હજી કોઈ અગાઉની ચેટ નથી.</p>
+                    <p className="text-[11px] text-slate-500 mt-1">તમે જે પણ ચેટ કરશો તે અહીં આપમેળે સેવ થશે.</p>
+                  </div>
+                ) : (
+                  chatSessions.map((s) => (
+                    <div
+                      key={s.id}
+                      onClick={() => handleSelectSession(s)}
+                      className={`group flex items-center justify-between p-2.5 rounded-xl text-xs transition cursor-pointer ${
+                        activeSessionId === s.id
+                          ? "bg-orange-600/20 text-orange-300 border border-orange-500/40"
+                          : "hover:bg-slate-800/80 text-slate-300"
+                      }`}
+                    >
+                      <div className="min-w-0 flex-1 pr-2">
+                        <p className="font-bold truncate text-[11.5px] leading-tight">{s.title}</p>
+                        <span className="text-[9.5px] text-slate-500 block mt-0.5">
+                          {new Date(s.updatedAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        </span>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={(e) => handleDeleteSession(s.id, e)}
+                        title="આ ચેટ ડિલીટ કરો"
+                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg hover:bg-rose-500/20 hover:text-rose-400 text-slate-500 transition cursor-pointer"
+                      >
+                        <Trash2 size={13} />
+                      </button>
+                    </div>
+                  ))
+                )}
+              </div>
+
+              {/* Clear All Footer */}
+              {chatSessions.length > 0 && (
+                <div className="p-3 border-t border-slate-800 bg-slate-950/60">
+                  <button
+                    type="button"
+                    onClick={handleClearAllHistory}
+                    className="w-full text-center text-[10.5px] text-rose-400 hover:text-rose-300 font-bold py-1 transition cursor-pointer"
+                  >
+                    બધી હિસ્ટ્રી સાફ કરો (Clear All)
+                  </button>
+                </div>
+              )}
+            </>
           )}
         </div>
       )}
@@ -946,10 +1121,21 @@ export default function ChatBot() {
             </button>
 
             {citizenSession ? (
-              <span className="inline-flex items-center gap-1 text-[11px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[150px] truncate">
-                <UserCheck size={12} className="text-amber-300 shrink-0" />
-                <span className="truncate">{citizenSession.citizenNameGu || citizenSession.citizenName}</span>
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center gap-1 text-[11px] bg-white/20 text-white font-bold px-2.5 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[150px] truncate">
+                  <UserCheck size={12} className="text-amber-300 shrink-0" />
+                  <span className="truncate">{citizenSession.citizenNameGu || citizenSession.citizenName}</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCitizenLogout}
+                  title="ચેટ અને એકાઉન્ટમાંથી લૉગઆઉટ કરો"
+                  className="inline-flex items-center gap-1 text-[11px] bg-rose-600/80 hover:bg-rose-600 text-white font-bold px-2.5 py-1 rounded-xl border border-rose-300/30 transition active:scale-95 cursor-pointer shadow-xs"
+                >
+                  <LogOut size={12} />
+                  <span>લૉગઆઉટ</span>
+                </button>
+              </div>
             ) : (
               <button
                 type="button"
@@ -1021,7 +1207,7 @@ export default function ChatBot() {
               </div>
             </div>
 
-            {/* Right: New Chat + Citizen / Login */}
+            {/* Right: New Chat + Citizen / Login / Logout */}
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
@@ -1034,10 +1220,20 @@ export default function ChatBot() {
               </button>
 
               {citizenSession ? (
-                <span className="inline-flex items-center gap-1 text-[10px] bg-white/20 text-white font-bold px-2 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[100px] truncate">
-                  <UserCheck size={10} className="text-amber-300 shrink-0" />
-                  <span className="truncate">{citizenSession.citizenNameGu || citizenSession.citizenName}</span>
-                </span>
+                <>
+                  <span className="inline-flex items-center gap-1 text-[10px] bg-white/20 text-white font-bold px-1.5 py-1 rounded-xl border border-white/30 backdrop-blur-xs max-w-[85px] truncate">
+                    <UserCheck size={10} className="text-amber-300 shrink-0" />
+                    <span className="truncate">{citizenSession.citizenNameGu || citizenSession.citizenName}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={handleCitizenLogout}
+                    title="લૉગઆઉટ"
+                    className="p-1.5 rounded-xl bg-rose-600/80 hover:bg-rose-600 text-white border border-rose-300/30 transition active:scale-95 cursor-pointer flex items-center"
+                  >
+                    <LogOut size={12} />
+                  </button>
+                </>
               ) : (
                 <button
                   type="button"
@@ -1093,7 +1289,7 @@ export default function ChatBot() {
       {/* ── MESSAGES CONTAINER ── */}
       <div
         ref={messagesContainerRef}
-        className="flex-1 overflow-y-auto p-3 sm:p-4 space-y-3.5 bg-slate-50 overscroll-contain"
+        className="flex-1 min-h-0 overflow-y-auto p-2.5 sm:p-4 space-y-3 bg-slate-50 overscroll-contain"
       >
         {displayMessages.map((msg, i) => (
           <div

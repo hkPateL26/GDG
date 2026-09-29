@@ -278,13 +278,18 @@ export default function DocumentServicePortal({
 
       syncSession();
       window.addEventListener("storage", syncSession);
-      return () => window.removeEventListener("storage", syncSession);
+      window.addEventListener("nagrik_auth_change", syncSession);
+      return () => {
+        window.removeEventListener("storage", syncSession);
+        window.removeEventListener("nagrik_auth_change", syncSession);
+      };
     }
   }, []);
 
   const handleDocLogout = () => {
     localStorage.removeItem("nagrik_citizen_session");
     window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("nagrik_auth_change"));
     setCitizenSession(null);
   };
 

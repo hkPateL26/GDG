@@ -28,10 +28,12 @@ export default function MobileBottomNav() {
   useEffect(() => {
     const timer = setTimeout(syncState, 0);
     window.addEventListener("storage", syncState);
+    window.addEventListener("nagrik_auth_change", syncState);
     window.addEventListener("popstate", syncState);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("storage", syncState);
+      window.removeEventListener("nagrik_auth_change", syncState);
       window.removeEventListener("popstate", syncState);
     };
   }, [syncState, pathname]);
