@@ -1,11 +1,11 @@
 {
-  "name": "નાગરિકસેવા AI - સરકારી યોજના સહાયક",
-  "short_name": "નાગરિકસેવા",
-  "description": "ગુજરાત અને ભારત સરકારની યોજનાઓ, પાત્રતા કેલ્ક્યુલેટર અને AI સહાયક",
+  "name": "NagrikSeva AI - નાગરિક સેવા e-Governance",
+  "short_name": "NagrikSeva AI",
+  "description": "ગુજરાત સરકાર e-Governance અને Digital Public Infrastructure (DPI) સરકારી સેવાઓ અને યોજના સહાયક",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#ffffff",
+  "background_color": "#020617",
   "theme_color": "#ea580c",
   "lang": "gu",
   "dir": "ltr",
@@ -23,5 +23,9 @@
       "purpose": "any"
     }
   ],
-  "categories": ["government", "productivity", "utilities"]
+  "categories": [
+    "government",
+    "productivity",
+    "utilities"
+  ]
 }

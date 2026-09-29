@@ -50,8 +50,8 @@ function addSlideBase(slide, categoryText, titleText, isDark = false) {
   }
 
   // Footer
-  slide.addText("NagrikSeva AI  |  Team JustCode  |  GDG Build with AI: Code for Communities 2.0", {
-    x: 0.8, y: 7.15, w: 8, h: 0.25,
+  slide.addText("NagrikSeva AI  |  Google Cloud: Build with AI — Code for Communities (Second Edition)  |  Hack2Skill", {
+    x: 0.8, y: 7.15, w: 11, h: 0.25,
     fontSize: 9, color: isDark ? "64748B" : "94A3B8", fontFace: "Segoe UI"
   });
 }
@@ -67,42 +67,55 @@ function addSlideBase(slide, categoryText, titleText, isDark = false) {
     x: 0, y: 0, w: "100%", h: 0.12, fill: { color: C_ORANGE }
   });
 
-  // Hackathon Badge
+  // Hackathon Badges
   slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, {
-    x: 0.8, y: 0.5, w: 5.2, h: 0.4, r: 0.2,
+    x: 0.8, y: 0.45, w: 2.8, h: 0.38, r: 0.15,
+    fill: { color: C_CARD_NAVY }, line: { color: "38BDF8", width: 1.5 }
+  });
+  slide.addText("☁️ GOOGLE CLOUD × HACK2SKILL", {
+    x: 0.8, y: 0.45, w: 2.8, h: 0.38,
+    fontSize: 9.5, bold: true, color: "38BDF8", align: "center", fontFace: "Segoe UI"
+  });
+
+  slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, {
+    x: 3.75, y: 0.45, w: 5.6, h: 0.38, r: 0.15,
     fill: { color: C_CARD_NAVY }, line: { color: C_AMBER, width: 1.5 }
   });
-  slide.addText("⚡ GDG Build with AI: Code for Communities 2.0 (Rajkot)", {
-    x: 0.8, y: 0.5, w: 5.2, h: 0.4,
-    fontSize: 11, bold: true, color: C_AMBER, align: "center", fontFace: "Segoe UI"
+  slide.addText("⚡ BUILD WITH AI: CODE FOR COMMUNITIES — SECOND EDITION", {
+    x: 3.75, y: 0.45, w: 5.6, h: 0.38,
+    fontSize: 9.5, bold: true, color: C_AMBER, align: "center", fontFace: "Segoe UI"
   });
 
   // Main Title
   slide.addText("NagrikSeva AI", {
-    x: 0.8, y: 1.05, w: 8.5, h: 0.9,
+    x: 0.8, y: 0.95, w: 8.5, h: 0.85,
     fontSize: 42, bold: true, color: C_WHITE, fontFace: "Segoe UI"
   });
-  slide.addText("નાગરિકસેવા AI — AI-Powered Digital Public Infrastructure", {
-    x: 0.8, y: 1.9, w: 8.5, h: 0.45,
-    fontSize: 18, bold: true, color: C_AMBER, fontFace: "Segoe UI"
+  slide.addText("નાગરિકસેવા AI — Multilingual Digital Public Infrastructure", {
+    x: 0.8, y: 1.75, w: 8.5, h: 0.4,
+    fontSize: 17, bold: true, color: C_AMBER, fontFace: "Segoe UI"
   });
 
   // Tagline
   slide.addText("A Next-Generation Citizen Governance Platform bridging 70M+ citizens to public welfare entitlements. Integrating Multilingual Gujarati Voice AI, Google Gemini 1.5 Flash Vision Document Scrutiny, and Mamlatdar Revenue Officer Workflows into unified Digital Public Infrastructure.", {
-    x: 0.8, y: 2.45, w: 8.5, h: 1.0,
-    fontSize: 13, color: "CBD5E1", fontFace: "Segoe UI", lineSpacing: 18
+    x: 0.8, y: 2.25, w: 8.5, h: 0.95,
+    fontSize: 12.5, color: "CBD5E1", fontFace: "Segoe UI", lineSpacing: 17
   });
 
   // Logo on Right
   if (fs.existsSync(teamLogoPath)) {
     slide.addImage({
       path: teamLogoPath,
-      x: 10.0, y: 0.8, w: 2.4, h: 2.4,
+      x: 10.0, y: 0.65, w: 2.3, h: 2.3,
       sizing: { type: "contain" }
     });
     slide.addText("TEAM JUSTCODE", {
-      x: 10.0, y: 3.3, w: 2.4, h: 0.35,
+      x: 10.0, y: 3.05, w: 2.3, h: 0.3,
       fontSize: 11, bold: true, color: "FB923C", align: "center", fontFace: "Segoe UI"
+    });
+    slide.addText("\"We don't talk, we build.\"", {
+      x: 10.0, y: 3.32, w: 2.3, h: 0.25,
+      fontSize: 9.5, italic: true, color: "94A3B8", align: "center", fontFace: "Segoe UI"
     });
   }
 
@@ -874,16 +887,24 @@ addSpotlightSlide({
 
   // Bottom Submission Bar
   slide.addShape(pptx.shapes.ROUNDED_RECTANGLE, {
-    x: 0.8, y: 6.35, w: 11.73, h: 0.7, r: 0.1,
-    fill: { color: C_CARD_NAVY }, line: { color: "334155", width: 1 }
+    x: 0.8, y: 6.3, w: 11.73, h: 0.8, r: 0.1,
+    fill: { color: C_CARD_NAVY }, line: { color: "38BDF8", width: 1.5 }
   });
-  slide.addText("SUBMISSION REPOSITORY & DEMO:  GitHub: https://github.com/hkPateL26/GDG  •  Live Prototype: NagrikSeva AI", {
-    x: 1.1, y: 6.45, w: 8.0, h: 0.25,
+  slide.addText("OFFICIAL HACKATHON SUBMISSION &bull; HACK2SKILL PORTAL", {
+    x: 1.1, y: 6.38, w: 7.5, h: 0.22,
+    fontSize: 9, bold: true, color: C_AMBER, fontFace: "Segoe UI"
+  });
+  slide.addText("Event: Google Cloud: Build with AI — Code for Communities (Second Edition)  •  Track: Digital Public Infrastructure (DPI)", {
+    x: 1.1, y: 6.6, w: 8.5, h: 0.25,
     fontSize: 9.5, bold: true, color: C_WHITE, fontFace: "Segoe UI"
   });
-  slide.addText("Thank You! 🙏  Empowering Every Citizen Through Google AI  |  Team JustCode", {
-    x: 1.1, y: 6.7, w: 11.0, h: 0.25,
-    fontSize: 9, color: C_AMBER, fontFace: "Segoe UI"
+  slide.addText("Team: JustCode (\"We don't talk, we build.\")  •  GitHub: https://github.com/hkPateL26/GDG  •  Prototype: NagrikSeva AI", {
+    x: 1.1, y: 6.85, w: 8.5, h: 0.22,
+    fontSize: 8.5, color: "38BDF8", fontFace: "Segoe UI"
+  });
+  slide.addText("Thank You! 🙏\nAtmiya University, Rajkot", {
+    x: 9.8, y: 6.45, w: 2.5, h: 0.55,
+    fontSize: 10.5, bold: true, color: C_AMBER, align: "right", fontFace: "Segoe UI"
   });
 }
 

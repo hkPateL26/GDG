@@ -15,11 +15,11 @@ const page = await browser.newPage();
 await page.setViewport({ width: 1536, height: 864, deviceScaleFactor: 1 });
 await page.goto("file:///" + htmlPath.replace(/\\/g, "/"), { waitUntil: "networkidle0" });
 
-const slideIds = ["slide-2", "slide-3", "slide-7", "slide-13", "slide-14", "slide-15"];
+const slideIds = ["slide-1", "slide-15"];
 for (const id of slideIds) {
   const el = await page.$(`#${id}`);
   if (el) {
-    await el.screenshot({ path: path.join(outDir, `${id}.png`) });
+    await el.screenshot({ path: path.join(outDir, `${id}_final.png`) });
     console.log(`Captured ${id}`);
   }
 }

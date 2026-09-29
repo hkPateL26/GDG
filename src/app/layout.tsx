@@ -9,6 +9,9 @@ import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import ScrollRestoration from "@/components/ScrollRestoration";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 import GlobalModalScrollLocker from "@/components/GlobalModalScrollLocker";
+import AppSplashScreen from "@/components/AppSplashScreen";
+import OfficialGovernmentUpdateModal from "@/components/OfficialGovernmentUpdateModal";
+import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", preload: false });
@@ -22,7 +25,7 @@ export const metadata: Metadata = {
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "નાગરિકસેવા AI",
+    title: "NagrikSeva AI",
   },
   icons: {
     icon: "/icon.svg",
@@ -43,11 +46,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="gu" className={inter.className} suppressHydrationWarning>
       <body className="min-h-screen bg-gray-50 antialiased pb-16 xl:pb-0" suppressHydrationWarning>
         <LanguageProvider>
+          <AppSplashScreen />
+          <OfficialGovernmentUpdateModal />
           <ScrollRestoration />
           <ServiceWorkerRegister />
           <HapticFeedbackProvider />
           <GlobalModalScrollLocker />
           {children}
+          <Footer />
           <MobileBottomNav />
           <FloatingInstallBanner />
           <GoogleTranslateScript />

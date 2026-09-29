@@ -182,27 +182,6 @@ export default function Home() {
             <ChatBot />
           </div>
         </div>
-
-        {/* ── Footer ── */}
-        <footer className="bg-gray-800 text-white mt-4 py-8 px-4">
-          <div className="max-w-4xl mx-auto text-center space-y-2">
-            <p className="text-sm font-medium">
-              🇮🇳 Built for{" "}
-              <span className="text-orange-400">GDG Code for Communities 2.0</span>
-            </p>
-            <p className="text-xs text-gray-400">
-              Powered by Google Gemini AI &bull; Cloud Firestore &bull; NagrikSeva AI &copy; 2026
-            </p>
-            <div className="flex flex-wrap justify-center gap-4 mt-3 text-xs text-gray-400">
-              <Link href="/eligibility" className="hover:text-orange-400 transition">પાત્રતા કેલ્ક્યુલેટર</Link>
-              <Link href="/schemes" className="hover:text-orange-400 transition">યોજનાઓ</Link>
-              <Link href="/documents" className="hover:text-orange-400 transition">દસ્તાવેજો</Link>
-              <Link href="/locator" className="hover:text-orange-400 transition">કચેરી લાઈબ્રેરી</Link>
-              <Link href="/track" className="hover:text-orange-400 transition">ટ્રેકિંગ</Link>
-              <Link href="/chat" className="hover:text-orange-400 transition">AI ચેટ</Link>
-            </div>
-          </div>
-        </footer>
       </main>
     </>
   );

@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { RefreshCw, Server, Cpu, Activity } from "lucide-react";
 
+import { APP_VERSION } from "@/lib/app-version";
+
 interface HealthData {
   db: {
     name: string;
@@ -52,6 +54,12 @@ export default function EnterpriseSystemHealthBar() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+
+  const triggerUpdateModal = () => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("nagrik_check_update"));
+    }
+  };
 
   const fetchHealth = useCallback(async () => {
     setIsLoading(true);
@@ -166,6 +174,17 @@ export default function EnterpriseSystemHealthBar() {
 
   const renderTickerContent = () => (
     <div className="flex items-center gap-4 sm:gap-6 pr-4 sm:pr-6 whitespace-nowrap shrink-0">
+      <span
+        onClick={triggerUpdateModal}
+        className="flex items-center gap-1.5 text-amber-300 font-semibold cursor-pointer hover:text-amber-200 transition"
+        title="સરકારી વર્ઝન અપડેટ તપાસો"
+      >
+        <span>🚀 વર્ઝન: {APP_VERSION} (સત્તાવાર અપડેટ)</span>
+        <span className="text-[9px] px-1 py-0.2 bg-amber-950/80 border border-amber-500/30 rounded text-amber-300 font-bold">DPI</span>
+      </span>
+
+      <span className="text-slate-700">•</span>
+
       <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
         <span className="text-amber-400">☁️</span>
         <span>DPI Cloud: {data.db.name}</span>
@@ -240,8 +259,17 @@ export default function EnterpriseSystemHealthBar() {
         </div>
       </div>
 
-      {/* ── Right Pinned Controls: Latency & Live Refresh ── */}
+      {/* ── Right Pinned Controls: Latency, Version & Live Refresh ── */}
       <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 h-full bg-slate-950 z-20 shrink-0 border-l border-slate-800/80 shadow-[-4px_0_12px_rgba(2,6,23,0.95)]">
+        <button
+          type="button"
+          onClick={triggerUpdateModal}
+          className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700/80 text-[9.5px] font-mono font-bold text-amber-400 hover:text-white hover:border-amber-500 transition cursor-pointer"
+          title="સરકારી વર્ઝન અપડેટ તપાસો"
+        >
+          <span>{APP_VERSION}</span>
+        </button>
+
         <span className="font-mono text-emerald-300 text-[10px] sm:text-[11px] font-bold">
           ⚡ {data.db.latencyMs}ms
         </span>
