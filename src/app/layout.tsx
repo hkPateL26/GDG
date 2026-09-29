@@ -4,6 +4,7 @@ import "./globals.css";
 
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import HapticFeedbackProvider from "@/components/HapticFeedbackProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import ScrollRestoration from "@/components/ScrollRestoration";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";
@@ -42,6 +43,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <LanguageProvider>
           <ScrollRestoration />
           <ServiceWorkerRegister />
+          <HapticFeedbackProvider />
           {children}
           <MobileBottomNav />
           <FloatingInstallBanner />

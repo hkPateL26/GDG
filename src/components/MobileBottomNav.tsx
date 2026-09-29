@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   Home,
   LayoutGrid,
@@ -11,66 +11,112 @@ import {
   Building2,
   Sparkles,
 } from "lucide-react";
+import { triggerHaptic } from "@/lib/haptic";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const [currentMode, setCurrentMode] = useState<string>("");
   const [citizenSession, setCitizenSession] = useState<boolean>(false);
   const [officerSession, setOfficerSession] = useState<boolean>(false);
 
-  useEffect(() => {
-    const checkSessions = () => {
-      if (typeof window !== "undefined") {
-        setCitizenSession(Boolean(localStorage.getItem("nagrik_citizen_session")));
-        setOfficerSession(Boolean(sessionStorage.getItem("nagrik_officer_session")));
-      }
-    };
-    checkSessions();
-    window.addEventListener("storage", checkSessions);
-    return () => window.removeEventListener("storage", checkSessions);
+  const syncState = useCallback(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setCurrentMode(params.get("mode") || "");
+      setCitizenSession(Boolean(localStorage.getItem("nagrik_citizen_session")));
+      setOfficerSession(Boolean(sessionStorage.getItem("nagrik_officer_session")));
+    }
   }, []);
+
+  useEffect(() => {
+    syncState();
+    window.addEventListener("storage", syncState);
+    window.addEventListener("popstate", syncState);
+    return () => {
+      window.removeEventListener("storage", syncState);
+      window.removeEventListener("popstate", syncState);
+    };
+  }, [syncState, pathname]);
 
   const navItems = [
     {
+      key: "home",
       href: "/",
       label: "હોમ",
       englishLabel: "Home",
       icon: Home,
-      exact: true,
     },
     {
+      key: "schemes",
       href: "/schemes",
       label: "યોજનાઓ",
       englishLabel: "Schemes",
       icon: LayoutGrid,
-      exact: false,
     },
     {
+      key: "chat",
       href: "/chat",
       label: "AI સહાયક",
       englishLabel: "AI Chat",
       icon: Bot,
       highlight: true,
-      exact: false,
     },
     {
+      key: "vault",
       href: "/portal?mode=citizen",
-      altHref: "/track",
       label: citizenSession ? "વોલ્ટ" : "ટ્રેક",
       englishLabel: "Vault",
       icon: FolderLock,
-      exact: false,
       badge: citizenSession ? "પ્રમાણિત" : undefined,
     },
     {
+      key: "admin",
       href: "/portal?mode=officer",
-      altHref: "/admin",
       label: officerSession ? "ડેસ્ક" : "કચેરી",
       englishLabel: "Admin",
       icon: Building2,
-      exact: false,
       badge: officerSession ? "કચેરી" : undefined,
     },
   ];
+
+  // Exact mutual exclusion check: Never allow both Vault and Admin to be orange simultaneously!
+  const isItemActive = (key: string) => {
+    if (key === "home") {
+      return pathname === "/";
+    }
+    if (key === "schemes") {
+      return pathname.startsWith("/schemes");
+    }
+    if (key === "chat") {
+      return pathname.startsWith("/chat");
+    }
+    if (key === "vault") {
+      if (
+        pathname === "/track" ||
+        pathname === "/documents" ||
+        pathname === "/eligibility" ||
+        pathname === "/benefit-calculator"
+      ) {
+        return true;
+      }
+      if (pathname === "/portal") {
+        // Vault is active ONLY when mode is NOT officer
+        return currentMode !== "officer";
+      }
+      return false;
+    }
+    if (key === "admin") {
+      if (pathname === "/admin") {
+        return true;
+      }
+      if (pathname === "/portal") {
+        // Admin is active ONLY when mode IS officer
+        return currentMode === "officer";
+      }
+      return false;
+    }
+    return false;
+  };
 
   return (
     <nav
@@ -79,18 +125,18 @@ export default function MobileBottomNav() {
     >
       <div className="max-w-lg mx-auto flex items-center justify-around">
         {navItems.map((item) => {
-          const isActive = item.exact
-            ? pathname === item.href
-            : pathname.startsWith(item.href.split("?")[0]) ||
-              (item.altHref && pathname.startsWith(item.altHref));
-
+          const isActive = isItemActive(item.key);
           const IconComponent = item.icon;
 
           if (item.highlight) {
             return (
               <Link
-                key={item.href}
+                key={item.key}
                 href={item.href}
+                onClick={() => {
+                  triggerHaptic("medium");
+                  setCurrentMode("");
+                }}
                 className="relative -top-3 flex flex-col items-center group cursor-pointer"
               >
                 <div
@@ -119,8 +165,18 @@ export default function MobileBottomNav() {
 
           return (
             <Link
-              key={item.href}
+              key={item.key}
               href={item.href}
+              onClick={() => {
+                triggerHaptic("selection");
+                if (item.key === "admin") {
+                  setCurrentMode("officer");
+                } else if (item.key === "vault") {
+                  setCurrentMode("citizen");
+                } else {
+                  setCurrentMode("");
+                }
+              }}
               className={`flex-1 flex flex-col items-center justify-center py-1 px-1 rounded-xl transition-all duration-150 active:scale-95 cursor-pointer relative ${
                 isActive ? "text-orange-600" : "text-slate-500 hover:text-slate-800"
               }`}
