@@ -25,6 +25,15 @@ for (const file of files) {
   console.log(`Optimized ${file} -> .jpg`);
 }
 
+// Compress team logo
+const logoSrc = path.join(rootDir, "team_logo.jpg");
+const logoDst = path.join(rootDir, "team_logo_opt.jpg");
+await sharp(logoSrc)
+  .resize({ width: 300, withoutEnlargement: true })
+  .jpeg({ quality: 82, mozjpeg: true })
+  .toFile(logoDst);
+console.log("Optimized team_logo.jpg -> team_logo_opt.jpg");
+
 // Create an optimized presentation HTML that points to the .jpg images and eliminates print raster bloat
 let html = fs.readFileSync(path.join(rootDir, "presentation.html"), "utf-8");
 html = html.replace(/\.\/perfect_screenshots\/([a-zA-Z0-9_-]+)\.png/g, "./perfect_screenshots_opt/$1.jpg");

@@ -14,7 +14,7 @@ export interface LeadDeveloper {
 export const LEAD_DEVELOPERS: LeadDeveloper[] = [
   {
     name: "Hari Patel",
-    nameGu: "હરિભાઈ પટેલ",
+    nameGu: "હરિ પટેલ",
     role: "Chief System Architect & AI Engineer",
     roleGu: "મુખ્ય સિસ્ટમ આર્કિટેક્ટ & AI એન્જિનિયર",
   },

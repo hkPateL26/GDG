@@ -6,15 +6,12 @@ import {
   APP_VERSION,
   APP_BUILD_NAME,
   APP_RELEASE_DATE,
-  LEAD_DEVELOPERS,
 } from "@/lib/app-version";
 import {
   ShieldCheck,
   Phone,
   RefreshCw,
   Award,
-  ExternalLink,
-  Cpu,
   Lock,
 } from "lucide-react";
 import Image from "next/image";
@@ -33,7 +30,7 @@ export default function Footer() {
 
   return (
     <footer
-      className="bg-slate-950 text-slate-300 border-t-2 border-orange-500 pt-10 pb-16 xl:pb-12 px-4 sm:px-6 lg:px-8 notranslate select-none"
+      className="bg-slate-950 text-slate-300 border-t-2 border-orange-500 pt-10 pb-28 sm:pb-24 xl:pb-12 px-4 sm:px-6 lg:px-8 notranslate select-none"
       translate="no"
     >
       <div className="max-w-7xl mx-auto space-y-8">
@@ -43,7 +40,15 @@ export default function Footer() {
           {/* Column 1: Brand & Gov Portal Authority */}
           <div className="space-y-3">
             <div className="flex items-center gap-2.5">
-              <span className="text-2xl leading-none">🇮🇳</span>
+              <div className="w-8 h-8 rounded-xl bg-white/10 border border-white/20 p-1 flex items-center justify-center shrink-0">
+                <Image
+                  src="/icon.svg"
+                  alt="NagrikSeva Emblem"
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 object-contain"
+                />
+              </div>
               <div>
                 <h3 className="text-lg font-black text-white tracking-tight leading-tight">
                   Nagrik<span className="text-orange-500">Seva</span>{" "}
@@ -59,7 +64,7 @@ export default function Footer() {
               ગુજરાત સરકાર e-Governance અને Digital Public Infrastructure (DPI) માપદંડો મુજબ નાગરિકોને યોજનાઓ, પાત્રતા, દસ્તાવેજ પ્રમાણીકરણ અને 2FA આધાર સુરક્ષા પૂરી પાડતું કેન્દ્રીય પોર્ટલ.
             </p>
 
-            <div className="pt-1 flex items-center gap-2">
+            <div className="pt-1 flex items-center gap-2 flex-wrap">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 text-[10.5px] font-bold">
                 <ShieldCheck size={13} className="shrink-0" />
                 <span>GIGW & DPI પ્રમાણિત</span>
@@ -177,12 +182,12 @@ export default function Footer() {
 
         </div>
 
-        {/* ── Official Government Developer & Architecture Credit Block ── */}
+        {/* ── Official Government Developer & Architecture Credit Block (Strict Hard Responsive) ── */}
         <div className="border-t border-slate-800/90 pt-6 mt-6">
           <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
             
-            {/* Lead Developers Attribution */}
-            <div className="space-y-1 text-center md:text-left">
+            {/* Lead Developers Attribution - Clean 'હરિ પટેલ (Hari Patel)' */}
+            <div className="space-y-1.5 text-center md:text-left w-full md:w-auto">
               <div className="flex items-center justify-center md:justify-start gap-2">
                 <Award size={16} className="text-amber-400 shrink-0" />
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
@@ -190,27 +195,27 @@ export default function Footer() {
                 </span>
               </div>
               
-              <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-3 gap-y-1 text-xs sm:text-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-1.5 sm:gap-3 text-xs sm:text-sm">
                 <span className="font-bold text-white">
-                  <span className="text-orange-400 font-black">{LEAD_DEVELOPERS[0].nameGu}</span> ({LEAD_DEVELOPERS[0].name})
-                  <span className="text-[11px] text-slate-400 font-normal ml-1">— {LEAD_DEVELOPERS[0].role}</span>
+                  <span className="text-orange-400 font-black">હરિ પટેલ (Hari Patel)</span>
+                  <span className="text-[11px] text-slate-400 font-normal ml-1">— Chief System Architect</span>
                 </span>
                 <span className="text-slate-600 hidden sm:inline">•</span>
                 <span className="font-bold text-white">
-                  <span className="text-emerald-400 font-black">{LEAD_DEVELOPERS[1].nameGu}</span> ({LEAD_DEVELOPERS[1].name})
-                  <span className="text-[11px] text-slate-400 font-normal ml-1">— {LEAD_DEVELOPERS[1].role}</span>
+                  <span className="text-emerald-400 font-black">જીત જાજલ (Jeet Jajal)</span>
+                  <span className="text-[11px] text-slate-400 font-normal ml-1">— Lead Full-Stack Engineer</span>
                 </span>
               </div>
 
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-500 leading-snug">
                 Digital Public Infrastructure (DPI) Core Engineering Unit • NIC & GSDC Standard • GDG Code for Communities 2.0
               </p>
             </div>
 
             {/* Official Release Badge */}
-            <div className="shrink-0 flex flex-col items-center md:items-end">
+            <div className="shrink-0 flex flex-col items-center md:items-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/60">
               <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <span className="text-xs font-mono font-bold text-slate-200">
                   {APP_VERSION} ({APP_BUILD_NAME})
                 </span>

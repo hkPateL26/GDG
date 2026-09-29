@@ -867,7 +867,7 @@ export default function ChatBot() {
   const handleQuickDemoLogin = () => {
     const demoCitizen: CitizenSession = {
       citizenName: "Hari Patel",
-      citizenNameGu: "હરિભાઈ પટેલ",
+      citizenNameGu: "હરિ પટેલ",
       mobile: "9974442291",
       district: "Rajkot",
       taluka: "Gondal",
@@ -1058,7 +1058,7 @@ export default function ChatBot() {
               className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs shadow-md transition active:scale-95 mb-2 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <UserCheck size={14} />
-              <span>⚡ ૧-ક્લિક લૉગિન: હરિભાઈ પટેલ (ગોમટા)</span>
+              <span>⚡ ૧-ક્લિક લૉગિન: હરિ પટેલ (ગોમટા)</span>
             </button>
 
             <Link
