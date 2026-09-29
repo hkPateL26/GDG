@@ -12,9 +12,11 @@ import {
   Sparkles,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptic";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
+  const { currentLang } = useLanguage();
   const [citizenSession, setCitizenSession] = useState<boolean>(false);
   const [officerSession, setOfficerSession] = useState<boolean>(false);
 
@@ -38,43 +40,45 @@ export default function MobileBottomNav() {
     };
   }, [syncState, pathname]);
 
+  const isEn = currentLang === "en";
+  const isHi = currentLang === "hi";
+
   const navItems = [
     {
       key: "home",
       href: "/",
-      label: "હોમ",
-      englishLabel: "Home",
+      label: isEn ? "Home" : isHi ? "होम" : "હોમ",
       icon: Home,
     },
     {
       key: "schemes",
       href: "/schemes",
-      label: "યોજનાઓ",
-      englishLabel: "Schemes",
+      label: isEn ? "Schemes" : isHi ? "योजनाएं" : "યોજનાઓ",
       icon: LayoutGrid,
     },
     {
       key: "chat",
       href: "/chat",
-      label: "AI સહાયક",
-      englishLabel: "AI Chat",
+      label: isEn ? "AI Chat" : isHi ? "AI सहायक" : "AI સહાયક",
       icon: Bot,
       highlight: true,
     },
     {
       key: "locator",
       href: "/locator",
-      label: "કચેરી",
-      englishLabel: "Offices",
+      label: isEn ? "Offices" : isHi ? "कार्यालय" : "કચેરી",
       icon: MapPin,
     },
     {
       key: "login",
       href: "/portal",
-      label: citizenSession ? "વોલ્ટ" : officerSession ? "ડેસ્ક" : "લૉગિન",
-      englishLabel: "Login",
+      label: citizenSession
+        ? isEn ? "Vault" : isHi ? "वॉल्ट" : "વોલ્ટ"
+        : officerSession
+        ? isEn ? "Desk" : isHi ? "डेस्क" : "ડેસ્ક"
+        : isEn ? "Login" : isHi ? "लॉगिन" : "લૉગિન",
       icon: User,
-      badge: citizenSession ? "2FA" : officerSession ? "કચેરી" : undefined,
+      badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "अधिकारी" : "કચેરી") : undefined,
     },
   ];
 

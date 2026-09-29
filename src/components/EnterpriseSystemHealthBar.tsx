@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { RefreshCw, Server, Cpu, Activity } from "lucide-react";
 
 import { APP_VERSION } from "@/lib/app-version";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface HealthData {
   db: {
@@ -30,6 +31,10 @@ interface HealthData {
 
 export default function EnterpriseSystemHealthBar() {
   const pathname = usePathname();
+  const { currentLang } = useLanguage();
+
+  const isEn = currentLang === "en";
+  const isHi = currentLang === "hi";
 
   const [data, setData] = useState<HealthData>({
     db: {
@@ -112,61 +117,65 @@ export default function EnterpriseSystemHealthBar() {
   const getPageMetric = () => {
     if (pathname === "/") {
       return {
-        badge: "DPI પોર્ટલ",
-        text: `કુલ યોજનાઓ: ${data.metrics.totalSchemes} | કચેરીઓ: ${data.metrics.totalOffices}`,
+        badge: isEn ? "DPI Portal" : isHi ? "DPI पोर्टल" : "DPI પોર્ટલ",
+        text: isEn
+          ? `Total Schemes: ${data.metrics.totalSchemes} | Offices: ${data.metrics.totalOffices}`
+          : isHi
+          ? `कुल योजनाएँ: ${data.metrics.totalSchemes} | कार्यालय: ${data.metrics.totalOffices}`
+          : `કુલ યોજનાઓ: ${data.metrics.totalSchemes} | કચેરીઓ: ${data.metrics.totalOffices}`,
       };
     }
     if (pathname.startsWith("/schemes")) {
       return {
-        badge: "યોજનાઓ",
-        text: `કુલ યોજનાઓ: ${data.metrics.totalSchemes}`,
+        badge: isEn ? "Schemes" : isHi ? "योजनाएँ" : "યોજનાઓ",
+        text: isEn ? `Total Schemes: ${data.metrics.totalSchemes}` : isHi ? `कुल योजनाएँ: ${data.metrics.totalSchemes}` : `કુલ યોજનાઓ: ${data.metrics.totalSchemes}`,
       };
     }
     if (pathname.startsWith("/locator")) {
       return {
-        badge: "કચેરીઓ",
-        text: `૩૩ જિલ્લા | ${data.metrics.totalOffices} સરકારી કચેરીઓ`,
+        badge: isEn ? "Offices" : isHi ? "कार्यालय" : "કચેરીઓ",
+        text: isEn ? `33 Districts | ${data.metrics.totalOffices} Gov Offices` : isHi ? `३३ जिले | ${data.metrics.totalOffices} सरकारी कार्यालय` : `૩૩ જિલ્લા | ${data.metrics.totalOffices} સરકારી કચેરીઓ`,
       };
     }
     if (pathname.startsWith("/chat")) {
       return {
         badge: "Gemini AI",
-        text: "AI સહાયક લાઈવ • <૧ સેકન્ડ રિસ્પોન્સ",
+        text: isEn ? "AI Assistant Live • <1s Latency" : isHi ? "AI सहायक लाइव • <१ सेकंड रिस्पांस" : "AI સહાયક લાઈવ • <૧ સેકન્ડ રિસ્પોન્સ",
       };
     }
     if (pathname.startsWith("/benefit-calculator")) {
       return {
-        badge: "લાભ કેલ્ક્યુલેટર",
-        text: "૧૪ યોજના સહાય અંદાજ લાઈવ",
+        badge: isEn ? "Benefit Calc" : isHi ? "लाभ कैलकुलेटर" : "લાભ કેલ્ક્યુલેટર",
+        text: isEn ? "14 Schemes Live Assessment" : isHi ? "१४ योजना सहायता लाइव अनुमान" : "૧૪ યોજના સહાય અંદાજ લાઈવ",
       };
     }
     if (pathname.startsWith("/track")) {
       return {
-        badge: "અરજી ટ્રેકિંગ",
-        text: "NIC e-Governance API લાઈવ",
+        badge: isEn ? "Track Application" : isHi ? "आवेदन ट्रैकिंग" : "અરજી ટ્રેકિંગ",
+        text: isEn ? "NIC e-Governance API Live" : isHi ? "NIC e-Governance API लाइव" : "NIC e-Governance API લાઈવ",
       };
     }
     if (pathname.startsWith("/documents")) {
       return {
-        badge: "ડિજિટલ વોલ્ટ",
-        text: "DigiLocker DPI સંકલિત • ૧૦૦% માન્ય",
+        badge: isEn ? "Digital Vault" : isHi ? "डिजिटल वॉल्ट" : "ડિજિટલ વોલ્ટ",
+        text: isEn ? "DigiLocker DPI Integrated • 100% Certified" : isHi ? "DigiLocker DPI एकीकृत • १००% मान्य" : "DigiLocker DPI સંકલિત • ૧૦૦% માન્ય",
       };
     }
     if (pathname.startsWith("/eligibility")) {
       return {
-        badge: "પાત્રતા માપદંડ",
-        text: "સરકારી માપદંડ ડેટાબેઝ લાઈવ",
+        badge: isEn ? "Eligibility" : isHi ? "पात्रता" : "પાત્રતા માપદંડ",
+        text: isEn ? "Official Eligibility Rules Live" : isHi ? "सरकारी मानदंड डेटाबेस लाइव" : "સરકારી માપદંડ ડેટાબેઝ લાઈવ",
       };
     }
     if (pathname.startsWith("/portal") || pathname.startsWith("/admin")) {
       return {
-        badge: "સુરક્ષિત સત્ર",
-        text: "2FA આધાર OTP • એસએસઓ સુરક્ષિત",
+        badge: isEn ? "Secure Session" : isHi ? "सुरक्षित सत्र" : "સુરક્ષિત સત્ર",
+        text: isEn ? "2FA Aadhaar OTP • SSO Protected" : isHi ? "2FA आधार OTP • SSO सुरक्षित" : "2FA આધાર OTP • એસએસઓ સુરક્ષિત",
       };
     }
     return {
-      badge: "યોજનાઓ",
-      text: `કુલ યોજનાઓ: ${data.metrics.totalSchemes}`,
+      badge: isEn ? "Schemes" : isHi ? "योजनाएँ" : "યોજનાઓ",
+      text: isEn ? `Total Schemes: ${data.metrics.totalSchemes}` : isHi ? `कुल योजनाएँ: ${data.metrics.totalSchemes}` : `કુલ યોજનાઓ: ${data.metrics.totalSchemes}`,
     };
   };
 
@@ -177,9 +186,12 @@ export default function EnterpriseSystemHealthBar() {
       <span
         onClick={triggerUpdateModal}
         className="flex items-center gap-1.5 text-amber-300 font-semibold cursor-pointer hover:text-amber-200 transition"
-        title="સરકારી વર્ઝન અપડેટ તપાસો"
+        title="Check Official Update"
       >
-        <span>🚀 વર્ઝન: {APP_VERSION} (સત્તાવાર અપડેટ)</span>
+        <span>
+          🚀 {isEn ? "Version:" : isHi ? "संस्करण:" : "વર્ઝન:"} {APP_VERSION}{" "}
+          ({isEn ? "Official Release" : isHi ? "आधिकारिक अपडेट" : "સત્તાવાર અપડેટ"})
+        </span>
         <span className="text-[9px] px-1 py-0.2 bg-amber-950/80 border border-amber-500/30 rounded text-amber-300 font-bold">DPI</span>
       </span>
 
@@ -188,7 +200,9 @@ export default function EnterpriseSystemHealthBar() {
       <span className="flex items-center gap-1.5 text-emerald-400 font-medium">
         <span className="text-amber-400">☁️</span>
         <span>DPI Cloud: {data.db.name}</span>
-        <span className="text-[9px] px-1 py-0.2 bg-emerald-950/80 border border-emerald-500/30 rounded text-emerald-300 font-bold">સક્રિય</span>
+        <span className="text-[9px] px-1 py-0.2 bg-emerald-950/80 border border-emerald-500/30 rounded text-emerald-300 font-bold">
+          {isEn ? "ACTIVE" : isHi ? "सक्रिय" : "સક્રિય"}
+        </span>
       </span>
 
       <span className="text-slate-700">•</span>
@@ -202,7 +216,7 @@ export default function EnterpriseSystemHealthBar() {
 
       <span className="flex items-center gap-1.5 text-slate-300">
         <Server size={11} className="text-orange-400 shrink-0" />
-        <span>GSDC ગાંધીનગર: {data.system.node}</span>
+        <span>GSDC Gandhinagar: {data.system.node}</span>
       </span>
 
       <span className="text-slate-700">•</span>
@@ -218,13 +232,25 @@ export default function EnterpriseSystemHealthBar() {
 
       <span className="flex items-center gap-1.5 text-slate-300">
         <Activity size={11} className="text-emerald-400 shrink-0" />
-        <span>રાજ્ય કવરેજ: ૩૩ જિલ્લા | ૨૬ યોજનાઓ | ૩૫ કચેરીઓ</span>
+        <span>
+          {isEn
+            ? "State Coverage: 33 Districts | 26 Schemes | 35 Offices"
+            : isHi
+            ? "राज्य कवरेज: ३३ जिले | २६ योजनाएँ | ३૫ कार्यालय"
+            : "રાજ્ય કવરેજ: ૩૩ જિલ્લા | ૨૬ યોજનાઓ | ૩૫ કચેરીઓ"}
+        </span>
       </span>
 
       <span className="text-slate-700">•</span>
 
       <span className="text-emerald-400 font-medium">
-        <span>✅ ૯૯.૯૮% અપટાઇમ • GRTSA ૨૦૧૩ સત્તાવાર માન્ય</span>
+        <span>
+          {isEn
+            ? "✅ 99.98% Uptime • GRTSA 2013 Certified"
+            : isHi
+            ? "✅ ९९.९८% अपटाइम • GRTSA २०१३ प्रमाणित"
+            : "✅ ૯૯.૯૮% અપટાઇમ • GRTSA ૨૦૧૩ સત્તાવાર માન્ય"}
+        </span>
       </span>
 
       <span className="text-slate-700">•</span>
@@ -233,8 +259,7 @@ export default function EnterpriseSystemHealthBar() {
 
   return (
     <div
-      className="bg-slate-950 text-slate-300 text-[10.5px] sm:text-[11px] h-7 sm:h-7.5 border-b border-slate-800/90 shadow-xs flex items-center overflow-hidden notranslate z-30 relative select-none whitespace-nowrap"
-      translate="no"
+      className="bg-slate-950 text-slate-300 text-[10.5px] sm:text-[11px] h-7 sm:h-7.5 border-b border-slate-800/90 shadow-xs flex items-center overflow-hidden z-30 relative select-none whitespace-nowrap"
       aria-label="Enterprise DPI System Health Status"
     >
       {/* ── Left Pinned Badge: Live Pulse Indicator ── */}
@@ -265,7 +290,7 @@ export default function EnterpriseSystemHealthBar() {
           type="button"
           onClick={triggerUpdateModal}
           className="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-700/80 text-[9.5px] font-mono font-bold text-amber-400 hover:text-white hover:border-amber-500 transition cursor-pointer"
-          title="સરકારી વર્ઝન અપડેટ તપાસો"
+          title="Check Official Update"
         >
           <span>{APP_VERSION}</span>
         </button>
@@ -279,7 +304,7 @@ export default function EnterpriseSystemHealthBar() {
           onClick={fetchHealth}
           disabled={isLoading}
           className="text-slate-400 hover:text-white transition p-0.5 rounded active:scale-90 cursor-pointer disabled:opacity-50"
-          title="રીઅલ-ટાઇમ ક્લાઉડ સ્ટેટસ રીફ્રેશ કરો"
+          title="Refresh Real-time Status"
         >
           <RefreshCw
             size={11}

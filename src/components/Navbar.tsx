@@ -117,16 +117,22 @@ export default function Navbar() {
 
   return (
     <>
-      <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50 notranslate" translate="no" suppressHydrationWarning>
+      <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50" suppressHydrationWarning>
       <div className="w-full px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* ── Logo ── */}
           <Link
             href="/"
             onClick={(e) => handleNavClick(e, "/")}
-            className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0"
+            className="flex items-center gap-2 min-w-0 shrink-0"
           >
-            <span className="text-xl sm:text-2xl leading-none select-none shrink-0">🇮🇳</span>
+            <img
+              src="/icon.svg"
+              alt="National Emblem"
+              width="28"
+              height="28"
+              className="w-7 h-7 object-contain shrink-0"
+            />
             <div className="min-w-0">
               <p className="font-extrabold text-gray-800 text-sm sm:text-base leading-tight whitespace-nowrap">
                 Nagrik<span className="text-orange-500">Seva</span>{" "}
