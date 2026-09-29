@@ -5,7 +5,7 @@
 // 2. District Collectorate (જિલ્લા કલેક્ટર કચેરી - રાજકોટ)
 // 3. Sub-Divisional Magistrate / SDM (પ્રાંત કચેરી - રાજકોટ ગ્રામ્ય / ગોંડલ)
 // 4. Taluka Mamlatdar & TDO (તાલુકા મામલતદાર કચેરી - ગોંડલ)
-// 5. Gram Panchayat / Talati / VCE (ગ્રામ પંચાયત - ગોમતા / જન સેવા કેન્દ્ર)
+// 5. Gram Panchayat / Talati / VCE (ગ્રામ પંચાયત - મોમટા / જન સેવા કેન્દ્ર)
 // =========================================================================
 
 export type AdminRole =
@@ -132,7 +132,7 @@ export const HIERARCHICAL_OFFICERS: OfficerNode[] = [
   {
     id: "GUJ-TAL-7089",
     name: "વિજયકુમાર જોષી",
-    designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, ગોમતા",
+    designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, મોમટા",
     role: "talati",
     tierLevel: 5,
     tierNameGu: "પંચાયત સ્તર - તલાટી કમ મંત્રી",
@@ -140,11 +140,11 @@ export const HIERARCHICAL_OFFICERS: OfficerNode[] = [
     districtGu: "રાજકોટ",
     taluka: "Gondal",
     talukaGu: "ગોંડલ",
-    panchayat: "Gomta",
-    panchayatGu: "ગોમતા ગ્રામ પંચાયત",
-    office: "ગ્રામ પંચાયત ભવન, ગોમતા, જિ. રાજકોટ",
-    officeGu: "ગ્રામ પંચાયત કચેરી, ગોમતા",
-    email: "talati-gomta@gujarat.gov.in",
+    panchayat: "Momta",
+    panchayatGu: "મોમટા ગ્રામ પંચાયત",
+    office: "ગ્રામ પંચાયત ભવન, મોમટા, જિ. રાજકોટ",
+    officeGu: "ગ્રામ પંચાયત કચેરી, મોમટા",
+    email: "talati-momta@gujarat.gov.in",
     mobile: "9879107089",
     isOnLeave: false,
     actingOfficerId: "GUJ-GOV-9012",
@@ -158,8 +158,8 @@ export const HIERARCHICAL_OFFICERS: OfficerNode[] = [
 ];
 
 // =========================================================================
-// 15-MINUTE AI SLA BOTTLENECK MONITOR ENGINE
-// Detects applications stuck > 15 minutes without officer action
+// 1-HOUR (DEMO) AI SLA BOTTLENECK MONITOR ENGINE
+// Detects applications stuck > 60 minutes without officer action
 // =========================================================================
 
 export interface SlaBottleneckAnalysis {
@@ -191,7 +191,7 @@ export function analyzeApplicationSla(
   },
   overrideMinutes?: number
 ): SlaBottleneckAnalysis {
-  const SLA_LIMIT_MINUTES = 15; // 15-Minute SLA as requested by user
+  const SLA_LIMIT_MINUTES = 60; // 1-Hour SLA (Demo Mode)
 
   // Determine elapsed time (either mock elapsed or computed from submission)
   let elapsed = overrideMinutes ?? 0;
@@ -201,13 +201,13 @@ export function analyzeApplicationSla(
     } else {
       // Deterministic realistic simulated duration based on stage and status
       if (app.status === "pending" || app.paymentStatus === "pending_challan") {
-        elapsed = 18; // Breached 15 min!
+        elapsed = 74; // Breached 60 min!
       } else if (app.workflowStage === 1) {
-        elapsed = 16; // Breached 15 min!
+        elapsed = 68; // Breached 60 min!
       } else if (app.workflowStage === 2) {
-        elapsed = 11; // 11 mins, warning
+        elapsed = 48; // 48 mins, warning
       } else {
-        elapsed = 6;
+        elapsed = 25;
       }
     }
   }
@@ -215,12 +215,12 @@ export function analyzeApplicationSla(
   const isBreached = elapsed >= SLA_LIMIT_MINUTES;
   const remaining = Math.max(0, SLA_LIMIT_MINUTES - elapsed);
 
-  let currentDeskGu = "તલાટી કમ મંત્રી સ્ક્રુટિની કાઉન્ટર, ગોમતા ગ્રામ પંચાયત";
+  let currentDeskGu = "તલાટી કમ મંત્રી સ્ક્રુટિની કાઉન્ટર, મોમટા ગ્રામ પંચાયત";
   let currentOfficerName = "વિજયકુમાર જોષી (તલાટી)";
   let currentOfficerDesignation = "તલાટી કમ મંત્રી";
   let stuckReasonGu = "દસ્તાવેજ અપલોડ થયા બાદ તલાટી દ્વારા પ્રાથમિક સ્ક્રુટિની શરૂ થઈ નથી.";
   let aiDiagnosisGu =
-    "અરજી આવ્યાને ૧૫ મિનિટ કરતા વધુ સમય થઈ ગયો છે. તલાટી ડેસ્ક પર દસ્તાવેજ ચકાસણી પેન્ડિંગ હોવાથી આગળનું મામલતદાર e-Sign અટકેલું છે.";
+    "અરજી આવ્યાને ૧ કલાક (૬૦ મિનિટ) કરતા વધુ સમય થઈ ગયો છે. તલાટી ડેસ્ક પર દસ્તાવેજ ચકાસણી પેન્ડિંગ હોવાથી આગળનું મામલતદાર e-Sign અટકેલું છે.";
   let recommendedActionGu = "નાયબ મામલતદાર અથવા ઇન-ચાર્જ તલાટીને તાત્કાલિક રી-રૂટ કરો.";
   let escalationTargetOfficer = "એચ. વી. પટેલ, GAS (તાલુકા મામલતદાર)";
 
@@ -229,7 +229,7 @@ export function analyzeApplicationSla(
     currentOfficerName = "પી. આર. રાઠોડ";
     currentOfficerDesignation = "નાયબ મામલતદાર (દસ્તાવેજ ચકાસણી)";
     stuckReasonGu = "પ્રાથમિક તલાટી રિપોર્ટ મંજૂર થયો છે પરંતુ મામલતદાર સાહેબને ફોરવર્ડ કરવાનું પેન્ડિંગ છે.";
-    aiDiagnosisGu = "નાયબ મામલતદાર ડેસ્ક પર ૧૧+ મિનિટથી ફાઈલ રજૂ થઈ નથી.";
+    aiDiagnosisGu = "નાયબ મામલતદાર ડેસ્ક પર ૪૫+ મિનિટથી ફાઈલ રજૂ થઈ નથી.";
     recommendedActionGu = "મામલતદાર ડેસ્ક પર ડાયરેક્ટ પુશ કરો.";
     escalationTargetOfficer = "એચ. વી. પટેલ, GAS (મામલતદાર)";
   } else if (app.workflowStage === 3 || app.status === "approved") {
@@ -245,7 +245,7 @@ export function analyzeApplicationSla(
   let urgencyLevel: "normal" | "warning" | "critical" = "normal";
   if (isBreached) {
     urgencyLevel = "critical";
-  } else if (elapsed >= 10) {
+  } else if (elapsed >= 45) {
     urgencyLevel = "warning";
   }
 

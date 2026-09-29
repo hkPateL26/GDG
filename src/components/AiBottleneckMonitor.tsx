@@ -41,14 +41,14 @@ export default function AiBottleneckMonitor({
   });
   
   const analyzedApps = activeApps.map((app) => {
-    // Generate deterministic minute offsets for demonstration
-    let mockOffsetMinutes = 6;
+    // Generate deterministic minute offsets for demonstration (1-Hour SLA Demo)
+    let mockOffsetMinutes = 25;
     if (app.id.includes("8") || app.id.includes("3") || app.paymentStatus === "pending_challan") {
-      mockOffsetMinutes = 18; // > 15 mins breached
+      mockOffsetMinutes = 75; // > 60 mins breached (1 hr 15 min)
     } else if (app.id.includes("7") || app.id.includes("5")) {
-      mockOffsetMinutes = 16; // > 15 mins breached
+      mockOffsetMinutes = 65; // > 60 mins breached (1 hr 5 min)
     } else if (app.id.includes("2")) {
-      mockOffsetMinutes = 12; // warning
+      mockOffsetMinutes = 48; // warning (45-59 mins)
     }
 
     const slaAnalysis = analyzeApplicationSla(app, mockOffsetMinutes);
@@ -95,14 +95,14 @@ export default function AiBottleneckMonitor({
             <div>
               <div className="flex items-center gap-2 flex-wrap">
                 <h3 className="text-base sm:text-lg font-black text-white">
-                  AI ૧૫-મિનિટ બોટલનેક મોનિટર & ઓટો-એસ્કેલેશન બોટ
+                  AI ૧-કલાક બોટલનેક મોનિટર & ઓટો-એસ્કેલેશન બોટ
                 </h3>
                 <span className="text-[10px] bg-rose-500 text-white font-black px-2.5 py-0.5 rounded-full flex items-center gap-1 shadow-xs animate-pulse">
-                  <span className="w-1.5 h-1.5 rounded-full bg-white" /> લાઈવ ૧૫-મિનિટ ટ્રેકર
+                  <span className="w-1.5 h-1.5 rounded-full bg-white" /> લાઈવ ૧-કલાક SLA ટ્રેકર
                 </span>
               </div>
               <p className="text-xs text-indigo-200/90 mt-1 max-w-2xl leading-relaxed">
-                ગુજરાત સરકાર ઈ-ગવર્નન્સ નિયમ: કોઈ પણ નાગરિક અરજી આવ્યાના ૧૫ મિનિટમાં અધિકારી સ્તરે કાર્યવાહી
+                ગુજરાત સરકાર ઈ-ગવર્નન્સ નિયમ: કોઈ પણ નાગરિક અરજી આવ્યાના ૧ કલાક (૬૦ મિનિટ) માં અધિકારી સ્તરે કાર્યવાહી
                 ન થાય તો AI બોટ આપમેળે કારણ શોધી ઉપરી કચેરી (મામલતદાર/કલેક્ટર) ને તાકીદ કરે છે.
               </p>
             </div>
@@ -134,7 +134,7 @@ export default function AiBottleneckMonitor({
             }`}
           >
             <span className="text-[11px] text-rose-300 block font-bold flex items-center gap-1">
-              <AlertTriangle size={12} className="text-rose-400" /> ૧૫+ મિ. અટવાયેલી (SLA બ્રીચ)
+              <AlertTriangle size={12} className="text-rose-400" /> ૧ કલાક+ અટવાયેલી (SLA બ્રીચ)
             </span>
             <span className="text-xl font-black text-rose-400">{breachedCount}</span>
           </div>
@@ -148,14 +148,14 @@ export default function AiBottleneckMonitor({
             }`}
           >
             <span className="text-[11px] text-amber-300 block font-bold flex items-center gap-1">
-              <Clock size={12} className="text-amber-400" /> ચેતવણી ઝોન (૧૦-૧૪ મિ.)
+              <Clock size={12} className="text-amber-400" /> ચેતવણી ઝોન (૪૫-૫૯ મિ.)
             </span>
             <span className="text-xl font-black text-amber-400">{warningCount}</span>
           </div>
 
           <div className="bg-slate-900/80 border border-slate-800 p-3 rounded-2xl">
             <span className="text-[11px] text-emerald-300 block font-medium flex items-center gap-1">
-              <CheckCircle2 size={12} className="text-emerald-400" /> નિયત સમયમાં (૧૫ મિ. અંદર)
+              <CheckCircle2 size={12} className="text-emerald-400" /> નિયત સમયમાં (૧ કલાક અંદર)
             </span>
             <span className="text-xl font-black text-emerald-400">
               {Math.max(0, activeApps.length - breachedCount - warningCount)}
@@ -176,7 +176,7 @@ export default function AiBottleneckMonitor({
           }`}
         >
           <AlertTriangle size={13} />
-          <span>૧૫+ મિનિટથી અટવાયેલી ({breachedCount})</span>
+          <span>૧ કલાક+ અટવાયેલી ({breachedCount})</span>
         </button>
 
         <button
@@ -189,7 +189,7 @@ export default function AiBottleneckMonitor({
           }`}
         >
           <Clock size={13} />
-          <span>૧૦-૧૪ મિનિટ ચેતવણી ({warningCount})</span>
+          <span>૪૫-૫૯ મિનિટ ચેતવણી ({warningCount})</span>
         </button>
 
         <button
@@ -211,9 +211,9 @@ export default function AiBottleneckMonitor({
           <div className="w-12 h-12 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center text-2xl mx-auto mb-3">
             🎉
           </div>
-          <h4 className="font-black text-slate-900 text-base">કોઈ અરજી ૧૫ મિનિટથી વધુ અટવાયેલી નથી!</h4>
+          <h4 className="font-black text-slate-900 text-base">કોઈ અરજી ૧ કલાકથી વધુ અટવાયેલી નથી!</h4>
           <p className="text-xs text-slate-500 mt-1">
-            તમામ કચેરીઓ (તલાટી, નાયબ મામલતદાર, મામલતદાર) નિયત ૧૫-મિનિટ SLA મર્યાદામાં ઝડપથી કામ કરી રહી છે.
+            તમામ કચેરીઓ (તલાટી, નાયબ મામલતદાર, મામલતદાર) નિયત ૧-કલાક (૬૦ મિનિટ) SLA મર્યાદામાં ઝડપથી કામ કરી રહી છે.
           </p>
         </div>
       ) : (
@@ -253,7 +253,12 @@ export default function AiBottleneckMonitor({
                       }`}
                     >
                       <Clock size={13} className={sla.isBreached ? "text-rose-600 animate-spin" : ""} />
-                      <span>{sla.elapsedMinutes} મિનિટથી પેન્ડિંગ</span>
+                      <span>
+                        {sla.elapsedMinutes >= 60
+                          ? `${Math.floor(sla.elapsedMinutes / 60)} કલાક ${sla.elapsedMinutes % 60 ? `${sla.elapsedMinutes % 60} મિ.` : ""}`
+                          : `${sla.elapsedMinutes} મિનિટથી`}{" "}
+                        પેન્ડિંગ
+                      </span>
                       {sla.isBreached && <span className="text-[10px] text-rose-600 font-bold">(SLA બ્રીચ)</span>}
                     </span>
                   </div>

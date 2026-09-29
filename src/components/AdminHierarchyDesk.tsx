@@ -85,10 +85,11 @@ function formatCitizenNameGu(app: CitizenApplication): string {
 }
 
 function cleanVillageOnly(village?: string): string {
-  if (!village) return "ગોમતા";
+  if (!village) return "મોમટા";
   const v = village.replace(/\s*\([^)]*\)/g, "").trim();
   const villageMap: Record<string, string> = {
-    gomta: "ગોમતા",
+    momta: "મોમટા",
+    gomta: "મોમટા",
     movaiya: "મોવૈયા",
     biliyala: "બીલીયાળા",
     charakhadi: "ચરખડી",
@@ -221,32 +222,32 @@ function getOfficerJurisdictionInfo(officer: OfficerNode) {
   switch (officer.role) {
     case "talati":
       return {
-        badge: "ગોમતા ગ્રામ પંચાયત (માત્ર ગોમતા ગામ)",
-        description: "અધિકારક્ષેત્ર: માત્ર ગોમતા ગ્રામ પંચાયત",
+        badge: "મોમટા ગ્રામ પંચાયત (માત્ર મોમટા ગામ)",
+        description: "માત્ર મોમટા ગ્રામ પંચાયત",
         icon: "📋",
       };
     case "mamlatdar":
       return {
         badge: "ગોંડલ તાલુકો (તમામ ગામડાં & શહેર)",
-        description: "અધિકારક્ષેત્ર: ગોંડલ તાલુકો",
+        description: "ગોંડલ તાલુકો",
         icon: "🖋️",
       };
     case "sdm_prant":
       return {
         badge: "ગોંડલ સબ-ડિવિઝન (ગોંડલ, કોટડા સાંગાણી, લોધિકા)",
-        description: "અધિકારક્ષેત્ર: ગોંડલ પ્રાંતના ૩ તાલુકા",
+        description: "ગોંડલ પ્રાંતના ૩ તાલુકા",
         icon: "⚖️",
       };
     case "district_collector":
       return {
         badge: "રાજકોટ જિલ્લો (૧૧ તાલુકા)",
-        description: "અધિકારક્ષેત્ર: સમગ્ર રાજકોટ જિલ્લો",
+        description: "સમગ્ર રાજકોટ જિલ્લો",
         icon: "🏢",
       };
     default:
       return {
         badge: "સમગ્ર ગુજરાત રાજ્ય (૩૩ જિલ્લા)",
-        description: "અધિકારક્ષેત્ર: સમગ્ર ગુજરાત",
+        description: "સમગ્ર ગુજરાત",
         icon: "🏛️",
       };
   }
@@ -370,7 +371,7 @@ export default function AdminHierarchyDesk({
   });
   const [selectedVillage, setSelectedVillage] = useState<string>(() => {
     if (currentOfficer.role === "talati") {
-      return "ગોમતા (Gomta)";
+      return "મોમટા (Momta)";
     }
     return "all";
   });
@@ -405,7 +406,7 @@ export default function AdminHierarchyDesk({
   // Dynamic real villages for the selected taluka
   const availableVillages = useMemo(() => {
     if (currentOfficer.role === "talati") {
-      return ["ગોમતા (Gomta)"];
+      return ["મોમટા (Momta)"];
     }
     const effectiveT = (currentOfficer.role === "mamlatdar") ? "Gondal" : selectedTaluka;
     if (effectiveT === "all") {
@@ -469,7 +470,7 @@ export default function AdminHierarchyDesk({
       } else if (currentOfficer.role === "talati") {
         qDistrict = "Rajkot";
         qTaluka = "Gondal";
-        qVillage = "Gomta";
+        qVillage = "Momta";
       }
 
       if (qDistrict !== "all") params.append("district", qDistrict);
@@ -555,7 +556,7 @@ export default function AdminHierarchyDesk({
     } else if (target.role === "talati") {
       setSelectedDistrict(target.district || "Rajkot");
       setSelectedTaluka(target.taluka || "Gondal");
-      setSelectedVillage("ગોમતા (Gomta)");
+      setSelectedVillage("મોમટા (Momta)");
     }
 
     sessionStorage.setItem("nagrik_officer_session", JSON.stringify(target));
@@ -739,9 +740,9 @@ export default function AdminHierarchyDesk({
 
       // ── STRICT OFFICER JURISDICTION ENFORCEMENT ──
       if (currentOfficer.role === "talati") {
-        // Talati only sees Gomta village applications
-        const isGomta = appVillage.includes("gomta") || appVillage.includes("ગોમતા");
-        if (!isGomta) return false;
+        // Talati only sees Momta village applications
+        const isMomta = appVillage.includes("momta") || appVillage.includes("મોમટા") || appVillage.includes("gomta") || appVillage.includes("ગોમતા");
+        if (!isMomta) return false;
       } else if (currentOfficer.role === "mamlatdar") {
         // Mamlatdar only sees Gondal taluka applications
         if (appTaluka !== "gondal") return false;
@@ -851,9 +852,6 @@ export default function AdminHierarchyDesk({
               <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mt-1.5">
                 <span className="text-[9.5px] sm:text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
                   {getOfficerJurisdictionInfo(currentOfficer).icon} અધિકારક્ષેત્ર: {getOfficerJurisdictionInfo(currentOfficer).badge}
-                </span>
-                <span className="text-[9.5px] sm:text-[10px] text-amber-200/90 font-medium hidden sm:inline">
-                  &bull; {getOfficerJurisdictionInfo(currentOfficer).description}
                 </span>
               </div>
             </div>
@@ -1042,9 +1040,6 @@ export default function AdminHierarchyDesk({
                 <span className="text-[11px] bg-amber-100 text-amber-950 border border-amber-300 font-black px-2.5 py-0.5 rounded-md inline-flex items-center gap-1 shadow-2xs">
                   {getOfficerJurisdictionInfo(currentOfficer).icon} {getOfficerJurisdictionInfo(currentOfficer).badge}
                 </span>
-                <span className="text-[10.5px] text-slate-500 hidden sm:inline">
-                  ({getOfficerJurisdictionInfo(currentOfficer).description})
-                </span>
               </div>
               <div className="text-[11px] text-slate-600 font-medium">
                 અધિકારક્ષેત્ર હેઠળ અરજીઓ: <strong className="text-slate-900 font-mono font-black text-xs bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{filteredApplications.length}</strong>
@@ -1165,7 +1160,7 @@ export default function AdminHierarchyDesk({
                   <Search size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="દા.ત. APP001, ગોમતા..."
+                    placeholder="દા.ત. APP001, મોમટા..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 text-slate-900 font-bold focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs"
@@ -1174,7 +1169,7 @@ export default function AdminHierarchyDesk({
               </div>
             </div>
 
-            {/* Quick 15-Minute SLA Toggle Pill */}
+            {/* Quick 1-Hour SLA Toggle Pill */}
             <div className="flex items-center justify-between pt-1.5 border-t border-slate-100 flex-wrap gap-2 text-xs">
               <button
                 type="button"
@@ -1186,7 +1181,7 @@ export default function AdminHierarchyDesk({
                 }`}
               >
                 <AlertTriangle size={12} className={slaFilterOnly ? "text-white" : "text-rose-500"} />
-                <span>🚨 ૧૫+ મિ. અટવાયેલી (SLA Breached Only)</span>
+                <span>🚨 ૧ કલાક+ અટવાયેલી (SLA Breached Only)</span>
               </button>
 
               <span className="text-[11px] text-slate-500">
@@ -1309,7 +1304,10 @@ export default function AdminHierarchyDesk({
                                 }`}
                               >
                                 <Clock size={11} />
-                                {sla.elapsedMinutes} મિ. પેન્ડિંગ
+                                {sla.elapsedMinutes >= 60
+                                  ? `${Math.floor(sla.elapsedMinutes / 60)} કલાક ${sla.elapsedMinutes % 60 ? `${sla.elapsedMinutes % 60} મિ.` : ""}`
+                                  : `${sla.elapsedMinutes} મિ.`}{" "}
+                                પેન્ડિંગ
                               </span>
                               <span className="text-[10.5px] text-slate-600 block leading-snug whitespace-normal break-words">
                                 {sla.currentDeskGu}
@@ -1726,7 +1724,11 @@ export default function AdminHierarchyDesk({
                     <Clock size={16} className={modalSla.isBreached ? "text-rose-600" : "text-amber-600"} />
                     <div>
                       <span className="font-black">
-                        ૧૫-મિનિટ SLA સમયગાળો: {modalSla.elapsedMinutes} મિનિટ પેન્ડિંગ
+                        ૧-કલાક SLA સમયગાળો:{" "}
+                        {modalSla.elapsedMinutes >= 60
+                          ? `${Math.floor(modalSla.elapsedMinutes / 60)} કલાક ${modalSla.elapsedMinutes % 60 ? `${modalSla.elapsedMinutes % 60} મિ.` : ""}`
+                          : `${modalSla.elapsedMinutes} મિનિટ`}{" "}
+                        પેન્ડિંગ
                       </span>
                       <p className="text-[11px] text-slate-600 mt-0.5">{modalSla.stuckReasonGu}</p>
                     </div>
