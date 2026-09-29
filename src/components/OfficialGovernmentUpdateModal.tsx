@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   APP_VERSION,
   APP_BUILD_NAME,
@@ -21,48 +21,104 @@ export default function OfficialGovernmentUpdateModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [updateSuccess, setUpdateSuccess] = useState(false);
+  const [serverBuildHash, setServerBuildHash] = useState<string>("");
+  const [serverVersion, setServerVersion] = useState<string>(APP_VERSION);
   const { currentLang } = useLanguage();
 
   const isEn = currentLang === "en";
   const isHi = currentLang === "hi";
 
-  useEffect(() => {
-    // 1. Mandatory Check: If user has not updated to latest APP_VERSION, enforce popup
-    if (typeof window !== "undefined") {
-      const lastVersion = localStorage.getItem("nagrik_app_version");
-      if (!lastVersion || lastVersion !== APP_VERSION) {
-        // Appears promptly right as page mounts (700ms)
-        const timer = setTimeout(() => {
-          setIsOpen(true);
-        }, 700);
-        return () => clearTimeout(timer);
-      }
+  const checkLiveVersion = useCallback(async () => {
+    if (typeof window === "undefined") return;
+
+    // 1. Immediate static APP_VERSION check
+    const savedVersion = localStorage.getItem("nagrik_app_version");
+    if (!savedVersion || savedVersion !== APP_VERSION) {
+      setIsOpen(true);
     }
 
-    // 2. Global event listener for manual trigger (from HealthBar or Footer)
+    // 2. Live server / codebase buildHash check (triggers whenever ANY file in src/ is updated!)
+    try {
+      const res = await fetch(`/api/version?t=${Date.now()}`, {
+        cache: "no-store",
+      });
+      if (!res.ok) return;
+      const data = await res.json();
+      if (data?.version) setServerVersion(data.version);
+      if (data?.buildHash) {
+        setServerBuildHash(data.buildHash);
+        const savedHash = localStorage.getItem("nagrik_app_build_hash");
+        if (!savedHash || savedHash !== data.buildHash) {
+          setIsOpen(true);
+        }
+      }
+    } catch {
+      // Ignore transient network errors
+    }
+  }, []);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      checkLiveVersion();
+    }, 400);
+
+    // Poll every 5 seconds so live code updates or deployments immediately pop up the modal
+    const pollInterval = setInterval(checkLiveVersion, 5000);
+
     const handleManualCheck = () => {
       setIsOpen(true);
     };
 
-    window.addEventListener("nagrik_check_update", handleManualCheck);
-    return () => {
-      window.removeEventListener("nagrik_check_update", handleManualCheck);
+    const handleFocus = () => {
+      checkLiveVersion();
     };
-  }, []);
+
+    window.addEventListener("nagrik_check_update", handleManualCheck);
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      clearTimeout(timer);
+      clearInterval(pollInterval);
+      window.removeEventListener("nagrik_check_update", handleManualCheck);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [checkLiveVersion, APP_VERSION]);
 
   const handleApplyUpdate = async () => {
     triggerHaptic("heavy");
     setIsUpdating(true);
 
     try {
-      // Clear legacy PWA caches
+      // Fetch the freshest buildHash right at the moment of update
+      let latestHash = serverBuildHash;
+      let latestVer = serverVersion || APP_VERSION;
+      try {
+        const res = await fetch(`/api/version?t=${Date.now()}`, {
+          cache: "no-store",
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data?.buildHash) latestHash = data.buildHash;
+          if (data?.version) latestVer = data.version;
+        }
+      } catch {
+        // Fallback to state
+      }
+
+      // Clear legacy PWA caches & force Service Worker script update
       if (typeof window !== "undefined" && "caches" in window) {
         const cacheNames = await caches.keys();
         await Promise.all(cacheNames.map((name) => caches.delete(name)));
       }
+      if (typeof window !== "undefined" && "serviceWorker" in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.update().catch(() => {})));
+      }
 
-      // Record latest version to unlock the app
-      localStorage.setItem("nagrik_app_version", APP_VERSION);
+      // Record latest version & buildHash to unlock the app
+      localStorage.setItem("nagrik_app_version", latestVer);
+      if (latestHash) {
+        localStorage.setItem("nagrik_app_build_hash", latestHash);
+      }
       localStorage.setItem("nagrik_app_updated_at", new Date().toISOString());
 
       setUpdateSuccess(true);
@@ -72,9 +128,12 @@ export default function OfficialGovernmentUpdateModal() {
         setIsOpen(false);
         // Clean reload to ensure latest JS chunks & manifests are loaded
         window.location.reload();
-      }, 900);
+      }, 800);
     } catch {
       localStorage.setItem("nagrik_app_version", APP_VERSION);
+      if (serverBuildHash) {
+        localStorage.setItem("nagrik_app_build_hash", serverBuildHash);
+      }
       setIsUpdating(false);
       setIsOpen(false);
       window.location.reload();
@@ -134,7 +193,7 @@ export default function OfficialGovernmentUpdateModal() {
                   {t.badge}
                 </span>
                 <span className="text-xs font-mono font-bold text-orange-100">
-                  {APP_VERSION}
+                  {serverVersion}
                 </span>
               </div>
               <h2 className="text-sm sm:text-base font-extrabold tracking-tight text-white mt-0.5 leading-snug">

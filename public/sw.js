@@ -1,15 +1,16 @@
 // NagrikSeva AI Service Worker (Enables 1-Click Native PWA Install on Chrome/Android/Desktop)
-const CACHE_NAME = 'nagrikseva-v2.4.1';
+const CACHE_NAME = 'nagrikseva-v2.5.1';
 const STATIC_ASSETS = [
   '/manifest.json',
   '/icon.svg',
-  '/favicon.ico',
+  '/icon-192.png',
+  '/icon-512.png',
 ];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(STATIC_ASSETS);
+      return cache.addAll(STATIC_ASSETS).catch(() => {});
     }).then(() => self.skipWaiting())
   );
 });
@@ -27,37 +28,52 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
 
-  const url = new URL(event.request.url);
-  // Never intercept Next.js HMR/chunks or API routes
+  let url;
+  try {
+    url = new URL(event.request.url);
+  } catch {
+    return;
+  }
+
+  // 1. NEVER intercept cross-origin requests (e.g. translate.google.com, fonts, external APIs)
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // 2. Never intercept Next.js HMR/chunks or API routes
   if (url.pathname.startsWith('/_next/') || url.pathname.startsWith('/api/')) {
     return;
   }
 
-  // On localhost, always use network-first so live code edits appear immediately
-  // while still satisfying Chrome's fetch-handler requirement for 1-Click PWA Install
+  // 3. On localhost, pass straight through to network and guarantee a valid Response fallback
   if (url.hostname === 'localhost' || url.hostname === '127.0.0.1') {
     event.respondWith(
-      fetch(event.request).catch(() => caches.match(event.request))
+      fetch(event.request).catch(async () => {
+        const cached = await caches.match(event.request);
+        return cached || new Response('', { status: 204 });
+      })
     );
     return;
   }
 
+  // 4. Production same-origin static assets with guaranteed Response fallback
   event.respondWith(
     fetch(event.request)
       .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200 && event.request.url.startsWith('http')) {
+        if (networkResponse && networkResponse.status === 200) {
           const clone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone)).catch(() => {});
         }
         return networkResponse;
       })
-      .catch(() => {
-        return caches.match(event.request).then((cachedResponse) => {
-          if (cachedResponse) return cachedResponse;
-          if (event.request.mode === 'navigate') {
-            return caches.match('/');
-          }
-        });
+      .catch(async () => {
+        const cachedResponse = await caches.match(event.request);
+        if (cachedResponse) return cachedResponse;
+        if (event.request.mode === 'navigate') {
+          const rootMatch = await caches.match('/');
+          if (rootMatch) return rootMatch;
+        }
+        return new Response('', { status: 204 });
       })
   );
 });

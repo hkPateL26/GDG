@@ -1,7 +1,7 @@
-export const APP_VERSION = "v2.4.1";
-export const APP_BUILD_NAME = "National DPI Certified Security Release";
-export const APP_RELEASE_DATE = "૨૯ સપ્ટેમ્બર ૨૦૨૬";
-export const APP_RELEASE_DATE_EN = "29 September 2026";
+export const APP_VERSION = "v2.5.2";
+export const APP_BUILD_NAME = "National DPI Certified Super-App Release";
+export const APP_RELEASE_DATE = "૩૦ સપ્ટેમ્બર ૨૦૨૬";
+export const APP_RELEASE_DATE_EN = "30 September 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
 
 export interface LeadDeveloper {
@@ -43,8 +43,8 @@ export const APP_CHANGELOG = [
     descGu: "નાગરિક દસ્તાવેજોની ચકાસણી અને ૧૦૦% સરકારી માન્યતા પ્રાપ્ત ડિજિટલ રસીદ.",
   },
   {
-    titleGu: "યુનિવર્સલ મોબાઇલ રિસ્પોન્સિવનેસ (iOS & Android)",
-    titleEn: "Native Mobile UI & Universal Device Responsiveness",
-    descGu: "કોઈપણ સ્માર્ટફોનમાં સિંગલ-લાઇન સુસંગતતા, બ્રાન્ડેડ સ્પ્લેશ સ્ક્રીન અને 1-ક્લિક ઇન્સ્ટોલેશન.",
+    titleGu: "Play Store Super-App UI & ડાયનેમિક પ્રોફાઇલ",
+    titleEn: "Play Store Super-App UI & Dynamic Citizen Greeting",
+    descGu: "લૉગિન થયેલ નાગરિકના નામ સાથે ડાયનેમિક ગ્રીટિંગ કાર્ડ, Material 3 બોટમ નેવિગેશન અને ટચ વાઇબ્રેશન.",
   },
 ];
