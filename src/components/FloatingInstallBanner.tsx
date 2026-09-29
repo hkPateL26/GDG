@@ -41,7 +41,7 @@ export default function FloatingInstallBanner() {
       {showBanner && (
         <div
           data-pwa-install="true"
-          className="pwa-install-element print:hidden no-print print-hide fixed bottom-4 left-4 right-4 z-40 sm:max-w-md sm:left-auto sm:right-6 animate-in slide-in-from-bottom duration-300"
+          className="pwa-install-element print:hidden no-print print-hide fixed bottom-20 xl:bottom-4 left-4 right-4 z-40 sm:max-w-md sm:left-auto sm:right-6 animate-in slide-in-from-bottom duration-300"
         >
           <div className="bg-gray-900 text-white p-3.5 rounded-2xl shadow-2xl border border-orange-500/40 flex items-center justify-between gap-3">
             <div className="flex items-center gap-2.5 min-w-0">

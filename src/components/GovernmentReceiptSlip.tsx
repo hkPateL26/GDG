@@ -1,7 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, Download, Clock } from "lucide-react";
+import { CheckCircle2, Download, Clock, X, Printer } from "lucide-react";
 
 interface GovernmentReceiptSlipProps {
   app: CitizenApplication;
@@ -12,7 +13,7 @@ interface GovernmentReceiptSlipProps {
 export default function GovernmentReceiptSlip({
   app,
   onClose,
-  isModalPreview = false,
+  isModalPreview = true,
 }: GovernmentReceiptSlipProps) {
   const isChallanPending = app.paymentStatus === "pending_challan";
   const receiptNo = isChallanPending
@@ -20,6 +21,20 @@ export default function GovernmentReceiptSlip({
     : `GJ-DPI-2026-${app.id}`;
   const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
   const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}`;
+
+  // Automatically treat as modal if onClose is provided or isModalPreview is true
+  const showModalControls = isModalPreview || Boolean(onClose);
+
+  // Keyboard Escape Key to close modal instantly
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onClose) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   // Payment Mode Label in Gujarati
   const getPaymentModeLabel = () => {
@@ -143,64 +158,90 @@ export default function GovernmentReceiptSlip({
 
   return (
     <div
-      className={`bg-white text-slate-900 font-sans print-only-certificate ${
-        isModalPreview
-          ? "w-full max-w-3xl mx-auto p-3 sm:p-6 rounded-2xl shadow-2xl border border-slate-300 relative max-h-[94vh] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print:m-0 print:w-full print:max-w-none"
+      className={`bg-white text-slate-900 font-sans print-only-certificate relative ${
+        showModalControls
+          ? "w-full max-w-4xl mx-auto p-2.5 sm:p-5 rounded-3xl shadow-2xl border border-slate-300 relative max-h-[92vh] overflow-y-auto print:max-h-none print:overflow-visible print:border-none print:shadow-none print:p-0 print:m-0 print:w-full print:max-w-none"
           : ""
       }`}
     >
-      {/* On-screen modal action bar (hidden in print) */}
-      {isModalPreview && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pb-3.5 mb-3.5 border-b border-slate-200 print:hidden sticky top-0 bg-white/95 backdrop-blur-sm z-10 gap-2">
-          <div className="flex items-center gap-2">
+      {/* ── Fixed Floating Close Button (Always visible on mobile & desktop) ── */}
+      {showModalControls && onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 flex items-center justify-center transition cursor-pointer active:scale-90 print:hidden"
+          title="બંધ કરો (Esc)"
+          aria-label="બંધ કરો"
+        >
+          <X size={22} className="stroke-[2.5]" />
+        </button>
+      )}
+
+      {/* ── On-screen Modal Action Bar (Sticky, High-Visibility, Mobile-Responsive) ── */}
+      {showModalControls && (
+        <div className="sticky top-0 z-30 bg-slate-950 text-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-800 mb-3 sm:mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
+          <div className="flex items-center gap-2.5 min-w-0 pr-10 sm:pr-0">
             <span
-              className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 ${
+              className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${
                 isChallanPending
-                  ? "bg-amber-100 text-amber-800 border border-amber-300"
-                  : "bg-orange-100 text-orange-700"
+                  ? "bg-amber-400/20 text-amber-300 border border-amber-400/30"
+                  : "bg-emerald-400/20 text-emerald-300 border border-emerald-400/30"
               }`}
             >
-              <span>{isChallanPending ? "🏛️" : "📜"}</span>
-              <span>
+              {isChallanPending ? "🏛️" : "📜"}
+            </span>
+            <div className="min-w-0">
+              <h3 className="font-black text-xs sm:text-sm text-white truncate">
                 {isChallanPending
                   ? "સત્તાવાર ઓફલાઇન રોકડ ચલણ (Official Cash Challan)"
-                  : "સત્તાવાર સરકારી પહોંચ (Official e-Challan Slip)"}
-              </span>
-            </span>
+                  : "સત્તાવાર સરકારી પહોંચ / પાવતી (e-Challan Slip)"}
+              </h3>
+              <p className="text-[11px] text-slate-400 truncate">
+                અરજી ક્રમાંક: <strong className="font-mono text-amber-300">{app.id}</strong> &bull; {app.citizenNameGu || app.citizenName}
+              </p>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
+
+          <div className="flex items-center gap-2 shrink-0">
             <button
+              type="button"
               onClick={handlePrintDocument}
-              className={`flex-1 sm:flex-initial px-4 py-2 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap active:scale-95 ${
+              className={`flex-1 sm:flex-initial px-4 py-2 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition flex items-center justify-center gap-2 whitespace-nowrap active:scale-95 cursor-pointer ${
                 isChallanPending
-                  ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700"
-                  : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700"
+                  ? "bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500"
+                  : "bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500"
               }`}
             >
-              <Download size={15} />
+              <Download size={16} />
               <span>
                 {isChallanPending
-                  ? "📥 રોકડ ચલણ ડાઉનલોડ / પ્રિન્ટ (Save Challan PDF)"
-                  : "📥 PDF ડાઉનલોડ / પ્રિન્ટ કરો (Save as PDF)"}
+                  ? "રોકડ ચલણ ડાઉનલોડ (PDF)"
+                  : "PDF ડાઉનલોડ / પ્રિન્ટ"}
               </span>
             </button>
+
             {onClose && (
               <button
+                type="button"
                 onClick={onClose}
-                className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold transition shrink-0"
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-1.5 shadow-md shrink-0 cursor-pointer"
+                title="બંધ કરો (Esc)"
               >
-                બંધ કરો
+                <X size={16} className="stroke-[2.5]" />
+                <span>બંધ કરો</span>
               </button>
             )}
           </div>
         </div>
       )}
 
-      {/* Main A4 Document Outer Border - Fills Full Page Gracefully */}
-      <div
-        id="official-receipt-print-area"
-        className="border-2 border-slate-900 p-3.5 sm:p-5 bg-white relative box-border flex flex-col justify-between h-full min-h-0 text-slate-900 overflow-hidden"
-      >
+      {/* ── Document Responsive Outer Scroll Wrapper ── */}
+      <div className="w-full overflow-x-auto no-scrollbar scrollbar-thin">
+        {/* Main A4 Document Outer Border - Fills Full Page Gracefully */}
+        <div
+          id="official-receipt-print-area"
+          className="min-w-[620px] sm:min-w-0 border-2 border-slate-900 p-3.5 sm:p-5 bg-white relative box-border flex flex-col justify-between h-full min-h-0 text-slate-900 overflow-hidden"
+        >
         {/* Subtle Security Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none overflow-hidden">
           <p className="text-5xl sm:text-6xl font-black text-slate-900 -rotate-45 text-center leading-tight">
@@ -647,5 +688,6 @@ export default function GovernmentReceiptSlip({
         </div>
       </div>
     </div>
+  </div>
   );
 }

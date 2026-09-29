@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import ScrollRestoration from "@/components/ScrollRestoration";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";
@@ -37,11 +38,12 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="gu" className={inter.className} suppressHydrationWarning>
-      <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
+      <body className="min-h-screen bg-gray-50 antialiased pb-16 xl:pb-0" suppressHydrationWarning>
         <LanguageProvider>
           <ScrollRestoration />
           <ServiceWorkerRegister />
           {children}
+          <MobileBottomNav />
           <FloatingInstallBanner />
           <GoogleTranslateScript />
         </LanguageProvider>

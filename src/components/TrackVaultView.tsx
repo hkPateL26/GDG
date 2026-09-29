@@ -1390,7 +1390,12 @@ export default function TrackVaultView({
 
       {/* ── Official Receipt Slip Modal (PDF Download / Print) ── */}
       {showPrintModal && selectedApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowPrintModal(false);
+          }}
+        >
           <GovernmentReceiptSlip
             app={selectedApp}
             isModalPreview={true}
@@ -1401,7 +1406,12 @@ export default function TrackVaultView({
 
       {/* ── Official Government Certificate Modal (PDF Download / Print) ── */}
       {showCertificateModal && selectedApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowCertificateModal(false);
+          }}
+        >
           <OfficialGovernmentCertificate
             app={selectedApp}
             isModalPreview={true}

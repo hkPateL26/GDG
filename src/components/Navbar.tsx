@@ -296,24 +296,7 @@ export default function Navbar() {
 
         {/* ── Mobile & Tablet Dropdown ── */}
         {isOpen && (
-          <div className="xl:hidden border-t border-gray-100 py-2 space-y-1 max-h-[80vh] overflow-y-auto">
-            {/* 🌐 Indian Languages Selector in Drawer */}
-            <LanguageSelector variant="drawer" />
-
-            {/* Quick Install Banner in Drawer */}
-            {!isInstalled && (
-              <button
-                data-pwa-install="true"
-                onClick={() => {
-                  setIsOpen(false);
-                  setShowInstallModal(true);
-                }}
-                className="pwa-install-element w-full flex items-center justify-center gap-2 p-2.5 rounded-xl text-xs font-black text-white bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 whitespace-nowrap transition shadow-sm mb-1.5 cursor-pointer"
-              >
-                <Smartphone size={16} />
-                <span suppressHydrationWarning>📲 {t.nav.installApp} (૧-ક્લિક)</span>
-              </button>
-            )}
+          <div className="xl:hidden border-t border-gray-100 py-2.5 space-y-1.5 max-h-[80vh] overflow-y-auto">
 
             {/* 🔐 Unified Session / Login Cards in Mobile Drawer */}
             {officerSession ? (

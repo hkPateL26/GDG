@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
 import { Printer, X, ShieldCheck, Award, CreditCard, FileText } from "lucide-react";
 
@@ -115,6 +115,17 @@ export default function OfficialGovernmentCertificate({
   // Mode: "letter" = Full Authentic e-Aadhaar Letter + Bottom Cutout Card (Exact replica of user reference)
   //       "pvc"    = Front & Back PVC wallet card with real UIDAI Guilloche colors
   const [viewMode, setViewMode] = useState<"letter" | "pvc">("letter");
+
+  // Keyboard Escape Key to close modal instantly
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && onClose) {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [onClose]);
 
   const origin =
     typeof window !== "undefined"
@@ -817,6 +828,19 @@ export default function OfficialGovernmentCertificate({
         }
       `}</style>
 
+      {/* ── Fixed Floating Close Button (Always visible on mobile & desktop) ── */}
+      {isModalPreview && onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 flex items-center justify-center transition cursor-pointer active:scale-90 cert-no-print"
+          title="બંધ કરો (Esc)"
+          aria-label="બંધ કરો"
+        >
+          <X size={22} className="stroke-[2.5]" />
+        </button>
+      )}
+
       {/* ── Top Bar with Actions ── */}
       <div className="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-3 border-b border-slate-800 cert-no-print">
         <div className="flex items-center gap-2">
@@ -932,9 +956,11 @@ export default function OfficialGovernmentCertificate({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 hover:bg-slate-800 text-slate-400 hover:text-white rounded-xl transition cursor-pointer ml-auto"
+              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer ml-auto shrink-0"
+              title="બંધ કરો (Esc)"
             >
-              <X size={16} />
+              <X size={16} className="stroke-[2.5]" />
+              <span>બંધ કરો</span>
             </button>
           )}
         </div>

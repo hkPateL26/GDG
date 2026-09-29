@@ -2037,9 +2037,15 @@ export default function AdminHierarchyDesk({
           OFFICIAL CERTIFICATE MODAL PREVIEW
           ══════════════════════════════════════════════════════════════ */}
       {certificateModalApp && (
-        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCertificateModalApp(null);
+          }}
+        >
           <OfficialGovernmentCertificate
             app={certificateModalApp}
+            isModalPreview={true}
             onClose={() => setCertificateModalApp(null)}
           />
         </div>
@@ -2049,9 +2055,15 @@ export default function AdminHierarchyDesk({
           OFFICIAL RECEIPT SLIP MODAL PREVIEW
           ══════════════════════════════════════════════════════════════ */}
       {receiptModalApp && (
-        <div className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setReceiptModalApp(null);
+          }}
+        >
           <GovernmentReceiptSlip
             app={receiptModalApp}
+            isModalPreview={true}
             onClose={() => setReceiptModalApp(null)}
           />
         </div>

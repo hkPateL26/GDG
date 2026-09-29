@@ -1328,7 +1328,12 @@ export default function DocumentServicePortal({
 
       {/* ── Official A4 Government Receipt Slip Modal (PDF Download / Print) ── */}
       {showSlipModal && submittedApp && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowSlipModal(false);
+          }}
+        >
           <GovernmentReceiptSlip
             app={submittedApp}
             isModalPreview={true}
