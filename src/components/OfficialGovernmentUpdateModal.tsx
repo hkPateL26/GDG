@@ -31,10 +31,10 @@ export default function OfficialGovernmentUpdateModal() {
     if (typeof window !== "undefined") {
       const lastVersion = localStorage.getItem("nagrik_app_version");
       if (!lastVersion || lastVersion !== APP_VERSION) {
-        // Appears smoothly right after splash screen finishes (1.5s)
+        // Appears promptly right as page mounts (700ms)
         const timer = setTimeout(() => {
           setIsOpen(true);
-        }, 1500);
+        }, 700);
         return () => clearTimeout(timer);
       }
     }

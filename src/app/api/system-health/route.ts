@@ -3,6 +3,7 @@ import os from "os";
 import { db } from "@/lib/firebase";
 import { collection, getDocs, limit, query } from "firebase/firestore";
 import { SCHEMES_DATA } from "@/lib/schemes-data";
+import { APP_VERSION } from "@/lib/app-version";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +57,7 @@ export async function GET() {
   return NextResponse.json(
     {
       success: true,
+      version: APP_VERSION,
       db: {
         name: dbName,
         status: dbStatus,

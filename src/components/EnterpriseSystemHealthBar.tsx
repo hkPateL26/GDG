@@ -77,6 +77,12 @@ export default function EnterpriseSystemHealthBar() {
         const json = await res.json();
         if (json.success) {
           setData(json);
+          if (json.version && typeof window !== "undefined") {
+            const stored = localStorage.getItem("nagrik_app_version");
+            if (!stored || stored !== json.version) {
+              window.dispatchEvent(new CustomEvent("nagrik_check_update"));
+            }
+          }
         }
       }
     } catch {
@@ -98,6 +104,12 @@ export default function EnterpriseSystemHealthBar() {
           const json = await res.json();
           if (json.success) {
             setData(json);
+            if (json.version && typeof window !== "undefined") {
+              const stored = localStorage.getItem("nagrik_app_version");
+              if (!stored || stored !== json.version) {
+                window.dispatchEvent(new CustomEvent("nagrik_check_update"));
+              }
+            }
           }
         }
       } catch {
