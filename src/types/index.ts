@@ -51,6 +51,32 @@ export interface Message {
   role: "user" | "model";
   text: string;
   timestamp?: Date;
+  applicationCard?: {
+    id: string;
+    citizenName: string;
+    schemeName: string;
+    schemeNameGu: string;
+    schemeEmoji: string;
+    status: string;
+    statusLabelGu: string;
+    workflowStage: number;
+    totalStages: number;
+    currentDeskGu: string;
+    elapsedMinutes: number;
+    isBreached: boolean;
+    actCitation: string;
+    village: string;
+    taluka: string;
+    district: string;
+    paymentStatus?: string;
+    submissionDate?: string;
+  };
+  actionButtons?: {
+    label: string;
+    href: string;
+    variant?: "primary" | "secondary" | "success";
+    icon?: string;
+  }[];
 }
 
 export interface ChatHistory {
