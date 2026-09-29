@@ -51,8 +51,17 @@ export async function POST(req: NextRequest) {
             ? localResolved.villageGu
             : village;
 
-        const taluka = localResolved.taluka || "Gondal";
-        const talukaGu = localResolved.talukaGu || "ગોંડલ";
+        let taluka = localResolved.taluka || "Gondal";
+        let talukaGu = localResolved.talukaGu || "ગોંડલ";
+        if (
+          villageGu === "ગોમટા" ||
+          village === "Gomta" ||
+          taluka.toLowerCase().includes("rural") ||
+          talukaGu.includes("ગ્રામ્ય")
+        ) {
+          taluka = "Gondal";
+          talukaGu = "ગોંડલ";
+        }
         const district = (address.state_district || address.county || localResolved.district).replace(/ District| જિલ્લો/gi, "");
         const districtGu = localResolved.districtGu || "રાજકોટ";
 

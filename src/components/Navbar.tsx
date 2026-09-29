@@ -114,11 +114,11 @@ export default function Navbar() {
           <Link
             href="/"
             onClick={(e) => handleNavClick(e, "/")}
-            className="flex items-center gap-2 min-w-0 shrink-0"
+            className="flex items-center gap-1.5 sm:gap-2 min-w-0 shrink-0"
           >
-            <span className="text-2xl leading-none select-none">🇮🇳</span>
+            <span className="text-xl sm:text-2xl leading-none select-none shrink-0">🇮🇳</span>
             <div className="min-w-0">
-              <p className="font-bold text-gray-800 text-base leading-tight whitespace-nowrap">
+              <p className="font-extrabold text-gray-800 text-sm sm:text-base leading-tight whitespace-nowrap">
                 Nagrik<span className="text-orange-500">Seva</span>{" "}
                 <span className="text-green-600">AI</span>
               </p>
@@ -288,10 +288,12 @@ export default function Navbar() {
               <button
                 data-pwa-install="true"
                 onClick={() => setShowInstallModal(true)}
-                className="pwa-install-element flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 shadow-xs active:scale-95 cursor-pointer"
+                className="pwa-install-element flex items-center gap-1 bg-gradient-to-r from-orange-500 to-amber-500 text-white px-2 sm:px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 shadow-xs active:scale-95 cursor-pointer"
+                title="મોબાઈલ એપ ઇન્સ્ટોલ કરો"
               >
-                <Smartphone size={14} className="shrink-0" />
-                <span suppressHydrationWarning>{t.nav.installApp}</span>
+                <Smartphone size={13} className="shrink-0" />
+                <span className="hidden sm:inline" suppressHydrationWarning>{t.nav.installApp}</span>
+                <span className="sm:hidden text-[10.5px]" suppressHydrationWarning>ઇન્સ્ટોલ</span>
               </button>
             )}
             <button

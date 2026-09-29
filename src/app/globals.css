@@ -209,3 +209,25 @@ main {
     opacity: 1;
   }
 }
+
+/* ── Enterprise DPI Live Telemetry Ticker Animation (Strict Single Line) ── */
+@keyframes dpiTicker {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+
+.animate-dpi-ticker {
+  display: inline-flex;
+  white-space: nowrap;
+  animation: dpiTicker 36s linear infinite;
+  will-change: transform;
+}
+
+.animate-dpi-ticker:hover,
+.animate-dpi-ticker:active {
+  animation-play-state: paused;
+}
