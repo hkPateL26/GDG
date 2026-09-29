@@ -47,10 +47,49 @@ export interface Document {
   isMandatory: boolean;
 }
 
+export interface DocumentAttachment {
+  name: string;
+  type: string;
+  base64: string;
+  size: number;
+}
+
+export interface DocumentVerificationReport {
+  documentType: string;
+  documentTypeGu: string;
+  isValid: boolean;
+  status: "verified" | "action_required" | "rejected";
+  confidence: string;
+  issuingAuthority: string;
+  guidelineChecklist: {
+    rule: string;
+    passed: boolean;
+    remark: string;
+  }[];
+  eligibleSchemes: {
+    schemeName: string;
+    schemeNameGu: string;
+    department: string;
+  }[];
+  recommendations: string[];
+}
+
+export interface ChatSessionRecord {
+  id: string;
+  title: string;
+  messages: Message[];
+  createdAt: string;
+  updatedAt: string;
+  citizenId?: string;
+  citizenName?: string;
+}
+
 export interface Message {
   role: "user" | "model";
   text: string;
   timestamp?: Date;
+  attachment?: DocumentAttachment;
+  documentReport?: DocumentVerificationReport;
   applicationCard?: {
     id: string;
     citizenName: string;

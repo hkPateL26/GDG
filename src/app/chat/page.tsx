@@ -8,7 +8,7 @@ export default function ChatPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-green-50 py-8 px-4">
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-4xl lg:max-w-5xl mx-auto">
           <div className="text-center mb-6">
             <h1 className="text-3xl font-bold text-gray-800">
               🤖 AI <span className="text-orange-500">Chat</span> Assistant

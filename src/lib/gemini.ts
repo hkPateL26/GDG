@@ -46,12 +46,13 @@ YOUR MANDATORY CORE RULES:
    Provide genuine, accurate, and uplifting information. Never invent schemes. Always point to official portals (digitalgujarat.gov.in, ikhedut.gujarat.gov.in, anyror.gujarat.gov.in).`;
 
 export const AVAILABLE_MODELS = [
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash-lite",
   "gemini-3.7-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
+  "gemini-3.8-flash",
 ];
 
-export function getChatModel(modelName = "gemini-3.7-flash") {
+export function getChatModel(modelName = "gemini-flash-lite-latest") {
   return genAI.getGenerativeModel({
     model: modelName,
     systemInstruction: NAGRIK_SEVA_PROMPT,
