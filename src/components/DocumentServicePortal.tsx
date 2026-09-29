@@ -7,6 +7,7 @@ import {
   CitizenApplication,
   lookupCitizenExistingRecord,
   ExistingCitizenProfile,
+  getVillagesForTaluka,
 } from "@/lib/large-datasets";
 import {
   FileCheck2,
@@ -2326,18 +2327,31 @@ export default function DocumentServicePortal({
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    ગામ / સોસાયટી / રહેઠાણ સરનામું *
+                    ગામ / શહેર (Village / City) *
                   </label>
-                  <input
-                    type="text"
-                    value={village || streetSociety}
-                    onChange={(e) => {
-                      setVillage(e.target.value);
-                      setStreetSociety(e.target.value);
-                    }}
-                    placeholder="દા.ત. ઘર નં. ૧૨, પટેલ વાસ, ગોમટા ગામ"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <select
+                      value={village}
+                      onChange={(e) => {
+                        setVillage(e.target.value);
+                      }}
+                      className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    >
+                      <option value="">-- ગામ / શહેર પસંદ કરો --</option>
+                      {getVillagesForTaluka(taluka).map((v) => (
+                        <option key={v} value={v}>
+                          {v}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="text"
+                      value={streetSociety}
+                      onChange={(e) => setStreetSociety(e.target.value)}
+                      placeholder="સોસાયટી / શેરી / મકાન નંબર"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
                 </div>
 
                 {/* Service Specific Fields */}

@@ -112,12 +112,12 @@ export default function CitizenPortalHeader({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0 self-start sm:self-center">
+          <div className="w-full sm:w-auto flex items-center justify-end gap-2 shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-emerald-200/60 flex-wrap">
             {onOpenLocator && (
               <button
                 type="button"
                 onClick={onOpenLocator}
-                className="px-3.5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95"
+                className="flex-1 sm:flex-initial px-3.5 py-2 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-xs cursor-pointer active:scale-95 min-h-[38px]"
                 title="AI કચેરી નેવિગેટર અને GPS રસ્તો જુઓ"
               >
                 <Navigation size={13} />
@@ -127,7 +127,7 @@ export default function CitizenPortalHeader({
             <button
               type="button"
               onClick={onLogout}
-              className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 hover:border-rose-300 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer active:scale-95"
+              className="px-3.5 py-2 bg-white hover:bg-rose-50 text-rose-600 border border-rose-200 hover:border-rose-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer active:scale-95 min-h-[38px]"
               title="સત્ર સમાપ્ત કરો"
             >
               <LogOut size={13} />

@@ -13,6 +13,7 @@ import {
 import {
   GUJARAT_DISTRICTS,
   CitizenApplication,
+  getVillagesForTaluka,
 } from "@/lib/large-datasets";
 import {
   Shield,
@@ -115,6 +116,7 @@ export default function AdminHierarchyDesk({
   const [selectedTaluka, setSelectedTaluka] = useState<string>(
     currentOfficer.taluka || "all"
   );
+  const [selectedVillage, setSelectedVillage] = useState<string>("all");
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [slaFilterOnly, setSlaFilterOnly] = useState<boolean>(false);
@@ -129,6 +131,22 @@ export default function AdminHierarchyDesk({
     );
     return distObj ? distObj.talukas : [];
   }, [selectedDistrict]);
+
+  // Dynamic real villages for the selected taluka
+  const availableVillages = useMemo(() => {
+    if (selectedTaluka === "all") {
+      if (selectedDistrict !== "all") {
+        const distObj = GUJARAT_DISTRICTS.find(
+          (d) => d.en.toLowerCase() === selectedDistrict.toLowerCase() || d.gu === selectedDistrict
+        );
+        if (distObj) {
+          return Array.from(new Set(distObj.talukas.flatMap((t) => getVillagesForTaluka(t))));
+        }
+      }
+      return [];
+    }
+    return getVillagesForTaluka(selectedTaluka);
+  }, [selectedDistrict, selectedTaluka]);
 
   // Data & Modal States
   const [applications, setApplications] = useState<CitizenApplication[]>([]);
@@ -165,9 +183,11 @@ export default function AdminHierarchyDesk({
     try {
       const params = new URLSearchParams();
       if (selectedDistrict !== "all") params.append("district", selectedDistrict);
+      if (selectedTaluka !== "all") params.append("taluka", selectedTaluka);
+      if (selectedVillage !== "all") params.append("village", selectedVillage);
       if (selectedStatus !== "all") params.append("status", selectedStatus);
       if (searchQuery.trim()) params.append("search", searchQuery.trim());
-      params.append("limit", "25");
+      params.append("limit", "100");
 
       const res = await fetch(`/api/track?${params.toString()}`);
       const data = await res.json();
@@ -202,7 +222,7 @@ export default function AdminHierarchyDesk({
     } finally {
       setLoading(false);
     }
-  }, [selectedDistrict, selectedStatus, searchQuery]);
+  }, [selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery]);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -225,8 +245,9 @@ export default function AdminHierarchyDesk({
       setSelectedDistrict(target.district);
     }
 
-    // Default to "all" so switching role does not arbitrarily hide other talukas in the district
-    setSelectedTaluka("all");
+    // Default to officer taluka or "all"
+    setSelectedTaluka(target.taluka || "all");
+    setSelectedVillage("all");
 
     sessionStorage.setItem("nagrik_officer_session", JSON.stringify(target));
   };
@@ -388,15 +409,35 @@ export default function AdminHierarchyDesk({
     setTimeout(() => setPolicySavedAlert(false), 4000);
   };
 
-  // Filtered List with 15-Min SLA condition
+  // Filtered List with 15-Min SLA condition, Taluka & Village/City filtering
   const filteredApplications = useMemo(() => {
     const seen = new Set<string>();
     return applications.filter((app) => {
       if (!app || !app.id || seen.has(app.id)) return false;
       seen.add(app.id);
 
+      // District filter
+      if (selectedDistrict !== "all") {
+        const matchDist =
+          app.district.toLowerCase() === selectedDistrict.toLowerCase() ||
+          (app.districtGu && app.districtGu === selectedDistrict);
+        if (!matchDist) return false;
+      }
+
       // Taluka filter
-      if (selectedTaluka !== "all" && app.taluka !== selectedTaluka) return false;
+      if (selectedTaluka !== "all" && app.taluka.toLowerCase() !== selectedTaluka.toLowerCase()) return false;
+
+      // Village / City filter
+      if (selectedVillage !== "all") {
+        const appV = (app.village || "").toLowerCase();
+        const vPure = selectedVillage.split("(")[0].trim().toLowerCase();
+        const appVPure = appV.split("(")[0].trim().toLowerCase();
+        const matchesVillage =
+          appV.includes(vPure) ||
+          vPure.includes(appVPure) ||
+          appV === selectedVillage.toLowerCase();
+        if (!matchesVillage) return false;
+      }
 
       // 15-Minute SLA check
       if (slaFilterOnly) {
@@ -405,7 +446,7 @@ export default function AdminHierarchyDesk({
       }
       return true;
     });
-  }, [applications, selectedTaluka, slaFilterOnly]);
+  }, [applications, selectedDistrict, selectedTaluka, selectedVillage, slaFilterOnly]);
 
   return (
     <div className="space-y-4 max-w-7xl mx-auto px-2 sm:px-4 animate-in fade-in duration-200">
@@ -467,10 +508,10 @@ export default function AdminHierarchyDesk({
           </div>
         </div>
 
-        {/* ── Role Switcher Bar (Compact Horizontal Slider) ── */}
-        <div className="bg-slate-950/80 p-2 rounded-xl border border-slate-800 flex items-center gap-1.5 overflow-x-auto scrollbar-none text-xs">
-          <span className="text-[11px] text-slate-400 font-bold px-2 shrink-0 flex items-center gap-1">
-            <Shield size={12} className="text-amber-400" /> સ્તર બદલો:
+        {/* ── Role Switcher Bar (Play Store Grade Horizontal Touch Carousel) ── */}
+        <div className="bg-slate-950/80 p-2 sm:p-2.5 rounded-xl border border-slate-800 flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x snap-x text-xs">
+          <span className="text-[11px] text-slate-400 font-bold px-1.5 shrink-0 flex items-center gap-1.5 whitespace-nowrap">
+            <Shield size={13} className="text-amber-400" /> સ્તર બદલો:
           </span>
 
           {HIERARCHICAL_OFFICERS.map((officer) => (
@@ -478,10 +519,10 @@ export default function AdminHierarchyDesk({
               key={officer.id}
               type="button"
               onClick={() => handleRoleSwitch(officer.id)}
-              className={`px-2.5 py-1 rounded-lg font-bold whitespace-nowrap transition cursor-pointer text-[10.5px] ${
+              className={`px-3 py-2 rounded-xl font-bold whitespace-nowrap transition cursor-pointer text-xs shrink-0 snap-start min-h-[38px] flex items-center gap-1.5 ${
                 currentOfficer.id === officer.id
-                  ? "bg-amber-400 text-slate-950 shadow-xs font-black"
-                  : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800"
+                  ? "bg-amber-400 text-slate-950 shadow-md font-black ring-1 ring-amber-300"
+                  : "bg-slate-900 hover:bg-slate-800 text-slate-300 border border-slate-800 active:scale-95"
               }`}
             >
               <span>
@@ -511,20 +552,20 @@ export default function AdminHierarchyDesk({
         </div>
       )}
 
-      {/* ── Navigation Tabs (Compact) ── */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none border-b border-slate-200">
+      {/* ── Navigation Tabs (App-grade Horizontal Touch Strip) ── */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x pb-2 border-b border-slate-200">
         <button
           type="button"
           onClick={() => setActiveTab("queue")}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 min-h-[42px] select-none ${
             activeTab === "queue"
-              ? "bg-slate-900 text-white shadow-xs"
-              : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+              ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
+              : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 active:scale-95"
           }`}
         >
-          <FileText size={14} />
+          <FileText size={15} />
           <span>૧. અરજી સ્ક્રુટિની ડેસ્ક</span>
-          <span className="text-[10px] bg-amber-400 text-slate-950 px-1.5 py-0.2 rounded-full font-black">
+          <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black">
             {filteredApplications.length}
           </span>
         </button>
@@ -532,13 +573,13 @@ export default function AdminHierarchyDesk({
         <button
           type="button"
           onClick={() => setActiveTab("sla")}
-          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
+          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 min-h-[42px] select-none ${
             activeTab === "sla"
-              ? "bg-rose-600 text-white shadow-xs"
-              : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+              ? "bg-rose-600 text-white shadow-sm ring-1 ring-rose-500"
+              : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 active:scale-95"
           }`}
         >
-          <AlertTriangle size={14} className={activeTab === "sla" ? "text-white" : "text-rose-500"} />
+          <AlertTriangle size={15} className={activeTab === "sla" ? "text-white" : "text-rose-500"} />
           <span>૨. AI ૧૫-મિનિટ બોટલનેક મોનિટર</span>
         </button>
 
@@ -546,13 +587,13 @@ export default function AdminHierarchyDesk({
           <button
             type="button"
             onClick={() => setActiveTab("policy")}
-            className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 ${
+            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 min-h-[42px] select-none ${
               activeTab === "policy"
-                ? "bg-slate-900 text-white shadow-xs"
-                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
+                ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
+                : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 active:scale-95"
             }`}
           >
-            <Sliders size={14} />
+            <Sliders size={15} />
             <span>૩. ડાયનેમિક પોલિસી CMS</span>
           </button>
         )}
@@ -565,7 +606,7 @@ export default function AdminHierarchyDesk({
         <div className="space-y-3">
           {/* Dynamic Cascading Filter Bar */}
           <div className="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs space-y-2.5">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
               {/* District Dropdown */}
               <div>
                 <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
@@ -577,6 +618,7 @@ export default function AdminHierarchyDesk({
                   onChange={(e) => {
                     setSelectedDistrict(e.target.value);
                     setSelectedTaluka("all");
+                    setSelectedVillage("all");
                   }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-60 text-xs"
                 >
@@ -596,13 +638,38 @@ export default function AdminHierarchyDesk({
                 </label>
                 <select
                   value={selectedTaluka}
-                  onChange={(e) => setSelectedTaluka(e.target.value)}
+                  onChange={(e) => {
+                    setSelectedTaluka(e.target.value);
+                    setSelectedVillage("all");
+                  }}
                   className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs"
                 >
                   <option value="all">તમામ તાલુકા ({availableTalukas.length})</option>
                   {availableTalukas.map((t) => (
                     <option key={t} value={t}>
                       {t}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Dynamic Real Villages & Cities Dropdown */}
+              <div>
+                <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
+                  ગામ / શહેર (Village / City{availableVillages.length > 0 ? ` - ${availableVillages.length}` : ""})
+                </label>
+                <select
+                  value={selectedVillage}
+                  onChange={(e) => setSelectedVillage(e.target.value)}
+                  disabled={availableVillages.length === 0}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs disabled:opacity-50"
+                >
+                  <option value="all">
+                    {selectedTaluka === "all" ? "તમામ ગામડા / શહેર" : `તમામ ગામ / શહેર (${availableVillages.length})`}
+                  </option>
+                  {availableVillages.map((v) => (
+                    <option key={v} value={v}>
+                      {v}
                     </option>
                   ))}
                 </select>
@@ -629,13 +696,13 @@ export default function AdminHierarchyDesk({
               {/* Search Bar */}
               <div>
                 <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
-                  અરજી ID / નામ
+                  અરજી ID / નામ / ગામ
                 </label>
                 <div className="relative">
                   <Search size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="દા.ત. APP001..."
+                    placeholder="દા.ત. APP001, ગોમતા..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 text-slate-900 font-bold focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs"
@@ -708,9 +775,14 @@ export default function AdminHierarchyDesk({
                             <span className="font-bold text-slate-700 text-xs">
                               {citizenNameDisplay}
                             </span>
-                            <span className="text-[10px] text-slate-400 block font-mono">
-                              UID: XXXX-{app.aadhaarLast4 || "1413"}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                              <span className="text-[10px] text-slate-400 font-mono">
+                                UID: XXXX-{app.aadhaarLast4 || "1413"}
+                              </span>
+                              <span className="text-[9.5px] bg-amber-50 text-amber-900 border border-amber-200/80 px-1.5 py-0.2 rounded font-bold inline-flex items-center gap-0.5">
+                                🏡 {app.village || "ગોમતા"}
+                              </span>
+                            </div>
                           </td>
 
                           {/* Scheme & Office */}
@@ -718,8 +790,8 @@ export default function AdminHierarchyDesk({
                             <span className="font-bold text-slate-900 block truncate max-w-[200px]">
                               {schemeNameDisplay}
                             </span>
-                            <span className="text-[10.5px] text-slate-500 block">
-                              {locationDisplay}
+                            <span className="text-[10.5px] text-slate-600 font-medium block">
+                              📍 {app.village ? `${app.village}, ` : ""}{app.taluka || "ગોંડલ"} ({app.districtGu || app.district || "રાજકોટ"})
                             </span>
                           </td>
 
@@ -821,42 +893,110 @@ export default function AdminHierarchyDesk({
                 </table>
               </div>
 
-              {/* Mobile Responsive Cards View (No cramped horizontal breakage!) */}
-              <div className="md:hidden divide-y divide-slate-100 max-h-[560px] overflow-y-auto p-2 space-y-2">
+              {/* Mobile Responsive Cards View (Play Store Grade Native App Card Stack) */}
+              <div className="md:hidden max-h-[640px] overflow-y-auto p-2 space-y-3 touch-pan-y">
                 {filteredApplications.map((app, idx) => {
                   const sla = analyzeApplicationSla(app);
                   const isPaid = app.paymentStatus === "paid";
                   const isApproved = app.status === "approved" || app.workflowStage === 3;
                   const citizenNameDisplay = app.citizenNameGu || app.citizenName || "હરી વિનોદરાઈ પટેલ";
                   const schemeNameDisplay = app.schemeNameGu || app.schemeName || "આવકનું પ્રમાણપત્ર";
-                  const locationDisplay = `${app.taluka || "ગોંડલ"}, ${app.districtGu || app.district || "રાજકોટ"}`;
 
                   return (
-                    <div key={`${app.id}-${idx}`} className="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2 text-xs">
-                      <div className="flex items-center justify-between">
-                        <span className="font-mono font-black text-slate-900">{app.id}</span>
+                    <div
+                      key={`${app.id}-${idx}`}
+                      className="bg-white p-3.5 sm:p-4 rounded-2xl border border-slate-200/90 shadow-sm space-y-3 text-xs transition active:scale-[0.99]"
+                    >
+                      {/* Card Header: App ID & SLA Pill */}
+                      <div className="flex items-center justify-between gap-2 border-b border-slate-100 pb-2">
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <span className="font-mono font-black text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg text-xs truncate">
+                            {app.id}
+                          </span>
+                          <span className="text-[10px] text-slate-500 font-mono font-bold">
+                            XXXX-{app.aadhaarLast4 || "1413"}
+                          </span>
+                        </div>
                         <span
-                          className={`text-[9.5px] font-black px-2 py-0.5 rounded-full ${
+                          className={`text-[10.5px] font-black px-2.5 py-0.5 rounded-full shrink-0 flex items-center gap-1 ${
                             sla.isBreached
                               ? "bg-rose-100 text-rose-800 border border-rose-300"
-                              : "bg-slate-200 text-slate-700"
+                              : "bg-slate-100 text-slate-700 border border-slate-200"
                           }`}
                         >
-                          ⏱️ {sla.elapsedMinutes} મિ.
+                          <Clock size={11} className={sla.isBreached ? "text-rose-600 animate-spin" : ""} />
+                          <span>{sla.elapsedMinutes} મિ.</span>
+                          {sla.isBreached && <span className="text-rose-600 font-bold">(SLA)</span>}
                         </span>
                       </div>
 
-                      <div>
-                        <p className="font-bold text-slate-900 text-sm leading-snug">{citizenNameDisplay}</p>
-                        <p className="text-slate-600 text-xs">{schemeNameDisplay}</p>
-                        <p className="text-[11px] text-slate-500">{locationDisplay}</p>
+                      {/* Citizen & Scheme Details (No text clipping) */}
+                      <div className="space-y-1">
+                        <p className="font-black text-slate-900 text-sm leading-snug">
+                          {citizenNameDisplay}
+                        </p>
+                        <p className="text-slate-700 font-bold text-xs leading-normal">
+                          {schemeNameDisplay}
+                        </p>
+                        <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                          <span className="text-[10px] bg-amber-50 text-amber-950 border border-amber-300 px-2 py-0.5 rounded-md font-bold inline-flex items-center gap-1">
+                            🏡 {app.village || "ગોમતા"}
+                          </span>
+                          <span className="text-[11px] text-slate-600 font-medium">
+                            📍 {app.taluka || "ગોંડલ"}, {app.districtGu || app.district || "રાજકોટ"}
+                          </span>
+                        </div>
                       </div>
 
-                      <div className="flex items-center justify-between pt-1 border-t border-slate-200">
+                      {/* Status Badges Row */}
+                      <div className="flex items-center gap-2 flex-wrap pt-1">
                         {isPaid ? (
-                          <span className="text-[10px] text-emerald-700 font-bold">✓ ફી ભરપાઈ</span>
+                          <span className="inline-flex items-center gap-1 text-[10.5px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                            <CheckCircle2 size={11} /> ચુકવણી પ્રમાણિત
+                          </span>
                         ) : (
-                          <span className="text-[10px] text-amber-700 font-bold">⚠️ ફી બાકી</span>
+                          <span className="inline-flex items-center gap-1 text-[10.5px] bg-amber-100 text-amber-800 font-bold px-2.5 py-0.5 rounded-full border border-amber-300">
+                            <Clock size={11} /> ચલણ બાકી
+                          </span>
+                        )}
+
+                        {isApproved ? (
+                          <span className="inline-flex items-center gap-1 text-[10.5px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                            <Award size={11} /> e-Signed મંજૂર
+                          </span>
+                        ) : app.status === "rejected" ? (
+                          <span className="inline-flex items-center gap-1 text-[10.5px] bg-rose-100 text-rose-800 font-bold px-2.5 py-0.5 rounded-full border border-rose-300">
+                            સુધારણા જરૂરી
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 text-[10.5px] bg-blue-100 text-blue-800 font-bold px-2.5 py-0.5 rounded-full border border-blue-200">
+                            તબક્કો {app.workflowStage || 1}: સ્ક્રુટિની
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Action Bar (Full width touch-friendly buttons min-h 44px) */}
+                      <div className="pt-2 border-t border-slate-100 flex items-center gap-2">
+                        {isApproved && (
+                          <button
+                            type="button"
+                            onClick={() => setCertificateModalApp(app)}
+                            className="px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold text-xs rounded-xl border border-emerald-200 flex items-center gap-1 min-h-[44px] cursor-pointer"
+                          >
+                            <Award size={13} />
+                            <span>પ્રમાણપત્ર</span>
+                          </button>
+                        )}
+
+                        {isPaid && (
+                          <button
+                            type="button"
+                            onClick={() => setReceiptModalApp(app)}
+                            className="px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-800 font-bold text-xs rounded-xl border border-blue-200 flex items-center gap-1 min-h-[44px] cursor-pointer"
+                          >
+                            <Receipt size={13} />
+                            <span>પાવતી</span>
+                          </button>
                         )}
 
                         <button
@@ -865,9 +1005,10 @@ export default function AdminHierarchyDesk({
                             setSelectedApp(app);
                             setReviewModalOpen(true);
                           }}
-                          className="px-3 py-1 bg-slate-900 text-white font-bold rounded-lg text-xs"
+                          className="flex-1 py-2.5 px-3 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-xs min-h-[44px] cursor-pointer"
                         >
-                          ફાઇલ ખોલો →
+                          <span>ફાઇલ સ્ક્રુટિની ખોલો</span>
+                          <ArrowRight size={13} />
                         </button>
                       </div>
                     </div>
@@ -1047,13 +1188,16 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {reviewModalOpen && selectedApp && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/75 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
           onClick={() => setReviewModalOpen(false)}
         >
           <div
-            className="relative w-full max-w-3xl my-auto bg-white rounded-3xl shadow-2xl border border-slate-300 text-slate-900 p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto"
+            className="relative w-full max-w-3xl my-0 sm:my-auto bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-300 text-slate-900 p-4 sm:p-6 space-y-4 max-h-[94vh] sm:max-h-[90vh] overflow-y-auto"
             onClick={(e) => e.stopPropagation()}
           >
+            {/* Mobile Bottom Sheet Grab Indicator */}
+            <div className="w-12 h-1 bg-slate-300 rounded-full mx-auto sm:hidden -mt-1 mb-2" />
+
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
               <div className="flex items-center gap-2 min-w-0">
@@ -1065,35 +1209,35 @@ export default function AdminHierarchyDesk({
               <button
                 type="button"
                 onClick={() => setReviewModalOpen(false)}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-500 transition cursor-pointer"
+                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
               >
                 <X size={18} />
               </button>
             </div>
 
-            {/* Applicant Profile Card (Zero Blank Fields!) */}
-            <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200 grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-              <div>
-                <span className="text-slate-500 block text-[11px]">અરજદારનું નામ:</span>
-                <strong className="font-bold text-slate-900">
+            {/* Applicant Profile Card (Zero Blank Fields & Zero Text Chopping) */}
+            <div className="bg-slate-50 p-3 sm:p-4 rounded-2xl border border-slate-200 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+              <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block text-[11px] font-medium">અરજદારનું નામ:</span>
+                <strong className="font-black text-slate-900 text-xs sm:text-sm block truncate">
                   {selectedApp.citizenNameGu || selectedApp.citizenName || "હરી વિનોદરાઈ પટેલ"}
                 </strong>
               </div>
-              <div>
-                <span className="text-slate-500 block text-[11px]">નાગરિક ઓળખ:</span>
-                <strong className="font-mono font-bold text-amber-700">
+              <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block text-[11px] font-medium">નાગરિક ઓળખ:</span>
+                <strong className="font-mono font-bold text-amber-700 block">
                   GUJ-CIT-{selectedApp.aadhaarLast4 || "1413"}
                 </strong>
               </div>
-              <div>
-                <span className="text-slate-500 block text-[11px]">સ્થળ:</span>
-                <strong className="font-bold text-slate-900">
-                  {selectedApp.village || "ગોમતા"}, {selectedApp.taluka || "ગોંડલ"}, {selectedApp.districtGu || selectedApp.district || "રાજકોટ"}
+              <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block text-[11px] font-medium">સ્થળ (ગામ / શહેર):</span>
+                <strong className="font-bold text-slate-900 block truncate">
+                  🏡 {selectedApp.village || "ગોમતા"}, {selectedApp.taluka || "ગોંડલ"} ({selectedApp.districtGu || selectedApp.district || "રાજકોટ"})
                 </strong>
               </div>
-              <div>
-                <span className="text-slate-500 block text-[11px]">અરજી તારીખ:</span>
-                <strong className="font-bold text-slate-900">{selectedApp.appliedDate || "2026-09-28"}</strong>
+              <div className="bg-white/80 p-2 sm:p-2.5 rounded-xl border border-slate-100">
+                <span className="text-slate-500 block text-[11px] font-medium">અરજી તારીખ:</span>
+                <strong className="font-bold text-slate-900 block">{selectedApp.appliedDate || "2026-09-28"}</strong>
               </div>
             </div>
 

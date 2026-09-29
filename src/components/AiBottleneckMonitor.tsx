@@ -164,41 +164,41 @@ export default function AiBottleneckMonitor({
         </div>
       </div>
 
-      {/* ── Filter Pills ── */}
-      <div className="flex items-center gap-2">
+      {/* ── Filter Pills (Mobile-App Touch Carousel) ── */}
+      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x pb-1.5">
         <button
           type="button"
           onClick={() => setActiveFilter("breached")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 min-h-[40px] select-none ${
             activeFilter === "breached"
               ? "bg-rose-600 text-white shadow-xs"
-              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 active:scale-95"
           }`}
         >
-          <AlertTriangle size={12} />
+          <AlertTriangle size={13} />
           <span>૧૫+ મિનિટથી અટવાયેલી ({breachedCount})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveFilter("warning")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shrink-0 min-h-[40px] select-none ${
             activeFilter === "warning"
               ? "bg-amber-500 text-slate-950 shadow-xs font-black"
-              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 active:scale-95"
           }`}
         >
-          <Clock size={12} />
+          <Clock size={13} />
           <span>૧૦-૧૪ મિનિટ ચેતવણી ({warningCount})</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveFilter("all")}
-          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 min-h-[40px] select-none ${
             activeFilter === "all"
               ? "bg-slate-900 text-white shadow-xs"
-              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50"
+              : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-50 active:scale-95"
           }`}
         >
           <span>તમામ સક્રિય અરજીઓ ({activeApps.length})</span>
@@ -299,16 +299,16 @@ export default function AiBottleneckMonitor({
                         <button
                           type="button"
                           onClick={() => handleEscalateAction(app.id, sla.escalationTargetOfficer)}
-                          className="flex-1 px-2.5 py-1.5 bg-rose-600 hover:bg-rose-500 text-white font-bold text-[11px] rounded-lg transition shadow-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95"
+                          className="flex-1 px-3 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 min-h-[40px]"
                         >
-                          <Send size={11} />
+                          <Send size={12} />
                           <span>તાત્કાલિક એસ્કેલેટ કરો</span>
                         </button>
                         {onSelectApplication && (
                           <button
                             type="button"
                             onClick={() => onSelectApplication(app)}
-                            className="px-2.5 py-1.5 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[11px] rounded-lg transition cursor-pointer"
+                            className="px-3 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl transition cursor-pointer active:scale-95 min-h-[40px]"
                           >
                             ફાઇલ ખોલો
                           </button>
