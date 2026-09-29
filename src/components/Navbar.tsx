@@ -17,12 +17,16 @@ import {
   ChevronDown,
   User,
   Building2,
+  Search,
+  FolderLock,
+  ClipboardCheck,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled } from "@/lib/usePwaInstall";
 import { useLanguage } from "@/context/LanguageContext";
 import { DEFAULT_LANGUAGE } from "@/lib/translation";
 import LanguageSelector from "./LanguageSelector";
+import EnterpriseSystemHealthBar from "./EnterpriseSystemHealthBar";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
@@ -97,7 +101,8 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50 notranslate" translate="no" suppressHydrationWarning>
+    <>
+      <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50 notranslate" translate="no" suppressHydrationWarning>
       <div className="max-w-7xl mx-auto px-3 sm:px-4">
         <div className="flex items-center justify-between h-16">
           {/* ── Logo ── */}
@@ -298,93 +303,65 @@ export default function Navbar() {
         {isOpen && (
           <div className="xl:hidden border-t border-gray-100 py-2.5 space-y-1.5 max-h-[80vh] overflow-y-auto">
 
-            {/* 🔐 Unified Session / Login Cards in Mobile Drawer */}
-            {officerSession ? (
-              <Link
-                href="/portal?mode=officer"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-slate-900 text-amber-300 border-2 border-amber-400 mb-2 shadow-xs"
-              >
-                <span className="flex items-center gap-2">
-                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                  <span>કચેરી એડમિન: {officerSession.name || "મામલતદાર"}</span>
-                </span>
-                <span className="text-[11px] bg-amber-400 text-slate-950 px-2.5 py-1 rounded-full font-black">ડેસ્ક જુઓ →</span>
-              </Link>
-            ) : citizenSession ? (
-              <Link
-                href="/portal?mode=citizen"
-                onClick={() => setIsOpen(false)}
-                className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-emerald-50 text-emerald-900 border-2 border-emerald-400 mb-2 shadow-xs"
-              >
-                <span className="flex items-center gap-2">
-                  <ShieldCheck size={18} className="text-emerald-600 shrink-0" />
-                  <span>પ્રમાણિત સત્ર: {citizenSession.citizenNameGu || citizenSession.citizenName}</span>
-                </span>
-                <span className="text-[11px] bg-emerald-600 text-white px-2.5 py-1 rounded-full font-black">વોલ્ટ જુઓ →</span>
-              </Link>
-            ) : (
-              <div className="space-y-1.5 mb-2.5">
-                <p className="text-[10.5px] font-bold text-gray-500 uppercase tracking-wider px-1">
-                  🔐 લૉગિન પોર્ટલ પસંદ કરો:
-                </p>
-                <div className="grid grid-cols-1 gap-2">
+            {/* 📌 વિશેષ નાગરિક સેવાઓ (Dedicated Services - Login is moved exclusively to Bottom Dock) */}
+            <div className="space-y-1">
+              <p className="text-[10.5px] font-bold text-gray-500 uppercase tracking-wider px-1">
+                📌 નાગરિક સેવાઓ:
+              </p>
+              {[
+                {
+                  href: "/benefit-calculator",
+                  label: currentLang === "en" ? "Eligibility & Benefit Calculator" : currentLang === "hi" ? "पात्रता और लाभ कैलकुलेटर" : "💰 લાભ ગણો (સહાય કેલ્ક્યુલેટર)",
+                  Icon: IndianRupee,
+                },
+                {
+                  href: "/track",
+                  label: currentLang === "en" ? "Track Application Status" : currentLang === "hi" ? "आवेदन स्थिति ट्रैक करें" : "અરજી ટ્રેકિંગ (Track Status)",
+                  Icon: Search,
+                },
+                {
+                  href: "/documents",
+                  label: currentLang === "en" ? "Digital Vault & Certificates" : currentLang === "hi" ? "डिजिटल वॉल्ट और दस्तावेज़" : "ડિજિટલ વોલ્ટ & પ્રમાણપત્રો",
+                  Icon: FolderLock,
+                },
+                {
+                  href: "/eligibility",
+                  label: currentLang === "en" ? "Scheme Eligibility Check" : currentLang === "hi" ? "योजना पात्रता जांचें" : "યોજના પાત્રતા ચકાસો",
+                  Icon: ClipboardCheck,
+                },
+              ].map(({ href, label, Icon }) => {
+                const active = pathname === href;
+                return (
                   <Link
-                    href="/portal?mode=citizen"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-sm active:scale-95"
+                    key={href}
+                    href={href}
+                    onClick={(e) => {
+                      setIsOpen(false);
+                      handleNavClick(e, href);
+                    }}
+                    className={`flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
+                      active
+                        ? "bg-orange-50 text-orange-600 font-bold"
+                        : "text-gray-700 hover:bg-gray-50 hover:text-orange-500"
+                    }`}
                   >
-                    <span className="flex items-center gap-2.5">
-                      <User size={16} className="shrink-0" />
-                      <span className="font-bold">નાગરિક લૉગિન (Citizen 2FA)</span>
-                    </span>
-                    <span className="text-[10px] bg-white/20 px-2 py-0.5 rounded-full font-semibold">SSO પ્રવેશ →</span>
+                    <Icon size={16} strokeWidth={active ? 2.5 : 2} className="shrink-0 text-orange-600" />
+                    <span suppressHydrationWarning>{label}</span>
                   </Link>
+                );
+              })}
+            </div>
 
-                  <Link
-                    href="/portal?mode=officer"
-                    onClick={() => setIsOpen(false)}
-                    className="flex items-center justify-between p-3 rounded-2xl text-xs font-bold bg-slate-900 text-amber-300 shadow-sm active:scale-95 border border-slate-800"
-                  >
-                    <span className="flex items-center gap-2.5">
-                      <Building2 size={16} className="shrink-0 text-amber-300" />
-                      <span className="font-bold">અધિકારી / એડમિન લૉગિન</span>
-                    </span>
-                    <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black">મામલતદાર ડેસ્ક →</span>
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {navLinks.map(({ href, label, Icon }) => {
-              const active = pathname === href;
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  onClick={(e) => {
-                    setIsOpen(false);
-                    handleNavClick(e, href);
-                  }}
-                  className={`flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold whitespace-nowrap transition ${
-                    active
-                      ? "bg-orange-50 text-orange-600 font-bold"
-                      : "text-gray-700 hover:bg-gray-50 hover:text-orange-500"
-                  }`}
-                >
-                  <Icon size={17} strokeWidth={active ? 2.5 : 2} className="shrink-0" />
-                  <span suppressHydrationWarning>{label}</span>
-                </Link>
-              );
-            })}
-            <a
-              href="tel:14567"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium text-orange-600 hover:bg-orange-50 whitespace-nowrap transition"
-            >
-              <Phone size={17} className="shrink-0" />
-              <span suppressHydrationWarning>{t.nav.helpline} – 14567 (Free 24/7)</span>
-            </a>
+            <div className="pt-2 border-t border-gray-100">
+              <a
+                href="tel:14567"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-bold text-orange-600 bg-orange-50/60 hover:bg-orange-100 whitespace-nowrap transition"
+              >
+                <Phone size={15} className="shrink-0 text-orange-600" />
+                <span suppressHydrationWarning>{t.nav.helpline} – 14567 (Free 24/7)</span>
+              </a>
+            </div>
           </div>
         )}
       </div>
@@ -396,6 +373,8 @@ export default function Navbar() {
           onClose={() => setShowInstallModal(false)}
         />
       )}
-    </nav>
+      </nav>
+      <EnterpriseSystemHealthBar />
+    </>
   );
 }

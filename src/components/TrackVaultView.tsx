@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   Award,
+  Eye,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -150,6 +152,7 @@ export default function TrackVaultView({
   });
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
+  const [showTimelineModal, setShowTimelineModal] = useState<boolean>(false);
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -158,6 +161,23 @@ export default function TrackVaultView({
   const [cashConfirmedAlert, setCashConfirmedAlert] = useState(false);
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [stageUpdateAlert, setStageUpdateAlert] = useState<string | null>(null);
+
+  // Close modals on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showPrintModal) {
+          setShowPrintModal(false);
+        } else if (showCertificateModal) {
+          setShowCertificateModal(false);
+        } else if (showTimelineModal) {
+          setShowTimelineModal(false);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showPrintModal, showCertificateModal, showTimelineModal]);
 
   // Load Citizen Vault on Mount or Citizen Prop change
   const loadCitizenVault = useCallback(async (mobile: string, aadhaarLast4?: string, targetId?: string) => {
@@ -202,7 +222,10 @@ export default function TrackVaultView({
         const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "") || searchQuery.trim();
         if (activeTargetId) {
           const found = uniqueApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
-          if (found) setSelectedApp(found);
+          if (found) {
+            setSelectedApp(found);
+            setShowTimelineModal(true);
+          }
         } else if (uniqueApps.length > 0) {
           setSelectedApp(uniqueApps[0]);
         }
@@ -569,15 +592,19 @@ export default function TrackVaultView({
                     key={`${app.id}-${idx}`}
                     role="button"
                     tabIndex={0}
-                    onClick={() => setSelectedApp(isSelected ? null : app)}
+                    onClick={() => {
+                      setSelectedApp(app);
+                      setShowTimelineModal(true);
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedApp(isSelected ? null : app);
+                        setSelectedApp(app);
+                        setShowTimelineModal(true);
                       }
                     }}
                     className={`group bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md ${
-                      isSelected
+                      isSelected && showTimelineModal
                         ? "border-orange-500 ring-2 ring-orange-200 bg-orange-50/20"
                         : "border-slate-200 hover:border-orange-300"
                     }`}
@@ -659,7 +686,7 @@ export default function TrackVaultView({
                       <span className="text-[11px] text-slate-500 font-medium">
                         તારીખ: <strong className="text-slate-700">{app.appliedDate}</strong>
                       </span>
-                      <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -667,19 +694,23 @@ export default function TrackVaultView({
                             setSelectedApp(app);
                             setShowPrintModal(true);
                           }}
-                          className="text-xs font-bold text-slate-600 hover:text-orange-600 flex items-center gap-1 transition"
+                          className="text-xs font-bold text-slate-600 hover:text-orange-600 flex items-center gap-1 transition px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer"
                         >
                           <Printer size={13} />
                           <span>પહોંચ (PDF)</span>
                         </button>
-                        <span
-                          className={`text-xs font-bold flex items-center gap-1 transition ${
-                            isSelected ? "text-orange-600" : "text-slate-500 group-hover:text-orange-600"
-                          }`}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedApp(app);
+                            setShowTimelineModal(true);
+                          }}
+                          className="text-xs font-black text-orange-600 hover:text-white hover:bg-orange-600 bg-orange-50 active:scale-95 px-2.5 py-1 rounded-lg border border-orange-200 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
                         >
-                          <span>{isSelected ? "વિગતો છુપાવો" : "લાઈવ ટ્રેકિંગ જુઓ"}</span>
-                          {isSelected ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-                        </span>
+                          <Eye size={13} />
+                          <span>ટ્રેકિંગ વિગતો ↗</span>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -688,405 +719,433 @@ export default function TrackVaultView({
             </div>
           )}
 
-          {/* Selected Application Timeline & Stages Detail Card */}
-          {selectedApp && (
-            <div className="bg-white rounded-3xl p-5 sm:p-6 border-2 border-orange-400 shadow-xl space-y-5 animate-in fade-in slide-in-from-top-2 duration-200">
-              {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-3 min-w-0">
-                  <span className="text-3xl p-2.5 bg-orange-50 rounded-2xl border border-orange-200 shrink-0">
-                    {selectedApp.schemeEmoji}
-                  </span>
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2.5 py-0.5 rounded-full border border-orange-200">
-                        અરજી નં: {selectedApp.id}
-                      </span>
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${(STATUS_CONFIG[selectedApp.status] || STATUS_CONFIG.processing).badgeBg}`}>
-                        {(STATUS_CONFIG[selectedApp.status] || STATUS_CONFIG.processing).labelGu}
-                      </span>
+          {/* ── Citizen Application Live Timeline & Stages Detail Modal Popup ── */}
+          {showTimelineModal && selectedApp && (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="timeline-modal-title"
+              className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
+              onClick={(e) => {
+                if (e.target === e.currentTarget) setShowTimelineModal(false);
+              }}
+            >
+              <div
+                className="bg-white w-full max-w-3xl rounded-2xl sm:rounded-3xl shadow-2xl border-2 border-orange-400 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] animate-in zoom-in-95 duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {/* ── Modal Header (Sticky) ── */}
+                <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-amber-500 text-white p-3.5 sm:p-5 flex items-center justify-between gap-3 shrink-0 shadow-sm">
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <span className="text-2xl sm:text-3xl p-1.5 sm:p-2 bg-white/20 backdrop-blur-xs rounded-xl sm:rounded-2xl border border-white/20 shrink-0 shadow-inner">
+                      {selectedApp.schemeEmoji}
+                    </span>
+                    <div className="min-w-0">
+                      <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                        <span className="font-mono font-black text-[11px] sm:text-xs text-orange-950 bg-white/95 px-2 py-0.5 rounded-md shadow-2xs">
+                          અરજી નં: {selectedApp.id}
+                        </span>
+                        <span className={`text-[10px] sm:text-[11px] font-bold px-2 py-0.5 rounded-full border shadow-2xs ${(STATUS_CONFIG[selectedApp.status] || STATUS_CONFIG.processing).badgeBg}`}>
+                          {(STATUS_CONFIG[selectedApp.status] || STATUS_CONFIG.processing).labelGu}
+                        </span>
+                      </div>
+                      <h3 id="timeline-modal-title" className="text-sm sm:text-lg font-black text-white mt-1 leading-snug truncate">
+                        {selectedApp.schemeNameGu}
+                      </h3>
+                      <p className="text-[10.5px] sm:text-xs text-orange-100 truncate">
+                        {selectedApp.schemeName}
+                      </p>
                     </div>
-                    <h3 className="text-base sm:text-lg font-black text-slate-900 mt-1 leading-snug">
-                      {selectedApp.schemeNameGu}
-                    </h3>
-                    <p className="text-xs text-slate-500 leading-normal">
-                      અરજદાર: {selectedApp.citizenNameGu} ({selectedApp.citizenName}) &bull; 📱 +91 {selectedApp.mobile}
-                    </p>
                   </div>
-                </div>
-
-                <div className="w-full sm:w-auto flex items-center gap-2 flex-wrap justify-start sm:justify-end shrink-0 pt-2 sm:pt-0">
-                  {selectedApp.status === "rejected" && (
-                    <button
-                      type="button"
-                      onClick={() => handleReApply(selectedApp)}
-                      className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px]"
-                    >
-                      <RotateCw size={14} />
-                      <span>પુનઃ અરજી કરો</span>
-                    </button>
-                  )}
-
-                  {/* ── Gated Action 1: Payment Slip (Unlocks ONLY after payment verified) ── */}
-                  {selectedApp.paymentStatus === "paid" ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowPrintModal(true)}
-                      className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer min-h-[40px]"
-                    >
-                      <Printer size={14} />
-                      <span>પહોંચ ડાઉનલોડ (PDF)</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled
-                      title="કચેરી અધિકારી દ્વારા ચુકવણી ખરાઈ થયા બાદ જ સત્તાવાર પહોંચ અનલૉક થશે"
-                      className="flex-1 sm:flex-initial px-3 py-2.5 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed opacity-75 min-h-[40px]"
-                    >
-                      <Lock size={13} className="text-amber-500" />
-                      <span>પહોંચ લૉક (ચુકવણી ખરાઈ બાકી)</span>
-                    </button>
-                  )}
-
-                  {/* ── Gated Action 2: Official Certificate (Unlocks ONLY after Mamlatdar e-Sign) ── */}
-                  {selectedApp.workflowStage === 3 || selectedApp.status === "approved" ? (
-                    <button
-                      type="button"
-                      onClick={() => setShowCertificateModal(true)}
-                      className="flex-1 sm:flex-initial px-3.5 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer animate-pulse min-h-[40px]"
-                    >
-                      <Award size={14} />
-                      <span>📜 નવું સરકારી પ્રમાણપત્ર (PDF)</span>
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      disabled
-                      title="તાલુકા મામલતદાર સાહેબની ડિજિટલ સહી (e-Sign) બાદ જ પ્રમાણપત્ર ડાઉનલોડ થશે"
-                      className="flex-1 sm:flex-initial px-3 py-2.5 bg-slate-100 text-slate-400 font-bold rounded-xl text-xs border border-slate-200 flex items-center justify-center gap-1.5 cursor-not-allowed opacity-75 min-h-[40px]"
-                    >
-                      <Lock size={13} className="text-slate-400" />
-                      <span>પ્રમાણપત્ર લૉક (e-Sign બાકી)</span>
-                    </button>
-                  )}
 
                   <button
                     type="button"
-                    onClick={() => setSelectedApp(null)}
-                    className="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 hover:text-slate-900 font-bold rounded-xl text-xs transition flex items-center justify-center gap-1 cursor-pointer min-h-[40px]"
-                    title="વિગતો બંધ કરો"
+                    onClick={() => setShowTimelineModal(false)}
+                    className="w-8 h-8 sm:w-9 sm:h-9 bg-black/20 hover:bg-black/40 active:scale-95 text-white rounded-full flex items-center justify-center transition shrink-0 cursor-pointer"
+                    title="બંધ કરો (Esc)"
                   >
-                    <X size={14} />
-                    <span>બંધ કરો</span>
+                    <X size={18} />
                   </button>
                 </div>
-              </div>
 
-              {/* 1. Official SLA Duration & Guaranteed Resolution Target */}
-              {(() => {
-                const sla = getApplicationSLADetails(selectedApp);
-                return (
-                  <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-orange-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-3">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-200/70 pb-3">
-                      <div className="flex items-center gap-2.5">
-                        <div className="w-9 h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center font-bold text-lg shadow-xs">
-                          ⏱️
+                {/* ── Modal Body (Scrollable, Responsive, Nothing Cut Off) ── */}
+                <div className="overflow-y-auto p-3.5 sm:p-6 space-y-4 text-slate-800 touch-pan-y">
+                  {/* Applicant Meta Pill */}
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl p-2.5 sm:p-3 flex flex-wrap items-center justify-between gap-2 text-xs">
+                    <div className="text-slate-700">
+                      <span className="text-slate-500 font-medium">અરજદાર: </span>
+                      <strong className="text-slate-900">{selectedApp.citizenNameGu}</strong> ({selectedApp.citizenName})
+                      <span className="text-slate-400 mx-1.5">•</span>
+                      <span>📱 +91 {selectedApp.mobile}</span>
+                    </div>
+                    <div className="text-[11px] text-slate-500 font-medium">
+                      📍 {selectedApp.village ? `${selectedApp.village}, ` : ""}{selectedApp.taluka}, {selectedApp.districtGu}
+                    </div>
+                  </div>
+
+                  {/* 1. Official SLA Duration & Guaranteed Resolution Target */}
+                  {(() => {
+                    const sla = getApplicationSLADetails(selectedApp);
+                    return (
+                      <div className="bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 border border-orange-200 rounded-2xl p-3.5 sm:p-5 shadow-xs space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-orange-200/70 pb-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-600 text-white flex items-center justify-center font-bold text-base sm:text-lg shadow-xs shrink-0">
+                              ⏱️
+                            </div>
+                            <div>
+                              <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2 flex-wrap">
+                                <span>સરકારી સેવા સમયમર્યાદા (Citizen Charter SLA)</span>
+                                <span className="bg-orange-600 text-white text-[10px] sm:text-[10.5px] px-2 py-0.2 rounded-full font-bold">
+                                  {sla.slaLabelGu}
+                                </span>
+                              </h4>
+                              <p className="text-[10.5px] sm:text-[11px] text-slate-600 mt-0.5">
+                                {sla.actSectionGu}
+                              </p>
+                            </div>
+                          </div>
+
+                          <span className={`text-[11px] sm:text-xs px-2.5 py-0.5 sm:py-1 rounded-full font-black border shadow-2xs self-start sm:self-auto ${sla.statusColor}`}>
+                            {sla.statusBadgeGu}
+                          </span>
                         </div>
-                        <div>
-                          <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-2">
-                            <span>સરકારી સેવા સમયમર્યાદા (Citizen Charter SLA)</span>
-                            <span className="bg-orange-600 text-white text-[10.5px] px-2.5 py-0.5 rounded-full font-bold">
-                              {sla.slaLabelGu}
-                            </span>
-                          </h4>
-                          <p className="text-[11px] text-slate-600 mt-0.5">
-                            {sla.actSectionGu}
+
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-2.5 text-xs">
+                          <div className="bg-white/90 p-2 sm:p-2.5 rounded-xl border border-orange-100 shadow-2xs">
+                            <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-bold block uppercase truncate">અરજી સબમિટ તારીખ</span>
+                            <strong className="text-slate-800 text-xs sm:text-sm font-mono">{selectedApp.appliedDate}</strong>
+                          </div>
+                          <div className="bg-white/90 p-2 sm:p-2.5 rounded-xl border border-orange-100 shadow-2xs">
+                            <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-bold block uppercase truncate">અપેક્ષિત નિકાલ તારીખ</span>
+                            <strong className="text-orange-700 text-xs sm:text-sm font-mono">{sla.targetDateStr}</strong>
+                          </div>
+                          <div className="bg-white/90 p-2 sm:p-2.5 rounded-xl border border-orange-100 shadow-2xs">
+                            <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-bold block uppercase truncate">સક્ષમ કચેરી / સત્તાધિકારી</span>
+                            <strong className="text-slate-800 text-[11px] sm:text-[11.5px] leading-tight block break-words" title={sla.authorityGu}>{sla.authorityGu}</strong>
+                          </div>
+                          <div className="bg-white/90 p-2 sm:p-2.5 rounded-xl border border-orange-100 shadow-2xs">
+                            <span className="text-[9.5px] sm:text-[10px] text-slate-500 font-bold block uppercase truncate">છેલ્લું સ્થિતિ અપડેટ</span>
+                            <strong className="text-slate-800 text-xs sm:text-sm font-mono">{selectedApp.lastUpdated}</strong>
+                          </div>
+                        </div>
+
+                        <p className="text-[10.5px] sm:text-[11px] text-slate-600 italic leading-snug">
+                          📌 <strong>કચેરી નિયમ:</strong> {sla.descriptionGu}
+                        </p>
+                      </div>
+                    );
+                  })()}
+
+                  {/* 2. Official Scrutiny Remarks & Officer Reasons */}
+                  {selectedApp.status === "rejected" && (
+                    <div className="p-3.5 sm:p-5 bg-rose-50 border-2 border-rose-300 rounded-2xl space-y-3 shadow-xs animate-in fade-in">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-2 border-b border-rose-200 pb-2.5">
+                        <div className="flex items-center gap-2 text-rose-950">
+                          <AlertTriangle size={18} className="text-rose-600 shrink-0" />
+                          <span className="font-black text-xs sm:text-sm">
+                            🚨 કચેરી સ્ક્રુટિની આદેશ: અરજી પરત / પૂરક પુરાવા જરૂરી (Action Required)
+                          </span>
+                        </div>
+                        <span className="text-[9.5px] sm:text-[10px] font-bold bg-rose-200 text-rose-950 px-2 py-0.5 rounded-full border border-rose-300 self-start sm:self-auto font-mono">
+                          GJ-REV-REJ-{selectedApp.id}
+                        </span>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <div className="bg-white p-3 rounded-xl border border-rose-200 space-y-1">
+                          <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wide block">
+                            સત્તાવાર કારણ (Official Rejection Reason)
+                          </span>
+                          <p className="text-rose-950 font-bold leading-relaxed text-xs sm:text-[13px]">
+                            {selectedApp.remarksGu}
+                          </p>
+                        </div>
+
+                        <div className="bg-white p-3 rounded-xl border border-rose-200 space-y-1">
+                          <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">
+                            ચકાસણી કરનાર સત્તાવાર અધિકારી
+                          </span>
+                          <p className="text-slate-900 font-bold">
+                            {selectedApp.officerDesignation}
+                          </p>
+                          <p className="text-[10.5px] text-slate-500">
+                            સ્થળ: {selectedApp.taluka} તાલુકા સેવા સદન, {selectedApp.districtGu}
                           </p>
                         </div>
                       </div>
 
-                      <span className={`text-xs px-3 py-1 rounded-full font-black border shadow-2xs ${sla.statusColor}`}>
-                        {sla.statusBadgeGu}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
-                      <div className="bg-white/90 p-2.5 rounded-xl border border-orange-100 shadow-2xs">
-                        <span className="text-[10px] text-slate-500 font-bold block uppercase">અરજી સબમિટ તારીખ</span>
-                        <strong className="text-slate-800 text-xs sm:text-sm font-mono">{selectedApp.appliedDate}</strong>
-                      </div>
-                      <div className="bg-white/90 p-2.5 rounded-xl border border-orange-100 shadow-2xs">
-                        <span className="text-[10px] text-slate-500 font-bold block uppercase">અપેક્ષિત નિકાલ તારીખ</span>
-                        <strong className="text-orange-700 text-xs sm:text-sm font-mono">{sla.targetDateStr}</strong>
-                      </div>
-                      <div className="bg-white/90 p-2.5 rounded-xl border border-orange-100 shadow-2xs">
-                        <span className="text-[10px] text-slate-500 font-bold block uppercase">સક્ષમ કચેરી / સત્તાધિકારી</span>
-                        <strong className="text-slate-800 text-[11.5px] leading-tight block break-words" title={sla.authorityGu}>{sla.authorityGu}</strong>
-                      </div>
-                      <div className="bg-white/90 p-2.5 rounded-xl border border-orange-100 shadow-2xs">
-                        <span className="text-[10px] text-slate-500 font-bold block uppercase">છેલ્લું સ્થિતિ અપડેટ</span>
-                        <strong className="text-slate-800 text-xs sm:text-sm font-mono">{selectedApp.lastUpdated}</strong>
-                      </div>
-                    </div>
-
-                    <p className="text-[11px] text-slate-600 italic">
-                      📌 <strong>કચેરી નિયમ:</strong> {sla.descriptionGu}
-                    </p>
-                  </div>
-                );
-              })()}
-
-              {/* 2. Official Scrutiny Remarks & Officer Reasons */}
-              {selectedApp.status === "rejected" && (
-                <div className="p-4 sm:p-5 bg-rose-50 border-2 border-rose-300 rounded-2xl space-y-3.5 shadow-xs animate-in fade-in">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-rose-200 pb-2.5">
-                    <div className="flex items-center gap-2 text-rose-950">
-                      <AlertTriangle size={20} className="text-rose-600 shrink-0" />
-                      <span className="font-black text-sm">
-                        🚨 કચેરી સ્ક્રુટિની આદેશ: અરજી પરત / પૂરક પુરાવા જરૂરી (Action Required)
-                      </span>
-                    </div>
-                    <span className="text-[10px] font-bold bg-rose-200 text-rose-950 px-2.5 py-0.5 rounded-full border border-rose-300 self-start sm:self-auto">
-                      આદેશ ક્રમાંક: GJ-REV-REJ-{selectedApp.id}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
-                    <div className="bg-white p-3.5 rounded-xl border border-rose-200 space-y-1">
-                      <span className="text-[10px] font-bold text-rose-700 uppercase tracking-wide block">
-                        સત્તાવાર નામંજૂરીનું કારણ (Official Rejection Reason)
-                      </span>
-                      <p className="text-rose-950 font-bold leading-relaxed">
-                        {selectedApp.remarksGu}
-                      </p>
-                    </div>
-
-                    <div className="bg-white p-3.5 rounded-xl border border-rose-200 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-600 uppercase tracking-wide block">
-                        ચકાસણી કરનાર સત્તાવાર અધિકારી
-                      </span>
-                      <p className="text-slate-900 font-bold">
-                        {selectedApp.officerDesignation}
-                      </p>
-                      <p className="text-[11px] text-slate-500">
-                        સ્થળ: {selectedApp.taluka} તાલુકા સેવા સદન, {selectedApp.districtGu}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="bg-rose-100/70 p-3.5 rounded-xl border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div className="text-xs text-rose-950 space-y-0.5">
-                      <p className="font-extrabold flex items-center gap-1.5">
-                        <span>💡 નાગરિક માટે ત્વરિત ઉકેલ (Instant Resolution):</span>
-                      </p>
-                      <p className="text-[11px] text-rose-800">
-                        તમારી અગાઉની તમામ વિગતો સુરક્ષિત સાચવેલી છે. તમારે માત્ર માંગેલ પૂરક પુરાવો અપલોડ કરી ૧-ક્લિકમાં પુનઃ અરજી કરવાની રહેશે.
-                      </p>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => handleReApply(selectedApp)}
-                      className="px-4 py-2.5 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-95 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer shrink-0"
-                    >
-                      <RotateCw size={14} className="animate-spin-slow" />
-                      <span>🔄 પૂરક પુરાવા સાથે પુનઃ અરજી કરો (Re-Apply)</span>
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              {selectedApp.status === "processing" && (
-                <div className="p-4 bg-blue-50 border border-blue-200 rounded-2xl space-y-2.5 text-xs shadow-xs">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 text-blue-900 font-bold">
-                      <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping" />
-                      <span className="font-black text-xs sm:text-sm">કચેરી સ્ક્રુટિની & રેકોર્ડ ખરાઈ ચાલુ (Under Scrutiny)</span>
-                    </div>
-                    <span className="text-[10.5px] bg-blue-200/80 text-blue-900 font-bold px-2.5 py-0.5 rounded-full">
-                      તબક્કો ૨ ચાલુ
-                    </span>
-                  </div>
-                  <div className="bg-white/80 p-3 rounded-xl border border-blue-100 text-blue-950 space-y-1">
-                    <p>
-                      <strong>કચેરી નોંધ:</strong> {selectedApp.remarksGu}
-                    </p>
-                    <p className="text-[11px] text-blue-700">
-                      <strong>ચકાસણી અધિકારી:</strong> {selectedApp.officerDesignation}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {selectedApp.status === "pending" && (
-                <div className="p-4 bg-amber-50 border border-amber-200 rounded-2xl space-y-2.5 text-xs shadow-xs">
-                  <div className="flex items-center gap-2 text-amber-900 font-bold">
-                    <Clock size={16} className="text-amber-600" />
-                    <span className="font-black text-xs sm:text-sm">સ્થળ તપાસ / પંચનામા રિપોર્ટ પેન્ડિંગ (Field Inspection)</span>
-                  </div>
-                  <div className="bg-white/80 p-3 rounded-xl border border-amber-100 text-amber-950 space-y-1">
-                    <p>
-                      <strong>વિગત:</strong> {selectedApp.remarksGu}
-                    </p>
-                    <p className="text-[11px] text-amber-700">
-                      <strong>તપાસકર્તા:</strong> {selectedApp.officerDesignation}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {selectedApp.status === "approved" && (
-                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2.5 text-xs shadow-xs">
-                  <div className="flex items-center justify-between gap-2 flex-wrap">
-                    <div className="flex items-center gap-2 text-emerald-900 font-bold">
-                      <CheckCircle2 size={18} className="text-emerald-600" />
-                      <span className="font-black text-xs sm:text-sm">સત્તાવાર મંજૂરી આદેશ સંપન્ન (Sanctioned & Approved)</span>
-                    </div>
-                    {selectedApp.benefitAmount > 0 && (
-                      <span className="bg-emerald-200 text-emerald-950 font-black px-2.5 py-0.5 rounded-full text-xs">
-                        DBT સહાય: ₹{selectedApp.benefitAmount.toLocaleString("en-IN")} જમા
-                      </span>
-                    )}
-                  </div>
-                  <div className="bg-white/80 p-3 rounded-xl border border-emerald-100 text-emerald-950 space-y-1">
-                    <p>
-                      <strong>મંજૂરી નોંધ:</strong> {selectedApp.remarksGu}
-                    </p>
-                    <p className="text-[11px] text-emerald-700">
-                      <strong>મંજૂર કરનાર સત્તાધિકારી:</strong> {selectedApp.officerDesignation}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* 3. Smart 3-Step Visual Progress Workflow Pipeline */}
-              {(() => {
-                const currentStage = selectedApp.workflowStage || (selectedApp.status === "approved" ? 3 : selectedApp.status === "rejected" ? 2 : 2);
-                const isRejected = selectedApp.status === "rejected";
-                const isApproved = selectedApp.status === "approved";
-                const sla = getApplicationSLADetails(selectedApp);
-
-                return (
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
-                        <span>🏛️ લાઈવ સ્ક્રુટિની ટ્રેકિંગ પાઈપલાઈન (Live Scrutiny Pipeline)</span>
-                      </h4>
-                      <span className="text-[11px] text-slate-500 font-medium">
-                        તબક્કો {isApproved ? "૩/૩ (પૂર્ણ)" : isRejected ? "૨/૩ (અટકેલ)" : "૨/૩ (ચાલુ)"}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                      {/* Stage 1 */}
-                      <div className="p-3.5 rounded-2xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs">
-                        <div className="flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black bg-emerald-600 text-white shrink-0">
-                            ✓
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-extrabold text-xs">તબક્કો ૧: ઓનલાઇન સ્વીકૃતિ</p>
-                            <p className="text-[10px] text-emerald-700">{selectedApp.appliedDate}</p>
-                          </div>
+                      <div className="bg-rose-100/70 p-3 rounded-xl border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="text-xs text-rose-950 space-y-0.5">
+                          <p className="font-extrabold flex items-center gap-1.5">
+                            <span>💡 નાગરિક માટે ત્વરિત ઉકેલ:</span>
+                          </p>
+                          <p className="text-[10.5px] text-rose-800 leading-snug">
+                            તમારી વિગતો સુરક્ષિત છે. માત્ર માંગેલ પૂરક પુરાવો અપલોડ કરી ૧-ક્લિકમાં પુનઃ અરજી કરો.
+                          </p>
                         </div>
-                        <p className="text-[11px] mt-2 text-slate-600 leading-snug">
-                          અરજી સ્વીકૃત. આધાર e-KYC અને AI દસ્તાવેજ ચકાસણી ૧૦૦% સફળ.
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowTimelineModal(false);
+                            handleReApply(selectedApp);
+                          }}
+                          className="px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-95 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                        >
+                          <RotateCw size={13} />
+                          <span>પુનઃ અરજી કરો (Re-Apply)</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedApp.status === "processing" && (
+                    <div className="p-3.5 bg-blue-50 border border-blue-200 rounded-2xl space-y-2 text-xs shadow-xs">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 text-blue-900 font-bold">
+                          <span className="w-2.5 h-2.5 rounded-full bg-blue-600 animate-ping" />
+                          <span className="font-black text-xs sm:text-sm">કચેરી સ્ક્રુટિની & રેકોર્ડ ખરાઈ ચાલુ (Under Scrutiny)</span>
+                        </div>
+                        <span className="text-[10px] bg-blue-200/80 text-blue-900 font-bold px-2 py-0.5 rounded-full">
+                          તબક્કો ૨ ચાલુ
+                        </span>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-blue-100 text-blue-950 space-y-1">
+                        <p>
+                          <strong>કચેરી નોંધ:</strong> {selectedApp.remarksGu}
+                        </p>
+                        <p className="text-[11px] text-blue-700">
+                          <strong>ચકાસણી અધિકારી:</strong> {selectedApp.officerDesignation}
                         </p>
                       </div>
+                    </div>
+                  )}
 
-                      {/* Stage 2 */}
-                      <div className={`p-3.5 rounded-2xl border shadow-2xs ${
-                        isRejected
-                          ? "bg-rose-50 border-rose-300 text-rose-900"
-                          : isApproved || currentStage >= 2
-                          ? "bg-emerald-50 border-emerald-300 text-emerald-900"
-                          : "bg-blue-50 border-blue-300 text-blue-900"
-                      }`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                  {selectedApp.status === "pending" && (
+                    <div className="p-3.5 bg-amber-50 border border-amber-200 rounded-2xl space-y-2 text-xs shadow-xs">
+                      <div className="flex items-center gap-2 text-amber-900 font-bold">
+                        <Clock size={16} className="text-amber-600 shrink-0" />
+                        <span className="font-black text-xs sm:text-sm">સ્થળ તપાસ / પંચનામા રિપોર્ટ પેન્ડિંગ (Field Inspection)</span>
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-amber-100 text-amber-950 space-y-1">
+                        <p>
+                          <strong>વિગત:</strong> {selectedApp.remarksGu}
+                        </p>
+                        <p className="text-[11px] text-amber-700">
+                          <strong>તપાસકર્તા:</strong> {selectedApp.officerDesignation}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedApp.status === "approved" && (
+                    <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2 text-xs shadow-xs">
+                      <div className="flex items-center justify-between gap-2 flex-wrap">
+                        <div className="flex items-center gap-2 text-emerald-900 font-bold">
+                          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                          <span className="font-black text-xs sm:text-sm">સત્તાવાર મંજૂરી આદેશ સંપન્ન (Sanctioned & Approved)</span>
+                        </div>
+                        {selectedApp.benefitAmount > 0 && (
+                          <span className="bg-emerald-200 text-emerald-950 font-black px-2.5 py-0.5 rounded-full text-xs">
+                            DBT સહાય: ₹{selectedApp.benefitAmount.toLocaleString("en-IN")} જમા
+                          </span>
+                        )}
+                      </div>
+                      <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-100 text-emerald-950 space-y-1">
+                        <p>
+                          <strong>મંજૂરી નોંધ:</strong> {selectedApp.remarksGu}
+                        </p>
+                        <p className="text-[11px] text-emerald-700">
+                          <strong>મંજૂર કરનાર સત્તાધિકારી:</strong> {selectedApp.officerDesignation}
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 3. Smart 3-Step Visual Progress Workflow Pipeline */}
+                  {(() => {
+                    const currentStage = selectedApp.workflowStage || (selectedApp.status === "approved" ? 3 : selectedApp.status === "rejected" ? 2 : 2);
+                    const isRejected = selectedApp.status === "rejected";
+                    const isApproved = selectedApp.status === "approved";
+                    const sla = getApplicationSLADetails(selectedApp);
+
+                    return (
+                      <div className="space-y-2.5 pt-1">
+                        <div className="flex items-center justify-between">
+                          <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center gap-1.5">
+                            <span>🏛️ લાઈવ સ્ક્રુટિની ટ્રેકિંગ પાઈપલાઈન (Live Scrutiny Pipeline)</span>
+                          </h4>
+                          <span className="text-[11px] text-slate-500 font-medium">
+                            તબક્કો {isApproved ? "૩/૩ (પૂર્ણ)" : isRejected ? "૨/૩ (અટકેલ)" : "૨/૩ (ચાલુ)"}
+                          </span>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3">
+                          {/* Stage 1 */}
+                          <div className="p-3 sm:p-3.5 rounded-2xl border bg-emerald-50 border-emerald-300 text-emerald-900 shadow-2xs">
+                            <div className="flex items-center gap-2">
+                              <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-black bg-emerald-600 text-white shrink-0">
+                                ✓
+                              </span>
+                              <div className="min-w-0">
+                                <p className="font-extrabold text-xs">તબક્કો ૧: ઓનલાઇન સ્વીકૃતિ</p>
+                                <p className="text-[10px] text-emerald-700">{selectedApp.appliedDate}</p>
+                              </div>
+                            </div>
+                            <p className="text-[11px] mt-2 text-slate-600 leading-snug">
+                              અરજી સ્વીકૃત. આધાર e-KYC અને AI દસ્તાવેજ ચકાસણી ૧૦૦% સફળ.
+                            </p>
+                          </div>
+
+                          {/* Stage 2 */}
+                          <div className={`p-3 sm:p-3.5 rounded-2xl border shadow-2xs ${
                             isRejected
-                              ? "bg-rose-600 text-white"
-                              : isApproved
-                              ? "bg-emerald-600 text-white"
-                              : "bg-blue-600 text-white animate-pulse"
+                              ? "bg-rose-50 border-rose-300 text-rose-900"
+                              : isApproved || currentStage >= 2
+                              ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                              : "bg-blue-50 border-blue-300 text-blue-900"
                           }`}>
-                            {isRejected ? "✕" : isApproved ? "✓" : "૨"}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-extrabold text-xs">તબક્કો ૨: કચેરી સ્ક્રુટિની</p>
-                            <p className="text-[10px] text-slate-500">સમયમર્યાદા: {sla.slaLabelGu}</p>
+                            <div className="flex items-center gap-2">
+                              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                                isRejected
+                                  ? "bg-rose-600 text-white"
+                                  : isApproved
+                                  ? "bg-emerald-600 text-white"
+                                  : "bg-blue-600 text-white animate-pulse"
+                              }`}>
+                                {isRejected ? "✕" : isApproved ? "✓" : "૨"}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="font-extrabold text-xs">તબક્કો ૨: કચેરી સ્ક્રુટિની</p>
+                                <p className="text-[10px] text-slate-500">સમયમર્યાદા: {sla.slaLabelGu}</p>
+                              </div>
+                            </div>
+                            <p className="text-[11px] mt-2 text-slate-600 leading-snug">
+                              {isRejected
+                                ? "પૂરક પુરાવા જરૂરી હોવાથી અરજી પરત કરાઈ છે."
+                                : isApproved
+                                ? "મામલતદાર / વિસ્તરણ અધિકારી ખરાઈ સફળ."
+                                : "રેકોર્ડ ખરાઈ અને સ્થળ તપાસ પ્રક્રિયા હેઠળ છે."}
+                            </p>
                           </div>
-                        </div>
-                        <p className="text-[11px] mt-2 text-slate-600 leading-snug">
-                          {isRejected
-                            ? "પૂરક પુરાવા જરૂરી હોવાથી અરજી પરત કરાઈ છે."
-                            : isApproved
-                            ? "મામલતદાર / વિસ્તરણ અધિકારી ખરાઈ સફળ."
-                            : "રેકોર્ડ ખરાઈ અને સ્થળ તપાસ પ્રક્રિયા હેઠળ છે."}
-                        </p>
-                      </div>
 
-                      {/* Stage 3 */}
-                      <div className={`p-3.5 rounded-2xl border shadow-2xs ${
-                        isApproved
-                          ? "bg-emerald-50 border-emerald-300 text-emerald-900"
-                          : isRejected
-                          ? "bg-slate-50 border-slate-200 text-slate-400"
-                          : "bg-slate-50 border-slate-200 text-slate-500"
-                      }`}>
-                        <div className="flex items-center gap-2">
-                          <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                          {/* Stage 3 */}
+                          <div className={`p-3 sm:p-3.5 rounded-2xl border shadow-2xs ${
                             isApproved
-                              ? "bg-emerald-600 text-white"
-                              : "bg-slate-200 text-slate-600"
+                              ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                              : isRejected
+                              ? "bg-slate-50 border-slate-200 text-slate-400"
+                              : "bg-slate-50 border-slate-200 text-slate-500"
                           }`}>
-                            {isApproved ? "✓" : "૩"}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="font-extrabold text-xs">તબક્કો ૩: આખરી મંજૂરી / e-Sign</p>
-                            <p className="text-[10px] text-slate-500">
-                              {isApproved ? selectedApp.lastUpdated : "અપેક્ષિત: " + sla.targetDateStr}
+                            <div className="flex items-center gap-2">
+                              <span className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-black shrink-0 ${
+                                isApproved
+                                  ? "bg-emerald-600 text-white"
+                                  : "bg-slate-200 text-slate-600"
+                              }`}>
+                                {isApproved ? "✓" : "૩"}
+                              </span>
+                              <div className="min-w-0">
+                                <p className="font-extrabold text-xs">તબક્કો ૩: આખરી મંજૂરી / e-Sign</p>
+                                <p className="text-[10px] text-slate-500">
+                                  {isApproved ? selectedApp.lastUpdated : "અપેક્ષિત: " + sla.targetDateStr}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-[11px] mt-2 text-slate-600 leading-snug">
+                              {isApproved
+                                ? "ડિજિટલ સહી વાળું પ્રમાણપત્ર તૈયાર / DBT સહાય જમા."
+                                : isRejected
+                                ? "પુનઃ અરજી બાદ જ આ તબક્કો સક્રિય થશે."
+                                : "સ્ક્રુટિની પૂર્ણ થયે ડિજિટલ સર્ટિફિકેટ ઇશ્યૂ થશે."}
                             </p>
                           </div>
                         </div>
-                        <p className="text-[11px] mt-2 text-slate-600 leading-snug">
-                          {isApproved
-                            ? "ડિજિટલ સહી વાળું પ્રમાણપત્ર તૈયાર / DBT સહાય જમા."
-                            : isRejected
-                            ? "પુનઃ અરજી બાદ જ આ તબક્કો સક્રિય થશે."
-                            : "સ્ક્રુટિની પૂર્ણ થયે ડિજિટલ સર્ટિફિકેટ ઇશ્યૂ થશે."}
-                        </p>
                       </div>
-                    </div>
-                  </div>
-                );
-              })()}
+                    );
+                  })()}
 
-              {/* Cash payment action if pending challan */}
-              {selectedApp.paymentStatus === "pending_challan" && (
-                <div className="p-4 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                  <div className="flex items-center gap-2 text-amber-900">
-                    <Receipt size={18} className="text-amber-700 shrink-0" />
-                    <div>
-                      <p className="font-extrabold text-xs">
-                        ઓફલાઇન રોકડ ચલણ પાવતી ભરપાઈ બાકી (GRN: {selectedApp.challanNo})
-                      </p>
-                      <p className="text-[11px] text-amber-800">
-                        જન સેવા કેન્દ્ર કેશ કાઉન્ટર પર રોકડા ₹{selectedApp.feeAmount} ભરી પહોંચ મેળવો.
-                      </p>
+                  {/* Cash payment action if pending challan */}
+                  {selectedApp.paymentStatus === "pending_challan" && (
+                    <div className="p-3.5 bg-amber-50 border border-amber-300 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                      <div className="flex items-center gap-2 text-amber-900">
+                        <Receipt size={18} className="text-amber-700 shrink-0" />
+                        <div>
+                          <p className="font-extrabold text-xs">
+                            ઓફલાઇન રોકડ ચલણ પાવતી ભરપાઈ બાકી (GRN: {selectedApp.challanNo})
+                          </p>
+                          <p className="text-[11px] text-amber-800">
+                            જન સેવા કેન્દ્ર કેશ કાઉન્ટર પર રોકડા ₹{selectedApp.feeAmount} ભરી પહોંચ મેળવો.
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={handleConfirmCashPayment}
+                        disabled={isConfirmingCash}
+                        className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black rounded-xl text-xs transition shrink-0 cursor-pointer"
+                      >
+                        {isConfirmingCash ? "ચકાસણી..." : "ઓપરેટર ચુકવણી પુષ્ટિ (Demo Confirm)"}
+                      </button>
                     </div>
+                  )}
+                </div>
+
+                {/* ── Modal Footer (Sticky, Clean Actions) ── */}
+                <div className="bg-slate-50 border-t border-slate-200 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                  <div className="flex items-center gap-2 flex-wrap flex-1 min-w-0">
+                    {/* Gated Action 1: Payment Slip */}
+                    {selectedApp.paymentStatus === "paid" ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowPrintModal(true)}
+                        className="px-3 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Printer size={13} />
+                        <span>પહોંચ (PDF)</span>
+                      </button>
+                    ) : (
+                      <span
+                        title="કચેરી અધિકારી દ્વારા ચુકવણી ખરાઈ થયા બાદ જ પહોંચ અનલૉક થશે"
+                        className="px-2.5 py-1.5 bg-slate-100 text-slate-400 font-bold rounded-xl text-[11px] border border-slate-200 flex items-center gap-1 cursor-not-allowed opacity-75"
+                      >
+                        <Lock size={12} className="text-amber-500" />
+                        <span>પહોંચ લૉક</span>
+                      </span>
+                    )}
+
+                    {/* Gated Action 2: Official Certificate */}
+                    {selectedApp.workflowStage === 3 || selectedApp.status === "approved" ? (
+                      <button
+                        type="button"
+                        onClick={() => setShowCertificateModal(true)}
+                        className="px-3 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white font-extrabold rounded-xl text-xs shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer animate-pulse"
+                      >
+                        <Award size={13} />
+                        <span>📜 સરકારી પ્રમાણપત્ર (PDF)</span>
+                      </button>
+                    ) : (
+                      <span
+                        title="તાલુકા મામલતદાર સાહેબની ડિજિટલ સહી (e-Sign) બાદ જ પ્રમાણપત્ર ડાઉનલોડ થશે"
+                        className="px-2.5 py-1.5 bg-slate-100 text-slate-400 font-bold rounded-xl text-[11px] border border-slate-200 flex items-center gap-1 cursor-not-allowed opacity-75"
+                      >
+                        <Lock size={12} className="text-slate-400" />
+                        <span>પ્રમાણપત્ર લૉક</span>
+                      </span>
+                    )}
                   </div>
+
                   <button
                     type="button"
-                    onClick={handleConfirmCashPayment}
-                    disabled={isConfirmingCash}
-                    className="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white font-black rounded-xl text-xs transition shrink-0 cursor-pointer"
+                    onClick={() => setShowTimelineModal(false)}
+                    className="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-black rounded-xl text-xs transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
                   >
-                    {isConfirmingCash ? "ચકાસણી..." : "ઓપરેટર ચુકવણી પુષ્ટિ (Demo Confirm)"}
+                    <X size={13} />
+                    <span>બંધ કરો</span>
                   </button>
                 </div>
-              )}
+              </div>
             </div>
           )}
         </div>
@@ -1391,7 +1450,7 @@ export default function TrackVaultView({
       {/* ── Official Receipt Slip Modal (PDF Download / Print) ── */}
       {showPrintModal && selectedApp && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowPrintModal(false);
           }}
@@ -1407,7 +1466,7 @@ export default function TrackVaultView({
       {/* ── Official Government Certificate Modal (PDF Download / Print) ── */}
       {showCertificateModal && selectedApp && (
         <div
-          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
+          className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowCertificateModal(false);
           }}

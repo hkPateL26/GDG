@@ -229,34 +229,34 @@ export default function UnifiedCitizenPortal({
   // STATE C: UNAUTHENTICATED (Unified Login Gateway with Mode Selector)
   // ══════════════════════════════════════════════════════════════
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">
-      <div className="max-w-xl mx-auto px-3 sm:px-6 py-8 sm:py-12 animate-in fade-in duration-300 space-y-4">
+    <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 sm:pb-16 overflow-x-hidden">
+      <div className="max-w-xl mx-auto px-2 sm:px-6 py-1.5 sm:py-8 animate-in fade-in duration-300 space-y-1.5 sm:space-y-4">
         {/* Top Segmented Mode Switcher */}
-        <div className="bg-slate-200/80 p-1.5 rounded-2xl flex items-center gap-1 shadow-inner border border-slate-300">
+        <div className="bg-slate-200/80 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl flex items-center gap-1 shadow-inner border border-slate-300">
           <button
             type="button"
             onClick={() => setAuthMode("citizen")}
-            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               authMode === "citizen"
                 ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md font-black"
                 : "text-slate-700 hover:bg-white/60"
             }`}
           >
-            <User size={15} />
-            <span>નાગરિક 2FA લૉગિન</span>
+            <User size={13} className="shrink-0" />
+            <span className="truncate">નાગરિક 2FA લૉગિન</span>
           </button>
 
           <button
             type="button"
             onClick={() => setAuthMode("officer")}
-            className={`flex-1 py-2.5 px-3 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer ${
+            className={`flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
               authMode === "officer"
                 ? "bg-slate-900 text-amber-300 shadow-md font-black"
                 : "text-slate-700 hover:bg-white/60"
             }`}
           >
-            <Building2 size={15} />
-            <span>અધિકારી / એડમિન લૉગિન</span>
+            <Building2 size={13} className="shrink-0" />
+            <span className="truncate">અધિકારી લૉગિન</span>
           </button>
         </div>
 

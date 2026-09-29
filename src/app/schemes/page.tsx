@@ -102,43 +102,6 @@ export default function SchemesPage() {
     <>
       <Navbar />
       <main className="min-h-screen bg-gray-50 pb-16">
-        {/* Real-time Enterprise DPI Status Bar */}
-        <div className="bg-slate-900 text-slate-300 text-[11px] py-1.5 px-3 sm:px-6 border-b border-slate-800 flex items-center justify-between flex-wrap gap-2">
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 font-semibold text-emerald-400">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-              DPI Cloud: {clusterMeta.source === "cloud-firestore" ? "Google Cloud Firestore" : "Local Edge"}
-            </span>
-            <span className="hidden sm:inline-block text-slate-600">|</span>
-            <span className="hidden sm:flex items-center gap-1 text-slate-300">
-              <Server size={12} className="text-orange-400" />
-              Node: {clusterMeta.serverCluster}
-            </span>
-            <span className="hidden md:inline-block text-slate-600">|</span>
-            <span className="hidden md:flex items-center gap-1 text-slate-400">
-              <Activity size={12} className="text-blue-400" />
-              Load Balancer: Active Round-Robin
-            </span>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <span className="flex items-center gap-1 text-emerald-300 font-mono">
-              ⚡ {clusterMeta.latencyMs}ms
-            </span>
-            <span className="text-slate-600">|</span>
-            <span className="text-slate-300 font-medium">
-              કુલ યોજનાઓ: {clusterMeta.totalInCluster}
-            </span>
-            <button
-              onClick={handleRefresh}
-              className="text-slate-400 hover:text-white transition flex items-center gap-1"
-              title="રીફ્રેશ લાઈવ ડેટા"
-            >
-              <RefreshCw size={11} className={isLoading ? "animate-spin text-orange-400" : ""} />
-            </button>
-          </div>
-        </div>
-
         {/* Hero Section */}
         <div className="bg-gradient-to-r from-orange-600 via-orange-500 to-green-700 text-white py-7 sm:py-10 px-4 shadow-inner">
           <div className="max-w-4xl mx-auto text-center">

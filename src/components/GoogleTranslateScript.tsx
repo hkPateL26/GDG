@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import {
   getStoredLanguage,
   setGoogleTranslateCookies,
+  clearGoogleTranslateCookies,
   DEFAULT_LANGUAGE,
 } from "@/lib/translation";
 
@@ -68,6 +69,8 @@ export default function GoogleTranslateScript() {
     // Ensure cookie is in sync with stored language before script initializes
     if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
       setGoogleTranslateCookies(savedLang);
+    } else {
+      clearGoogleTranslateCookies();
     }
 
     // Set callback for Google Translate initialization
@@ -129,13 +132,18 @@ export default function GoogleTranslateScript() {
       }
     };
 
-    // Preload Google Translate script unconditionally so combo is pre-warmed & ready
-    loadScript();
+    // Only load Google Translate script if a non-default language is selected
+    if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
+      loadScript();
+    } else {
+      window.dispatchEvent(new Event("nagrikseva:pageReady"));
+    }
 
     const handleLangChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>;
       const newLang = customEvent.detail;
       if (newLang && newLang !== DEFAULT_LANGUAGE) {
+        setGoogleTranslateCookies(newLang);
         loadScript();
       }
     };
