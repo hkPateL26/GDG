@@ -815,42 +815,44 @@ export default function AdminHierarchyDesk({
   }, [applications, currentOfficer.role, selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery, slaFilterOnly]);
 
   return (
-    <div className="space-y-4 max-w-7xl mx-auto px-2 sm:px-4 animate-in fade-in duration-200">
+    <div className="space-y-3 sm:space-y-4 max-w-7xl mx-auto px-1 sm:px-4 animate-in fade-in duration-200">
       {/* ── Officer Identity Header & Administrative Tier (Compact & Responsive) ── */}
-      <div className="bg-slate-900 text-white rounded-2xl p-4 sm:p-5 border border-slate-800 shadow-lg space-y-3">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-5 border border-slate-800 shadow-lg space-y-2.5 sm:space-y-3">
+        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
           {/* Officer Details */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-12 h-12 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-2xl shadow-inner shrink-0">
+          <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-xl sm:text-2xl shadow-inner shrink-0 mt-0.5 sm:mt-0">
               {currentOfficer.avatarEmoji || "🏛️"}
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h2 className="font-black text-base text-white truncate">{currentOfficer.name}</h2>
-                <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <h2 className="font-black text-sm sm:text-base text-white">{currentOfficer.name}</h2>
+                <span className="text-[9px] sm:text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-full uppercase shrink-0">
                   {currentOfficer.tierNameGu}
                 </span>
                 {isOnLeave ? (
-                  <span className="text-[10px] bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse">
+                  <span className="text-[9px] sm:text-[10px] bg-rose-500 text-white font-bold px-2 py-0.5 rounded-full flex items-center gap-1 animate-pulse shrink-0">
                     ⚠️ રજા પર
                   </span>
                 ) : (
-                  <span className="text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <span className="text-[9px] sm:text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 font-bold px-2 py-0.5 rounded-full flex items-center gap-1 shrink-0">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
                     ફરજ પર
                   </span>
                 )}
               </div>
-              <p className="text-[11px] text-slate-300 mt-0.5 break-words">
+              <p className="text-[10.5px] sm:text-[11px] text-slate-300 mt-1 leading-snug break-words">
                 {currentOfficer.designation} &bull; ID:{" "}
-                <strong className="font-mono text-amber-300">{currentOfficer.id}</strong> (
-                {currentOfficer.officeGu || currentOfficer.office || "કચેરી ડેસ્ક"})
+                <strong className="font-mono text-amber-300">{currentOfficer.id}</strong>
+                <span className="text-slate-400 block sm:inline sm:ml-1">
+                  ({currentOfficer.officeGu || currentOfficer.office || "કચેરી ડેસ્ક"})
+                </span>
               </p>
-              <div className="flex items-center gap-2 flex-wrap mt-1">
-                <span className="text-[10px] bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap mt-1.5">
+                <span className="text-[9.5px] sm:text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 font-black px-2 py-0.5 rounded-md flex items-center gap-1 shadow-2xs">
                   {getOfficerJurisdictionInfo(currentOfficer).icon} અધિકારક્ષેત્ર: {getOfficerJurisdictionInfo(currentOfficer).badge}
                 </span>
-                <span className="text-[10px] text-amber-200/90 font-medium hidden sm:inline">
+                <span className="text-[9.5px] sm:text-[10px] text-amber-200/90 font-medium hidden sm:inline">
                   &bull; {getOfficerJurisdictionInfo(currentOfficer).description}
                 </span>
               </div>
@@ -858,11 +860,11 @@ export default function AdminHierarchyDesk({
           </div>
 
           {/* Quick Actions: Leave Protocol & Logout */}
-          <div className="flex items-center gap-2 shrink-0 self-end md:self-auto">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-0">
             <button
               type="button"
               onClick={handleToggleLeave}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+              className={`flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[34px] sm:min-h-[36px] ${
                 isOnLeave
                   ? "bg-rose-600 hover:bg-rose-500 text-white"
                   : "bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700"
@@ -874,7 +876,7 @@ export default function AdminHierarchyDesk({
             <button
               type="button"
               onClick={handleLogoutClick}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1 cursor-pointer"
+              className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-rose-300 border border-slate-700 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[34px] sm:min-h-[36px]"
             >
               <LogOut size={12} />
               <span>લૉગઆઉટ</span>
@@ -933,21 +935,24 @@ export default function AdminHierarchyDesk({
             })}
           </div>
         ) : (
-          <div className="bg-slate-950/90 p-2.5 sm:p-3 rounded-xl border border-emerald-500/40 flex items-center justify-between gap-3 text-xs">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-base">
+          <div className="bg-slate-950/90 p-2 sm:p-2.5 rounded-xl border border-emerald-500/40 flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 sm:gap-3 text-xs">
+            <div className="flex items-start sm:items-center gap-2 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0 text-sm mt-0.5 sm:mt-0">
                 🔒
               </div>
-              <div className="min-w-0">
-                <p className="text-emerald-300 font-bold text-xs truncate">
-                  સત્તાવાર વહીવટી અધિકારક્ષેત્ર: {authenticatedOfficer.panchayatGu || authenticatedOfficer.officeGu}
+              <div className="min-w-0 flex-1">
+                <p className="text-emerald-300 font-bold text-[11px] sm:text-xs leading-snug break-words">
+                  સત્તાવાર વહીવટી અધિકારક્ષેત્ર:{" "}
+                  <span className="text-white font-black">
+                    {authenticatedOfficer.panchayatGu || authenticatedOfficer.officeGu}
+                  </span>
                 </p>
-                <p className="text-[10.5px] text-slate-400 hidden sm:block">
-                  ગ્રામ સ્તરે માત્ર આપના સ્થાનિક અધિકારક્ષેત્રનું ડેસ્ક સક્રિય છે. ઉચ્ચ કચેરીઓનો વહીવટ માત્ર સક્ષમ ઉચ્ચ અધિકારીઓ પાસે સુરક્ષિત છે.
+                <p className="text-[10px] text-slate-400 hidden sm:block">
+                  ગ્રામ સ્તરે માત્ર આપના સ્થાનિક અધિકારક્ષેત્રનું ડેસ્ક સક્રિય છે.
                 </p>
               </div>
             </div>
-            <span className="shrink-0 text-[10px] font-black uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-2.5 py-1 rounded-md">
+            <span className="self-start sm:self-auto shrink-0 text-[9.5px] sm:text-[10px] font-black uppercase tracking-wider bg-emerald-950 text-emerald-300 border border-emerald-600/50 px-2 py-0.5 rounded-md">
               સિંગલ ડેસ્ક લૉક
             </span>
           </div>
@@ -973,20 +978,22 @@ export default function AdminHierarchyDesk({
         </div>
       )}
 
-      {/* ── Navigation Tabs (App-grade Horizontal Touch Strip) ── */}
-      <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none touch-pan-x pb-2 border-b border-slate-200">
+      {/* ── Navigation Tabs (App-grade Responsive Touch Strip) ── */}
+      <div className={`grid gap-1.5 sm:flex sm:items-center sm:gap-2 pb-2 border-b border-slate-200 ${
+        currentOfficer.canModifyPolicy ? "grid-cols-3" : "grid-cols-2"
+      }`}>
         <button
           type="button"
           onClick={() => setActiveTab("queue")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 min-h-[42px] select-none ${
+          className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
             activeTab === "queue"
               ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
               : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 active:scale-95"
           }`}
         >
-          <FileText size={15} />
-          <span>૧. અરજી સ્ક્રુટિની ડેસ્ક</span>
-          <span className="text-[10px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black">
+          <FileText size={13} className="shrink-0" />
+          <span className="truncate">૧. અરજી સ્ક્રુટિની</span>
+          <span className="text-[9.5px] sm:text-[10px] bg-amber-400 text-slate-950 px-1.5 sm:px-2 py-0.2 rounded-full font-black shrink-0">
             {filteredApplications.length}
           </span>
         </button>
@@ -994,28 +1001,28 @@ export default function AdminHierarchyDesk({
         <button
           type="button"
           onClick={() => setActiveTab("sla")}
-          className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 min-h-[42px] select-none ${
+          className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
             activeTab === "sla"
               ? "bg-rose-600 text-white shadow-sm ring-1 ring-rose-500"
               : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 active:scale-95"
           }`}
         >
-          <AlertTriangle size={15} className={activeTab === "sla" ? "text-white" : "text-rose-500"} />
-          <span>૨. AI ૧૫-મિનિટ બોટલનેક મોનિટર</span>
+          <AlertTriangle size={13} className={`shrink-0 ${activeTab === "sla" ? "text-white" : "text-rose-500"}`} />
+          <span className="truncate">૨. AI બોટલનેક</span>
         </button>
 
         {currentOfficer.canModifyPolicy && (
           <button
             type="button"
             onClick={() => setActiveTab("policy")}
-            className={`px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 min-h-[42px] select-none ${
+            className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
               activeTab === "policy"
                 ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
                 : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 active:scale-95"
             }`}
           >
-            <Sliders size={15} />
-            <span>૩. ડાયનેમિક પોલિસી CMS</span>
+            <Sliders size={13} className="shrink-0" />
+            <span className="truncate">૩. પોલિસી CMS</span>
           </button>
         )}
       </div>
@@ -1044,13 +1051,13 @@ export default function AdminHierarchyDesk({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 text-xs">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-1.5 sm:gap-2 text-xs">
               {/* District Dropdown */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
-                  <span>જિલ્લો (District)</span>
+                <label className="block text-[10px] sm:text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span className="truncate">જિલ્લો (District)</span>
                   {currentOfficer.role !== "state_admin" && (
-                    <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono">🔒 લૉક</span>
+                    <span className="text-[8.5px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono shrink-0">🔒</span>
                   )}
                 </label>
                 <select
@@ -1061,7 +1068,7 @@ export default function AdminHierarchyDesk({
                     setSelectedTaluka("all");
                     setSelectedVillage("all");
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 sm:p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-[11px] sm:text-xs"
                 >
                   {currentOfficer.role === "state_admin" && <option value="all">તમામ ૩૩ જિલ્લા</option>}
                   {GUJARAT_DISTRICTS.map((d) => (
@@ -1074,10 +1081,10 @@ export default function AdminHierarchyDesk({
 
               {/* Dynamic Real Talukas Dropdown */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
-                  <span>તાલુકો (Taluka - {availableTalukas.length})</span>
+                <label className="block text-[10px] sm:text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span className="truncate">તાલુકો (Taluka)</span>
                   {(currentOfficer.role === "talati" || currentOfficer.role === "mamlatdar") && (
-                    <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono">🔒 લૉક</span>
+                    <span className="text-[8.5px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono shrink-0">🔒</span>
                   )}
                 </label>
                 <select
@@ -1087,12 +1094,12 @@ export default function AdminHierarchyDesk({
                     setSelectedTaluka(e.target.value);
                     setSelectedVillage("all");
                   }}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 sm:p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-[11px] sm:text-xs"
                 >
                   {currentOfficer.role !== "talati" && currentOfficer.role !== "mamlatdar" && (
                     <option value="all">
                       {currentOfficer.role === "sdm_prant"
-                        ? "ગોંડલ સબ-ડિવિઝન (તમામ ૩ તાલુકા)"
+                        ? "ગોંડલ સબ-ડિવિઝન"
                         : `તમામ તાલુકા (${availableTalukas.length})`}
                     </option>
                   )}
@@ -1106,21 +1113,21 @@ export default function AdminHierarchyDesk({
 
               {/* Dynamic Real Villages & Cities Dropdown */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
-                  <span>ગામ / શહેર (Village / City)</span>
+                <label className="block text-[10px] sm:text-[10.5px] font-bold text-slate-600 mb-1 flex items-center justify-between">
+                  <span className="truncate">ગામ / શહેર</span>
                   {currentOfficer.role === "talati" && (
-                    <span className="text-[9px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono">🔒 લૉક</span>
+                    <span className="text-[8.5px] bg-slate-200 text-slate-700 px-1 py-0.2 rounded font-mono shrink-0">🔒</span>
                   )}
                 </label>
                 <select
                   value={selectedVillage}
                   disabled={currentOfficer.role === "talati" || availableVillages.length === 0}
                   onChange={(e) => setSelectedVillage(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 sm:p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 disabled:opacity-75 disabled:bg-slate-100 text-[11px] sm:text-xs"
                 >
                   {currentOfficer.role !== "talati" && (
                     <option value="all">
-                      {selectedTaluka === "all" ? "તમામ ગામડા / શહેર" : `તમામ ગામ / શહેર (${availableVillages.length})`}
+                      {selectedTaluka === "all" ? "તમામ ગામડા / શહેર" : `ગામ/શહેર (${availableVillages.length})`}
                     </option>
                   )}
                   {availableVillages.map((v) => (
@@ -1133,13 +1140,13 @@ export default function AdminHierarchyDesk({
 
               {/* Status Filter */}
               <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
-                  સ્થિતિ (Status)
+                <label className="block text-[10px] sm:text-[10.5px] font-bold text-slate-600 mb-1">
+                  <span className="truncate">સ્થિતિ (Status)</span>
                 </label>
                 <select
                   value={selectedStatus}
                   onChange={(e) => setSelectedStatus(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg p-1.5 sm:p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs"
                 >
                   <option value="all">તમામ સ્થિતિ</option>
                   <option value="processing">ચકાસણી હેઠળ</option>
@@ -1149,9 +1156,9 @@ export default function AdminHierarchyDesk({
                 </select>
               </div>
 
-              {/* Search Bar */}
-              <div>
-                <label className="block text-[10.5px] font-bold text-slate-600 mb-1">
+              {/* Search Bar - Full Width on Mobile */}
+              <div className="col-span-2 sm:col-span-2 lg:col-span-1">
+                <label className="block text-[10px] sm:text-[10.5px] font-bold text-slate-600 mb-1">
                   અરજી ID / નામ / ગામ
                 </label>
                 <div className="relative">
@@ -1161,7 +1168,7 @@ export default function AdminHierarchyDesk({
                     placeholder="દા.ત. APP001, ગોમતા..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 text-slate-900 font-bold focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-xs"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 text-slate-900 font-bold focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs"
                   />
                 </div>
               </div>

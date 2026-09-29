@@ -135,8 +135,8 @@ export default function UnifiedCitizenPortal({
   // ══════════════════════════════════════════════════════════════
   if (officerSession) {
     return (
-      <main className="min-h-screen bg-slate-100 text-slate-900 pb-16 overflow-x-hidden">
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 animate-in fade-in duration-300">
+      <main className="min-h-screen bg-slate-100 text-slate-900 pb-24 sm:pb-16 overflow-x-hidden">
+        <div className="max-w-6xl mx-auto px-1.5 sm:px-6 py-2 sm:py-6 space-y-3 sm:space-y-6 animate-in fade-in duration-300">
           <AdminHierarchyDesk
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             initialOfficer={officerSession as any}
