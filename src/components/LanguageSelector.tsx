@@ -5,6 +5,7 @@ import { Globe, Check, ChevronDown, X, Sparkles, Search } from "lucide-react";
 import { INDIAN_LANGUAGES } from "@/lib/languages";
 import { useLanguage } from "@/context/LanguageContext";
 import { DEFAULT_LANGUAGE } from "@/lib/translation";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 export default function LanguageSelector({
   variant = "desktop",
@@ -13,6 +14,7 @@ export default function LanguageSelector({
 }) {
   const { currentLang: selectedCode, setLanguage } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+  useBodyScrollLock(isOpen);
   const [searchQuery, setSearchQuery] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
 

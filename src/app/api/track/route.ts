@@ -160,7 +160,7 @@ export async function POST(req: NextRequest) {
       district = "Rajkot",
       districtGu = "રાજકોટ",
       taluka = "Gondal",
-      village = "Momta",
+      village = "Gomta",
       schemeId = "aadhaar-update",
       schemeName = "Aadhaar Card Update",
       schemeNameGu = "આધાર કાર્ડ સુધારો",

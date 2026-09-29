@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Download, QrCode, X, CheckCircle2, Sparkles, Share2 } from "lucide-react";
 
 import { markPwaInstalled, useIsPwaInstalled } from "@/lib/usePwaInstall";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -17,6 +18,7 @@ export default function InstallAppModal({
   isOpen: boolean;
   onClose: () => void;
 }) {
+  useBodyScrollLock(isOpen);
   const { isInstalled } = useIsPwaInstalled();
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(() => {
     if (typeof window !== "undefined") {

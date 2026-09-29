@@ -6,8 +6,6 @@ import { Scheme } from "@/types";
 import { CitizenBenefitRecord, CitizenLedgerProfile } from "@/lib/large-datasets";
 import Link from "next/link";
 import {
-  CheckCircle2,
-  XCircle,
   ArrowRight,
   RotateCcw,
   ShieldCheck,

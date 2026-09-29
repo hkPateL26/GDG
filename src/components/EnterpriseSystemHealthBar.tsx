@@ -74,9 +74,30 @@ export default function EnterpriseSystemHealthBar() {
   }, []);
 
   useEffect(() => {
-    fetchHealth();
+    let isMounted = true;
+    const loadInitial = async () => {
+      try {
+        const res = await fetch("/api/system-health", {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
+        });
+        if (res.ok && isMounted) {
+          const json = await res.json();
+          if (json.success) {
+            setData(json);
+          }
+        }
+      } catch {
+        // Keep existing data gracefully
+      }
+    };
+
+    loadInitial();
     const interval = setInterval(fetchHealth, 45000);
-    return () => clearInterval(interval);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
   }, [fetchHealth]);
 
   // Contextual dynamic data based on current active page

@@ -1,21 +1,17 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   AlertTriangle,
   Clock,
   Sparkles,
-  ArrowRight,
-  ShieldAlert,
-  UserCheck,
   CheckCircle2,
   RefreshCw,
-  Building2,
   Send,
   Zap,
 } from "lucide-react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { analyzeApplicationSla, SlaBottleneckAnalysis } from "@/lib/admin-hierarchy-data";
+import { analyzeApplicationSla } from "@/lib/admin-hierarchy-data";
 
 interface AiBottleneckMonitorProps {
   applications: CitizenApplication[];

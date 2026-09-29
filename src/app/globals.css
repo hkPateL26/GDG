@@ -30,6 +30,25 @@ body {
 /* ── Overscroll contain for chat ── */
 .overscroll-contain { overscroll-behavior: contain; }
 
+/* ── Modal Scroll Lock (Strict Background Freeze on Web & App) ── */
+html.modal-open,
+body.modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none !important;
+  touch-action: none !important;
+  height: 100% !important;
+}
+
+/* Modal containers retain smooth scrolling */
+[role="dialog"],
+[role="alertdialog"],
+[aria-modal="true"],
+.modal-scrollable {
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch !important;
+  touch-action: pan-y !important;
+}
+
 /* ── Mobile Touch & Smooth Native Feel ── */
 .touch-pan-x {
   -webkit-overflow-scrolling: touch;

@@ -14,8 +14,6 @@ import {
   Printer,
   Lock,
   Receipt,
-  ChevronDown,
-  ChevronUp,
   X,
   Clock,
   RotateCw,
@@ -23,12 +21,12 @@ import {
   CheckCircle2,
   Award,
   Eye,
-  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 type StatusType = "approved" | "processing" | "pending" | "rejected";
 
@@ -162,6 +160,9 @@ export default function TrackVaultView({
   const [isUpdatingStage, setIsUpdatingStage] = useState(false);
   const [stageUpdateAlert, setStageUpdateAlert] = useState<string | null>(null);
 
+  // Freeze background scrolling when any modal is open
+  useBodyScrollLock(Boolean(showTimelineModal || showPrintModal || showCertificateModal || showOfficerModal));
+
   // Close modals on Escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -219,7 +220,7 @@ export default function TrackVaultView({
         }
         setRecords(uniqueApps);
 
-        const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "") || searchQuery.trim();
+        const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "");
         if (activeTargetId) {
           const found = uniqueApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
           if (found) {

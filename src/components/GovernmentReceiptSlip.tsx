@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, Download, Clock, X, Printer } from "lucide-react";
+import { CheckCircle2, Download, Clock, X } from "lucide-react";
 
 interface GovernmentReceiptSlipProps {
   app: CitizenApplication;

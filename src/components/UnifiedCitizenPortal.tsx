@@ -10,7 +10,8 @@ import DocumentServicePortal from "@/components/DocumentServicePortal";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
 import AdminHierarchyDesk from "@/components/AdminHierarchyDesk";
-import { User, Building2, LogOut, X } from "lucide-react";
+import { User, Building2, X } from "lucide-react";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 export type PortalTabType = "track" | "documents" | "eligibility";
 
@@ -29,6 +30,9 @@ export default function UnifiedCitizenPortal({
   const [officerSession, setOfficerSession] = useState<OfficerProfile | null>(null);
   const [isLocatorModalOpen, setIsLocatorModalOpen] = useState(false);
   const [isRestoring, setIsRestoring] = useState(true);
+
+  // Freeze background scrolling when locator modal is open
+  useBodyScrollLock(isLocatorModalOpen);
 
   // Restore and sync session from storage
   useEffect(() => {
@@ -136,7 +140,7 @@ export default function UnifiedCitizenPortal({
   if (officerSession) {
     return (
       <main className="min-h-screen bg-slate-100 text-slate-900 pb-24 sm:pb-16 overflow-x-hidden">
-        <div className="max-w-6xl mx-auto px-1.5 sm:px-6 py-2 sm:py-6 space-y-3 sm:space-y-6 animate-in fade-in duration-300">
+        <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-5 space-y-3 sm:space-y-4 animate-in fade-in duration-300">
           <AdminHierarchyDesk
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             initialOfficer={officerSession as any}
@@ -153,7 +157,7 @@ export default function UnifiedCitizenPortal({
   if (citizenSession) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">
-        <div className="max-w-6xl mx-auto px-3 sm:px-6 py-6 sm:py-8 space-y-6 animate-in fade-in duration-300">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-in fade-in duration-300">
           <CitizenPortalHeader
             citizen={citizenSession}
             activeTab={activeTab}

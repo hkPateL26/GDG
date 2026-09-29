@@ -36,12 +36,6 @@ export default function OfficerLoginShield({
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
 
-  const handleDemoFill = () => {
-    setOfficerId("GUJ-GOV-9012");
-    setOfficerPin("GJ2026");
-    setError("");
-  };
-
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!officerId.trim() || !officerPin.trim()) {

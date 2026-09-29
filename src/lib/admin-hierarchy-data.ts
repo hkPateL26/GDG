@@ -5,7 +5,7 @@
 // 2. District Collectorate (જિલ્લા કલેક્ટર કચેરી - રાજકોટ)
 // 3. Sub-Divisional Magistrate / SDM (પ્રાંત કચેરી - રાજકોટ ગ્રામ્ય / ગોંડલ)
 // 4. Taluka Mamlatdar & TDO (તાલુકા મામલતદાર કચેરી - ગોંડલ)
-// 5. Gram Panchayat / Talati / VCE (ગ્રામ પંચાયત - મોમટા / જન સેવા કેન્દ્ર)
+// 5. Gram Panchayat / Talati / VCE (ગ્રામ પંચાયત - ગોમટા / જન સેવા કેન્દ્ર)
 // =========================================================================
 
 export type AdminRole =
@@ -132,7 +132,7 @@ export const HIERARCHICAL_OFFICERS: OfficerNode[] = [
   {
     id: "GUJ-TAL-7089",
     name: "વિજયકુમાર જોષી",
-    designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, મોમટા",
+    designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, ગોમટા",
     role: "talati",
     tierLevel: 5,
     tierNameGu: "પંચાયત સ્તર - તલાટી કમ મંત્રી",
@@ -140,11 +140,11 @@ export const HIERARCHICAL_OFFICERS: OfficerNode[] = [
     districtGu: "રાજકોટ",
     taluka: "Gondal",
     talukaGu: "ગોંડલ",
-    panchayat: "Momta",
-    panchayatGu: "મોમટા ગ્રામ પંચાયત",
-    office: "ગ્રામ પંચાયત ભવન, મોમટા, જિ. રાજકોટ",
-    officeGu: "ગ્રામ પંચાયત કચેરી, મોમટા",
-    email: "talati-momta@gujarat.gov.in",
+    panchayat: "Gomta",
+    panchayatGu: "ગોમટા ગ્રામ પંચાયત",
+    office: "ગ્રામ પંચાયત ભવન, ગોમટા, જિ. રાજકોટ",
+    officeGu: "ગ્રામ પંચાયત કચેરી, ગોમટા",
+    email: "talati-gomta@gujarat.gov.in",
     mobile: "9879107089",
     isOnLeave: false,
     actingOfficerId: "GUJ-GOV-9012",
@@ -215,7 +215,7 @@ export function analyzeApplicationSla(
   const isBreached = elapsed >= SLA_LIMIT_MINUTES;
   const remaining = Math.max(0, SLA_LIMIT_MINUTES - elapsed);
 
-  let currentDeskGu = "તલાટી કમ મંત્રી સ્ક્રુટિની કાઉન્ટર, મોમટા ગ્રામ પંચાયત";
+  let currentDeskGu = "તલાટી કમ મંત્રી સ્ક્રુટિની કાઉન્ટર, ગોમટા ગ્રામ પંચાયત";
   let currentOfficerName = "વિજયકુમાર જોષી (તલાટી)";
   let currentOfficerDesignation = "તલાટી કમ મંત્રી";
   let stuckReasonGu = "દસ્તાવેજ અપલોડ થયા બાદ તલાટી દ્વારા પ્રાથમિક સ્ક્રુટિની શરૂ થઈ નથી.";

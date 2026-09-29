@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import Navbar from "@/components/Navbar";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import {
   ShieldCheck,
   Share2,
@@ -55,6 +56,9 @@ export default function BenefitCalculatorPage() {
   const [activeDetailView, setActiveDetailView] = useState<"members" | "address" | null>(null);
   const [showMembersModal, setShowMembersModal] = useState<boolean>(false);
   const [showAddressModal, setShowAddressModal] = useState<boolean>(false);
+
+  // Freeze background scrolling when mobile popups are open
+  useBodyScrollLock(Boolean(showMembersModal || showAddressModal));
   const membersScrollRef = useRef<HTMLDivElement>(null);
 
   const scrollMembers = (direction: "left" | "right") => {
@@ -499,7 +503,7 @@ export default function BenefitCalculatorPage() {
         </section>
 
         {/* ── Mobile App Tab Switcher (Visible only on small screens) ── */}
-        <div className="max-w-6xl mx-auto px-4 mt-3 lg:hidden">
+        <div className="w-full px-3 sm:px-6 lg:px-8 mt-3 lg:hidden">
           <div className="grid grid-cols-2 p-1 bg-white rounded-2xl shadow-sm border border-gray-200">
             <button
               onClick={() => setActiveTab("inputs")}
@@ -529,7 +533,7 @@ export default function BenefitCalculatorPage() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 lg:gap-7 items-start">
 
             {/* ════════ LEFT COLUMN: Form Inputs & 1-Tap Chips ════════ */}

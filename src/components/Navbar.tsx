@@ -12,7 +12,6 @@ import {
   MapPin,
   IndianRupee,
   Smartphone,
-  ShieldCheck,
   Lock,
   ChevronDown,
   User,
@@ -27,6 +26,7 @@ import { useLanguage } from "@/context/LanguageContext";
 import { DEFAULT_LANGUAGE } from "@/lib/translation";
 import LanguageSelector from "./LanguageSelector";
 import EnterpriseSystemHealthBar from "./EnterpriseSystemHealthBar";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
@@ -34,6 +34,7 @@ export default function Navbar() {
   const { isInstalled } = useIsPwaInstalled();
   const { currentLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
+  useBodyScrollLock(isOpen);
   const [showInstallModal, setShowInstallModal] = useState(false);
   const [citizenSession, setCitizenSession] = useState<{
     citizenNameGu?: string;
@@ -103,7 +104,7 @@ export default function Navbar() {
   return (
     <>
       <nav className="bg-white shadow-sm border-b-2 border-orange-500 sticky top-0 z-50 notranslate" translate="no" suppressHydrationWarning>
-      <div className="max-w-7xl mx-auto px-3 sm:px-4">
+      <div className="w-full px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* ── Logo ── */}
           <Link

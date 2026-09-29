@@ -7,8 +7,6 @@ import { SkeletonCard } from "@/components/Skeleton";
 import Navbar from "@/components/Navbar";
 import { Scheme } from "@/types";
 import {
-  Server,
-  Activity,
   RefreshCw,
   Sparkles,
   CheckCircle2,
@@ -32,7 +30,6 @@ export default function SchemesPage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
-  const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [page, setPage] = useState(1);
   const [clusterMeta, setClusterMeta] = useState<DbClusterMeta>({
     source: "cloud-firestore",
@@ -42,10 +39,16 @@ export default function SchemesPage() {
     totalInCluster: 26,
   });
 
-  // Reset to page 1 when filter/search changes
-  useEffect(() => {
+  const handleSearchChange = (val: string) => {
+    setSearch(val);
     setPage(1);
-  }, [search, selectedCategory]);
+  };
+
+  const handleCategoryChange = (cat: string) => {
+    setIsLoading(true);
+    setSelectedCategory(cat);
+    setPage(1);
+  };
 
   // Dynamic fetch connected to Cloud Firestore with debouncing and race-condition safety
   useEffect(() => {
@@ -82,17 +85,7 @@ export default function SchemesPage() {
       active = false;
       clearTimeout(timer);
     };
-  }, [search, selectedCategory, refreshTrigger]);
-
-  const handleCategoryChange = (cat: string) => {
-    setIsLoading(true);
-    setSelectedCategory(cat);
-  };
-
-  const handleRefresh = () => {
-    setIsLoading(true);
-    setRefreshTrigger((prev) => prev + 1);
-  };
+  }, [search, selectedCategory]);
 
   // Pagination
   const totalPages = Math.ceil(schemes.length / PAGE_SIZE);
@@ -122,13 +115,13 @@ export default function SchemesPage() {
               <input
                 type="text"
                 value={search}
-                onChange={(e) => setSearch(e.target.value)}
+                onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="PM Kisan, આયુષ્માન, MYSY, સૂર્ય ઘર, આવાસ..."
                 className="w-full pl-11 pr-10 py-3 rounded-2xl text-gray-900 text-sm bg-white shadow-xl focus:outline-none focus:ring-3 focus:ring-orange-300 font-medium placeholder-gray-400"
               />
               {search && (
                 <button
-                  onClick={() => setSearch("")}
+                  onClick={() => handleSearchChange("")}
                   className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-lg w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100"
                 >
                   ×
@@ -139,7 +132,7 @@ export default function SchemesPage() {
         </div>
 
         {/* Main Content Area */}
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-5 sm:py-7">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-5 sm:py-7">
 
           {/* Category Filter Pills (Horizontal Scroll) */}
           <div className="flex gap-2 overflow-x-auto pb-3 mb-5 -mx-1 px-1 scrollbar-hide">
@@ -268,7 +261,7 @@ export default function SchemesPage() {
                 અન્ય કેટેગરી અથવા અલગ શબ્દથી શોધો.
               </p>
               <button
-                onClick={() => { setSearch(""); setSelectedCategory("all"); }}
+                onClick={() => { handleSearchChange(""); handleCategoryChange("all"); }}
                 className="bg-orange-600 text-white font-bold px-5 py-2 rounded-xl text-xs shadow-md hover:bg-orange-700 transition cursor-pointer"
               >
                 બધા ફિલ્ટર દૂર કરો

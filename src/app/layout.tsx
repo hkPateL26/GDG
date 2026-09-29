@@ -8,6 +8,7 @@ import HapticFeedbackProvider from "@/components/HapticFeedbackProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
 import ScrollRestoration from "@/components/ScrollRestoration";
 import GoogleTranslateScript from "@/components/GoogleTranslateScript";
+import GlobalModalScrollLocker from "@/components/GlobalModalScrollLocker";
 import { LanguageProvider } from "@/context/LanguageContext";
 
 const inter = Inter({ subsets: ["latin"], display: "swap", preload: false });
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ScrollRestoration />
           <ServiceWorkerRegister />
           <HapticFeedbackProvider />
+          <GlobalModalScrollLocker />
           {children}
           <MobileBottomNav />
           <FloatingInstallBanner />

@@ -96,7 +96,7 @@ export default function OfficeLocatorPage() {
           </div>
         </section>
 
-        <div className="max-w-6xl mx-auto px-4 py-8">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-8">
           {/* District Filters */}
           <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-6 scrollbar-hide">
             <span className="text-xs font-bold text-gray-500 uppercase flex-shrink-0 mr-1">

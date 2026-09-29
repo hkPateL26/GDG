@@ -17,40 +17,28 @@ import {
 } from "@/lib/large-datasets";
 import {
   Shield,
-  Building2,
-  Users,
   Search,
   CheckCircle2,
   AlertTriangle,
   Clock,
   LogOut,
   Sparkles,
-  Printer,
-  ChevronDown,
   X,
-  Send,
-  Zap,
-  Lock,
   ArrowRight,
   FileText,
   Sliders,
   Award,
-  RefreshCw,
-  Eye,
   Maximize2,
   FileCheck,
   Receipt,
-  Smartphone,
-  Check,
 } from "lucide-react";
 import AiBottleneckMonitor from "@/components/AiBottleneckMonitor";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import {
-  SkeletonAdminStats,
   SkeletonAdminTable,
-  SkeletonReviewModal,
 } from "@/components/Skeleton";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 const GUJARATI_NAME_MAP: Record<string, string> = {
   "rameshbhai kantilal patel": "રમેશભાઈ કાંતિલાલ પટેલ",
@@ -85,11 +73,11 @@ function formatCitizenNameGu(app: CitizenApplication): string {
 }
 
 function cleanVillageOnly(village?: string): string {
-  if (!village) return "મોમટા";
+  if (!village) return "ગોમટા";
   const v = village.replace(/\s*\([^)]*\)/g, "").trim();
   const villageMap: Record<string, string> = {
-    momta: "મોમટા",
-    gomta: "મોમટા",
+    gomta: "ગોમટા",
+    momta: "ગોમટા",
     movaiya: "મોવૈયા",
     biliyala: "બીલીયાળા",
     charakhadi: "ચરખડી",
@@ -222,8 +210,8 @@ function getOfficerJurisdictionInfo(officer: OfficerNode) {
   switch (officer.role) {
     case "talati":
       return {
-        badge: "મોમટા ગ્રામ પંચાયત (માત્ર મોમટા ગામ)",
-        description: "માત્ર મોમટા ગ્રામ પંચાયત",
+        badge: "ગોમટા ગ્રામ પંચાયત (માત્ર ગોમટા ગામ)",
+        description: "માત્ર ગોમટા ગ્રામ પંચાયત",
         icon: "📋",
       };
     case "mamlatdar":
@@ -262,9 +250,13 @@ function resolveOfficerNode(raw?: Partial<OfficerNode> | null): OfficerNode {
     return {
       ...match,
       ...raw,
+      designation: match.designation,
+      panchayatGu: match.panchayatGu,
+      panchayat: match.panchayat,
+      office: match.office,
+      officeGu: match.officeGu,
       avatarEmoji: match.avatarEmoji,
       tierNameGu: match.tierNameGu,
-      officeGu: match.officeGu,
       tierLevel: match.tierLevel,
     };
   }
@@ -371,7 +363,7 @@ export default function AdminHierarchyDesk({
   });
   const [selectedVillage, setSelectedVillage] = useState<string>(() => {
     if (currentOfficer.role === "talati") {
-      return "મોમટા (Momta)";
+      return "ગોમટા (Gomta)";
     }
     return "all";
   });
@@ -406,7 +398,7 @@ export default function AdminHierarchyDesk({
   // Dynamic real villages for the selected taluka
   const availableVillages = useMemo(() => {
     if (currentOfficer.role === "talati") {
-      return ["મોમટા (Momta)"];
+      return ["ગોમટા (Gomta)"];
     }
     const effectiveT = (currentOfficer.role === "mamlatdar") ? "Gondal" : selectedTaluka;
     if (effectiveT === "all") {
@@ -432,6 +424,9 @@ export default function AdminHierarchyDesk({
   const [receiptModalApp, setReceiptModalApp] = useState<CitizenApplication | null>(null);
   const [zoomDocImage, setZoomDocImage] = useState<{ src: string; title: string; ocrData?: Record<string, string> } | null>(null);
 
+  // Freeze background scrolling when any administrative modal is open
+  useBodyScrollLock(Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage));
+
   // Review Modal Actions State
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
   const [isProcessingAction, setIsProcessingAction] = useState<boolean>(false);
@@ -443,14 +438,9 @@ export default function AdminHierarchyDesk({
   } | null>(null);
 
   // Policy CMS state
-  const [policyConfigs, setPolicyConfigs] = useState<Record<string, ServicePolicyConfig>>({});
+  const [policyConfigs, setPolicyConfigs] = useState<Record<string, ServicePolicyConfig>>(() => getPolicyConfigs());
   const [selectedPolicyKey, setSelectedPolicyKey] = useState<string>("income-certificate");
   const [policySavedAlert, setPolicySavedAlert] = useState<boolean>(false);
-
-  // Load Policies
-  useEffect(() => {
-    setPolicyConfigs(getPolicyConfigs());
-  }, []);
 
   // Fetch applications list with strict jurisdiction parameters
   const fetchApplications = useCallback(async () => {
@@ -470,7 +460,7 @@ export default function AdminHierarchyDesk({
       } else if (currentOfficer.role === "talati") {
         qDistrict = "Rajkot";
         qTaluka = "Gondal";
-        qVillage = "Momta";
+        qVillage = "Gomta";
       }
 
       if (qDistrict !== "all") params.append("district", qDistrict);
@@ -556,7 +546,7 @@ export default function AdminHierarchyDesk({
     } else if (target.role === "talati") {
       setSelectedDistrict(target.district || "Rajkot");
       setSelectedTaluka(target.taluka || "Gondal");
-      setSelectedVillage("મોમટા (Momta)");
+      setSelectedVillage("ગોમટા (Gomta)");
     }
 
     sessionStorage.setItem("nagrik_officer_session", JSON.stringify(target));
@@ -740,9 +730,9 @@ export default function AdminHierarchyDesk({
 
       // ── STRICT OFFICER JURISDICTION ENFORCEMENT ──
       if (currentOfficer.role === "talati") {
-        // Talati only sees Momta village applications
-        const isMomta = appVillage.includes("momta") || appVillage.includes("મોમટા") || appVillage.includes("gomta") || appVillage.includes("ગોમતા");
-        if (!isMomta) return false;
+        // Talati only sees Gomta village applications
+        const isGomta = appVillage.includes("gomta") || appVillage.includes("ગોમટા") || appVillage.includes("momta") || appVillage.includes("મોમટા");
+        if (!isGomta) return false;
       } else if (currentOfficer.role === "mamlatdar") {
         // Mamlatdar only sees Gondal taluka applications
         if (appTaluka !== "gondal") return false;
@@ -816,7 +806,7 @@ export default function AdminHierarchyDesk({
   }, [applications, currentOfficer.role, selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery, slaFilterOnly]);
 
   return (
-    <div className="space-y-3 sm:space-y-4 max-w-7xl mx-auto px-1 sm:px-4 animate-in fade-in duration-200">
+    <div className="space-y-3 sm:space-y-4 w-full animate-in fade-in duration-200">
       {/* ── Officer Identity Header & Administrative Tier (Compact & Responsive) ── */}
       <div className="bg-slate-900 text-white rounded-2xl p-3 sm:p-5 border border-slate-800 shadow-lg space-y-2.5 sm:space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
@@ -1160,7 +1150,7 @@ export default function AdminHierarchyDesk({
                   <Search size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
                   <input
                     type="text"
-                    placeholder="દા.ત. APP001, મોમટા..."
+                    placeholder="દા.ત. APP001, ગોમટા..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-7 pr-2 py-1.5 text-slate-900 font-bold focus:outline-hidden focus:ring-1 focus:ring-amber-400 text-[11px] sm:text-xs"
@@ -1219,7 +1209,7 @@ export default function AdminHierarchyDesk({
                       <th className="p-3">અરજી ક્રમાંક & નાગરિક</th>
                       <th className="p-3">સેવા & કચેરી</th>
                       <th className="p-3">ચુકવણી & રસીદ</th>
-                      <th className="p-3">૧૫-મિનિટ SLA</th>
+                      <th className="p-3">૧-કલાક SLA</th>
                       <th className="p-3">તબક્કો (Stage)</th>
                       <th className="p-3 text-right">કાર્યવાહી</th>
                     </tr>
@@ -1393,7 +1383,11 @@ export default function AdminHierarchyDesk({
                           }`}
                         >
                           <Clock size={11} className={sla.isBreached ? "text-rose-600 animate-spin" : ""} />
-                          <span>{sla.elapsedMinutes} મિ.</span>
+                          <span>
+                            {sla.elapsedMinutes >= 60
+                              ? `${Math.floor(sla.elapsedMinutes / 60)} કલાક ${sla.elapsedMinutes % 60 ? `${sla.elapsedMinutes % 60} મિ.` : ""}`
+                              : `${sla.elapsedMinutes} મિ.`}
+                          </span>
                           {sla.isBreached && <span className="text-rose-600 font-bold">(SLA)</span>}
                         </span>
                       </div>
@@ -1516,7 +1510,7 @@ export default function AdminHierarchyDesk({
                 ⚙️ ગુજરાત સરકાર ઈ-ગવર્નન્સ પોલિસી એડમિન CMS
               </h3>
               <p className="text-xs text-slate-500">
-                સરકારી ફી, જરૂરી પુરાવા નિયમો અને ૧૫-મિનિટ SLA મર્યાદા ડેવલપર વિના સીધા અહીંથી લાઈવ અપડેટ કરો.
+                સરકારી ફી, જરૂરી પુરાવા નિયમો અને ૧-કલાક SLA મર્યાદા ડેવલપર વિના સીધા અહીંથી લાઈવ અપડેટ કરો.
               </p>
             </div>
             {policySavedAlert && (

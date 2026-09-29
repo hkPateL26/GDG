@@ -38,6 +38,7 @@ import {
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import CitizenLoginShield from "@/components/CitizenLoginShield";
+import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 interface UploadedDocState {
   file: File | null;
@@ -228,6 +229,9 @@ export default function DocumentServicePortal({
   // 8. Submission & Notification Alert Simulation
   const [submitting, setSubmitting] = useState<boolean>(false);
   const [submittedApp, setSubmittedApp] = useState<CitizenApplication | null>(null);
+
+  // Freeze background scrolling when any payment or receipt modal is open
+  useBodyScrollLock(Boolean(showPaymentModal || submittedApp || showSlipModal));
   const [notificationPayload, setNotificationPayload] = useState<{
     sms?: { sentTo: string; message: string; timestamp: string };
     email?: { sentTo: string; subject: string; timestamp: string };
@@ -1402,10 +1406,10 @@ export default function DocumentServicePortal({
       {/* ── Compact Citizen Session Notification ── */}
       {citizenSession && !hideCitizenHeader && (
         <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-950 shadow-2xs">
-          <div className="flex items-center gap-2.5">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shrink-0">✓</span>
-            <div>
-              <p className="font-extrabold text-emerald-950 text-xs sm:text-sm">
+            <div className="min-w-0">
+              <p className="font-extrabold text-emerald-950 text-xs sm:text-sm truncate">
                 2FA પ્રમાણિત અરજદાર: {citizenSession.citizenNameGu || citizenSession.citizenName}
               </p>
               <p className="text-[11px] text-emerald-700">
@@ -1413,6 +1417,15 @@ export default function DocumentServicePortal({
               </p>
             </div>
           </div>
+          <button
+            type="button"
+            onClick={handleDocLogout}
+            className="px-3 py-1.5 bg-white/90 hover:bg-white text-rose-700 hover:text-rose-800 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
+            title="લોગઆઉટ કરો"
+          >
+            <LogOut size={13} />
+            <span className="hidden sm:inline">લોગઆઉટ</span>
+          </button>
         </div>
       )}
 

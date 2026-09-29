@@ -89,7 +89,7 @@ export const GUJARAT_TALUKA_VILLAGES: Record<string, string[]> = {
   // ── Rajkot District (All 11 Talukas - 100% Real Gujarat Revenue Records) ──
   "Gondal": [
     "ગોંડલ શહેર (Gondal City)",
-    "મોમટા (Momta)",
+    "ગોમટા (Gomta)",
     "મોવૈયા (Movaiya)",
     "બાંદ્રા (Bandra)",
     "બીલીયાળા (Biliyala)",
@@ -690,14 +690,14 @@ const BENCHMARK_APPLICATIONS: CitizenApplication[] = [
     district: "Rajkot",
     districtGu: "રાજકોટ",
     taluka: "Gondal",
-    village: "મોમટા (Momta)",
+    village: "ગોમટા (Gomta)",
     aadhaarLast4: "4921",
     status: "approved",
     appliedDate: "2026-09-12",
     lastUpdated: "2026-09-20",
     benefitAmount: 6000,
-    remarksGu: "મોમટા ગ્રામ પંચાયત તલાટી દ્વારા ૭/૧૨ ખરાઈ પૂર્ણ. સહાય મંજૂર થયેલ છે.",
-    remarksEn: "Momta Gram Panchayat Talati verified land records. Assistance approved.",
+    remarksGu: "ગોમટા ગ્રામ પંચાયત તલાટી દ્વારા ૭/૧૨ ખરાઈ પૂર્ણ. સહાય મંજૂર થયેલ છે.",
+    remarksEn: "Gomta Gram Panchayat Talati verified land records. Assistance approved.",
     officerDesignation: "તાલુકા મામલતદાર, ગોંડલ",
     workflowStage: 3,
     paymentStatus: "paid",
@@ -882,14 +882,14 @@ const BENCHMARK_APPLICATIONS: CitizenApplication[] = [
     district: "Rajkot",
     districtGu: "રાજકોટ",
     taluka: "Gondal",
-    village: "મોમટા (Momta)",
+    village: "ગોમટા (Gomta)",
     aadhaarLast4: "2354",
     status: "processing",
     appliedDate: "2026-09-24",
     lastUpdated: "2026-09-28",
     benefitAmount: 3500,
-    remarksGu: "મોમટા ગ્રામ પંચાયત BPL પ્રમાણપત્ર ચકાસણી પ્રગતિમાં છે.",
-    remarksEn: "Momta BPL status verification in progress.",
+    remarksGu: "ગોમટા ગ્રામ પંચાયત BPL પ્રમાણપત્ર ચકાસણી પ્રગતિમાં છે.",
+    remarksEn: "Gomta BPL status verification in progress.",
     officerDesignation: "પુરવઠા મામલતદાર, ગોંડલ",
     workflowStage: 2,
     paymentStatus: "paid",
@@ -4545,7 +4545,7 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
 
   const effectiveVillage = (app.village && app.village.trim() && !app.village.includes("Rural"))
     ? app.village
-    : (fallbackVillage || getVillagesForTaluka(effectiveTaluka)[0] || "મોમટા (Momta)");
+    : (fallbackVillage || getVillagesForTaluka(effectiveTaluka)[0] || "ગોમટા (Gomta)");
 
   return {
     id,
@@ -5369,14 +5369,14 @@ export function verifyOfficerPin(officerId: string, pin: string) {
         officer: {
           id: "GUJ-TAL-7089",
           name: "વિજયકુમાર જોષી",
-          designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, મોમટા",
+          designation: "તલાટી કમ મંત્રી & ઇ-ગ્રામ કેન્દ્ર સંચાલક, ગોમટા",
           district: "Rajkot",
           districtGu: "રાજકોટ",
           taluka: "Gondal",
           talukaGu: "ગોંડલ",
-          panchayat: "Momta",
-          panchayatGu: "મોમટા ગ્રામ પંચાયત",
-          office: "ગ્રામ પંચાયત કચેરી, મોમટા",
+          panchayat: "Gomta",
+          panchayatGu: "ગોમટા ગ્રામ પંચાયત",
+          office: "ગ્રામ પંચાયત કચેરી, ગોમટા",
           role: "talati",
           tierLevel: 5,
           tierNameGu: "પંચાયત સ્તર - તલાટી કમ મંત્રી",

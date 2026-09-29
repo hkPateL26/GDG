@@ -87,7 +87,7 @@ export default function Home() {
         </section>
 
         {/* ── Main Content ── */}
-        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <div className="w-full px-3 sm:px-6 lg:px-8 py-8 grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
 
           {/* ── Sidebar ── */}
           <aside className="lg:col-span-1 space-y-4">

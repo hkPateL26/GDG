@@ -26,10 +26,11 @@ export default function MobileBottomNav() {
   }, []);
 
   useEffect(() => {
-    syncState();
+    const timer = setTimeout(syncState, 0);
     window.addEventListener("storage", syncState);
     window.addEventListener("popstate", syncState);
     return () => {
+      clearTimeout(timer);
       window.removeEventListener("storage", syncState);
       window.removeEventListener("popstate", syncState);
     };
