@@ -845,13 +845,13 @@ export default function ChatBot() {
 
   const handleQuickDemoLogin = () => {
     const demoCitizen: CitizenSession = {
-      citizenName: "Hari Patel",
-      citizenNameGu: "હરિ પટેલ",
-      mobile: "9974442291",
+      citizenName: "Hari Vinodrai Patel",
+      citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+      mobile: "9825012345",
       district: "Rajkot",
       taluka: "Gondal",
       village: "Gomta",
-      aadhaarLast4: "1413",
+      aadhaarLast4: "4829",
     };
     localStorage.setItem("nagrik_citizen_session", JSON.stringify(demoCitizen));
     window.dispatchEvent(new Event("storage"));
@@ -906,7 +906,7 @@ export default function ChatBot() {
           </div>
 
           {!citizenSession ? (
-            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center">
+            <div className="flex-1 flex flex-col items-center justify-start pt-8 p-6 text-center">
               <div className="w-14 h-14 rounded-2xl bg-slate-800 border border-slate-700 flex items-center justify-center text-2xl mb-3 text-orange-400">
                 <Lock size={24} />
               </div>
@@ -1021,41 +1021,58 @@ export default function ChatBot() {
         </div>
       )}
 
-      {/* ── 1-CLICK CITIZEN LOGIN MODAL ── */}
+      {/* ── 1-CLICK CITIZEN LOGIN MODAL (Fixed Full-Screen Viewport Overlay for Mobile App & Website) ── */}
       {isLoginModalOpen && (
-        <div className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-center animate-in zoom-in-95 duration-200">
-            <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold">
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-[9998] bg-slate-950/75 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150"
+          onClick={() => setIsLoginModalOpen(false)}
+        >
+          <div
+            className="bg-white rounded-3xl p-5 sm:p-6 max-w-sm w-full shadow-2xl border border-slate-200 text-center relative animate-in zoom-in-95 duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              type="button"
+              onClick={() => setIsLoginModalOpen(false)}
+              className="absolute top-3.5 right-3.5 p-1.5 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+              title="બંધ કરો"
+            >
+              <X size={16} />
+            </button>
+
+            <div className="w-12 h-12 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center mx-auto mb-3 text-2xl font-bold shadow-xs">
               🔐
             </div>
             <h3 className="text-base font-black text-slate-900 mb-1">
-              સત્તાવાર નાગરિક લૉગિન
+              સત્તાવાર નાગરિક 2FA લૉગિન
             </h3>
-            <p className="text-xs text-slate-500 mb-4">
-              લૉગિન કરવાથી તમારી ચેટ હિસ્ટ્રી અને સરકારી અરજીઓ તમારા આધાર / મોબાઈલ સાથે સુરક્ષિત લિંક થશે.
+            <p className="text-xs text-slate-500 mb-4 leading-relaxed">
+              લૉગિન કરવાથી તમારી ચેટ હિસ્ટ્રી, કુટુંબ પ્રોફાઈલ અને સરકારી અરજીઓ તમારા આધાર / મોબાઈલ સાથે સુરક્ષિત લિંક થશે.
             </p>
 
             <button
               type="button"
               onClick={handleQuickDemoLogin}
-              className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs shadow-md transition active:scale-95 mb-2 cursor-pointer flex items-center justify-center gap-1.5"
+              className="w-full py-2.5 px-4 rounded-2xl bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white font-black text-xs shadow-md transition active:scale-95 mb-2.5 cursor-pointer flex items-center justify-center gap-1.5"
             >
               <UserCheck size={14} />
-              <span>⚡ ૧-ક્લિક લૉગિન: હરિ પટેલ (ગોમટા)</span>
+              <span>⚡ ૧-ક્લિક લૉગિન: હરી વિનોદરાઈ પટેલ</span>
             </button>
 
             <Link
-              href="/portal?mode=citizen"
+              href="/track?mode=citizen"
               onClick={() => setIsLoginModalOpen(false)}
-              className="block w-full py-2 text-xs font-bold text-slate-600 hover:text-orange-600 transition"
+              className="block w-full py-2.5 px-4 rounded-2xl bg-slate-100 hover:bg-orange-50 text-slate-800 hover:text-orange-700 border border-slate-200 text-xs font-extrabold transition"
             >
-              OTP વડે સત્તાવાર લૉગિન પોર્ટલ ખોલો &rarr;
+              📲 આધાર & OTP વડે લૉગિન પોર્ટલ ખોલો &rarr;
             </Link>
 
             <button
               type="button"
               onClick={() => setIsLoginModalOpen(false)}
-              className="mt-3 text-[11px] text-slate-400 hover:text-slate-600 cursor-pointer"
+              className="mt-3 text-xs font-bold text-slate-400 hover:text-slate-600 cursor-pointer"
             >
               બંધ કરો
             </button>

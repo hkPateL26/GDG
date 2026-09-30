@@ -1,4 +1,4 @@
-export const APP_VERSION = "v2.5.7";
+export const APP_VERSION = "v2.5.8";
 export const APP_BUILD_NAME = "National DPI Certified Super-App Release";
 export const APP_RELEASE_DATE = "૩૦ સપ્ટેમ્બર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "30 September 2026";
