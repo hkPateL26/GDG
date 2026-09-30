@@ -44,7 +44,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="gu" className={inter.className} suppressHydrationWarning>
-      <body className="min-h-screen bg-gray-50 antialiased pb-16 xl:pb-0" suppressHydrationWarning>
+      <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
         <LanguageProvider>
           <AppSplashScreen />
           <OfficialGovernmentUpdateModal />

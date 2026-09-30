@@ -44,28 +44,34 @@ export async function executeNativePwaInstall(): Promise<"installed" | "dismisse
   }
 }
 
+export function checkIsStandaloneApp(): boolean {
+  if (typeof window === "undefined") return false;
+  return (
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.matchMedia("(display-mode: fullscreen)").matches ||
+    window.matchMedia("(display-mode: minimal-ui)").matches ||
+    window.matchMedia("(display-mode: window-controls-overlay)").matches ||
+    (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
+    document.referrer.includes("android-app://")
+  );
+}
+
 export function useIsPwaInstalled() {
   const [isInstalled, setIsInstalled] = useState<boolean>(false);
+  const [isStandalone, setIsStandalone] = useState<boolean>(false);
   const [isMounted, setIsMounted] = useState<boolean>(false);
 
   useEffect(() => {
     const checkInstalled = () => {
       if (typeof window === "undefined") return false;
 
-      // 1. Check if running inside installed standalone PWA window
-      const isStandalone =
-        window.matchMedia("(display-mode: standalone)").matches ||
-        window.matchMedia("(display-mode: fullscreen)").matches ||
-        window.matchMedia("(display-mode: minimal-ui)").matches ||
-        (window.navigator as unknown as { standalone?: boolean }).standalone === true ||
-        document.referrer.includes("android-app://");
+      const standalone = checkIsStandaloneApp();
+      setIsStandalone(standalone);
 
-      // 2. Check if previously recorded as installed in this browser
-      const isStoredInstalled = localStorage.getItem("nagrikseva_pwa_installed") === "true";
-
-      const installed = isStandalone || isStoredInstalled;
-      setIsInstalled(installed);
-      return installed;
+      // Only mark as installed when actually running in standalone app mode
+      // or right after appinstalled event in current session
+      setIsInstalled(standalone);
+      return standalone;
     };
 
     const timer = setTimeout(() => {
@@ -76,6 +82,7 @@ export function useIsPwaInstalled() {
     // Listen to changes in display mode (when app opens in standalone)
     const mediaQuery = window.matchMedia("(display-mode: standalone)");
     const handleMediaChange = (e: MediaQueryListEvent) => {
+      setIsStandalone(e.matches);
       if (e.matches) {
         localStorage.setItem("nagrikseva_pwa_installed", "true");
         setIsInstalled(true);
@@ -107,7 +114,7 @@ export function useIsPwaInstalled() {
     };
   }, []);
 
-  return { isInstalled, isMounted };
+  return { isInstalled, isStandalone, isMounted };
 }
 
 export function markPwaInstalled() {

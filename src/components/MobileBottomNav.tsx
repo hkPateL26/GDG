@@ -13,10 +13,12 @@ import {
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptic";
 import { useLanguage } from "@/context/LanguageContext";
+import { useIsPwaInstalled } from "@/lib/usePwaInstall";
 
 export default function MobileBottomNav() {
   const pathname = usePathname();
   const { currentLang } = useLanguage();
+  const { isStandalone } = useIsPwaInstalled();
   const [citizenSession, setCitizenSession] = useState<boolean>(false);
   const [officerSession, setOfficerSession] = useState<boolean>(false);
 
@@ -90,6 +92,9 @@ export default function MobileBottomNav() {
     if (key === "login") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
     return false;
   };
+
+  // Strictly show Bottom Menu ONLY when running inside the Installed App (PWA Standalone mode)
+  if (!isStandalone) return null;
 
   return (
     <nav

@@ -31,7 +31,7 @@ import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
 export default function Navbar() {
-  const { isInstalled } = useIsPwaInstalled();
+  const { isInstalled, isStandalone } = useIsPwaInstalled();
   const { currentLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   useBodyScrollLock(isOpen);
@@ -335,7 +335,7 @@ export default function Navbar() {
           onClick={() => setIsOpen(false)}
         >
           <div
-            className="bg-white w-full rounded-t-3xl shadow-2xl border-t border-slate-200 p-4 pb-[max(env(safe-area-inset-bottom,20px),20px)] space-y-3.5 animate-bottom-sheet"
+            className="bg-white w-full max-h-[86vh] overflow-y-auto rounded-t-3xl shadow-2xl border-t border-slate-200 p-4 pb-[max(env(safe-area-inset-bottom,20px),20px)] space-y-3.5 animate-bottom-sheet"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Bottom Sheet Drag Handle */}
@@ -345,7 +345,7 @@ export default function Navbar() {
 
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
               <p className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                📌 {currentLang === "en" ? "Quick Citizen Services" : currentLang === "hi" ? "त्वरित नागरिक सेवाएं" : "ઝડપી નાગરિક સેવાઓ"}
+                ☰ {currentLang === "en" ? "Navigation & Citizen Menu" : currentLang === "hi" ? "मुख्य मेनू और नागरिक सेवाएं" : "મુખ્ય મેનૂ & નાગરિક સેવાઓ"}
               </p>
               <button
                 onClick={() => setIsOpen(false)}
@@ -356,76 +356,208 @@ export default function Navbar() {
               </button>
             </div>
 
-            {/* 2x2 Bento Quick Service Grid inside Bottom Sheet */}
-            <div className="grid grid-cols-2 gap-2.5">
-              {[
-                {
-                  href: "/benefit-calculator",
-                  label: currentLang === "en" ? "Benefit Calculator" : currentLang === "hi" ? "लाभ कैलकुलेटर" : "લાભ ગણો (કેલ્ક્યુલેટર)",
-                  sub: currentLang === "en" ? "Family Pass" : currentLang === "hi" ? "परिवार पास" : "કુટુંબ સહાય પાસ",
-                  Icon: IndianRupee,
-                  bg: "bg-emerald-50 border-emerald-200/80 text-emerald-700",
-                },
-                {
-                  href: "/track",
-                  label: currentLang === "en" ? "Track Status" : currentLang === "hi" ? "आवेदन ट्रैक करें" : "અરજી ટ્રેકિંગ",
-                  sub: currentLang === "en" ? "Live SLA Stage" : currentLang === "hi" ? "लाइव स्थिति" : "લાઈવ સ્ટેટસ",
-                  Icon: Search,
-                  bg: "bg-blue-50 border-blue-200/80 text-blue-700",
-                },
-                {
-                  href: "/documents",
-                  label: currentLang === "en" ? "Document Guide" : currentLang === "hi" ? "दस्तावेज़ गाइड" : "દસ્તાવેજ ગાઈડ",
-                  sub: currentLang === "en" ? "Ration & Health" : currentLang === "hi" ? "राशन व आयुष्मान" : "રેશન & આયુષ્માન",
-                  Icon: FolderLock,
-                  bg: "bg-purple-50 border-purple-200/80 text-purple-700",
-                },
-                {
-                  href: "/eligibility",
-                  label: currentLang === "en" ? "Check Eligibility" : currentLang === "hi" ? "पात्रता जांचें" : "પાત્રતા ચકાસો",
-                  sub: currentLang === "en" ? "1-Min AI Check" : currentLang === "hi" ? "१ मिनट में जांचें" : "૧ મિનિટમાં ચેક",
-                  Icon: ClipboardCheck,
-                  bg: "bg-orange-50 border-orange-200/80 text-orange-700",
-                },
-              ].map(({ href, label, sub, Icon, bg }) => {
-                const active = pathname === href;
-                return (
+            {/* ── WEBSITE MODE ONLY (!isStandalone): Main Navigation Menu (Moved from Bottom Bar into Hamburger) ── */}
+            {!isStandalone && (
+              <div className="space-y-2 pb-2 border-b border-slate-100">
+                <p className="text-[10.5px] font-extrabold text-slate-500 uppercase tracking-wider px-0.5">
+                  🧭 {currentLang === "en" ? "Main Menu" : currentLang === "hi" ? "मुख्य मेनू" : "મુખ્ય મેનૂ"}
+                </p>
+
+                <div className="grid grid-cols-2 gap-2">
+                  {[
+                    {
+                      href: "/",
+                      label: currentLang === "en" ? "Home" : currentLang === "hi" ? "होम" : "હોમ પેજ",
+                      sub: currentLang === "en" ? "Main Dashboard" : currentLang === "hi" ? "मुख्य पृष्ठ" : "મુખ્ય ડેશબોર્ડ",
+                      Icon: Home,
+                      bg: "bg-orange-50 border-orange-200/80 text-orange-600",
+                    },
+                    {
+                      href: "/schemes",
+                      label: currentLang === "en" ? "Schemes (26+)" : currentLang === "hi" ? "सरकारी योजनाएं" : "સરકારી યોજનાઓ",
+                      sub: currentLang === "en" ? "All Gov Schemes" : currentLang === "hi" ? "सभी योजनाएं" : "૨૬+ યોજનાની યાદી",
+                      Icon: LayoutGrid,
+                      bg: "bg-amber-50 border-amber-200/80 text-amber-700",
+                    },
+                    {
+                      href: "/chat",
+                      label: currentLang === "en" ? "AI Assistant" : currentLang === "hi" ? "AI सहायक" : "AI સહાયક (ચેટ)",
+                      sub: currentLang === "en" ? "24/7 Voice & Chat" : currentLang === "hi" ? "२४/७ वॉइस व चैट" : "૨૪/૭ વોઈસ & ચેટ",
+                      Icon: Bot,
+                      bg: "bg-slate-900 border-slate-800 text-amber-300",
+                    },
+                    {
+                      href: "/locator",
+                      label: currentLang === "en" ? "Nearby Offices" : currentLang === "hi" ? "नज़दीकी कार्यालय" : "નજીકની કચેરી",
+                      sub: currentLang === "en" ? "Live GPS Locator" : currentLang === "hi" ? "लाइव GPS रास्ता" : "લાઈવ GPS રસ્તો",
+                      Icon: MapPin,
+                      bg: "bg-teal-50 border-teal-200/80 text-teal-700",
+                    },
+                  ].map(({ href, label, sub, Icon, bg }) => {
+                    const active = href === "/" ? pathname === "/" : pathname.startsWith(href);
+                    return (
+                      <Link
+                        key={href}
+                        href={href}
+                        onClick={(e) => {
+                          setIsOpen(false);
+                          handleNavClick(e, href);
+                        }}
+                        className={`app-touch-card flex items-center gap-2.5 p-2.5 rounded-2xl border transition ${
+                          active
+                            ? "bg-orange-600 text-white border-orange-600 shadow-sm"
+                            : "bg-slate-50/90 hover:bg-slate-100 border-slate-200/80 text-slate-800"
+                        }`}
+                      >
+                        <div
+                          className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                            active ? "bg-white/20 border-white/30 text-white" : bg
+                          }`}
+                        >
+                          <Icon size={17} strokeWidth={2.2} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs font-extrabold truncate leading-tight" suppressHydrationWarning>
+                            {label}
+                          </p>
+                          <p
+                            className={`text-[10px] truncate mt-0.5 ${
+                              active ? "text-orange-100" : "text-slate-500"
+                            }`}
+                            suppressHydrationWarning
+                          >
+                            {sub}
+                          </p>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+
+                {/* Citizen / Officer Login & Vault Row inside Hamburger */}
+                <div className="grid grid-cols-2 gap-2 pt-0.5">
                   <Link
-                    key={href}
-                    href={href}
+                    href="/portal?mode=citizen"
                     onClick={(e) => {
                       setIsOpen(false);
-                      handleNavClick(e, href);
+                      handleNavClick(e, "/portal?mode=citizen");
                     }}
-                    className={`app-touch-card flex items-center gap-2.5 p-3 rounded-2xl border transition ${
-                      active
-                        ? "bg-orange-600 text-white border-orange-600 shadow-sm"
-                        : "bg-slate-50/90 hover:bg-slate-100 border-slate-200/80 text-slate-800"
-                    }`}
+                    className="app-touch-card flex items-center gap-2 p-2.5 rounded-2xl border bg-emerald-50/90 hover:bg-emerald-100 border-emerald-300 text-emerald-950 transition"
                   >
-                    <div
-                      className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
-                        active ? "bg-white/20 border-white/30 text-white" : bg
-                      }`}
-                    >
-                      <Icon size={17} strokeWidth={2.2} />
+                    <div className="w-8 h-8 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                      <User size={15} />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-xs font-extrabold truncate leading-tight" suppressHydrationWarning>
-                        {label}
+                      <p className="text-[11.5px] font-black truncate leading-tight">
+                        {citizenSession
+                          ? citizenSession.citizenNameGu || citizenSession.citizenName || "મારું વોલ્ટ"
+                          : "નાગરિક લૉગિન"}
                       </p>
-                      <p
-                        className={`text-[10px] truncate mt-0.5 ${
-                          active ? "text-orange-100" : "text-slate-500"
-                        }`}
-                        suppressHydrationWarning
-                      >
-                        {sub}
+                      <p className="text-[9.5px] text-emerald-700 font-bold truncate">
+                        {citizenSession ? "2FA ડિજિટલ વોલ્ટ" : "આધાર OTP & વોલ્ટ"}
                       </p>
                     </div>
                   </Link>
-                );
-              })}
+
+                  <Link
+                    href="/portal?mode=officer"
+                    onClick={(e) => {
+                      setIsOpen(false);
+                      handleNavClick(e, "/portal?mode=officer");
+                    }}
+                    className="app-touch-card flex items-center gap-2 p-2.5 rounded-2xl border bg-slate-900 hover:bg-slate-800 border-slate-700 text-white transition"
+                  >
+                    <div className="w-8 h-8 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-300 flex items-center justify-center shrink-0">
+                      <Building2 size={15} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-[11.5px] font-black text-amber-300 truncate leading-tight">
+                        {officerSession ? officerSession.name || "કચેરી ડેસ્ક" : "અધિકારી લૉગિન"}
+                      </p>
+                      <p className="text-[9.5px] text-slate-300 font-bold truncate">
+                        તાલુકા / કચેરી ડેસ્ક
+                      </p>
+                    </div>
+                  </Link>
+                </div>
+              </div>
+            )}
+
+            {/* ── 2x2 Bento Quick Service Grid inside Bottom Sheet ── */}
+            <div className="space-y-2">
+              <p className="text-[10.5px] font-extrabold text-slate-500 uppercase tracking-wider px-0.5">
+                📌 {currentLang === "en" ? "Quick Citizen Services" : currentLang === "hi" ? "त्वरित नागरिक सेवाएं" : "ઝડપી નાગરિક સેવાઓ"}
+              </p>
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  {
+                    href: "/benefit-calculator",
+                    label: currentLang === "en" ? "Benefit Calculator" : currentLang === "hi" ? "लाभ कैलकुलेटर" : "લાભ ગણો (કેલ્ક્યુલેટર)",
+                    sub: currentLang === "en" ? "Family Pass" : currentLang === "hi" ? "परिवार पास" : "કુટુંબ સહાય પાસ",
+                    Icon: IndianRupee,
+                    bg: "bg-emerald-50 border-emerald-200/80 text-emerald-700",
+                  },
+                  {
+                    href: "/track",
+                    label: currentLang === "en" ? "Track Status" : currentLang === "hi" ? "आवेदन ट्रैक करें" : "અરજી ટ્રેકિંગ",
+                    sub: currentLang === "en" ? "Live SLA Stage" : currentLang === "hi" ? "लाइव स्थिति" : "લાઈવ સ્ટેટસ",
+                    Icon: Search,
+                    bg: "bg-blue-50 border-blue-200/80 text-blue-700",
+                  },
+                  {
+                    href: "/documents",
+                    label: currentLang === "en" ? "Document Guide" : currentLang === "hi" ? "दस्तावेज़ गाइड" : "દસ્તાવેજ ગાઈડ",
+                    sub: currentLang === "en" ? "Ration & Health" : currentLang === "hi" ? "राशन व आयुष्मान" : "રેશન & આયુષ્માન",
+                    Icon: FolderLock,
+                    bg: "bg-purple-50 border-purple-200/80 text-purple-700",
+                  },
+                  {
+                    href: "/eligibility",
+                    label: currentLang === "en" ? "Check Eligibility" : currentLang === "hi" ? "पात्रता जांचें" : "પાત્રતા ચકાસો",
+                    sub: currentLang === "en" ? "1-Min AI Check" : currentLang === "hi" ? "१ मिनट में जांचें" : "૧ મિનિટમાં ચેક",
+                    Icon: ClipboardCheck,
+                    bg: "bg-orange-50 border-orange-200/80 text-orange-700",
+                  },
+                ].map(({ href, label, sub, Icon, bg }) => {
+                  const active = pathname === href;
+                  return (
+                    <Link
+                      key={href}
+                      href={href}
+                      onClick={(e) => {
+                        setIsOpen(false);
+                        handleNavClick(e, href);
+                      }}
+                      className={`app-touch-card flex items-center gap-2.5 p-2.5 rounded-2xl border transition ${
+                        active
+                          ? "bg-orange-600 text-white border-orange-600 shadow-sm"
+                          : "bg-slate-50/90 hover:bg-slate-100 border-slate-200/80 text-slate-800"
+                      }`}
+                    >
+                      <div
+                        className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                          active ? "bg-white/20 border-white/30 text-white" : bg
+                        }`}
+                      >
+                        <Icon size={17} strokeWidth={2.2} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs font-extrabold truncate leading-tight" suppressHydrationWarning>
+                          {label}
+                        </p>
+                        <p
+                          className={`text-[10px] truncate mt-0.5 ${
+                            active ? "text-orange-100" : "text-slate-500"
+                          }`}
+                          suppressHydrationWarning
+                        >
+                          {sub}
+                        </p>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="pt-1">

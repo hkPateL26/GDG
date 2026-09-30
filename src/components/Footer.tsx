@@ -16,10 +16,12 @@ import {
   Lock,
 } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useIsPwaInstalled } from "@/lib/usePwaInstall";
 
 export default function Footer() {
   const pathname = usePathname();
   const { currentLang } = useLanguage();
+  const { isStandalone } = useIsPwaInstalled();
 
   const handleOpenUpdateModal = () => {
     if (typeof window !== "undefined") {
@@ -87,7 +89,9 @@ export default function Footer() {
 
   return (
     <footer
-      className="bg-slate-950 text-slate-300 border-t-2 border-orange-500 pt-10 pb-28 sm:pb-24 xl:pb-12 px-4 sm:px-6 lg:px-8 select-none"
+      className={`bg-slate-950 text-slate-300 border-t-2 border-orange-500 pt-10 ${
+        isStandalone ? "pb-24 xl:pb-10" : "pb-8 sm:pb-10"
+      } px-4 sm:px-6 lg:px-8 select-none`}
     >
       <div className="max-w-7xl mx-auto space-y-8">
         {/* ── Main 4-Column Grid ── */}
