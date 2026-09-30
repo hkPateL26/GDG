@@ -38,6 +38,8 @@ import {
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import CitizenLoginShield from "@/components/CitizenLoginShield";
+import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
+import { getActiveFamilyMember } from "@/lib/family-ledger";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 interface UploadedDocState {
@@ -248,7 +250,7 @@ export default function DocumentServicePortal({
     annualIncome?: number;
   } | null>(null);
 
-  // Restore authenticated citizen session and auto-prefill fields
+  // Restore authenticated citizen session and auto-prefill fields for active family member
   useEffect(() => {
     if (typeof window !== "undefined") {
       const syncSession = () => {
@@ -259,10 +261,15 @@ export default function DocumentServicePortal({
             if (parsed) {
               const cit = parsed.citizen || parsed;
               setCitizenSession(cit);
-              setApplicantName((prev) => prev || cit.citizenName || "Hari Vinodrai Patel");
-              setApplicantNameGu((prev) => prev || cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
-              setMobileNumber((prev) => prev || cit.mobile || "9974442291");
-              setAadhaarNumber((prev) => prev || `XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
+              const activeMember = getActiveFamilyMember(cit);
+              setApplicantName(activeMember.nameEn || activeMember.nameGu || cit.citizenName || "Hari Vinodrai Patel");
+              setApplicantNameGu(activeMember.nameGu || cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
+              setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu || "વિનોદરાઈ કરશનભાઈ પટેલ");
+              setDob(activeMember.dob || "1998-05-15");
+              setGender(activeMember.gender || "male");
+              setMobileNumber(activeMember.mobile || cit.mobile || "9974442291");
+              setAadhaarNumber(activeMember.aadhaarMasked || `XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
+              setLookupNumber(activeMember.aadhaarLast4 || cit.aadhaarLast4 || "4829");
               if (cit.district) setDistrict(cit.district);
               if (cit.taluka) setTaluka(cit.taluka);
               if (cit.village) setVillage(cit.village);
@@ -279,9 +286,13 @@ export default function DocumentServicePortal({
       syncSession();
       window.addEventListener("storage", syncSession);
       window.addEventListener("nagrik_auth_change", syncSession);
+      window.addEventListener("nagrik_family_member_change", syncSession);
+      window.addEventListener("nagrik_family_updated", syncSession);
       return () => {
         window.removeEventListener("storage", syncSession);
         window.removeEventListener("nagrik_auth_change", syncSession);
+        window.removeEventListener("nagrik_family_member_change", syncSession);
+        window.removeEventListener("nagrik_family_updated", syncSession);
       };
     }
   }, []);
@@ -728,6 +739,7 @@ export default function DocumentServicePortal({
         correctionsRequested: selectedCorrections,
         oldVsNewValues,
         kacheriDetails: {
+          primaryCitizenMobile: (citizenSession?.mobile || "").replace(/\D/g, "").slice(-10) || undefined,
           fatherOrHusbandName,
           motherName,
           dob,
@@ -1408,29 +1420,33 @@ export default function DocumentServicePortal({
         </div>
       )}
 
-      {/* ── Compact Citizen Session Notification ── */}
+      {/* ── Compact Citizen Session Notification + Family Aadhaar Bar (Standalone /documents view) ── */}
       {citizenSession && !hideCitizenHeader && (
-        <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-950 shadow-2xs">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shrink-0">✓</span>
-            <div className="min-w-0">
-              <p className="font-extrabold text-emerald-950 text-xs sm:text-sm truncate">
-                2FA પ્રમાણિત અરજદાર: {citizenSession.citizenNameGu || citizenSession.citizenName}
-              </p>
-              <p className="text-[11px] text-emerald-700">
-                📱 +91 {citizenSession.mobile} &bull; 🪪 આધાર: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
-              </p>
+        <div className="space-y-3">
+          <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-300 rounded-2xl p-3 sm:p-4 flex items-center justify-between gap-3 text-xs sm:text-sm text-emerald-950 shadow-2xs">
+            <div className="flex items-center gap-2.5 min-w-0">
+              <span className="w-8 h-8 bg-emerald-600 text-white rounded-xl flex items-center justify-center font-bold text-sm shrink-0">✓</span>
+              <div className="min-w-0">
+                <p className="font-extrabold text-emerald-950 text-xs sm:text-sm truncate">
+                  2FA પ્રમાણિત અરજદાર: {citizenSession.citizenNameGu || citizenSession.citizenName}
+                </p>
+                <p className="text-[11px] text-emerald-700">
+                  📱 +91 {citizenSession.mobile} &bull; 🪪 આધાર: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
+                </p>
+              </div>
             </div>
+            <button
+              type="button"
+              onClick={handleDocLogout}
+              className="px-3 py-1.5 bg-white/90 hover:bg-white text-rose-700 hover:text-rose-800 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
+              title="લોગઆઉટ કરો"
+            >
+              <LogOut size={13} />
+              <span className="hidden sm:inline">લોગઆઉટ</span>
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleDocLogout}
-            className="px-3 py-1.5 bg-white/90 hover:bg-white text-rose-700 hover:text-rose-800 border border-rose-200 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shrink-0 cursor-pointer shadow-2xs"
-            title="લોગઆઉટ કરો"
-          >
-            <LogOut size={13} />
-            <span className="hidden sm:inline">લોગઆઉટ</span>
-          </button>
+
+          <FamilyMemberManagerBar citizen={citizenSession} activeTab="documents" />
         </div>
       )}
 

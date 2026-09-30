@@ -158,7 +158,7 @@ export default function UnifiedCitizenPortal({
   if (citizenSession) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">
-        <div className="w-full px-3 sm:px-6 lg:px-8 py-4 sm:py-6 space-y-6 animate-in fade-in duration-300">
+        <div className="w-full px-2.5 sm:px-6 lg:px-8 py-2.5 sm:py-5 space-y-3 sm:space-y-5 animate-in fade-in duration-300">
           <CitizenPortalHeader
             citizen={citizenSession}
             activeTab={activeTab}

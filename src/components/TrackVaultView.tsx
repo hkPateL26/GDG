@@ -523,23 +523,28 @@ export default function TrackVaultView({
           MODE 1: CITIZEN PRIVATE VAULT
          ══════════════════════════════════════════════════════════════ */}
       {authMode === "citizen" && (
-        <div className="space-y-6">
-          {/* Active Applications Section Header */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-            <div>
-              <h3 className="text-base sm:text-lg font-black text-slate-800 flex items-center gap-2">
-                <span>📋 મારી સરકારી અરજીઓ (My Applications)</span>
-                <span className="bg-orange-100 text-orange-800 text-xs px-2.5 py-0.5 rounded-full font-bold">
+        <div className="space-y-3.5 sm:space-y-5">
+          {/* Active Applications Section Header (Hard-Responsive, Zero Awkward Wrapping) */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200 shadow-2xs">
+            <div className="min-w-0">
+              <div className="flex items-center justify-between sm:justify-start gap-2">
+                <h3 className="text-sm sm:text-lg font-black text-slate-900 truncate">
+                  📋 મારી સરકારી અરજીઓ{" "}
+                  <span className="hidden md:inline font-bold text-slate-500 text-sm">
+                    (My Applications)
+                  </span>
+                </h3>
+                <span className="shrink-0 whitespace-nowrap bg-orange-100 text-orange-800 border border-orange-200 text-[11px] sm:text-xs px-2.5 py-0.5 rounded-full font-extrabold">
                   {records.length} અરજી
                 </span>
-              </h3>
-              <p className="text-xs text-slate-500">
+              </div>
+              <p className="text-[11px] sm:text-xs text-slate-500 mt-0.5 leading-snug">
                 તમારા દ્વારા ઓનલાઇન સબમિટ થયેલ તમામ દસ્તાવેજો અને યોજનાઓનું લાઈવ સ્ટેટસ.
               </p>
             </div>
 
             {/* Quick Search in My Apps */}
-            <div className="w-full sm:w-64">
+            <div className="w-full sm:w-64 shrink-0">
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
@@ -547,8 +552,8 @@ export default function TrackVaultView({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyUp={handleSearchSubmit}
-                  placeholder="અરજી નંબરથી ફિલ્ટર..."
-                  className="w-full pl-8 pr-3 py-1.5 bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-1 focus:ring-orange-500 font-medium"
+                  placeholder="અરજી નંબર કે નામથી શોધો..."
+                  className="w-full pl-8 pr-3 py-2 sm:py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
                 />
               </div>
             </div>
@@ -582,7 +587,7 @@ export default function TrackVaultView({
               )}
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-3.5">
               {records.map((app, idx) => {
                 const cfg = STATUS_CONFIG[app.status] || STATUS_CONFIG.processing;
                 const isSelected = selectedApp?.id === app.id;
@@ -604,49 +609,61 @@ export default function TrackVaultView({
                         setShowTimelineModal(true);
                       }
                     }}
-                    className={`group bg-white rounded-2xl p-4 sm:p-5 border transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md ${
+                    className={`group bg-white rounded-2xl p-3.5 sm:p-4 border transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between gap-2.5 ${
                       isSelected && showTimelineModal
                         ? "border-orange-500 ring-2 ring-orange-200 bg-orange-50/20"
                         : "border-slate-200 hover:border-orange-300"
                     }`}
                   >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <span className="text-2xl p-2 bg-slate-50 rounded-xl border border-slate-100 shrink-0">
-                          {app.schemeEmoji}
+                    {/* Top Row 1: Application ID + Applicant Name + Status Pill (No Horizontal Squishing!) */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5 min-w-0">
+                        <span className="font-mono font-extrabold text-[11px] text-orange-700 bg-orange-50 px-2 py-0.5 rounded-md border border-orange-200 shrink-0 whitespace-nowrap">
+                          {app.id}
                         </span>
-                        <div className="min-w-0">
-                          <span className="font-mono font-bold text-xs text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100">
-                            {app.id}
+                        {app.citizenNameGu && (
+                          <span className="text-[10.5px] font-bold text-indigo-800 bg-indigo-50 border border-indigo-200/80 px-2 py-0.5 rounded-md truncate">
+                            👤 {app.citizenNameGu}
                           </span>
-                          <h4 className="font-bold text-sm sm:text-base text-slate-800 mt-1 leading-snug">
-                            {app.schemeNameGu}
-                          </h4>
-                          <p className="text-[11px] text-slate-500 mt-0.5 leading-snug">{app.schemeName}</p>
-                        </div>
+                        )}
                       </div>
 
                       <span
-                        className={`text-[10.5px] px-2.5 py-1 rounded-full font-bold border shrink-0 ${cfg.badgeBg}`}
+                        className={`text-[10.5px] px-2.5 py-0.5 rounded-full font-extrabold border shrink-0 whitespace-nowrap ${cfg.badgeBg}`}
                       >
                         {cfg.labelGu}
                       </span>
                     </div>
 
-                    {/* Official SLA Pill & Duration */}
-                    <div className="mt-3 flex flex-wrap items-center gap-1.5 text-[11px]">
-                      <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200 flex items-center gap-1">
-                        <Clock size={11} className="text-slate-500" />
+                    {/* Row 2: Emoji Icon + Full-Width Scheme Title (Never Squished!) */}
+                    <div className="flex items-center gap-2.5 min-w-0">
+                      <span className="w-10 h-10 sm:w-11 sm:h-11 text-xl sm:text-2xl bg-slate-50 rounded-xl border border-slate-200/80 flex items-center justify-center shrink-0">
+                        {app.schemeEmoji}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-black text-sm sm:text-base text-slate-900 leading-snug truncate">
+                          {app.schemeNameGu}
+                        </h4>
+                        <p className="text-[11px] text-slate-500 mt-0.5 leading-snug truncate">
+                          {app.schemeName}
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Official SLA Pill & Duration */}
+                    <div className="flex flex-wrap items-center gap-1.5 text-[10.5px]">
+                      <span className="bg-slate-100 text-slate-700 font-bold px-2 py-0.5 rounded-md border border-slate-200 inline-flex items-center gap-1 whitespace-nowrap">
+                        <Clock size={11} className="text-slate-500 shrink-0" />
                         <span>સમયમર્યાદા: {sla.slaLabelGu}</span>
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md font-bold border ${sla.statusColor}`}>
+                      <span className={`px-2 py-0.5 rounded-md font-bold border whitespace-nowrap ${sla.statusColor}`}>
                         {sla.statusBadgeGu}
                       </span>
                     </div>
 
                     {/* Officer Status Highlight Callout in Card */}
                     {app.status === "rejected" && (
-                      <div className="mt-2.5 p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-950 flex items-start justify-between gap-2">
+                      <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-[11px] text-rose-950 flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <span className="font-extrabold text-rose-900 block leading-tight">
                             ⚠️ કચેરી કારણ: {app.remarksGu}
@@ -661,7 +678,7 @@ export default function TrackVaultView({
                             e.stopPropagation();
                             handleReApply(app);
                           }}
-                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black rounded-lg text-[10.5px] transition shrink-0 flex items-center gap-1 shadow-2xs cursor-pointer"
+                          className="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-black rounded-lg text-[10.5px] transition shrink-0 flex items-center gap-1 shadow-2xs cursor-pointer whitespace-nowrap"
                         >
                           <RotateCw size={11} />
                           <span>પુનઃ અરજી</span>
@@ -670,24 +687,29 @@ export default function TrackVaultView({
                     )}
 
                     {app.status === "processing" && (
-                      <div className="mt-2 p-2 bg-blue-50/80 border border-blue-200 rounded-xl text-[11px] text-blue-950 flex items-center gap-2">
+                      <div className="p-2 bg-blue-50/80 border border-blue-200 rounded-xl text-[11px] text-blue-950 flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping shrink-0" />
-                        <span className="truncate"><strong>સ્ક્રુટિની ચાલુ:</strong> {app.remarksGu}</span>
+                        <span className="truncate">
+                          <strong>સ્ક્રુટિની ચાલુ:</strong> {app.remarksGu}
+                        </span>
                       </div>
                     )}
 
                     {app.status === "approved" && app.benefitAmount > 0 && (
-                      <div className="mt-2 p-1.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center justify-between">
-                        <span>✓ દસ્તાવેજ ખરાઈ સફળ</span>
-                        <span className="font-black text-emerald-800">DBT ₹{app.benefitAmount.toLocaleString("en-IN")} જમા</span>
+                      <div className="p-1.5 px-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-emerald-900 flex items-center justify-between gap-2">
+                        <span className="truncate">✓ દસ્તાવેજ ખરાઈ સફળ</span>
+                        <span className="font-black text-emerald-800 whitespace-nowrap">
+                          DBT ₹{app.benefitAmount.toLocaleString("en-IN")} જમા
+                        </span>
                       </div>
                     )}
 
-                    <div className="mt-3 pt-2.5 border-t border-slate-100 text-xs text-slate-600 flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-[11px] text-slate-500 font-medium">
-                        તારીખ: <strong className="text-slate-700">{app.appliedDate}</strong>
+                    {/* Row 4: Footer Bar (Date + PDF Receipt + Tracking Details) */}
+                    <div className="pt-2 border-t border-slate-100 text-xs text-slate-600 flex items-center justify-between gap-2">
+                      <span className="text-[11px] text-slate-500 font-medium whitespace-nowrap">
+                        📅 <strong className="font-mono text-slate-700">{app.appliedDate}</strong>
                       </span>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-1.5 shrink-0">
                         <button
                           type="button"
                           onClick={(e) => {
@@ -695,10 +717,10 @@ export default function TrackVaultView({
                             setSelectedApp(app);
                             setShowPrintModal(true);
                           }}
-                          className="text-xs font-bold text-slate-600 hover:text-orange-600 flex items-center gap-1 transition px-2 py-1 rounded-lg hover:bg-slate-100 cursor-pointer"
+                          className="text-[11px] font-bold text-slate-700 hover:text-orange-600 bg-slate-100 hover:bg-orange-50 border border-slate-200 flex items-center gap-1 transition px-2.5 py-1.5 rounded-lg cursor-pointer whitespace-nowrap active:scale-95"
                         >
-                          <Printer size={13} />
-                          <span>પહોંચ (PDF)</span>
+                          <Printer size={12} className="shrink-0" />
+                          <span>પહોંચ</span>
                         </button>
                         <button
                           type="button"
@@ -707,9 +729,9 @@ export default function TrackVaultView({
                             setSelectedApp(app);
                             setShowTimelineModal(true);
                           }}
-                          className="text-xs font-black text-orange-600 hover:text-white hover:bg-orange-600 bg-orange-50 active:scale-95 px-2.5 py-1 rounded-lg border border-orange-200 transition flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                          className="text-[11px] font-black text-orange-700 hover:text-white hover:bg-orange-600 bg-orange-50 active:scale-95 px-2.5 py-1.5 rounded-lg border border-orange-200 transition flex items-center gap-1 cursor-pointer shadow-2xs whitespace-nowrap"
                         >
-                          <Eye size={13} />
+                          <Eye size={12} className="shrink-0" />
                           <span>ટ્રેકિંગ વિગતો ↗</span>
                         </button>
                       </div>

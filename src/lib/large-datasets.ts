@@ -5064,10 +5064,11 @@ export function getCitizenBenefitProfile(mobile: string, aadhaarLast4?: string):
 
   const targetList = globalForApps.__CUSTOM_USER_APPLICATIONS__ || CUSTOM_USER_APPLICATIONS;
 
-  // Find all applications submitted by this citizen in our custom dataset
+  // Find all applications submitted by this citizen or their linked family members
   const customUserApps = targetList.filter(
     (a) =>
       (a.mobile && cleanMobile && a.mobile.includes(cleanMobile)) ||
+      (a.kacheriDetails && a.kacheriDetails.primaryCitizenMobile === cleanMobile) ||
       (a.aadhaarLast4 && cleanAadhaar && a.aadhaarLast4 === cleanAadhaar) ||
       (a.citizenNameGu && a.citizenNameGu.includes("હરી")) ||
       (a.citizenName && a.citizenName.toLowerCase().includes("hari"))
