@@ -1,10 +1,18 @@
 // =========================================================================
-// GET /api/track - Look up application status or query large-scale dataset
+// GET / POST / PATCH /api/track - Fast, Non-Blocking Citizen Application API
 // =========================================================================
 
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
-import { doc, getDoc, collection, getDocs, limit as fsLimit, query as fsQuery } from "firebase/firestore";
+import {
+  doc,
+  getDoc,
+  setDoc,
+  collection,
+  getDocs,
+  limit as fsLimit,
+  query as fsQuery,
+} from "firebase/firestore";
 import {
   queryApplications,
   calculateSystemStats,
@@ -22,10 +30,25 @@ function cleanForFirestore(obj: unknown): unknown {
   const result: Record<string, unknown> = {};
   for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
     if (value !== undefined) {
+      // Prevent Firestore 1MB document limit error if a large base64 photo is attached
+      if (
+        (key === "citizenPhoto" || key === "userPhoto") &&
+        typeof value === "string" &&
+        value.length > 120000
+      ) {
+        continue;
+      }
       result[key] = cleanForFirestore(value);
     }
   }
   return result;
+}
+
+function withFirestoreTimeout<T>(promise: Promise<T>, ms = 650): Promise<T | null> {
+  return Promise.race([
+    promise,
+    new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
+  ]);
 }
 
 export async function GET(req: NextRequest) {
@@ -41,17 +64,19 @@ export async function GET(req: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const statsOnly = searchParams.get("stats") === "true";
 
-    // Pre-sync recent applications from Cloud Firestore into in-memory ledger
+    // Pre-sync recent applications from Cloud Firestore into in-memory ledger (bounded by 650ms timeout)
     if (db) {
       try {
         const colRef = collection(db, "applications");
-        const snap = await getDocs(fsQuery(colRef, fsLimit(50)));
-        snap.forEach((docSnap) => {
-          const d = docSnap.data() as CitizenApplication;
-          if (d && d.id) {
-            addCustomApplication(d);
-          }
-        });
+        const snap = await withFirestoreTimeout(getDocs(fsQuery(colRef, fsLimit(50))), 650);
+        if (snap) {
+          snap.forEach((docSnap) => {
+            const d = docSnap.data() as CitizenApplication;
+            if (d && d.id) {
+              addCustomApplication(d);
+            }
+          });
+        }
       } catch {
         // ignore fallback to memory
       }
@@ -70,24 +95,7 @@ export async function GET(req: NextRequest) {
     if (id) {
       const cleanId = id.toUpperCase();
 
-      // Check Firestore if configured
-      if (db) {
-        try {
-          const docRef = doc(db, "applications", cleanId);
-          const snap = await getDoc(docRef);
-          if (snap.exists()) {
-            return NextResponse.json({
-              application: snap.data(),
-              source: "cloud-firestore",
-              success: true,
-            });
-          }
-        } catch (dbErr) {
-          console.warn("Firestore lookup failed, checking large dataset:", dbErr);
-        }
-      }
-
-      // Query from 5,000+ realistic dataset
+      // Check in-memory dataset first for instant response
       const result = queryApplications({ search: cleanId, page: 1, limit: 1 });
       if (result.records.length > 0) {
         const item = result.records[0];
@@ -112,15 +120,40 @@ export async function GET(req: NextRequest) {
             remarksEn: item.remarksEn,
             benefitAmount: item.benefitAmount,
             officerDesignation: item.officerDesignation,
-            workflowStage: item.workflowStage !== undefined ? item.workflowStage : (item.status === "approved" ? 3 : 1),
+            workflowStage:
+              item.workflowStage !== undefined
+                ? item.workflowStage
+                : item.status === "approved"
+                ? 3
+                : 1,
           },
           source: "enterprise-dataset",
           success: true,
         });
       }
 
+      // Check Firestore if configured (bounded by 650ms timeout)
+      if (db) {
+        try {
+          const docRef = doc(db, "applications", cleanId);
+          const snap = await withFirestoreTimeout(getDoc(docRef), 650);
+          if (snap && snap.exists()) {
+            return NextResponse.json({
+              application: snap.data(),
+              source: "cloud-firestore",
+              success: true,
+            });
+          }
+        } catch (dbErr) {
+          console.warn("Firestore lookup failed:", dbErr);
+        }
+      }
+
       return NextResponse.json(
-        { error: `No application found for "${id}". Please check your application ID.`, success: false },
+        {
+          error: `No application found for "${id}". Please check your application ID.`,
+          success: false,
+        },
         { status: 404 }
       );
     }
@@ -201,8 +234,12 @@ export async function POST(req: NextRequest) {
     // Auto-schedule biometric appointment if required
     const appointmentDate = biometricRequired ? "2026-09-29" : undefined;
     const appointmentTime = biometricRequired ? "11:30 AM" : undefined;
-    const appointmentCenter = biometricRequired ? `જન સેવા કેન્દ્ર (Jan Seva Kendra), ${taluka}` : undefined;
-    const appointmentToken = biometricRequired ? `TK-${Math.floor(100 + Math.random() * 899)}` : undefined;
+    const appointmentCenter = biometricRequired
+      ? `જન સેવા કેન્દ્ર (Jan Seva Kendra), ${taluka}`
+      : undefined;
+    const appointmentToken = biometricRequired
+      ? `TK-${Math.floor(100 + Math.random() * 899)}`
+      : undefined;
 
     let computedRemarksGu = "";
     let computedRemarksEn = "";
@@ -231,7 +268,7 @@ export async function POST(req: NextRequest) {
       districtGu,
       taluka,
       village,
-      aadhaarLast4: aadhaarLast4.slice(-4),
+      aadhaarLast4: String(aadhaarLast4 || "4829").slice(-4),
       status: "processing",
       appliedDate: today,
       lastUpdated: today,
@@ -264,23 +301,25 @@ export async function POST(req: NextRequest) {
       userPhoto: userPhoto || citizenPhoto || undefined,
     };
 
-    // Save into server large-dataset in-memory cache
+    // 1. Save immediately into server large-dataset in-memory cache (0ms latency)
     addCustomApplication(newApp);
 
-    // Save into Firebase Cloud Firestore if active
+    // 2. Sync to Firebase Cloud Firestore asynchronously in background so it NEVER blocks payment confirmation!
     if (db) {
-      try {
-        const { setDoc, doc: fsDoc } = await import("firebase/firestore");
-        await setDoc(fsDoc(db, "applications", id), cleanForFirestore(newApp) as Record<string, unknown>);
-      } catch (fbErr) {
-        console.warn("Firestore save fallback:", fbErr);
-      }
+      setDoc(
+        doc(db, "applications", id),
+        cleanForFirestore(newApp) as Record<string, unknown>
+      ).catch((fbErr) => {
+        console.warn("Firestore async save fallback:", fbErr);
+      });
     }
 
     // Dynamic App Origin for SMS & Email Links
     const host = req.headers.get("x-forwarded-host") || req.headers.get("host") || "";
     const proto = req.headers.get("x-forwarded-proto") || "https";
-    const origin = req.headers.get("origin") || (host ? `${proto}://${host}` : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in"));
+    const origin =
+      req.headers.get("origin") ||
+      (host ? `${proto}://${host}` : process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
 
     // Simulated SMS & Email Notification Payloads
     const smsMessage = `Govt of Gujarat: નમસ્તે ${resolvedCitizenNameGu || resolvedCitizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: ${origin}/track?id=${id}`;
@@ -321,7 +360,6 @@ export async function PATCH(req: NextRequest) {
 
     // 1. Confirm offline cash payment (Operator Verification)
     if (action === "confirm_cash_payment" && id) {
-      // Authorization Check (BUG-004)
       const isOperatorAuthorized =
         operatorId === "JSK-OP-8921" ||
         (officerId && (String(officerId).toUpperCase().startsWith("GUJ") || pin === "GJ2026"));
@@ -336,12 +374,13 @@ export async function PATCH(req: NextRequest) {
       const updated = confirmApplicationPayment(id);
       if (updated) {
         if (db) {
-          try {
-            const { setDoc, doc: fsDoc } = await import("firebase/firestore");
-            await setDoc(fsDoc(db, "applications", id.toUpperCase()), cleanForFirestore(updated) as Record<string, unknown>, { merge: true });
-          } catch (fbErr) {
-            console.warn("Firestore update fallback:", fbErr);
-          }
+          setDoc(
+            doc(db, "applications", id.toUpperCase()),
+            cleanForFirestore(updated) as Record<string, unknown>,
+            { merge: true }
+          ).catch((fbErr) => {
+            console.warn("Firestore async update fallback:", fbErr);
+          });
         }
 
         return NextResponse.json({
@@ -353,9 +392,8 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
     }
 
-    // 2. Advance Workflow Stage (Supports both 'update_workflow_stage' and 'advance_stage' - BUG-001)
+    // 2. Advance Workflow Stage
     if ((action === "update_workflow_stage" || action === "advance_stage") && id) {
-      // Authorization Check (BUG-004)
       const isOfficerAuthorized =
         (officerId && (String(officerId).toUpperCase().startsWith("GUJ") || pin === "GJ2026")) ||
         operatorId === "JSK-OP-8921" ||
@@ -375,12 +413,13 @@ export async function PATCH(req: NextRequest) {
 
       if (updated) {
         if (db) {
-          try {
-            const { setDoc, doc: fsDoc } = await import("firebase/firestore");
-            await setDoc(fsDoc(db, "applications", id.toUpperCase()), cleanForFirestore(updated) as Record<string, unknown>, { merge: true });
-          } catch (fbErr) {
-            console.warn("Firestore update fallback:", fbErr);
-          }
+          setDoc(
+            doc(db, "applications", id.toUpperCase()),
+            cleanForFirestore(updated) as Record<string, unknown>,
+            { merge: true }
+          ).catch((fbErr) => {
+            console.warn("Firestore async update fallback:", fbErr);
+          });
         }
 
         let stageMsg = "";
@@ -405,7 +444,6 @@ export async function PATCH(req: NextRequest) {
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Server error";
     console.error("Failed to update application:", err);
-    return NextResponse.json({ error: errorMsg, success: false }, { status: 500 });
+    return NextResponse.json({ error: errorMsg }, { status: 500 });
   }
 }
-
