@@ -31,13 +31,13 @@ export default function OfficialGovernmentUpdateModal() {
   const checkLiveVersion = useCallback(async () => {
     if (typeof window === "undefined") return;
 
-    // 1. Immediate static APP_VERSION check
+    // 1. Auto-sync static APP_VERSION silently so demo & judges are never blocked
     const savedVersion = localStorage.getItem("nagrik_app_version");
     if (!savedVersion || savedVersion !== APP_VERSION) {
-      setIsOpen(true);
+      localStorage.setItem("nagrik_app_version", APP_VERSION);
     }
 
-    // 2. Live server / codebase buildHash check (triggers whenever ANY file in src/ is updated!)
+    // 2. Live server / codebase buildHash sync
     try {
       const res = await fetch(`/api/version?t=${Date.now()}`, {
         cache: "no-store",
@@ -49,7 +49,7 @@ export default function OfficialGovernmentUpdateModal() {
         setServerBuildHash(data.buildHash);
         const savedHash = localStorage.getItem("nagrik_app_build_hash");
         if (!savedHash || savedHash !== data.buildHash) {
-          setIsOpen(true);
+          localStorage.setItem("nagrik_app_build_hash", data.buildHash);
         }
       }
     } catch {
