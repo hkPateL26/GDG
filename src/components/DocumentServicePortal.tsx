@@ -58,6 +58,8 @@ interface UploadedDocState {
   serviceRuleMatch?: boolean;
   serviceRuleStatus?: "pass" | "fail" | "warning";
   serviceRuleAdviceGu?: string;
+  matchesExpected?: boolean;
+  documentType?: string;
 }
 
 export default function DocumentServicePortal({
@@ -565,7 +567,12 @@ export default function DocumentServicePortal({
             detectedName: a.extractedInfo?.detectedName,
             serviceRuleMatch: a.serviceRuleMatch,
             serviceRuleStatus: a.serviceRuleStatus,
-            serviceRuleAdviceGu: a.serviceRuleAdviceGu,
+            serviceRuleAdviceGu:
+              a.nameMatchStatus === "mismatch" || a.matchesExpected === false
+                ? ""
+                : a.serviceRuleAdviceGu,
+            matchesExpected: a.matchesExpected,
+            documentType: a.documentType || a.documentNameGu,
           },
         }));
       } else {
@@ -702,17 +709,21 @@ export default function DocumentServicePortal({
     if (invalidDocs.length > 0) {
       const firstInvalid = invalidDocs[0];
       const firstState = uploadedDocs[firstInvalid.id];
-      if (firstState?.serviceRuleMatch === false) {
+      if (firstState?.nameMatchStatus === "mismatch") {
+        alert(
+          `❌ અરજી સબમિટ થઈ શકશે નહીં (અન્ય વ્યક્તિનો દસ્તાવેજ):\n\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName || "અરજદાર"}' ના નામે ભરેલું છે.\n\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે. કૃપા કરીને સાચો દસ્તાવેજ અપલોડ કરો.`
+        );
+      } else if (firstState?.matchesExpected === false) {
+        alert(
+          `❌ અરજી સબમિટ થઈ શકશે નહીં (ખોટો દસ્તાવેજ):\n\nતમે '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ કરી છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ, બોનાફાઈડ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
+        );
+      } else if (firstState?.serviceRuleMatch === false) {
         alert(
           `❌ અરજી સબમિટ થઈ શકશે નહીં (સરકારી સેવા નિયમ ભંગ):\n\n${firstState.serviceRuleAdviceGu || "અપલોડ કરેલ દસ્તાવેજ આ સેવાના કાયદાકીય નિયમો પૂર્ણ કરતો નથી."}\n\nકૃપા કરીને સરકારી ધારાધોરણો મુજબ પાત્ર દસ્તાવેજ અપલોડ કરો.`
         );
-      } else if (firstState?.nameMatchStatus === "mismatch") {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (નામ મેળ ખાતું નથી):\n\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પરનું નામ ફોર્મમાં ભરેલા અરજદાર (${applicantName || "અરજદાર"}) ના નામ સાથે મેળ ખાતું નથી.\n\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે. અન્ય વ્યક્તિના દસ્તાવેજ સ્વીકારવામાં આવશે નહીં. કૃપા કરીને સાચો દસ્તાવેજ અપલોડ કરો.`
-        );
       } else {
         alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય (ખોટો દસ્તાવેજ) છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
+          `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
         );
       }
       return;
@@ -2945,11 +2956,13 @@ export default function DocumentServicePortal({
                             <span className="inline-flex items-center gap-1 text-xs text-rose-800 bg-rose-100 border border-rose-300 px-2.5 py-1 rounded-full font-bold">
                               <XCircle size={14} className="text-rose-600" />
                               <span>
-                                {docState.serviceRuleMatch === false
+                                {docState.nameMatchStatus === "mismatch"
+                                  ? `અસ્વીકાર્ય (અન્ય વ્યક્તિનો દસ્તાવેજ)`
+                                  : docState.matchesExpected === false
+                                  ? `અસ્વીકાર્ય (ખોટો દસ્તાવેજ)`
+                                  : docState.serviceRuleMatch === false
                                   ? `અસ્વીકાર્ય (સેવા નિયમ ભંગ)`
-                                  : docState.nameMatchStatus === "mismatch"
-                                  ? `અસ્વીકાર્ય (નામ મેળ ખાતું નથી)`
-                                  : `અસ્વીકાર્ય (ખોટો દસ્તાવેજ)`}
+                                  : `અસ્વીકાર્ય (અમાન્ય પુરાવો)`}
                               </span>
                             </span>
                           )}
@@ -2995,60 +3008,131 @@ export default function DocumentServicePortal({
                         </label>
                       </div>
 
-                      {/* AI Smart Actionable Alert Message */}
-                      {docState?.adviceGu && (
-                        <div
-                          className={`text-xs p-3 rounded-xl border flex items-start gap-2.5 ${
-                            isValid
-                              ? "bg-emerald-50 border-emerald-200 text-emerald-900"
-                              : isWarning
-                              ? "bg-amber-100 border-amber-300 text-amber-950 font-medium"
-                              : "bg-rose-50 border-2 border-rose-300 text-rose-950"
-                          }`}
-                        >
-                          {isValid ? (
+                      {/* AI Smart Dynamic Verification & Guidance Widget */}
+                      {docState && (
+                        isValid ? (
+                          <div className="text-xs p-3 rounded-xl border border-emerald-300 bg-emerald-50/70 text-emerald-950 flex items-start gap-2.5 shadow-2xs">
                             <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
-                          ) : isWarning ? (
+                            <div className="space-y-1">
+                              <p className="font-bold text-emerald-900 leading-relaxed">
+                                {docState.adviceGu || "✅ દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો."}
+                              </p>
+                              {docState.detectedName && (
+                                <p className="text-[11px] text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded inline-block font-medium">
+                                  👤 દસ્તાવેજ પર નામ: <span className="font-bold">{docState.detectedName}</span>
+                                  {typeof docState.nameMatchConfidence === "number" && (
+                                    <span className="ml-1 opacity-80">(મેચ સ્કોર: {docState.nameMatchConfidence}%)</span>
+                                  )}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ) : isWarning ? (
+                          <div className="text-xs p-3 rounded-xl border border-amber-300 bg-amber-50 text-amber-950 flex items-start gap-2.5 shadow-2xs">
                             <AlertTriangle size={16} className="text-amber-600 shrink-0 mt-0.5" />
-                          ) : (
-                            <XCircle size={16} className="text-rose-600 shrink-0 mt-0.5" />
-                          )}
-                          <div className="space-y-1">
-                            <p className={`leading-relaxed ${isInvalid ? "font-bold text-rose-900 text-xs sm:text-sm" : ""}`}>
-                              {docState.adviceGu}
-                            </p>
-                            {docState.serviceRuleAdviceGu && (
-                              <p className="text-[11px] text-amber-950 font-bold bg-amber-100/90 border border-amber-300 rounded-md px-2.5 py-1">
-                                ⚖️ સરકારી સેવા નિયમ: {docState.serviceRuleAdviceGu}
+                            <div className="space-y-1">
+                              <p className="font-bold text-amber-900 leading-relaxed">
+                                {docState.adviceGu || "⚠️ દસ્તાવેજમાં કેટલીક બાબતો ચકાસવા જેવી છે."}
                               </p>
-                            )}
-                            {docState.detectedName && (
-                              <p className="text-[11px] text-slate-700 font-semibold bg-white/80 rounded-md px-2 py-0.5 inline-block border border-black/5">
-                                🔍 દસ્તાવેજ પર મળેલ નામ: <span className="font-bold text-slate-900">{docState.detectedName}</span>
-                                {typeof docState.nameMatchConfidence === "number" && (
-                                  <span className="ml-1 text-slate-500 font-normal">
-                                    (મેચ સ્કોર: {docState.nameMatchConfidence}%)
+                              {docState.serviceRuleAdviceGu && (
+                                <p className="text-[11px] text-amber-900 bg-amber-100 px-2 py-0.5 rounded font-medium">
+                                  ⚖️ નિયમ સલાહ: {docState.serviceRuleAdviceGu}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ) : isInvalid ? (
+                          <div className="bg-rose-50/90 border-2 border-rose-300 rounded-xl p-3 sm:p-4 space-y-2.5 text-xs text-rose-950 shadow-2xs">
+                            {/* Header with specific dynamic reason */}
+                            <div className="flex items-start gap-2">
+                              <XCircle size={18} className="text-rose-600 shrink-0 mt-0.5" />
+                              <div className="min-w-0 flex-1">
+                                <h5 className="font-black text-xs sm:text-sm text-rose-950 leading-tight">
+                                  {docState.nameMatchStatus === "mismatch"
+                                    ? "અરજદારની જગ્યાએ અન્ય વ્યક્તિનો દસ્તાવેજ અપલોડ થયેલ છે"
+                                    : docState.matchesExpected === false
+                                    ? "માંગેલ પુરાવા સિવાય અમાન્ય દસ્તાવેજ અપલોડ થયેલ છે"
+                                    : docState.serviceRuleMatch === false
+                                    ? "સરકારી સેવા પાત્રતા નિયમ સંતોષાતો નથી"
+                                    : "દસ્તાવેજ ચકાસણી અસ્વીકાર્ય (અમાન્ય ફાઇલ)"}
+                                </h5>
+                              </div>
+                            </div>
+
+                            {/* Dynamic Form vs Document Comparison Grid */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-white/95 border border-rose-200 rounded-lg p-2.5 text-[11px] sm:text-xs shadow-2xs">
+                              <div className="flex items-start gap-1.5">
+                                <span className="font-bold text-slate-500 shrink-0">📋 ફોર્મમાં અરજદાર:</span>
+                                <span className="font-extrabold text-slate-900 truncate">
+                                  {applicantNameGu || applicantName || "વિનોદરાઈ કરશનભાઈ પટેલ"}
+                                </span>
+                              </div>
+
+                              {docState.detectedName ? (
+                                <div className="flex items-start gap-1.5">
+                                  <span className="font-bold text-slate-500 shrink-0">👤 દસ્તાવેજ પર નામ:</span>
+                                  <span
+                                    className={`font-extrabold truncate ${
+                                      docState.nameMatchStatus === "mismatch"
+                                        ? "text-rose-700 bg-rose-50 px-1 rounded border border-rose-200"
+                                        : "text-slate-900"
+                                    }`}
+                                  >
+                                    {docState.detectedName}
+                                    {typeof docState.nameMatchConfidence === "number" && (
+                                      <span className="text-[10px] text-slate-500 font-normal ml-1">
+                                        (મેચ: {docState.nameMatchConfidence}%)
+                                      </span>
+                                    )}
                                   </span>
-                                )}
-                              </p>
-                            )}
-                            {isInvalid && (
-                              <p className="text-[11px] text-rose-700 font-medium">
-                                ⚠️ સરકારી નિયમ: માંગેલ સત્તાવાર પુરાવા સિવાય અન્ય કોઈ દસ્તાવેજ (દા.ત. માર્કશીટ, અયોગ્ય બિલ) માન્ય ગણાશે નહીં. કૃપા કરીને &apos;બદલો (Replace)&apos; પર ક્લિક કરી સાચો દસ્તાવેજ અપલોડ કરો.
-                              </p>
-                            )}
-                            {docState.needsUpdate && (
-                              <p className="text-[11px] text-amber-800 font-bold">
-                                👉 આ દસ્તાવેજમાં સુધારો કરવો પડશે. ઉપર &apos;સુધારો&apos; ટેબ પસંદ કરીને અપડેટ રિકવેસ્ટ કરી શકો છો.
-                              </p>
-                            )}
-                            {docState.needsNewDocument && (
-                              <p className="text-[11px] text-rose-800 font-bold">
-                                👉 આ દસ્તાવેજ એક્સપાયર થયેલ છે, નવો કઢાવવો પડશે.
-                              </p>
+                                </div>
+                              ) : null}
+
+                              <div className="flex items-start gap-1.5">
+                                <span className="font-bold text-slate-500 shrink-0">📌 માંગેલ પુરાવો:</span>
+                                <span className="font-bold text-emerald-800">{docItem.nameGu}</span>
+                              </div>
+
+                              <div className="flex items-start gap-1.5">
+                                <span className="font-bold text-slate-500 shrink-0">📎 અપલોડ કરેલ:</span>
+                                <span className="font-mono text-slate-700 truncate max-w-[200px]" title={docState.fileName}>
+                                  {docState.documentType ? `${docState.documentType}` : docState.fileName || "અપલોડ કરેલ ફાઇલ"}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Dynamic Plain-Language Solution Box */}
+                            <div className="bg-rose-100/80 border border-rose-200 rounded-lg p-2.5 text-xs text-rose-950 leading-relaxed font-medium">
+                              {docState.nameMatchStatus === "mismatch" ? (
+                                <p>
+                                  💡 <strong>સરળ ઉકેલ:</strong> આ ફોર્મ <strong>&apos;{applicantNameGu || applicantName}&apos;</strong> ના નામે ભરવામાં આવ્યું છે, પરંતુ તમે અપલોડ કરેલ દસ્તાવેજ પર <strong>&apos;{docState.detectedName || "અન્ય વ્યક્તિ"}&apos;</strong> નું નામ જણાય છે. સરકારી નિયમો મુજબ ફક્ત અરજદારનો પોતાનો જ અસલ દસ્તાવેજ માન્ય ગણાશે. કૃપા કરીને ઉપર <strong>&apos;બદલો (Replace)&apos;</strong> બટન દબાવી ફક્ત <strong>&apos;{applicantNameGu || applicantName}&apos;</strong> નો પોતાનો જ અસલ {docItem.nameGu} અપલોડ કરો.
+                                </p>
+                              ) : docState.matchesExpected === false ? (
+                                <p>
+                                  💡 <strong>સરળ ઉકેલ:</strong> અહીં સત્તાવાર <strong>&apos;{docItem.nameGu}&apos;</strong> ની જરૂર છે, જ્યારે અપલોડ કરેલ ફાઇલ અમાન્ય દસ્તાવેજ છે. કૃપા કરીને ઉપર <strong>&apos;બદલો (Replace)&apos;</strong> બટન દબાવી અરજદારનો સાચો સત્તાવાર <strong>&apos;{docItem.nameGu}&apos;</strong> અપલોડ કરો.
+                                </p>
+                              ) : docState.serviceRuleAdviceGu ? (
+                                <p>
+                                  ⚖️ <strong>કાયદાકીય સેવા નિયમ:</strong> {docState.serviceRuleAdviceGu}
+                                </p>
+                              ) : (
+                                <p>
+                                  💡 <strong>સરળ ઉકેલ:</strong> {docState.adviceGu}
+                                </p>
+                              )}
+                            </div>
+
+                            {/* Statutory service rule advice ONLY if distinct from name mismatch and wrong doc */}
+                            {docState.serviceRuleAdviceGu &&
+                             docState.nameMatchStatus !== "mismatch" &&
+                             docState.matchesExpected !== false &&
+                             !docState.serviceRuleAdviceGu.includes(docState.adviceGu || "") && (
+                              <div className="bg-amber-100/80 border border-amber-300 rounded-lg p-2 text-[11px] text-amber-950 font-bold">
+                                ⚖️ સરકારી સેવા નિયમ: {docState.serviceRuleAdviceGu}
+                              </div>
                             )}
                           </div>
-                        </div>
+                        ) : null
                       )}
                     </div>
                   );
@@ -3064,7 +3148,7 @@ export default function DocumentServicePortal({
                     <div>
                       <span className="font-extrabold block">ધ્યાન આપો: અરજીમાં અસ્વીકાર્ય દસ્તાવેજ મળ્યો છે!</span>
                       <span className="text-[11px] text-rose-800">
-                        અપલોડ કરેલ દસ્તાવેજ (દા.ત. માર્કશીટ/અયોગ્ય કાગળ) સરકારી નિયમો મુજબ માન્ય નથી. જ્યાં સુધી સાચો સત્તાવાર પુરાવો અપલોડ નહીં થાય ત્યાં સુધી અરજી સબમિટ કરી શકાશે નહીં.
+                        લાલ રંગથી દર્શાવેલ દસ્તાવેજ સરકારી નિયમો મુજબ માન્ય નથી. કૃપા કરીને ઉપર &apos;બદલો (Replace)&apos; પર ક્લિક કરી સાચો સત્તાવાર પુરાવો અપલોડ કરો, ત્યાર બાદ જ ફી ચુકવણી અને અરજી સબમિટ થઈ શકશે.
                       </span>
                     </div>
                   </div>

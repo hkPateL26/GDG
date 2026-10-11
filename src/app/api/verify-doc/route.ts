@@ -84,13 +84,13 @@ For ANY service (new application or update), all identity and personal entitleme
      -> "actionableAdviceGu": "✅ કુટુંબના વડા / પિતાના નામે માન્ય દસ્તાવેજ: દસ્તાવેજ પર કુટુંબના વડા અથવા પિતાનું નામ નિયમ મુજબ સ્વીકાર્ય છે."
 
   c) STRICT NAME MISMATCH (OTHER PERSON'S DOCUMENT / FRAUD RISK):
-     If the document clearly belongs to a DIFFERENT, UNRELATED individual (e.g. form has 'Hari Patel' but document is in the name of 'Dinesh Rabari', 'Ramesh Patel', 'Aartiben Solanki', etc.):
+     If the document clearly belongs to a DIFFERENT, UNRELATED individual (e.g. form has '[FORM_APPLICANT_NAME_GU]' but document is in the name of another individual):
      -> "nameMatchStatus": "mismatch"
      -> "nameMatchConfidence": 10 to 25
      -> "isValidForGovt": false
      -> "matchesExpected": false
      -> "qualityScore": 15
-     -> "actionableAdviceGu": "❌ અરજદારનું નામ મેળ ખાતું નથી: ફોર્મમાં અરજદારનું નામ ફોર્મમાં ભરેલા નામ મુજબ છે, પરંતુ અપલોડ કરેલ દસ્તાવેજ પર અન્ય વ્યક્તિનું નામ જણાય છે. સરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય રહેશે. અન્ય વ્યક્તિના દસ્તાવેજ સ્વીકારવામાં આવશે નહીં."
+     -> "actionableAdviceGu": "❌ અન્ય વ્યક્તિનો દસ્તાવેજ: ફોર્મમાં અરજદારનું નામ '[FORM_APPLICANT_NAME_GU]' છે, જ્યારે અપલોડ કરેલ દસ્તાવેજ પર અન્ય વ્યક્તિનું નામ જણાય છે. સરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય રહેશે. અન્ય વ્યક્તિના દસ્તાવેજ સ્વીકારવામાં આવશે નહીં."
      -> "feedbackGu": "અપલોડ કરેલ દસ્તાવેજ પરનું નામ ફોર્મમાં ભરેલા અરજદારના નામ સાથે મેળ ખાતું નથી (Name Mismatch)."
 
   d) NON-NAME / PHOTO DOCUMENT:
@@ -316,6 +316,14 @@ export async function POST(req: NextRequest) {
             parsed.matchesExpected = false;
             if (!parsed.qualityScore || parsed.qualityScore > 30) parsed.qualityScore = 15;
             if (!parsed.nameMatchConfidence || parsed.nameMatchConfidence > 30) parsed.nameMatchConfidence = 15;
+            if (parsed.serviceRuleAdviceGu && (
+              parsed.serviceRuleAdviceGu.includes("નામ") ||
+              parsed.serviceRuleAdviceGu.includes("અન્ય વ્યક્તિ") ||
+              parsed.serviceRuleAdviceGu.includes("મેળ ખાતો નથી") ||
+              parsed.serviceRuleAdviceGu.includes("મેળ ખાતી નથી")
+            )) {
+              parsed.serviceRuleAdviceGu = "";
+            }
           }
           if (parsed.serviceRuleMatch === false) {
             parsed.isValidForGovt = false;
@@ -550,8 +558,8 @@ export async function POST(req: NextRequest) {
               nameMatchConfidence: 15,
               serviceRuleMatch: true,
               serviceRuleStatus: "pass",
-              serviceRuleAdviceGu: "સેવા કેટેગરી સાચી છે પરંતુ અરજદારનું નામ મેળ ખાતું નથી.",
-              actionableAdviceGu: `❌ અરજદારનું નામ મેળ ખાતું નથી: ફોર્મમાં અરજદારનું નામ '${applicantName}' છે, જ્યારે અપલોડ કરેલ દસ્તાવેજ (${fileName}) અન્ય વ્યક્તિ ('${capName}') ના નામે જણાય છે. સરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય રહેશે. અન્ય વ્યક્તિના દસ્તાવેજ સ્વીકારવામાં આવશે નહીં.`,
+              serviceRuleAdviceGu: "",
+              actionableAdviceGu: `❌ અન્ય વ્યક્તિનો દસ્તાવેજ: ફોર્મમાં અરજદારનું નામ '${applicantNameGu || applicantName}' છે, જ્યારે અપલોડ કરેલ દસ્તાવેજ (${fileName}) પર અન્ય વ્યક્તિ ('${capName}') નું નામ જણાય છે. સરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય રહેશે. અન્ય વ્યક્તિના દસ્તાવેજ સ્વીકારવામાં આવશે નહીં.`,
               extractedInfo: {
                 detectedName: `${capName} Patel`,
                 documentNumberMasked: null,
