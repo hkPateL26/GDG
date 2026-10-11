@@ -52,6 +52,12 @@ interface UploadedDocState {
   adviceGu?: string;
   needsUpdate?: boolean;
   needsNewDocument?: boolean;
+  nameMatchStatus?: "matched" | "matched_family_head" | "mismatch" | "partial_match" | "not_applicable";
+  nameMatchConfidence?: number;
+  detectedName?: string | null;
+  serviceRuleMatch?: boolean;
+  serviceRuleStatus?: "pass" | "fail" | "warning";
+  serviceRuleAdviceGu?: string;
 }
 
 export default function DocumentServicePortal({
@@ -479,6 +485,28 @@ export default function DocumentServicePortal({
           mimeType: file.type || "image/jpeg",
           expectedDocType: expectedType,
           fileName: file.name,
+          applicantName: applicantName.trim() || citizenSession?.citizenName || "",
+          applicantNameGu: applicantNameGu.trim() || citizenSession?.citizenNameGu || "",
+          fatherOrHusbandName: fatherOrHusbandName.trim() || "",
+          serviceId: selectedServiceId,
+          serviceName: service?.nameEn || selectedServiceId,
+          serviceNameGu: service?.nameGu || "",
+          serviceMode: serviceMode,
+          selectedCorrections: selectedCorrections,
+          annualIncome: annualIncomeVal,
+          casteCategory: subCaste,
+          applicantAge: (() => {
+            if (!dob) return 40;
+            const birth = new Date(dob);
+            const now = new Date();
+            let a = now.getFullYear() - birth.getFullYear();
+            const m = now.getMonth() - birth.getMonth();
+            if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) a--;
+            return isNaN(a) ? 40 : a;
+          })(),
+          applicantGender: gender,
+          dob: dob,
+          docId: docId,
         }),
       });
 
@@ -489,11 +517,13 @@ export default function DocumentServicePortal({
       const data = await res.json();
       if (data.success && data.analysis) {
         const a = data.analysis;
-        const isMismatch = a.matchesExpected === false || a.isValidForGovt === false || (typeof a.qualityScore === "number" && a.qualityScore < 40);
+        const isServiceRuleMismatch = a.serviceRuleMatch === false;
+        const isNameMismatch = a.nameMatchStatus === "mismatch";
+        const isMismatch = isServiceRuleMismatch || isNameMismatch || a.matchesExpected === false || a.isValidForGovt === false || (typeof a.qualityScore === "number" && a.qualityScore < 40);
         let calculatedStatus: "valid" | "warning" | "invalid" = "valid";
         if (isMismatch) {
           calculatedStatus = "invalid";
-        } else if (a.needsUpdate || a.needsNewDocument) {
+        } else if (a.needsUpdate || a.needsNewDocument || a.serviceRuleStatus === "warning") {
           calculatedStatus = "warning";
         } else {
           calculatedStatus = "valid";
@@ -530,6 +560,12 @@ export default function DocumentServicePortal({
             adviceGu: a.actionableAdviceGu || a.feedbackGu || "દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો.",
             needsUpdate: a.needsUpdate,
             needsNewDocument: a.needsNewDocument,
+            nameMatchStatus: a.nameMatchStatus,
+            nameMatchConfidence: a.nameMatchConfidence,
+            detectedName: a.extractedInfo?.detectedName,
+            serviceRuleMatch: a.serviceRuleMatch,
+            serviceRuleStatus: a.serviceRuleStatus,
+            serviceRuleAdviceGu: a.serviceRuleAdviceGu,
           },
         }));
       } else {
@@ -664,9 +700,21 @@ export default function DocumentServicePortal({
     });
 
     if (invalidDocs.length > 0) {
-      alert(
-        `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${invalidDocs[0].nameGu}' અસ્વીકાર્ય (ખોટો દસ્તાવેજ) છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
-      );
+      const firstInvalid = invalidDocs[0];
+      const firstState = uploadedDocs[firstInvalid.id];
+      if (firstState?.serviceRuleMatch === false) {
+        alert(
+          `❌ અરજી સબમિટ થઈ શકશે નહીં (સરકારી સેવા નિયમ ભંગ):\n\n${firstState.serviceRuleAdviceGu || "અપલોડ કરેલ દસ્તાવેજ આ સેવાના કાયદાકીય નિયમો પૂર્ણ કરતો નથી."}\n\nકૃપા કરીને સરકારી ધારાધોરણો મુજબ પાત્ર દસ્તાવેજ અપલોડ કરો.`
+        );
+      } else if (firstState?.nameMatchStatus === "mismatch") {
+        alert(
+          `❌ અરજી સબમિટ થઈ શકશે નહીં (નામ મેળ ખાતું નથી):\n\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પરનું નામ ફોર્મમાં ભરેલા અરજદાર (${applicantName || "અરજદાર"}) ના નામ સાથે મેળ ખાતું નથી.\n\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે. અન્ય વ્યક્તિના દસ્તાવેજ સ્વીકારવામાં આવશે નહીં. કૃપા કરીને સાચો દસ્તાવેજ અપલોડ કરો.`
+        );
+      } else {
+        alert(
+          `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય (ખોટો દસ્તાવેજ) છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
+        );
+      }
       return;
     }
 
@@ -2876,7 +2924,13 @@ export default function DocumentServicePortal({
                           {isValid && (
                             <span className="inline-flex items-center gap-1 text-xs text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-1 rounded-full font-bold">
                               <CheckCircle2 size={14} className="text-emerald-600" />
-                              <span>પ્રમાણિત ({docState.qualityScore}%)</span>
+                              <span>
+                                {docState.nameMatchStatus === "matched"
+                                  ? `પ્રમાણિત (${docState.qualityScore}%) • નામ માન્ય`
+                                  : docState.nameMatchStatus === "matched_family_head"
+                                  ? `પ્રમાણિત (${docState.qualityScore}%) • વડા/પિતા માન્ય`
+                                  : `પ્રમાણિત (${docState.qualityScore}%)`}
+                              </span>
                             </span>
                           )}
 
@@ -2890,7 +2944,13 @@ export default function DocumentServicePortal({
                           {isInvalid && (
                             <span className="inline-flex items-center gap-1 text-xs text-rose-800 bg-rose-100 border border-rose-300 px-2.5 py-1 rounded-full font-bold">
                               <XCircle size={14} className="text-rose-600" />
-                              <span>અસ્વીકાર્ય (ખોટો દસ્તાવેજ)</span>
+                              <span>
+                                {docState.serviceRuleMatch === false
+                                  ? `અસ્વીકાર્ય (સેવા નિયમ ભંગ)`
+                                  : docState.nameMatchStatus === "mismatch"
+                                  ? `અસ્વીકાર્ય (નામ મેળ ખાતું નથી)`
+                                  : `અસ્વીકાર્ય (ખોટો દસ્તાવેજ)`}
+                              </span>
                             </span>
                           )}
                         </div>
@@ -2957,6 +3017,21 @@ export default function DocumentServicePortal({
                             <p className={`leading-relaxed ${isInvalid ? "font-bold text-rose-900 text-xs sm:text-sm" : ""}`}>
                               {docState.adviceGu}
                             </p>
+                            {docState.serviceRuleAdviceGu && (
+                              <p className="text-[11px] text-amber-950 font-bold bg-amber-100/90 border border-amber-300 rounded-md px-2.5 py-1">
+                                ⚖️ સરકારી સેવા નિયમ: {docState.serviceRuleAdviceGu}
+                              </p>
+                            )}
+                            {docState.detectedName && (
+                              <p className="text-[11px] text-slate-700 font-semibold bg-white/80 rounded-md px-2 py-0.5 inline-block border border-black/5">
+                                🔍 દસ્તાવેજ પર મળેલ નામ: <span className="font-bold text-slate-900">{docState.detectedName}</span>
+                                {typeof docState.nameMatchConfidence === "number" && (
+                                  <span className="ml-1 text-slate-500 font-normal">
+                                    (મેચ સ્કોર: {docState.nameMatchConfidence}%)
+                                  </span>
+                                )}
+                              </p>
+                            )}
                             {isInvalid && (
                               <p className="text-[11px] text-rose-700 font-medium">
                                 ⚠️ સરકારી નિયમ: માંગેલ સત્તાવાર પુરાવા સિવાય અન્ય કોઈ દસ્તાવેજ (દા.ત. માર્કશીટ, અયોગ્ય બિલ) માન્ય ગણાશે નહીં. કૃપા કરીને &apos;બદલો (Replace)&apos; પર ક્લિક કરી સાચો દસ્તાવેજ અપલોડ કરો.
