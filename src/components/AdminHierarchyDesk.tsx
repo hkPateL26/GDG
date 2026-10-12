@@ -584,9 +584,6 @@ export default function AdminHierarchyDesk({
         body: JSON.stringify({
           id: app.id,
           action: "confirm_cash_payment",
-          operatorId: "JSK-OP-8921",
-          officerId: currentOfficer.id,
-          pin: "GJ2026",
         }),
       });
       const data = await res.json();
@@ -619,10 +616,6 @@ export default function AdminHierarchyDesk({
           id: app.id,
           action: "advance_stage",
           stage: 3,
-          officerRole: `${currentOfficer.designation} (${currentOfficer.name})`,
-          officerName: currentOfficer.name,
-          officerId: currentOfficer.id || "GUJ-GOV-9012",
-          pin: "GJ2026",
         }),
       });
       const data = await res.json();
@@ -687,21 +680,28 @@ export default function AdminHierarchyDesk({
     if (!translatedRejection) return;
     setIsProcessingAction(true);
     try {
-      const updatedApp: CitizenApplication = {
-        ...app,
-        status: "rejected",
-        workflowStage: 2,
-        remarksGu: translatedRejection.gujaratiExplanation,
-        remarksEn: rejectionInput,
-        lastUpdated: new Date().toISOString().split("T")[0],
-      };
-      setApplications((prev) => prev.map((a) => (a.id === app.id ? updatedApp : a)));
-      setSelectedApp(updatedApp);
-      setActionSuccessMsg(
-        "અરજીમાં સુધારણા માટે નાગરિકને AI ગુજરાતી સૂચના સફળતાપૂર્વક મોકલાઈ ગઈ છે."
-      );
-      setTranslatedRejection(null);
-      setRejectionInput("");
+      const res = await fetch("/api/track", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: app.id,
+          action: "reject",
+          remarksGu: translatedRejection.gujaratiExplanation,
+          remarksEn: rejectionInput,
+        }),
+      });
+      const data = await res.json();
+      if (data.success && data.application) {
+        setApplications((prev) => prev.map((a) => (a.id === app.id ? data.application : a)));
+        setSelectedApp(data.application);
+        setActionSuccessMsg(
+          "અરજીમાં સુધારણા માટે નાગરિકને AI ગુજરાતી સૂચના સફળતાપૂર્વક મોકલાઈ ગઈ છે."
+        );
+        setTranslatedRejection(null);
+        setRejectionInput("");
+      } else {
+        alert(data.error || "અરજી રદ/પરત કરવામાં સમસ્યા આવી.");
+      }
     } catch {
       alert("ક્ષતિ આવી.");
     } finally {

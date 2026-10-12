@@ -1496,7 +1496,7 @@ export default function DocumentServicePortal({
               </button>
 
               <Link
-                href={`/track?id=${encodeURIComponent(submittedApp.id)}`}
+                href={`/track?id=${encodeURIComponent(submittedApp.id)}${submittedApp.trackingSecret ? `&secret=${encodeURIComponent(submittedApp.trackingSecret)}` : ""}`}
                 className="py-3 px-4 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-center font-extrabold text-xs sm:text-sm shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap"
               >
                 <Eye size={15} />

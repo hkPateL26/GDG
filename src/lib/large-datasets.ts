@@ -47,6 +47,7 @@ export interface CitizenApplication {
   workflowStage?: 1 | 2 | 3 | 4;
   citizenPhoto?: string;
   userPhoto?: string;
+  trackingSecret?: string;
 }
 
 export const GUJARAT_DISTRICTS = [
@@ -4579,6 +4580,15 @@ export function sanitizeApplication(app: Partial<CitizenApplication>): CitizenAp
       { name: "રહેઠાણ પુરાવો (લાઈટ બિલ)", verified: true, qualityScore: 95 },
       { name: "તલાટી આવક પંચનામું", verified: true, qualityScore: 92 },
     ],
+    trackingSecret: app.trackingSecret,
+    appointmentDate: app.appointmentDate,
+    appointmentTime: app.appointmentTime,
+    appointmentCenter: app.appointmentCenter,
+    serviceType: app.serviceType,
+    biometricRequired: app.biometricRequired,
+    signatureType: app.signatureType,
+    mobile: app.mobile,
+    email: app.email,
   };
 }
 
@@ -4610,6 +4620,46 @@ export function getCachedSystemDataset(): CitizenApplication[] {
     CACHED_SYSTEM_DATASET = list;
   }
   return CACHED_SYSTEM_DATASET;
+}
+
+export function getApplicationById(id: string): CitizenApplication | null {
+  const cleanId = (id || "").toUpperCase().trim();
+  let app = CUSTOM_USER_APPLICATIONS.find(
+    (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+  );
+
+  if (!app) {
+    const dataset = getCachedSystemDataset();
+    const found = dataset.find(
+      (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+    );
+    if (found) {
+      app = { ...found };
+      CUSTOM_USER_APPLICATIONS.unshift(app);
+    }
+  }
+
+  return app || null;
+}
+
+export function rejectApplication(
+  id: string,
+  remarksGu: string,
+  remarksEn?: string,
+  officerRole?: string
+): CitizenApplication | null {
+  const app = getApplicationById(id);
+  if (!app) return null;
+
+  app.status = "rejected";
+  app.workflowStage = 2;
+  app.remarksGu = remarksGu;
+  app.remarksEn = remarksEn || remarksGu;
+  app.lastUpdated = new Date().toISOString().split("T")[0];
+  if (officerRole) {
+    app.officerDesignation = officerRole;
+  }
+  return app;
 }
 
 export function confirmApplicationPayment(id: string): CitizenApplication | null {
@@ -5309,8 +5359,17 @@ export function verifyOfficerPin(officerId: string, pin: string) {
   const cleanId = (officerId || "").trim().toUpperCase();
   const cleanPin = (pin || "").trim();
 
-  // Government Officer Credentials for Hackathon Demonstration
+  // Government Officer Credentials for Hackathon Demonstration / Staging
   if (cleanPin === "GJ2026") {
+    // In production, shared demo PIN is strictly prohibited unless explicitly enabled
+    const isProduction = process.env.NODE_ENV === "production";
+    const allowDemo = process.env.ALLOW_DEMO_CREDENTIALS === "true";
+    if (isProduction && !allowDemo) {
+      return {
+        success: false,
+        error: "સુરક્ષા નીતિ: ઉત્પાદન વાતાવરણમાં ડેમો PIN અક્ષમ કરેલ છે. કૃપા કરીને સુરક્ષિત સરકારી ઓળખપત્રનો ઉપયોગ કરો. (Demo credentials disabled in production)",
+      };
+    }
     if (cleanId === "GUJ-STATE-001") {
       return {
         success: true,

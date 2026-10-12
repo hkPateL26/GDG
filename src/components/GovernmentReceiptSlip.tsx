@@ -20,7 +20,8 @@ export default function GovernmentReceiptSlip({
     ? `GJ-CHALLAN-2026-${app.challanNo || app.id}`
     : `GJ-DPI-2026-${app.id}`;
   const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
-  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}`;
+  const secretParam = app.trackingSecret ? `&secret=${encodeURIComponent(app.trackingSecret)}` : "";
+  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}${secretParam}`;
 
   // Automatically treat as modal if onClose is provided or isModalPreview is true
   const showModalControls = isModalPreview || Boolean(onClose);

@@ -249,8 +249,30 @@ export default function TrackVaultView({
         loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam);
       }, 0);
       return () => clearTimeout(timer);
+    } else if (authMode === "citizen") {
+      // Public Citizen Direct Tracking via ID and Tracking Secret (e.g. from receipt or QR code)
+      const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
+      const idParam = urlParams?.get("id")?.trim();
+      const secretParam = urlParams?.get("secret")?.trim();
+      if (idParam) {
+        const fetchUrl = `/api/track?id=${encodeURIComponent(idParam)}${secretParam ? `&secret=${encodeURIComponent(secretParam)}` : ""}`;
+        fetch(fetchUrl)
+          .then((res) => res.json())
+          .then((data) => {
+            if (data.success && data.application) {
+              setSelectedApp(data.application);
+              setRecords([data.application]);
+              setShowTimelineModal(true);
+            } else if (data.error) {
+              setError(data.error);
+            }
+          })
+          .catch(() => {
+            setError("અરજી ટ્રેક કરવામાં ક્ષતિ આવી.");
+          });
+      }
     }
-  }, [citizen, loadCitizenVault]);
+  }, [citizen, authMode, loadCitizenVault]);
 
   // Load Master Registry (For Officer Mode)
   const loadOfficerData = useCallback(async () => {
@@ -342,6 +364,12 @@ export default function TrackVaultView({
   };
 
   const handleOfficerLogout = () => {
+    fetch("/api/auth/otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout_officer" }),
+    }).catch(() => {});
+
     sessionStorage.removeItem("nagrik_officer_session");
     sessionStorage.removeItem("nagrik_authenticated_officer");
     setOfficerSession(null);
@@ -359,7 +387,6 @@ export default function TrackVaultView({
         body: JSON.stringify({
           id: selectedApp.id,
           action: "confirm_cash_payment",
-          operatorId: "JSK-OP-8921",
         }),
       });
       const data = await res.json();
@@ -388,14 +415,8 @@ export default function TrackVaultView({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           id: appToUpdate.id,
-          action: "update_workflow_stage",
+          action: "advance_stage",
           stage: newStage,
-          newStage,
-          newStatus,
-          officerRole: officerSession?.designation || officerSession?.name || "તાલુકા મામલતદાર, ગોંડલ",
-          officerName: officerSession?.name || "મામલતદાર, ગોંડલ",
-          officerId: officerSession?.id || "GUJ-GOV-9012",
-          pin: "GJ2026",
         }),
       });
       const data = await res.json();

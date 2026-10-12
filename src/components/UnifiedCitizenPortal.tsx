@@ -120,6 +120,12 @@ export default function UnifiedCitizenPortal({
   };
 
   const handleOfficerLogout = () => {
+    fetch("/api/auth/otp", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "logout_officer" }),
+    }).catch(() => {});
+
     sessionStorage.removeItem("nagrik_officer_session");
     sessionStorage.removeItem("nagrik_authenticated_officer");
     window.dispatchEvent(new Event("storage"));

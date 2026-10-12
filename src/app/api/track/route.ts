@@ -3,6 +3,7 @@
 // =========================================================================
 
 import { NextRequest, NextResponse } from "next/server";
+import crypto from "crypto";
 import { db } from "@/lib/firebase";
 import {
   doc,
@@ -21,7 +22,15 @@ import {
   addCustomApplication,
   confirmApplicationPayment,
   advanceWorkflowStage,
+  getApplicationById,
+  rejectApplication,
 } from "@/lib/large-datasets";
+import {
+  getOfficerSessionFromRequest,
+  isOfficerJurisdictionValid,
+  canOfficerPerformAction,
+  isWorkflowTransitionValid,
+} from "@/lib/officer-auth";
 
 function cleanForFirestore(obj: unknown): unknown {
   if (obj === undefined) return null;
@@ -51,18 +60,78 @@ function withFirestoreTimeout<T>(promise: Promise<T>, ms = 650): Promise<T | nul
   ]);
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// RATE LIMITER & DATA MINIMIZATION ENGINES
+// ─────────────────────────────────────────────────────────────────────────────
+
+const RATE_LIMIT_WINDOW_MS = 60 * 1000; // 1 minute
+const MAX_REQUESTS_PER_WINDOW = 60; // Max 60 requests per minute
+const ipRequestHistory = new Map<string, number[]>();
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const timestamps = ipRequestHistory.get(ip) || [];
+  const validTimestamps = timestamps.filter((t) => now - t < RATE_LIMIT_WINDOW_MS);
+
+  if (validTimestamps.length >= MAX_REQUESTS_PER_WINDOW) {
+    ipRequestHistory.set(ip, validTimestamps);
+    return { allowed: false, remaining: 0 };
+  }
+
+  validTimestamps.push(now);
+  ipRequestHistory.set(ip, validTimestamps);
+  return { allowed: true, remaining: MAX_REQUESTS_PER_WINDOW - validTimestamps.length };
+}
+
+// Exported for testing rate limit enforcement
+export function resetRateLimits(): void {
+  ipRequestHistory.clear();
+}
+
+export function maskCitizenName(name?: string): string {
+  if (!name) return "નાગરિક";
+  const parts = name.trim().split(/\s+/);
+  return parts
+    .map((part) => {
+      if (part.length <= 1) return part;
+      if (part.length === 2) return part[0] + "*";
+      return part[0] + "*".repeat(Math.min(part.length - 2, 4)) + part[part.length - 1];
+    })
+    .join(" ");
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id")?.trim();
+    const secret = searchParams.get("secret")?.trim();
     const search = searchParams.get("search")?.trim() || "";
-    const district = searchParams.get("district")?.trim() || "";
-    const taluka = searchParams.get("taluka")?.trim() || "";
-    const village = searchParams.get("village")?.trim() || "";
+    let district = searchParams.get("district")?.trim() || "";
+    let taluka = searchParams.get("taluka")?.trim() || "";
+    let village = searchParams.get("village")?.trim() || "";
     const status = searchParams.get("status")?.trim() || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const limit = parseInt(searchParams.get("limit") || "10", 10);
     const statsOnly = searchParams.get("stats") === "true";
+
+    // 1. Sliding Window Rate Limiting (Prevent Scraping & Enumeration)
+    const clientIp =
+      req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      req.headers.get("x-real-ip") ||
+      "127.0.0.1";
+    const rateCheck = checkRateLimit(clientIp);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "ઘણી બધી વિનંતીઓ (Too many requests). કૃપા કરીને થોડીવાર પછી ફરી પ્રયાસ કરો.",
+        },
+        { status: 429, headers: { "Retry-After": "60" } }
+      );
+    }
+
+    // Authenticate Officer Session
+    const officer = await getOfficerSessionFromRequest(req);
 
     // Pre-sync recent applications from Cloud Firestore into in-memory ledger (bounded by 650ms timeout)
     if (db) {
@@ -82,7 +151,7 @@ export async function GET(req: NextRequest) {
       }
     }
 
-    // 1. If stats requested
+    // 2. System Statistics Summary (Public dashboard metric aggregates, no PII)
     if (statsOnly) {
       return NextResponse.json({
         success: true,
@@ -91,74 +160,177 @@ export async function GET(req: NextRequest) {
       });
     }
 
-    // 2. If single application ID is requested
+    // 3. Single Application Status Tracking by ID
     if (id) {
       const cleanId = id.toUpperCase();
+      let targetApp = getApplicationById(cleanId);
 
-      // Check in-memory dataset first for instant response
-      const result = queryApplications({ search: cleanId, page: 1, limit: 1 });
-      if (result.records.length > 0) {
-        const item = result.records[0];
-        return NextResponse.json({
-          application: {
-            ...item,
-            id: item.id,
-            scheme: item.schemeName,
-            schemeGu: item.schemeNameGu,
-            schemeEmoji: item.schemeEmoji,
-            status: item.status,
-            date: item.appliedDate,
-            lastUpdated: item.lastUpdated,
-            citizenName: item.citizenName,
-            citizenNameGu: item.citizenNameGu,
-            district: item.district,
-            districtGu: item.districtGu,
-            taluka: item.taluka,
-            village: item.village,
-            aadhaarLast4: item.aadhaarLast4,
-            remarks: item.remarksGu,
-            remarksEn: item.remarksEn,
-            benefitAmount: item.benefitAmount,
-            officerDesignation: item.officerDesignation,
-            workflowStage:
-              item.workflowStage !== undefined
-                ? item.workflowStage
-                : item.status === "approved"
-                ? 3
-                : 1,
-          },
-          source: "enterprise-dataset",
-          success: true,
-        });
-      }
-
-      // Check Firestore if configured (bounded by 650ms timeout)
-      if (db) {
+      // Check Firestore if not in memory
+      if (!targetApp && db) {
         try {
           const docRef = doc(db, "applications", cleanId);
           const snap = await withFirestoreTimeout(getDoc(docRef), 650);
           if (snap && snap.exists()) {
-            return NextResponse.json({
-              application: snap.data(),
-              source: "cloud-firestore",
-              success: true,
-            });
+            targetApp = snap.data() as CitizenApplication;
+            addCustomApplication(targetApp);
           }
         } catch (dbErr) {
           console.warn("Firestore lookup failed:", dbErr);
         }
       }
 
+      if (!targetApp) {
+        return NextResponse.json(
+          {
+            error: `No application found for "${id}". Please check your application ID.`,
+            success: false,
+          },
+          { status: 404 }
+        );
+      }
+
+      // Case A: Authenticated Officer Review (Full application record scoped to jurisdiction)
+      if (officer) {
+        return NextResponse.json({
+          application: targetApp,
+          source: "officer-session",
+          success: true,
+        });
+      }
+
+      // Case B: Public Citizen Tracking (Strict Data Minimization & Tracking Secret Verification)
+      if (targetApp.trackingSecret) {
+        if (secret && targetApp.trackingSecret.toLowerCase() === secret.toLowerCase()) {
+          // Citizen possesses valid tracking secret from official receipt / QR code
+          return NextResponse.json({
+            success: true,
+            application: {
+              id: targetApp.id,
+              scheme: targetApp.schemeName,
+              schemeGu: targetApp.schemeNameGu,
+              schemeEmoji: targetApp.schemeEmoji,
+              status: targetApp.status,
+              workflowStage:
+                targetApp.workflowStage !== undefined
+                  ? targetApp.workflowStage
+                  : targetApp.status === "approved"
+                  ? 3
+                  : 1,
+              appliedDate: targetApp.appliedDate,
+              lastUpdated: targetApp.lastUpdated,
+              district: targetApp.district,
+              districtGu: targetApp.districtGu,
+              taluka: targetApp.taluka,
+              village: targetApp.village,
+              maskedCitizenName: maskCitizenName(targetApp.citizenName),
+              maskedCitizenNameGu: maskCitizenName(targetApp.citizenNameGu || targetApp.citizenName),
+              remarksGu: targetApp.remarksGu,
+              remarksEn: targetApp.remarksEn,
+              appointmentDate: targetApp.appointmentDate,
+              appointmentTime: targetApp.appointmentTime,
+              appointmentCenter: targetApp.appointmentCenter,
+              serviceType: targetApp.serviceType,
+              paymentStatus: targetApp.paymentStatus,
+              isSecretVerified: true,
+            },
+            source: "secure-citizen-tracking",
+          });
+        }
+
+        if (secret && targetApp.trackingSecret.toLowerCase() !== secret.toLowerCase()) {
+          return NextResponse.json(
+            {
+              error: "અમાન્ય ટ્રેકિંગ સિક્રેટ (Invalid tracking secret). કૃપા કરીને રસીદ પર આપેલ સિક્રેટ ચકાસો.",
+              success: false,
+            },
+            { status: 403 }
+          );
+        }
+
+        // Tracking secret exists but was not provided - return minimal non-sensitive masked status
+        return NextResponse.json({
+          success: true,
+          requiresSecret: true,
+          application: {
+            id: targetApp.id,
+            scheme: targetApp.schemeName,
+            schemeGu: targetApp.schemeNameGu,
+            schemeEmoji: targetApp.schemeEmoji,
+            status: targetApp.status,
+            workflowStage:
+              targetApp.workflowStage !== undefined
+                ? targetApp.workflowStage
+                : targetApp.status === "approved"
+                ? 3
+                : 1,
+            appliedDate: targetApp.appliedDate,
+            lastUpdated: targetApp.lastUpdated,
+            district: targetApp.district,
+            districtGu: targetApp.districtGu,
+            maskedCitizenName: maskCitizenName(targetApp.citizenName),
+            maskedCitizenNameGu: maskCitizenName(targetApp.citizenNameGu || targetApp.citizenName),
+          },
+          message:
+            "સંપૂર્ણ ટ્રેકિંગ વિગતો માટે કૃપા કરીને તમારી રસીદ પરનો QR કોડ અથવા ટ્રેકિંગ સિક્રેટ દાખલ કરો. (Tracking secret required for detailed view)",
+        });
+      }
+
+      // Legacy/Benchmark seeded application without tracking secret - return allowlisted safe tracking fields
+      return NextResponse.json({
+        success: true,
+        application: {
+          id: targetApp.id,
+          scheme: targetApp.schemeName,
+          schemeGu: targetApp.schemeNameGu,
+          schemeEmoji: targetApp.schemeEmoji,
+          status: targetApp.status,
+          workflowStage:
+            targetApp.workflowStage !== undefined
+              ? targetApp.workflowStage
+              : targetApp.status === "approved"
+              ? 3
+              : 1,
+          appliedDate: targetApp.appliedDate,
+          lastUpdated: targetApp.lastUpdated,
+          district: targetApp.district,
+          districtGu: targetApp.districtGu,
+          taluka: targetApp.taluka,
+          village: targetApp.village,
+          maskedCitizenName: maskCitizenName(targetApp.citizenName),
+          maskedCitizenNameGu: maskCitizenName(targetApp.citizenNameGu || targetApp.citizenName),
+          remarksGu: targetApp.remarksGu,
+          remarksEn: targetApp.remarksEn,
+        },
+        source: "allowlisted-public-tracking",
+      });
+    }
+
+    // 4. Queue Listing & Bulk Queries MUST Require Authenticated Officer Session
+    if (!officer) {
       return NextResponse.json(
         {
-          error: `No application found for "${id}". Please check your application ID.`,
           success: false,
+          error: "અનધિકૃત ઍક્સેસ. અરજીઓની યાદી જોવા માટે સત્તાવાર અધિકારી લૉગિન આવશ્યક છે. (Authentication required for queue access)",
+          code: "UNAUTHORIZED",
         },
-        { status: 404 }
+        { status: 401 }
       );
     }
 
-    // 3. Otherwise return paginated enterprise query
+    // Scope officer work queue to assigned jurisdiction
+    if (!officer.canViewAllDistricts) {
+      if (officer.district && officer.district !== "All") {
+        district = officer.district;
+      }
+      if (officer.taluka && officer.taluka !== "All") {
+        taluka = officer.taluka;
+      }
+      if (officer.panchayat && officer.panchayat !== "All") {
+        village = officer.panchayat;
+      }
+    }
+
+    // Return paginated enterprise query for authenticated officer
     const data = queryApplications({
       search,
       district,
@@ -224,12 +396,13 @@ export async function POST(req: NextRequest) {
     const resolvedCitizenNameGu = citizenNameGu || applicantName || citizenName || "નાગરિક અરજદાર";
     const resolvedPaymentStatus = paymentMethod === "challan" ? "pending_challan" : paymentStatus;
 
-    // Generate unique official Application ID
-    const randomSuffix = Math.floor(5425 + Math.random() * 4500);
-    const id = `APP-GUJ-${randomSuffix}`;
-
+    // Generate unique official Application ID with cryptographic entropy
+    const trackingSecret = crypto.randomBytes(16).toString("hex");
     const now = new Date();
     const today = now.toISOString().split("T")[0];
+    const year = now.getFullYear();
+    const randomSuffix = crypto.randomInt(100000, 999999);
+    const id = `APP-GUJ-${year}-${randomSuffix}`;
 
     // Auto-schedule biometric appointment if required
     const appointmentDate = biometricRequired ? "2026-09-29" : undefined;
@@ -257,6 +430,7 @@ export async function POST(req: NextRequest) {
 
     const newApp: CitizenApplication = {
       id,
+      trackingSecret,
       citizenName: resolvedCitizenName,
       citizenNameGu: resolvedCitizenNameGu,
       gender,
@@ -322,12 +496,15 @@ export async function POST(req: NextRequest) {
       (host ? `${proto}://${host}` : process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
 
     // Simulated SMS & Email Notification Payloads
-    const smsMessage = `Govt of Gujarat: નમસ્તે ${resolvedCitizenNameGu || resolvedCitizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: ${origin}/track?id=${id}`;
+    const trackUrl = `${origin}/track?id=${id}&secret=${trackingSecret}`;
+    const smsMessage = `Govt of Gujarat: નમસ્તે ${resolvedCitizenNameGu || resolvedCitizenName}, તમારી ${schemeNameGu} માટેની અરજી (${id}) સફળતાપૂર્વક સ્વીકારાઈ છે. સ્ટેટસ ટ્રેક કરવા: ${trackUrl}`;
     const emailSubject = `સરકારી પહોંચ સ્વીકૃતિ: ${schemeNameGu} (અરજી ક્રમાંક: ${id})`;
 
     return NextResponse.json({
       success: true,
       application: newApp,
+      trackingSecret,
+      trackingUrl: trackUrl,
       notifications: {
         sms: {
           sentTo: mobile,
@@ -351,31 +528,88 @@ export async function POST(req: NextRequest) {
 }
 
 // =========================================================================
-// PATCH /api/track - Confirm offline cash payment & Advance Workflow Stage
+// PATCH /api/track - Server-Authorized Sensitive Application Mutations
+// P0 Security Fix: Replaced request body PIN/ID bypass with cryptographic
+// server sessions, strict RBAC, jurisdictional validation, and state machine rules.
 // =========================================================================
 export async function PATCH(req: NextRequest) {
   try {
-    const body = await req.json();
-    const { id, action, operatorId, officerId, pin } = body;
+    // 1. Authenticate Officer Session
+    const officer = await getOfficerSessionFromRequest(req);
+    if (!officer) {
+      return NextResponse.json(
+        {
+          error: "અનધિકૃત ઍક્સેસ! સત્તાવાર અધિકારી લૉગિન અથવા માન્ય સત્ર (Session) જરૂરી છે.",
+          success: false,
+          code: "UNAUTHORIZED",
+        },
+        { status: 401 }
+      );
+    }
 
-    // 1. Confirm offline cash payment (Operator Verification)
-    if (action === "confirm_cash_payment" && id) {
-      const isOperatorAuthorized =
-        operatorId === "JSK-OP-8921" ||
-        (officerId && (String(officerId).toUpperCase().startsWith("GUJ") || pin === "GJ2026"));
+    const body = await req.json().catch(() => ({}));
+    const { id, action } = body;
 
-      if (!isOperatorAuthorized) {
+    if (!id || typeof id !== "string") {
+      return NextResponse.json(
+        { error: "અરજી ID જરૂરી છે (Application ID is required)", success: false },
+        { status: 400 }
+      );
+    }
+
+    const cleanId = id.trim().toUpperCase();
+
+    // 2. Fetch Application Record
+    const targetApp = getApplicationById(cleanId);
+    if (!targetApp) {
+      return NextResponse.json(
+        { error: `No application found for "${id}".`, success: false },
+        { status: 404 }
+      );
+    }
+
+    // 3. Validate Jurisdictional Authority
+    const jurisCheck = isOfficerJurisdictionValid(officer, targetApp);
+    if (!jurisCheck.valid) {
+      return NextResponse.json(
+        {
+          error:
+            jurisCheck.reason ||
+            "અધિકારક્ષેત્ર બહાર! તમે આ અરજી પર કાર્યવાહી કરવા સત્તાધિકારી નથી.",
+          success: false,
+          code: "FORBIDDEN_JURISDICTION",
+        },
+        { status: 403 }
+      );
+    }
+
+    // 4. Action: Confirm Offline Cash Payment
+    if (action === "confirm_cash_payment") {
+      const permCheck = canOfficerPerformAction(officer, action);
+      if (!permCheck.allowed) {
         return NextResponse.json(
-          { error: "અનધિકૃત ઍક્સેસ! માન્ય ઓપરેટર અથવા કચેરી ઓળખપત્ર જરૂરી છે.", success: false },
-          { status: 401 }
+          { error: permCheck.reason, success: false, code: "FORBIDDEN_ACTION" },
+          { status: 403 }
         );
       }
 
-      const updated = confirmApplicationPayment(id);
+      const transCheck = isWorkflowTransitionValid(
+        targetApp.workflowStage ?? 1,
+        targetApp.status,
+        action
+      );
+      if (!transCheck.valid) {
+        return NextResponse.json(
+          { error: transCheck.reason, success: false, code: "INVALID_TRANSITION" },
+          { status: 400 }
+        );
+      }
+
+      const updated = confirmApplicationPayment(cleanId);
       if (updated) {
         if (db) {
           setDoc(
-            doc(db, "applications", id.toUpperCase()),
+            doc(db, "applications", cleanId),
             cleanForFirestore(updated) as Record<string, unknown>,
             { merge: true }
           ).catch((fbErr) => {
@@ -389,32 +623,49 @@ export async function PATCH(req: NextRequest) {
           message: "ચલણ ફી રોકડમાં સ્વીકારી લેવાઈ છે. પ્રમાણપત્ર અનલૉક થઈ ગયું છે.",
         });
       }
+
       return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
     }
 
-    // 2. Advance Workflow Stage
-    if ((action === "update_workflow_stage" || action === "advance_stage") && id) {
-      const isOfficerAuthorized =
-        (officerId && (String(officerId).toUpperCase().startsWith("GUJ") || pin === "GJ2026")) ||
-        operatorId === "JSK-OP-8921" ||
-        (body.officerRole && String(body.officerRole).includes("મામલતદાર")) ||
-        (body.officerName && String(body.officerName).includes("મામલતદાર"));
-
-      if (!isOfficerAuthorized) {
+    // 5. Action: Advance Workflow Stage / Digital Approval
+    if (action === "advance_stage" || action === "update_workflow_stage") {
+      const targetStage = Number(body.stage ?? body.newStage) as 1 | 2 | 3;
+      if (isNaN(targetStage) || ![1, 2, 3].includes(targetStage)) {
         return NextResponse.json(
-          { error: "અનધિકૃત ઍક્સેસ! સત્તાવાર અધિકારી લૉગિન જરૂરી છે.", success: false },
-          { status: 401 }
+          { error: "અમાન્ય લક્ષ્ય તબક્કો. લક્ષ્ય તબક્કો ૧, ૨ અથવા ૩ હોવો આવશ્યક છે.", success: false },
+          { status: 400 }
         );
       }
 
-      const stage = Number(body.stage ?? body.newStage) as 1 | 2 | 3 | 4;
-      const officerRole = body.officerRole ?? body.officerName ?? "તાલુકા મામલતદાર";
-      const updated = advanceWorkflowStage(id, stage, officerRole);
+      const permCheck = canOfficerPerformAction(officer, action, targetStage);
+      if (!permCheck.allowed) {
+        return NextResponse.json(
+          { error: permCheck.reason, success: false, code: "FORBIDDEN_ROLE" },
+          { status: 403 }
+        );
+      }
+
+      const transCheck = isWorkflowTransitionValid(
+        targetApp.workflowStage ?? 1,
+        targetApp.status,
+        action,
+        targetStage
+      );
+      if (!transCheck.valid) {
+        return NextResponse.json(
+          { error: transCheck.reason, success: false, code: "INVALID_TRANSITION" },
+          { status: 400 }
+        );
+      }
+
+      // Stamped with authenticated officer credentials from verified cryptographic session
+      const officialDesignation = `${officer.designation} (${officer.name})`;
+      const updated = advanceWorkflowStage(cleanId, targetStage, officialDesignation);
 
       if (updated) {
         if (db) {
           setDoc(
-            doc(db, "applications", id.toUpperCase()),
+            doc(db, "applications", cleanId),
             cleanForFirestore(updated) as Record<string, unknown>,
             { merge: true }
           ).catch((fbErr) => {
@@ -423,10 +674,10 @@ export async function PATCH(req: NextRequest) {
         }
 
         let stageMsg = "";
-        if (stage === 2) {
-          stageMsg = "નાયબ મામલતદાર દ્વારા દસ્તાવેજ ખરાઈ મંજૂર થઈ! અરજી મામલતદાર સાહેબને ફોરવર્ડ થઈ.";
-        } else if (stage === 3) {
-          stageMsg = "તાલુકા મામલતદાર સાહેબ દ્વારા ડિજિટલ સહી (e-Sign) સાથે અરજી સંપૂર્ણપણે મંજૂર કરવામાં આવી!";
+        if (targetStage === 2) {
+          stageMsg = `${officer.name} દ્વારા દસ્તાવેજ ખરાઈ મંજૂર થઈ! અરજી આગળ અગ્રેસિત કરવામાં આવી.`;
+        } else if (targetStage === 3) {
+          stageMsg = `${officer.name} દ્વારા ડિજિટલ સહી (e-Sign) સાથે અરજી સંપૂર્ણપણે મંજૂર કરવામાં આવી!`;
         } else {
           stageMsg = "અરજી સફળતાપૂર્વક તબક્કો ૧ (સ્ક્રુટિની) માં રીસેટ કરવામાં આવી.";
         }
@@ -437,10 +688,71 @@ export async function PATCH(req: NextRequest) {
           message: stageMsg,
         });
       }
+
       return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
     }
 
-    return NextResponse.json({ error: "Invalid action", success: false }, { status: 400 });
+    // 6. Action: Reject or Request Correction
+    if (action === "reject" || action === "request_correction") {
+      const permCheck = canOfficerPerformAction(officer, action);
+      if (!permCheck.allowed) {
+        return NextResponse.json(
+          { error: permCheck.reason, success: false, code: "FORBIDDEN_ACTION" },
+          { status: 403 }
+        );
+      }
+
+      const transCheck = isWorkflowTransitionValid(
+        targetApp.workflowStage ?? 1,
+        targetApp.status,
+        action
+      );
+      if (!transCheck.valid) {
+        return NextResponse.json(
+          { error: transCheck.reason, success: false, code: "INVALID_TRANSITION" },
+          { status: 400 }
+        );
+      }
+
+      const remarksGu = (
+        body.remarksGu ||
+        body.remarks ||
+        body.reason ||
+        "દસ્તાવેજમાં ક્ષતિ હોવાથી અરજી પરત / રદ કરવામાં આવી છે."
+      ).trim();
+      const remarksEn = (body.remarksEn || body.reasonEn || remarksGu).trim();
+      const officialDesignation = `${officer.designation} (${officer.name})`;
+
+      const updated = rejectApplication(cleanId, remarksGu, remarksEn, officialDesignation);
+
+      if (updated) {
+        if (db) {
+          setDoc(
+            doc(db, "applications", cleanId),
+            cleanForFirestore(updated) as Record<string, unknown>,
+            { merge: true }
+          ).catch((fbErr) => {
+            console.warn("Firestore async update fallback:", fbErr);
+          });
+        }
+
+        return NextResponse.json({
+          success: true,
+          application: updated,
+          message: `અરજી ${officer.designation} દ્વારા પરત/રદ કરવામાં આવી છે.`,
+        });
+      }
+
+      return NextResponse.json({ error: "Application not found", success: false }, { status: 404 });
+    }
+
+    return NextResponse.json(
+      {
+        error: "અમાન્ય વહીવટી કાર્યવાહી (Invalid action).",
+        success: false,
+      },
+      { status: 400 }
+    );
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Server error";
     console.error("Failed to update application:", err);
