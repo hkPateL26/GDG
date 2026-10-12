@@ -180,55 +180,72 @@ export default function Navbar() {
             </div>
 
             {/* 🔐 Single Unified Entry (Login / Dashboard / Officer Desk) */}
-            {officerSession ? (
-              <Link
-                href="/portal?mode=officer"
-                className="ml-1.5 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border-2 border-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
-                title="કચેરી એડમિન સ્ક્રુટિની ડેસ્ક ખોલો"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
-                <span className="max-w-[220px] truncate">
-                  {officerSession.name || "કચેરી એડમિન"} (
-                  {officerSession.role === "talati"
-                    ? "તલાટી"
-                    : officerSession.role === "district_collector"
-                    ? "કલેક્ટર"
-                    : officerSession.role === "sdm_prant"
-                    ? "SDM/પ્રાંત"
-                    : officerSession.role === "state_admin"
-                    ? "મુખ્ય સચિવ"
-                    : "મામલતદાર"}
-                  )
-                </span>
-              </Link>
-            ) : citizenSession ? (
-              <Link
-                href="/portal?mode=citizen"
-                className="ml-1.5 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
-                title="તમારું નાગરિક પોર્ટલ અને વોલ્ટ ખોલો"
-              >
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
-                <span className="max-w-[220px] truncate">{citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)</span>
-              </Link>
-            ) : (
-              <div
-                className="relative"
-                onMouseEnter={() => setShowLoginDropdown(true)}
-                onMouseLeave={() => setShowLoginDropdown(false)}
-              >
-                <button
-                  type="button"
-                  onClick={() => setShowLoginDropdown(!showLoginDropdown)}
-                  className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap shrink-0 transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
-                  title="લૉગિન પોર્ટલ પસંદ કરો"
+            <div className="flex items-center gap-1.5 shrink-0">
+              {officerSession && (
+                <Link
+                  href="/portal?mode=officer"
+                  className="ml-1.5 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border-2 border-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
+                  title="કચેરી એડમિન સ્ક્રુટિની ડેસ્ક ખોલો"
                 >
-                  <Lock size={13} className="shrink-0" />
-                  <span>🔐 લૉગિન</span>
-                  <ChevronDown
-                    size={12}
-                    className={`transition-transform duration-200 ${showLoginDropdown ? "rotate-180" : ""}`}
-                  />
-                </button>
+                  <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
+                  <span className="max-w-[170px] truncate">
+                    🏛️ {officerSession.name || "કચેરી એડમિન"} (
+                    {officerSession.role === "talati"
+                      ? "તલાટી"
+                      : officerSession.role === "district_collector"
+                      ? "કલેક્ટર"
+                      : officerSession.role === "sdm_prant"
+                      ? "SDM/પ્રાંત"
+                      : officerSession.role === "state_admin"
+                      ? "મુખ્ય સચિવ"
+                      : "મામલતદાર"}
+                    )
+                  </span>
+                </Link>
+              )}
+
+              {citizenSession ? (
+                <Link
+                  href="/portal?mode=citizen"
+                  className="ml-1 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
+                  title="તમારું નાગરિક પોર્ટલ અને વોલ્ટ ખોલો"
+                >
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                  <span className="max-w-[160px] truncate">
+                    👤 {citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)
+                  </span>
+                </Link>
+              ) : officerSession ? (
+                <Link
+                  href="/portal?mode=citizen"
+                  target="_blank"
+                  className="ml-1 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow cursor-pointer"
+                  title="બીજી ટેબમાં નાગરિક પોર્ટલ ખોલો (Open Citizen Tab in New Window for Live Demo)"
+                >
+                  <User size={13} className="shrink-0" />
+                  <span>👤 નાગરિક ડેસ્ક ↗</span>
+                </Link>
+              ) : null}
+
+              {!officerSession && !citizenSession && (
+                <div
+                  className="relative"
+                  onMouseEnter={() => setShowLoginDropdown(true)}
+                  onMouseLeave={() => setShowLoginDropdown(false)}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setShowLoginDropdown(!showLoginDropdown)}
+                    className="ml-1.5 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-3.5 py-1.5 rounded-xl text-xs font-black whitespace-nowrap shrink-0 transition shadow-sm hover:shadow active:scale-95 cursor-pointer"
+                    title="લૉગિન પોર્ટલ પસંદ કરો"
+                  >
+                    <Lock size={13} className="shrink-0" />
+                    <span>🔐 લૉગિન</span>
+                    <ChevronDown
+                      size={12}
+                      className={`transition-transform duration-200 ${showLoginDropdown ? "rotate-180" : ""}`}
+                    />
+                  </button>
 
                 {/* Dropdown Menu on Cursor Hover or Click */}
                 {showLoginDropdown && (
@@ -280,6 +297,7 @@ export default function Navbar() {
                 )}
               </div>
             )}
+            </div>
 
             {/* 📱 Desktop Install App Button */}
             {!isInstalled && (

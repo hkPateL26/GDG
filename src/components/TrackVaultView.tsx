@@ -93,12 +93,17 @@ export default function TrackVaultView({
   const [authMode, setAuthMode] = useState<"citizen" | "officer">(() => {
     if (typeof window !== "undefined") {
       try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const mode = urlParams.get("mode");
+        if (mode === "citizen") return "citizen";
+        if (mode === "officer") return "officer";
+        if (citizen) return "citizen";
         return sessionStorage.getItem("nagrik_officer_session") ? "officer" : "citizen";
       } catch {
-        return "citizen";
+        return citizen ? "citizen" : "officer";
       }
     }
-    return "citizen";
+    return citizen ? "citizen" : "officer";
   });
 
   const [officerSession, setOfficerSession] = useState<{

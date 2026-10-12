@@ -31,6 +31,8 @@ import {
   Maximize2,
   FileCheck,
   Receipt,
+  RefreshCw,
+  ExternalLink,
 } from "lucide-react";
 import AiBottleneckMonitor from "@/components/AiBottleneckMonitor";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
@@ -506,10 +508,29 @@ export default function AdminHierarchyDesk({
   }, [currentOfficer.role, selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery]);
 
   useEffect(() => {
+    // Initial load
     const timer = setTimeout(() => {
       fetchApplications();
     }, 150);
-    return () => clearTimeout(timer);
+
+    // 1. Cross-tab storage listener (Fires when Citizen Tab submits application)
+    const handleStorageChange = () => {
+      fetchApplications();
+    };
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener("nagrik_application_submitted", handleStorageChange);
+
+    // 2. Periodic Live Simulation Polling (Every 4 seconds for real-time queue synchronization)
+    const pollInterval = setInterval(() => {
+      fetchApplications();
+    }, 4000);
+
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener("nagrik_application_submitted", handleStorageChange);
+      clearInterval(pollInterval);
+    };
   }, [fetchApplications]);
 
   // Role Switcher Handler (Auto-locks filters to the officer's administrative jurisdiction)
@@ -847,8 +868,29 @@ export default function AdminHierarchyDesk({
             </div>
           </div>
 
-          {/* Quick Actions: Leave Protocol & Logout */}
-          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-0">
+          {/* Quick Actions: Citizen Live Tab, Refresh, Leave Protocol & Logout */}
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-0 flex-wrap">
+            <a
+              href="/portal?mode=citizen"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[34px] sm:min-h-[36px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-xs"
+              title="બીજી ટેબમાં નાગરિક પોર્ટલ ખોલીને નવી અરજી સબમિટ કરો (Live Simulation Tab 2)"
+            >
+              <span>👤 નાગરિક ડેસ્ક (ટેબ ૨)</span>
+              <ExternalLink size={11} />
+            </a>
+
+            <button
+              type="button"
+              onClick={() => fetchApplications()}
+              className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[34px] sm:min-h-[36px]"
+              title="અરજીઓની યાદી તાજી કરો"
+            >
+              <RefreshCw size={11} className={loading ? "animate-spin text-amber-300" : "text-amber-400"} />
+              <span className="hidden xs:inline">તાજું કરો</span>
+            </button>
+
             <button
               type="button"
               onClick={handleToggleLeave}

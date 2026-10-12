@@ -10,7 +10,7 @@ import DocumentServicePortal from "@/components/DocumentServicePortal";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
 import AdminHierarchyDesk from "@/components/AdminHierarchyDesk";
-import { User, Building2, X } from "lucide-react";
+import { User, Building2, X, ExternalLink, ArrowLeftRight } from "lucide-react";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 export type PortalTabType = "track" | "documents" | "eligibility";
@@ -38,48 +38,52 @@ export default function UnifiedCitizenPortal({
   useEffect(() => {
     const syncSession = () => {
       if (typeof window !== "undefined") {
-        // Read URL mode if specified
         const urlParams = new URLSearchParams(window.location.search);
         const modeParam = urlParams.get("mode");
-        if (modeParam === "officer" || modeParam === "admin") {
-          setAuthMode("officer");
-        } else if (modeParam === "citizen") {
-          setAuthMode("citizen");
-        }
 
         // 1. Citizen Session (localStorage)
         const savedCitizen = localStorage.getItem("nagrik_citizen_session");
+        let parsedCitizen: CitizenLedgerProfile | null = null;
         if (savedCitizen) {
           try {
             const parsed = JSON.parse(savedCitizen);
             if (parsed && (parsed.mobile || parsed.citizenName)) {
-              setCitizenSession(parsed.citizen || parsed);
-            } else {
-              setCitizenSession(null);
+              parsedCitizen = parsed.citizen || parsed;
             }
           } catch {
-            setCitizenSession(null);
+            parsedCitizen = null;
           }
-        } else {
-          setCitizenSession(null);
         }
+        setCitizenSession(parsedCitizen);
 
         // 2. Officer Session (sessionStorage)
         const savedOfficer = sessionStorage.getItem("nagrik_officer_session");
+        let parsedOfficer: OfficerProfile | null = null;
         if (savedOfficer) {
           try {
             const parsed = JSON.parse(savedOfficer);
             if (parsed && (parsed.id || parsed.name)) {
-              setOfficerSession(parsed);
-              setAuthMode("officer");
-            } else {
-              setOfficerSession(null);
+              parsedOfficer = parsed;
             }
           } catch {
-            setOfficerSession(null);
+            parsedOfficer = null;
           }
+        }
+        setOfficerSession(parsedOfficer);
+
+        // Strict URL Precedence: If URL explicitly dictates mode, NEVER override it!
+        if (modeParam === "officer" || modeParam === "admin") {
+          setAuthMode("officer");
+        } else if (modeParam === "citizen") {
+          setAuthMode("citizen");
+        } else if (initialMode === "officer") {
+          setAuthMode("officer");
+        } else if (initialMode === "citizen") {
+          setAuthMode("citizen");
+        } else if (parsedOfficer && !parsedCitizen) {
+          setAuthMode("officer");
         } else {
-          setOfficerSession(null);
+          setAuthMode("citizen");
         }
 
         setIsRestoring(false);
@@ -88,8 +92,12 @@ export default function UnifiedCitizenPortal({
 
     syncSession();
     window.addEventListener("storage", syncSession);
-    return () => window.removeEventListener("storage", syncSession);
-  }, []);
+    window.addEventListener("nagrik_auth_change", syncSession);
+    return () => {
+      window.removeEventListener("storage", syncSession);
+      window.removeEventListener("nagrik_auth_change", syncSession);
+    };
+  }, [initialMode]);
 
   // Listen to browser Back/Forward navigation (BUG-012)
   useEffect(() => {
@@ -98,6 +106,13 @@ export default function UnifiedCitizenPortal({
         const path = window.location.pathname.replace(/^\//, "");
         if (path === "track" || path === "documents" || path === "eligibility") {
           setActiveTab(path as PortalTabType);
+        }
+        const urlParams = new URLSearchParams(window.location.search);
+        const modeParam = urlParams.get("mode");
+        if (modeParam === "officer" || modeParam === "admin") {
+          setAuthMode("officer");
+        } else if (modeParam === "citizen") {
+          setAuthMode("citizen");
         }
       }
     };
@@ -109,6 +124,16 @@ export default function UnifiedCitizenPortal({
     setActiveTab(tab);
     if (typeof window !== "undefined") {
       window.history.pushState({ tab }, "", "/" + tab);
+    }
+  };
+
+  const handleSwitchMode = (mode: "citizen" | "officer") => {
+    setAuthMode(mode);
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("mode", mode);
+      window.history.replaceState({}, "", url.toString());
+      window.dispatchEvent(new Event("nagrik_auth_change"));
     }
   };
 
@@ -129,8 +154,8 @@ export default function UnifiedCitizenPortal({
     sessionStorage.removeItem("nagrik_officer_session");
     sessionStorage.removeItem("nagrik_authenticated_officer");
     window.dispatchEvent(new Event("storage"));
+    window.dispatchEvent(new Event("nagrik_auth_change"));
     setOfficerSession(null);
-    setAuthMode("citizen");
   };
 
   if (isRestoring) {
@@ -142,16 +167,84 @@ export default function UnifiedCitizenPortal({
   }
 
   // ══════════════════════════════════════════════════════════════
-  // STATE A: OFFICER LOGGED IN (5-Tier Administrative Hierarchy Desk)
+  // BRANCH 1: OFFICER DESK (authMode === "officer")
   // ══════════════════════════════════════════════════════════════
-  if (officerSession) {
+  if (authMode === "officer") {
+    if (officerSession) {
+      return (
+        <main className="min-h-screen bg-slate-100 text-slate-900 pb-24 sm:pb-16 overflow-x-hidden">
+          {/* Dual-Tab Live Simulation Top Bar */}
+          <div className="bg-slate-950 border-b border-amber-400/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
+            <div className="flex items-center gap-2">
+              <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+              <span className="font-black text-amber-300 text-xs sm:text-sm">
+                🏛️ કચેરી એડમિન ડેસ્ક ({officerSession.name})
+              </span>
+              <span className="hidden md:inline-block text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                અધિકારી ટેબ
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <a
+                href="/portal?mode=citizen"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+                title="બીજી ટેબમાં નાગરિક પોર્ટલ ખોલો (Open Citizen Tab in New Window for Live Demo)"
+              >
+                <span>👤 નવી ટેબમાં નાગરિક ડેસ્ક ખોલો (Live Citizen Demo Tab)</span>
+                <ExternalLink size={13} />
+              </a>
+              <button
+                type="button"
+                onClick={() => handleSwitchMode("citizen")}
+                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer"
+                title="આ ટેબમાં જ નાગરિક વ્યૂ જુઓ"
+              >
+                <ArrowLeftRight size={12} />
+                <span>નાગરિક વ્યૂ</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-5 space-y-3 sm:space-y-4 animate-in fade-in duration-300">
+            <AdminHierarchyDesk
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              initialOfficer={officerSession as any}
+              onLogout={handleOfficerLogout}
+            />
+          </div>
+        </main>
+      );
+    }
+
+    // Officer Not Logged In
     return (
-      <main className="min-h-screen bg-slate-100 text-slate-900 pb-24 sm:pb-16 overflow-x-hidden">
-        <div className="w-full px-2 sm:px-4 lg:px-6 py-2 sm:py-5 space-y-3 sm:space-y-4 animate-in fade-in duration-300">
-          <AdminHierarchyDesk
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            initialOfficer={officerSession as any}
-            onLogout={handleOfficerLogout}
+      <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 sm:pb-16 overflow-x-hidden">
+        <div className="max-w-xl mx-auto px-2 sm:px-6 py-1.5 sm:py-8 animate-in fade-in duration-300 space-y-2">
+          {/* Top Segmented Mode Switcher */}
+          <div className="bg-slate-200/80 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl flex items-center gap-1 shadow-inner border border-slate-300">
+            <button
+              type="button"
+              onClick={() => handleSwitchMode("citizen")}
+              className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold text-slate-700 hover:bg-white/60 transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <User size={13} className="shrink-0" />
+              <span>નાગરિક 2FA લૉગિન</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleSwitchMode("officer")}
+              className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black bg-slate-900 text-amber-300 shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <Building2 size={13} className="shrink-0" />
+              <span>અધિકારી લૉગિન</span>
+            </button>
+          </div>
+
+          <OfficerLoginShield
+            onSuccess={(officer) => setOfficerSession(officer)}
+            onCitizenClick={() => handleSwitchMode("citizen")}
           />
         </div>
       </main>
@@ -159,11 +252,47 @@ export default function UnifiedCitizenPortal({
   }
 
   // ══════════════════════════════════════════════════════════════
-  // STATE B: CITIZEN LOGGED IN (Citizen 3-Pillar Dashboard)
+  // BRANCH 2: CITIZEN DESK (authMode === "citizen")
   // ══════════════════════════════════════════════════════════════
   if (citizenSession) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">
+        {/* Dual-Tab Live Simulation Top Bar */}
+        <div className="bg-emerald-950 border-b border-emerald-500/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
+            <span className="font-black text-emerald-200 text-xs sm:text-sm">
+              👤 નાગરિક પોર્ટલ & ડિજિટલ વોલ્ટ ({citizenSession.citizenNameGu || citizenSession.citizenName})
+            </span>
+            <span className="hidden md:inline-block text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-mono font-bold">
+              નાગરિક ટેબ
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <a
+              href="/portal?mode=officer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
+              title="બીજી ટેબમાં કચેરી ડેસ્ક ખોલો અને લાઈવ અરજી ચકાસો (Open Officer Tab)"
+            >
+              <span>🏛️ નવી ટેબમાં કચેરી ડેસ્ક ખોલો (Live Officer Desk)</span>
+              <ExternalLink size={13} />
+            </a>
+            {officerSession && (
+              <button
+                type="button"
+                onClick={() => handleSwitchMode("officer")}
+                className="bg-slate-800 hover:bg-slate-700 text-amber-300 px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer"
+                title="કચેરી સ્ક્રુટિની ડેસ્ક પર સ્વિચ કરો"
+              >
+                <ArrowLeftRight size={12} />
+                <span>કચેરી ડેસ્ક</span>
+              </button>
+            )}
+          </div>
+        </div>
+
         <div className="w-full px-2.5 sm:px-6 lg:px-8 py-2.5 sm:py-5 space-y-3 sm:space-y-5 animate-in fade-in duration-300">
           <CitizenPortalHeader
             citizen={citizenSession}
@@ -236,58 +365,34 @@ export default function UnifiedCitizenPortal({
     );
   }
 
-  // ══════════════════════════════════════════════════════════════
-  // STATE C: UNAUTHENTICATED (Unified Login Gateway with Mode Selector)
-  // ══════════════════════════════════════════════════════════════
+  // Citizen Not Logged In
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 sm:pb-16 overflow-x-hidden">
-      <div className="max-w-xl mx-auto px-2 sm:px-6 py-1.5 sm:py-8 animate-in fade-in duration-300 space-y-1.5 sm:space-y-4">
-        {/* Top Segmented Mode Switcher */}
+      <div className="max-w-xl mx-auto px-2 sm:px-6 py-1.5 sm:py-8 animate-in fade-in duration-300 space-y-2">
         <div className="bg-slate-200/80 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl flex items-center gap-1 shadow-inner border border-slate-300">
           <button
             type="button"
-            onClick={() => setAuthMode("citizen")}
-            className={`flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              authMode === "citizen"
-                ? "bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md font-black"
-                : "text-slate-700 hover:bg-white/60"
-            }`}
+            onClick={() => handleSwitchMode("citizen")}
+            className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-black bg-gradient-to-r from-orange-500 to-amber-500 text-white shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <User size={13} className="shrink-0" />
-            <span className="truncate">નાગરિક 2FA લૉગિન</span>
+            <span>નાગરિક 2FA લૉગિન</span>
           </button>
-
           <button
             type="button"
-            onClick={() => setAuthMode("officer")}
-            className={`flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer ${
-              authMode === "officer"
-                ? "bg-slate-900 text-amber-300 shadow-md font-black"
-                : "text-slate-700 hover:bg-white/60"
-            }`}
+            onClick={() => handleSwitchMode("officer")}
+            className="flex-1 py-1.5 sm:py-2.5 px-2 sm:px-3 rounded-lg sm:rounded-xl text-[11px] sm:text-xs font-bold text-slate-700 hover:bg-white/60 transition flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <Building2 size={13} className="shrink-0" />
-            <span className="truncate">અધિકારી લૉગિન</span>
+            <span>અધિકારી લૉગિન</span>
           </button>
         </div>
 
-        {/* Dynamic Login Shield */}
-        {authMode === "citizen" ? (
-          <CitizenLoginShield
-            serviceTitle="નાગરિક સેવા પોર્ટલ (Citizen Single Sign-On)"
-            onSuccess={(citizen) => {
-              setCitizenSession(citizen);
-            }}
-            onOfficerClick={() => setAuthMode("officer")}
-          />
-        ) : (
-          <OfficerLoginShield
-            onSuccess={(officer) => {
-              setOfficerSession(officer);
-            }}
-            onCitizenClick={() => setAuthMode("citizen")}
-          />
-        )}
+        <CitizenLoginShield
+          serviceTitle="નાગરિક સેવા પોર્ટલ (Citizen Single Sign-On)"
+          onSuccess={(citizen) => setCitizenSession(citizen)}
+          onOfficerClick={() => handleSwitchMode("officer")}
+        />
       </div>
     </main>
   );
