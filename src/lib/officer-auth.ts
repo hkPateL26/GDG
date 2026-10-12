@@ -10,9 +10,9 @@ import { db } from "./firebase";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import {
   type AdminRole,
-  type OfficerNode,
   HIERARCHICAL_OFFICERS,
 } from "./admin-hierarchy-data";
+import { isDemoCredentialsAllowed } from "./large-datasets";
 
 export const OFFICER_COOKIE_NAME = "nagrik_officer_token";
 const SESSION_TTL_SECONDS = 8 * 60 * 60; // 8 Hours
@@ -462,6 +462,11 @@ export function isOfficerJurisdictionValid(
 ): { valid: boolean; reason?: string } {
   // Tier 1: State Secretariat (Apex Authority) — Jurisdiction over all Gujarat
   if (officer.tierLevel === 1 || officer.role === "state_admin") {
+    return { valid: true };
+  }
+
+  // In authorized Demo / Hackathon evaluation mode, allow district officers to inspect and demonstrate actions across demo records in Rajkot
+  if (isDemoCredentialsAllowed() && isDistrictRajkot(app.district, app.districtGu)) {
     return { valid: true };
   }
 

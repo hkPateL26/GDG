@@ -567,11 +567,41 @@ export async function PATCH(req: NextRequest) {
 
     const cleanId = id.trim().toUpperCase();
 
-    // 2. Fetch Application Record
-    const targetApp = getApplicationById(cleanId);
+    // 2. Fetch Application Record (checks in-memory, Firestore, and client payload fallback)
+    let targetApp = getApplicationById(cleanId);
+
+    // If not found in server memory (e.g. serverless instance restart or cold start), check Firestore!
+    if (!targetApp && db) {
+      try {
+        const docRef = doc(db, getTargetCollection(req), cleanId);
+        const snap = await withFirestoreTimeout(getDoc(docRef), 800);
+        if (snap && snap.exists()) {
+          targetApp = snap.data() as CitizenApplication;
+          addCustomApplication(targetApp);
+        }
+      } catch (dbErr) {
+        console.warn("Firestore lookup failed in PATCH:", dbErr);
+      }
+    }
+
+    // If still not found and the client passed the application payload (e.g. created in client session)
+    if (!targetApp && body.application && typeof body.application === "object" && body.application.id) {
+      const clientApp = body.application as CitizenApplication;
+      if (clientApp.id.trim().toUpperCase() === cleanId) {
+        targetApp = clientApp;
+        addCustomApplication(targetApp);
+        if (db) {
+          setDoc(
+            doc(db, getTargetCollection(req), cleanId),
+            cleanForFirestore(targetApp) as Record<string, unknown>
+          ).catch(() => {});
+        }
+      }
+    }
+
     if (!targetApp) {
       return NextResponse.json(
-        { error: `No application found for "${id}".`, success: false },
+        { error: `No application found for "${id}". Please check your application ID.`, success: false },
         { status: 404 }
       );
     }
