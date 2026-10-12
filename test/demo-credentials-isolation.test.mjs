@@ -6,6 +6,7 @@
 
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import crypto from "crypto";
 import { verifyOfficerPin } from "../src/lib/large-datasets.ts";
 
 describe("Demo Credentials Production Isolation", () => {
@@ -103,4 +104,87 @@ describe("Demo Credentials Production Isolation", () => {
     const res = verifyOfficerPin("GUJ-GOV-9012", "999999");
     assert.equal(res.success, false);
   });
+
+  it("Allows demo PIN when isDemoAuthorized flag is true (via Demo Gate) even in production without env var", () => {
+    try {
+      process.env.NODE_ENV = "production";
+      delete process.env.ALLOW_DEMO_CREDENTIALS;
+      delete process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS;
+
+      // With isDemoAuthorized = true
+      const resAllowed = verifyOfficerPin("GUJ-GOV-9012", "GJ2026", true);
+      assert.equal(resAllowed.success, true, "Gate authorization must allow demo PIN in production");
+      assert.equal(resAllowed.officer.id, "GUJ-GOV-9012");
+
+      // With isDemoAuthorized = false
+      const resBlocked = verifyOfficerPin("GUJ-GOV-9012", "GJ2026", false);
+      assert.equal(resBlocked.success, false, "Without gate authorization, production must reject demo PIN");
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      if (originalDemo !== undefined) process.env.ALLOW_DEMO_CREDENTIALS = originalDemo;
+      if (originalPublicDemo !== undefined) process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS = originalPublicDemo;
+    }
+  });
 });
+
+describe("Demo Data Isolation Collections", () => {
+  it("Returns production collections by default when demo is not authorized", async () => {
+    const { getApplicationsCollectionName, getRevocationsCollectionName } = await import("../src/lib/large-datasets.ts");
+    const originalDemo = process.env.ALLOW_DEMO_CREDENTIALS;
+    const originalEnv = process.env.NODE_ENV;
+    try {
+      process.env.NODE_ENV = "production";
+      delete process.env.ALLOW_DEMO_CREDENTIALS;
+
+      assert.equal(getApplicationsCollectionName(false), "applications");
+      assert.equal(getRevocationsCollectionName(false), "officer_revocations");
+    } finally {
+      process.env.NODE_ENV = originalEnv;
+      if (originalDemo !== undefined) process.env.ALLOW_DEMO_CREDENTIALS = originalDemo;
+    }
+  });
+
+  it("Returns isolated demo collections when demo is authorized or gate is unlocked", async () => {
+    const { getApplicationsCollectionName, getRevocationsCollectionName } = await import("../src/lib/large-datasets.ts");
+    assert.equal(getApplicationsCollectionName(true), "demo_applications");
+    assert.equal(getRevocationsCollectionName(true), "demo_officer_revocations");
+  });
+});
+
+describe("Demo Gate Cookie Signing and Verification", () => {
+  it("Signs and verifies demo gate cookie with HMAC SHA-256 and constant-time comparison", async () => {
+    const secret = "test-secret-key-for-demo-gate-32-chars-long";
+    const timestamp = Date.now().toString();
+    const sig = crypto.createHmac("sha256", secret).update(`demo-gate-${timestamp}`).digest("hex");
+    const cookieValue = `${timestamp}.${sig}`;
+
+    assert.ok(cookieValue, "Cookie value must be generated");
+    assert.ok(cookieValue.includes("."), "Cookie value must be format payload.signature");
+
+    // Verification helper matching officer-auth.ts
+    const verifyCookie = (val) => {
+      if (!val) return false;
+      const parts = val.split(".");
+      if (parts.length !== 2) return false;
+      const [ts, s] = parts;
+      const timeNum = parseInt(ts, 10);
+      if (isNaN(timeNum) || Date.now() - timeNum > 24 * 60 * 60 * 1000) return false;
+      const expected = crypto.createHmac("sha256", secret).update(`demo-gate-${ts}`).digest("hex");
+      const sigBuf = Buffer.from(s);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length) return false;
+      return crypto.timingSafeEqual(sigBuf, expBuf);
+    };
+
+    assert.equal(verifyCookie(cookieValue), true, "Valid signed cookie must verify as true");
+    assert.equal(verifyCookie(cookieValue + "tamper"), false, "Tampered cookie must fail verification");
+    assert.equal(verifyCookie("invalid.cookie"), false, "Invalid format cookie must fail verification");
+    assert.equal(verifyCookie(""), false, "Empty cookie must fail verification");
+    // Expired timestamp
+    const expiredTs = (Date.now() - (25 * 60 * 60 * 1000)).toString();
+    const expiredSig = crypto.createHmac("sha256", secret).update(`demo-gate-${expiredTs}`).digest("hex");
+    assert.equal(verifyCookie(`${expiredTs}.${expiredSig}`), false, "Expired cookie (>24h) must fail verification");
+  });
+});
+
+

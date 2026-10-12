@@ -11,12 +11,16 @@ import {
   getOfficerCookieConfig,
   getOfficerSessionFromRequest,
   revokeOfficerSession,
+  verifyDemoGateCookie,
+  createDemoGateCookieValue,
+  getDemoGateCookieConfig,
+  DEFAULT_DEMO_GATE_PASSCODE,
 } from "@/lib/officer-auth";
 
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, mobile, aadhaarLast4, otp, officerId, pin } = body;
+    const { action, mobile, aadhaarLast4, otp, officerId, pin, passcode } = body;
 
     // 1. Send 6-Digit OTP to Citizen's Mobile
     if (action === "send_otp") {
@@ -56,7 +60,8 @@ export async function POST(req: NextRequest) {
 
     // 4. Verify Official Government Credentials (Officer Portal Access)
     if (action === "verify_officer") {
-      const res = verifyOfficerPin(officerId, pin);
+      const isGateAuthorized = verifyDemoGateCookie(req);
+      const res = verifyOfficerPin(officerId, pin, isGateAuthorized);
       if (!res.success || !res.officer) {
         return NextResponse.json(res, { status: 401 });
       }
@@ -133,12 +138,53 @@ export async function POST(req: NextRequest) {
 
     // 7. Get Environment Demo Status
     if (action === "get_demo_status") {
-      const isDemo = isDemoCredentialsAllowed();
+      const isGateUnlocked = verifyDemoGateCookie(req);
+      const isDemo = isDemoCredentialsAllowed(isGateUnlocked);
       return NextResponse.json({
         success: true,
         demoCredentialsAllowed: isDemo,
+        demoGateUnlocked: isGateUnlocked,
         environment: process.env.NODE_ENV || "development",
       });
+    }
+
+    // 8. Unlock Live Demo Gate (Secures Live Public Demonstrations)
+    if (action === "unlock_demo_gate") {
+      const cleanPass = (passcode || "").trim();
+      const expectedPass = (process.env.DEMO_GATE_PASSCODE || DEFAULT_DEMO_GATE_PASSCODE).trim();
+      if (!cleanPass || cleanPass !== expectedPass) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: "અમાન્ય ડેમો ગેટ પાસકોડ (Invalid Demo Gate Passcode). સરકારી ડેમો પાસકોડ ચકાસો.",
+          },
+          { status: 403 }
+        );
+      }
+
+      const cookieVal = createDemoGateCookieValue();
+      const cookieConf = getDemoGateCookieConfig(req);
+      const response = NextResponse.json({
+        success: true,
+        message: "અધિકૃત લાઈવ ડેમો મોડ સફળતાપૂર્વક અનલૉક થયો. (Live Demo Mode Unlocked)",
+        demoGateUnlocked: true,
+        demoCredentialsAllowed: true,
+      });
+      response.cookies.set(cookieConf.name, cookieVal, cookieConf);
+      return response;
+    }
+
+    // 9. Lock Live Demo Gate (Re-enables Strict Production Lockout)
+    if (action === "lock_demo_gate") {
+      const cookieConf = getDemoGateCookieConfig(req);
+      const response = NextResponse.json({
+        success: true,
+        message: "લાઈવ ડેમો મોડ સફળતાપૂર્વક લૉક થયો. (Live Demo Mode Locked)",
+        demoGateUnlocked: false,
+        demoCredentialsAllowed: isDemoCredentialsAllowed(false),
+      });
+      response.cookies.set(cookieConf.name, "", { ...cookieConf, maxAge: 0 });
+      return response;
     }
 
     return NextResponse.json({ success: false, error: "અમાન્ય વિનંતી (Invalid Action)" }, { status: 400 });
@@ -154,11 +200,13 @@ export async function POST(req: NextRequest) {
  * Allows client UI to accurately detect whether demo credentials are authorized
  * in the active server environment without exposing server secrets.
  */
-export async function GET() {
-  const isDemo = isDemoCredentialsAllowed();
+export async function GET(req: NextRequest) {
+  const isGateUnlocked = verifyDemoGateCookie(req);
+  const isDemo = isDemoCredentialsAllowed(isGateUnlocked);
   return NextResponse.json({
     success: true,
     demoCredentialsAllowed: isDemo,
+    demoGateUnlocked: isGateUnlocked,
     environment: process.env.NODE_ENV || "development",
     demoPin: isDemo ? "GJ2026" : undefined,
     demoOfficers: [

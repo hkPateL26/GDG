@@ -9,6 +9,8 @@ import {
   Loader2,
   User,
   KeyRound,
+  ShieldCheck,
+  X,
 } from "lucide-react";
 
 export interface OfficerProfile {
@@ -36,6 +38,11 @@ export default function OfficerLoginShield({
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
   const [demoAllowed, setDemoAllowed] = useState<boolean | null>(null);
+  const [demoGateUnlocked, setDemoGateUnlocked] = useState<boolean>(false);
+  const [showGateModal, setShowGateModal] = useState(false);
+  const [gatePasscode, setGatePasscode] = useState("");
+  const [gateLoading, setGateLoading] = useState(false);
+  const [gateError, setGateError] = useState("");
 
   useEffect(() => {
     let mounted = true;
@@ -44,6 +51,7 @@ export default function OfficerLoginShield({
       .then((data) => {
         if (mounted && data.success) {
           setDemoAllowed(Boolean(data.demoCredentialsAllowed));
+          setDemoGateUnlocked(Boolean(data.demoGateUnlocked));
         }
       })
       .catch(() => {
@@ -58,6 +66,64 @@ export default function OfficerLoginShield({
       mounted = false;
     };
   }, []);
+
+  const handleUnlockDemoGate = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!gatePasscode.trim()) {
+      setGateError("ડેમો ગેટ પાસકોડ દાખલ કરો.");
+      return;
+    }
+
+    setGateLoading(true);
+    setGateError("");
+
+    try {
+      const res = await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "unlock_demo_gate",
+          passcode: gatePasscode.trim(),
+        }),
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        setDemoAllowed(true);
+        setDemoGateUnlocked(true);
+        setShowGateModal(false);
+        setGatePasscode("");
+        setError("");
+        setSuccessMsg("અધિકૃત ડેમો ગેટ સફળતાપૂર્વક અનલૉક થયો!");
+        setTimeout(() => setSuccessMsg(""), 3000);
+      } else {
+        setGateError(data.error || "અમાન્ય ડેમો પાસકોડ. સાચો પાસકોડ દાખલ કરો.");
+      }
+    } catch {
+      setGateError("ડેમો ગેટ અનલૉક કરવામાં ક્ષતિ આવી.");
+    } finally {
+      setGateLoading(false);
+    }
+  };
+
+  const handleLockDemoGate = async () => {
+    setGateLoading(true);
+    try {
+      await fetch("/api/auth/otp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "lock_demo_gate" }),
+      });
+      setDemoGateUnlocked(false);
+      const res = await fetch("/api/auth/otp");
+      const data = await res.json();
+      setDemoAllowed(Boolean(data.demoCredentialsAllowed));
+    } catch {
+      // ignore
+    } finally {
+      setGateLoading(false);
+    }
+  };
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -144,19 +210,30 @@ export default function OfficerLoginShield({
       <div className="p-3 sm:p-8 space-y-2.5 sm:space-y-4">
         {/* Environment Notice when Demo PIN is Disabled in Production */}
         {demoAllowed === false && (
-          <div className="p-2.5 sm:p-3 bg-amber-50 border border-amber-300 rounded-xl sm:rounded-2xl space-y-1.5 shadow-2xs">
+          <div className="p-2.5 sm:p-3 bg-amber-50 border border-amber-300 rounded-xl sm:rounded-2xl space-y-2 shadow-2xs">
             <div className="flex items-center justify-between gap-1.5">
               <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs">
                 <AlertTriangle size={14} className="text-amber-700 shrink-0" />
                 <span>સુરક્ષા નીતિ: પ્રોડક્શન વાતાવરણ (Production Mode)</span>
               </div>
               <span className="text-[9.5px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
-                ડેમો PIN અક્ષમ
+                ડેમો PIN લૉક
               </span>
             </div>
             <p className="text-[10.5px] text-amber-900 leading-snug">
-              સામાન્ય ઉત્પાદન સુરક્ષા હેઠળ શેર્ડ ડેમો PIN (GJ2026) અક્ષમ છે. હેકાથોન / ડેમો વાતાવરણ માટે સર્વરમાં <code className="bg-amber-100 px-1 py-0.5 rounded font-mono font-bold text-slate-900">ALLOW_DEMO_CREDENTIALS=true</code> સેટ કરો.
+              સામાન્ય સુરક્ષા હેઠળ શેર્ડ ડેમો PIN (GJ2026) લૉક છે. લાઈવ ડેમો/હેકાથોન પ્રસ્તુતિ માટે અધિકૃત ડેમો ગેટ અનલૉક કરો.
             </p>
+            <button
+              type="button"
+              onClick={() => {
+                setShowGateModal(true);
+                setGateError("");
+              }}
+              className="w-full py-1.5 px-3 bg-amber-800 hover:bg-amber-900 text-white rounded-lg font-bold text-xs flex items-center justify-center gap-1.5 transition cursor-pointer shadow-xs"
+            >
+              <KeyRound size={13} className="text-amber-300" />
+              <span>🏛️ અધિકૃત ડેમો ગેટ અનલૉક કરો (Unlock Demo Gate)</span>
+            </button>
           </div>
         )}
 
@@ -179,6 +256,17 @@ export default function OfficerLoginShield({
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
                   ડેમો સક્રિય
                 </span>
+              )}
+              {demoGateUnlocked && (
+                <button
+                  type="button"
+                  onClick={handleLockDemoGate}
+                  disabled={gateLoading}
+                  className="text-[9.5px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold px-2 py-0.2 rounded-full border border-slate-300 flex items-center gap-1 cursor-pointer transition"
+                  title="ડેમો સત્ર લૉક કરો"
+                >
+                  🔒 લૉક કરો
+                </button>
               )}
               <span className="text-[9.5px] sm:text-[10px] bg-amber-200 text-amber-900 font-mono font-bold px-1.5 py-0.2 rounded-full shrink-0">
                 PIN: GJ2026
@@ -309,7 +397,7 @@ export default function OfficerLoginShield({
             <p className="text-[10px] sm:text-[10.5px] text-slate-500 mt-0.5 sm:mt-1">
               {demoAllowed === false ? (
                 <span className="text-amber-800 font-medium">
-                  🔒 પ્રોડક્શન વાતાવરણ: ડેમો PIN અક્ષમ છે. સત્તાવાર સરકારી પાસવર્ડ વાપરો.
+                  🔒 પ્રોડક્શન વાતાવરણ: ડેમો PIN લૉક છે. ડેમો ગેટ અનલૉક કરો અથવા સત્તાવાર સરકારી પાસવર્ડ વાપરો.
                 </span>
               ) : (
                 <span>
@@ -368,6 +456,91 @@ export default function OfficerLoginShield({
           </div>
         )}
       </div>
+
+      {/* ── Demo Gate Passcode Modal ── */}
+      {showGateModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border-2 border-slate-900 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-800 flex items-center justify-center font-bold">
+                  <KeyRound size={18} />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black text-slate-900">
+                    અધિકૃત ડેમો ગેટ
+                  </h3>
+                  <p className="text-[10px] text-slate-500">
+                    લાઈવ ડેમો એક્સેસ પાસકોડ
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowGateModal(false)}
+                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div className="p-2.5 bg-amber-50 rounded-xl border border-amber-200 text-[11px] text-amber-900 leading-relaxed">
+              લાઈવ વેબસાઇટ પર સરકારી અધિકારીઓ સમક્ષ ડેમો રજૂ કરવા માટે સુરક્ષિત ડેમો પાસકોડ દાખલ કરો:
+              <div className="mt-1 font-mono font-bold text-amber-950 bg-amber-100/80 px-2 py-0.5 rounded text-center">
+                GUJ-DEMO-2026
+              </div>
+            </div>
+
+            <form onSubmit={handleUnlockDemoGate} className="space-y-3">
+              <div>
+                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1">
+                  ડેમો પાસકોડ (Demo Passcode)
+                </label>
+                <input
+                  type="text"
+                  value={gatePasscode}
+                  onChange={(e) => {
+                    setGatePasscode(e.target.value.toUpperCase());
+                    if (gateError) setGateError("");
+                  }}
+                  placeholder="GUJ-DEMO-2026"
+                  autoFocus
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono font-bold text-sm tracking-wider focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white"
+                />
+              </div>
+
+              {gateError && (
+                <div className="p-2 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-[11px] flex items-center gap-1.5">
+                  <AlertTriangle size={13} className="shrink-0" />
+                  <span>{gateError}</span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowGateModal(false)}
+                  className="w-1/2 py-2 border border-slate-300 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition cursor-pointer"
+                >
+                  રદ કરો
+                </button>
+                <button
+                  type="submit"
+                  disabled={gateLoading}
+                  className="w-1/2 py-2 bg-slate-900 hover:bg-black text-amber-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                >
+                  {gateLoading ? (
+                    <Loader2 size={14} className="animate-spin text-amber-300" />
+                  ) : (
+                    <ShieldCheck size={14} />
+                  )}
+                  <span>અનલૉક કરો</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

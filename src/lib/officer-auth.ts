@@ -330,6 +330,84 @@ export function getOfficerCookieConfig(req?: NextRequest) {
   };
 }
 
+export const DEMO_GATE_COOKIE_NAME = "nagrik_demo_gate";
+export const DEFAULT_DEMO_GATE_PASSCODE = "GUJ-DEMO-2026";
+
+/**
+ * Returns security cookie options for the demo gate.
+ */
+export function getDemoGateCookieConfig(req?: NextRequest) {
+  const isProd = process.env.NODE_ENV === "production";
+  const proto = req?.headers.get("x-forwarded-proto");
+  const isHttps = proto === "https" || req?.url.startsWith("https");
+
+  return {
+    name: DEMO_GATE_COOKIE_NAME,
+    httpOnly: true,
+    secure: isProd || isHttps,
+    sameSite: "lax" as const,
+    path: "/",
+    maxAge: 4 * 60 * 60, // 4 hours demo session
+  };
+}
+
+/**
+ * Creates a cryptographically signed value for the demo gate cookie.
+ */
+export function createDemoGateCookieValue(): string {
+  const secret = getOfficerAuthSecret();
+  const timestamp = Date.now().toString();
+  const sig = crypto.createHmac("sha256", secret).update(`demo-gate-${timestamp}`).digest("hex");
+  return `${timestamp}.${sig}`;
+}
+
+/**
+ * Validates the demo gate cookie from the request.
+ */
+export function verifyDemoGateCookie(req: NextRequest | Request): boolean {
+  try {
+    let cookieVal: string | undefined;
+    if ("cookies" in req && typeof (req as NextRequest).cookies?.get === "function") {
+      cookieVal = (req as NextRequest).cookies.get(DEMO_GATE_COOKIE_NAME)?.value;
+    } else {
+      const cookieHeader = req.headers.get("cookie") || "";
+      const match = cookieHeader.match(new RegExp(`${DEMO_GATE_COOKIE_NAME}=([^;]+)`));
+      cookieVal = match ? match[1] : undefined;
+    }
+
+    if (!cookieVal) {
+      // Also support custom header for API clients, testing, or kiosks
+      const headerKey = req.headers.get("x-demo-gate-passcode");
+      if (headerKey && headerKey.trim() === (process.env.DEMO_GATE_PASSCODE || DEFAULT_DEMO_GATE_PASSCODE)) {
+        return true;
+      }
+      return false;
+    }
+
+    const [timestampStr, sig] = cookieVal.split(".");
+    if (!timestampStr || !sig) return false;
+
+    const timestamp = parseInt(timestampStr, 10);
+    // Expire after 8 hours max
+    if (isNaN(timestamp) || Date.now() - timestamp > 8 * 60 * 60 * 1000) {
+      return false;
+    }
+
+    const secret = getOfficerAuthSecret();
+    const expectedSig = crypto.createHmac("sha256", secret).update(`demo-gate-${timestampStr}`).digest("hex");
+
+    const sigBuf = Buffer.from(sig);
+    const expectedBuf = Buffer.from(expectedSig);
+    if (sigBuf.length !== expectedBuf.length || !crypto.timingSafeEqual(sigBuf, expectedBuf)) {
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // JURISDICTION VALIDATION ENGINE
 // ─────────────────────────────────────────────────────────────────────────────

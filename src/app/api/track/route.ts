@@ -24,13 +24,20 @@ import {
   advanceWorkflowStage,
   getApplicationById,
   rejectApplication,
+  getApplicationsCollectionName,
 } from "@/lib/large-datasets";
 import {
   getOfficerSessionFromRequest,
   isOfficerJurisdictionValid,
   canOfficerPerformAction,
   isWorkflowTransitionValid,
+  verifyDemoGateCookie,
 } from "@/lib/officer-auth";
+
+function getTargetCollection(req?: NextRequest): string {
+  const isGate = req ? verifyDemoGateCookie(req) : false;
+  return getApplicationsCollectionName(isGate);
+}
 
 function cleanForFirestore(obj: unknown): unknown {
   if (obj === undefined) return null;
@@ -136,7 +143,8 @@ export async function GET(req: NextRequest) {
     // Pre-sync recent applications from Cloud Firestore into in-memory ledger (bounded by 650ms timeout)
     if (db) {
       try {
-        const colRef = collection(db, "applications");
+        const targetCol = getTargetCollection(req);
+        const colRef = collection(db, targetCol);
         const snap = await withFirestoreTimeout(getDocs(fsQuery(colRef, fsLimit(50))), 650);
         if (snap) {
           snap.forEach((docSnap) => {
@@ -168,7 +176,7 @@ export async function GET(req: NextRequest) {
       // Check Firestore if not in memory
       if (!targetApp && db) {
         try {
-          const docRef = doc(db, "applications", cleanId);
+          const docRef = doc(db, getTargetCollection(req), cleanId);
           const snap = await withFirestoreTimeout(getDoc(docRef), 650);
           if (snap && snap.exists()) {
             targetApp = snap.data() as CitizenApplication;
@@ -481,7 +489,7 @@ export async function POST(req: NextRequest) {
     // 2. Sync to Firebase Cloud Firestore asynchronously in background so it NEVER blocks payment confirmation!
     if (db) {
       setDoc(
-        doc(db, "applications", id),
+        doc(db, getTargetCollection(req), id),
         cleanForFirestore(newApp) as Record<string, unknown>
       ).catch((fbErr) => {
         console.warn("Firestore async save fallback:", fbErr);
@@ -609,7 +617,7 @@ export async function PATCH(req: NextRequest) {
       if (updated) {
         if (db) {
           setDoc(
-            doc(db, "applications", cleanId),
+            doc(db, getTargetCollection(req), cleanId),
             cleanForFirestore(updated) as Record<string, unknown>,
             { merge: true }
           ).catch((fbErr) => {
@@ -665,7 +673,7 @@ export async function PATCH(req: NextRequest) {
       if (updated) {
         if (db) {
           setDoc(
-            doc(db, "applications", cleanId),
+            doc(db, getTargetCollection(req), cleanId),
             cleanForFirestore(updated) as Record<string, unknown>,
             { merge: true }
           ).catch((fbErr) => {
@@ -728,7 +736,7 @@ export async function PATCH(req: NextRequest) {
       if (updated) {
         if (db) {
           setDoc(
-            doc(db, "applications", cleanId),
+            doc(db, getTargetCollection(req), cleanId),
             cleanForFirestore(updated) as Record<string, unknown>,
             { merge: true }
           ).catch((fbErr) => {

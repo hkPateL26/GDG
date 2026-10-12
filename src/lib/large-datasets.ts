@@ -5355,7 +5355,8 @@ export function verifyCitizenOtp(mobile: string, enteredOtp: string, aadhaarLast
   };
 }
 
-export function isDemoCredentialsAllowed(): boolean {
+export function isDemoCredentialsAllowed(isDemoAuthorized?: boolean): boolean {
+  if (isDemoAuthorized === true) return true;
   const isProduction = process.env.NODE_ENV === "production";
   const allowDemo =
     process.env.ALLOW_DEMO_CREDENTIALS === "true" ||
@@ -5363,17 +5364,25 @@ export function isDemoCredentialsAllowed(): boolean {
   return !isProduction || allowDemo;
 }
 
-export function verifyOfficerPin(officerId: string, pin: string) {
+export function getApplicationsCollectionName(isDemo = isDemoCredentialsAllowed()): string {
+  return isDemo ? "demo_applications" : "applications";
+}
+
+export function getRevocationsCollectionName(isDemo = isDemoCredentialsAllowed()): string {
+  return isDemo ? "demo_officer_revocations" : "officer_revocations";
+}
+
+export function verifyOfficerPin(officerId: string, pin: string, isDemoAuthorized?: boolean) {
   const cleanId = (officerId || "").trim().toUpperCase();
   const cleanPin = (pin || "").trim();
 
   // Government Officer Credentials for Hackathon Demonstration / Staging
   if (cleanPin === "GJ2026") {
     // In production, shared demo PIN is strictly prohibited unless explicitly enabled
-    if (!isDemoCredentialsAllowed()) {
+    if (!isDemoCredentialsAllowed(isDemoAuthorized)) {
       return {
         success: false,
-        error: "સુરક્ષા નીતિ: ઉત્પાદન વાતાવરણમાં ડેમો PIN અક્ષમ કરેલ છે. કૃપા કરીને સુરક્ષિત સરકારી ઓળખપત્રનો ઉપયોગ કરો. (Demo credentials disabled in production)",
+        error: "સુરક્ષા નીતિ: ઉત્પાદન વાતાવરણમાં ડેમો PIN અક્ષમ કરેલ છે. કૃપા કરીને ડેમો ગેટ અનલૉક કરો અથવા સત્તાવાર ઓળખપત્રનો ઉપયોગ કરો. (Demo credentials disabled in production)",
       };
     }
     if (cleanId === "GUJ-STATE-001") {
