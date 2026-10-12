@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   OfficerNode,
   HIERARCHICAL_OFFICERS,
@@ -420,14 +420,22 @@ export default function AdminHierarchyDesk({
   // Data & Modal States
   const [applications, setApplications] = useState<CitizenApplication[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const applicationsRef = useRef<CitizenApplication[]>(applications);
+  applicationsRef.current = applications;
+
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState<boolean>(false);
   const [certificateModalApp, setCertificateModalApp] = useState<CitizenApplication | null>(null);
   const [receiptModalApp, setReceiptModalApp] = useState<CitizenApplication | null>(null);
   const [zoomDocImage, setZoomDocImage] = useState<{ src: string; title: string; ocrData?: Record<string, string> } | null>(null);
 
+  const isAnyModalOpen = Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage);
+  const modalOpenRef = useRef<boolean>(isAnyModalOpen);
+  modalOpenRef.current = isAnyModalOpen;
+
   // Freeze background scrolling when any administrative modal is open
-  useBodyScrollLock(Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage));
+  useBodyScrollLock(isAnyModalOpen);
 
   // Review Modal Actions State
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
@@ -445,8 +453,15 @@ export default function AdminHierarchyDesk({
   const [policySavedAlert, setPolicySavedAlert] = useState<boolean>(false);
 
   // Fetch applications list with strict jurisdiction parameters
-  const fetchApplications = useCallback(async () => {
-    setLoading(true);
+  // Uses silent background revalidation to prevent table unmounting or skeleton flashing
+  const fetchApplications = useCallback(async (options?: { silent?: boolean }) => {
+    const isSilent = options?.silent ?? (applicationsRef.current.length > 0);
+    if (!isSilent) {
+      setLoading(true);
+    } else {
+      setIsRefreshing(true);
+    }
+
     try {
       const params = new URLSearchParams();
 
@@ -498,37 +513,69 @@ export default function AdminHierarchyDesk({
             unique.push(item);
           }
         }
-        setApplications(unique);
+
+        // Compare with current applications to prevent unnecessary re-renders
+        const currentList = applicationsRef.current;
+        const hasChanged =
+          currentList.length !== unique.length ||
+          unique.some((u, idx) => {
+            const c = currentList[idx];
+            return (
+              !c ||
+              c.id !== u.id ||
+              c.status !== u.status ||
+              c.workflowStage !== u.workflowStage ||
+              c.paymentStatus !== u.paymentStatus
+            );
+          });
+
+        if (hasChanged) {
+          setApplications(unique);
+        }
       }
     } catch (e) {
       console.error("Failed to load applications:", e);
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   }, [currentOfficer.role, selectedDistrict, selectedTaluka, selectedVillage, selectedStatus, searchQuery]);
 
   useEffect(() => {
-    // Initial load
+    // Initial load (shows skeleton only once if empty)
     const timer = setTimeout(() => {
-      fetchApplications();
+      fetchApplications({ silent: applicationsRef.current.length > 0 });
     }, 150);
 
     // 1. Cross-tab storage listener (Fires when Citizen Tab submits application)
-    const handleStorageChange = () => {
-      fetchApplications();
+    const handleStorageChange = (e: StorageEvent | Event) => {
+      if ("key" in e && e.key && e.key !== "nagrik_user_applications") {
+        return;
+      }
+      fetchApplications({ silent: true });
     };
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener("nagrik_application_submitted", handleStorageChange);
 
-    // 2. Periodic Live Simulation Polling (Every 4 seconds for real-time queue synchronization)
+    // 2. Periodic Live Simulation Polling (Silent revalidation, paused when officer is reviewing a modal)
     const pollInterval = setInterval(() => {
-      fetchApplications();
-    }, 4000);
+      if (modalOpenRef.current) return;
+      fetchApplications({ silent: true });
+    }, 10000);
+
+    // 3. Tab visibility re-sync: When officer focuses back on this tab, silently re-check
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible" && !modalOpenRef.current) {
+        fetchApplications({ silent: true });
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       clearTimeout(timer);
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener("nagrik_application_submitted", handleStorageChange);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
       clearInterval(pollInterval);
     };
   }, [fetchApplications]);
@@ -883,11 +930,11 @@ export default function AdminHierarchyDesk({
 
             <button
               type="button"
-              onClick={() => fetchApplications()}
+              onClick={() => fetchApplications({ silent: true })}
               className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[34px] sm:min-h-[36px]"
               title="અરજીઓની યાદી તાજી કરો"
             >
-              <RefreshCw size={11} className={loading ? "animate-spin text-amber-300" : "text-amber-400"} />
+              <RefreshCw size={11} className={isRefreshing ? "animate-spin text-amber-300" : "text-amber-400"} />
               <span className="hidden xs:inline">તાજું કરો</span>
             </button>
 
@@ -1223,7 +1270,7 @@ export default function AdminHierarchyDesk({
           </div>
 
           {/* ── Table & Cards View (Hard Responsive with Max Height & No Endless Scroll) ── */}
-          {loading ? (
+          {loading && applications.length === 0 ? (
             <SkeletonAdminTable />
           ) : filteredApplications.length === 0 ? (
             <div className="bg-white rounded-2xl p-8 text-center border border-slate-200">
