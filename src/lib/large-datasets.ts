@@ -5355,6 +5355,14 @@ export function verifyCitizenOtp(mobile: string, enteredOtp: string, aadhaarLast
   };
 }
 
+export function isDemoCredentialsAllowed(): boolean {
+  const isProduction = process.env.NODE_ENV === "production";
+  const allowDemo =
+    process.env.ALLOW_DEMO_CREDENTIALS === "true" ||
+    process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS === "true";
+  return !isProduction || allowDemo;
+}
+
 export function verifyOfficerPin(officerId: string, pin: string) {
   const cleanId = (officerId || "").trim().toUpperCase();
   const cleanPin = (pin || "").trim();
@@ -5362,9 +5370,7 @@ export function verifyOfficerPin(officerId: string, pin: string) {
   // Government Officer Credentials for Hackathon Demonstration / Staging
   if (cleanPin === "GJ2026") {
     // In production, shared demo PIN is strictly prohibited unless explicitly enabled
-    const isProduction = process.env.NODE_ENV === "production";
-    const allowDemo = process.env.ALLOW_DEMO_CREDENTIALS === "true";
-    if (isProduction && !allowDemo) {
+    if (!isDemoCredentialsAllowed()) {
       return {
         success: false,
         error: "સુરક્ષા નીતિ: ઉત્પાદન વાતાવરણમાં ડેમો PIN અક્ષમ કરેલ છે. કૃપા કરીને સુરક્ષિત સરકારી ઓળખપત્રનો ઉપયોગ કરો. (Demo credentials disabled in production)",
@@ -5423,6 +5429,25 @@ export function verifyOfficerPin(officerId: string, pin: string) {
         },
       };
     }
+    if (cleanId === "GUJ-GOV-9012") {
+      return {
+        success: true,
+        officer: {
+          id: "GUJ-GOV-9012",
+          name: "એચ. વી. પટેલ, GAS",
+          designation: "તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ગોંડલ",
+          district: "Rajkot",
+          districtGu: "રાજકોટ",
+          taluka: "Gondal",
+          talukaGu: "ગોંડલ",
+          office: "જન સેવા કેન્દ્ર & તાલુકા સેવા સદન, ગોંડલ",
+          role: "mamlatdar",
+          tierLevel: 4,
+          tierNameGu: "તાલુકા સ્તર - મામલતદાર કચેરી",
+          avatarEmoji: "🖋️",
+        },
+      };
+    }
     if (cleanId === "GUJ-TAL-7089") {
       return {
         success: true,
@@ -5445,23 +5470,9 @@ export function verifyOfficerPin(officerId: string, pin: string) {
       };
     }
 
-    // Default / GUJ-GOV-9012 (Taluka Mamlatdar)
     return {
-      success: true,
-      officer: {
-        id: "GUJ-GOV-9012",
-        name: "એચ. વી. પટેલ, GAS",
-        designation: "તાલુકા મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, ગોંડલ",
-        district: "Rajkot",
-        districtGu: "રાજકોટ",
-        taluka: "Gondal",
-        talukaGu: "ગોંડલ",
-        office: "જન સેવા કેન્દ્ર & તાલુકા સેવા સદન, ગોંડલ",
-        role: "mamlatdar",
-        tierLevel: 4,
-        tierNameGu: "તાલુકા સ્તર - મામલતદાર કચેરી",
-        avatarEmoji: "🖋️",
-      },
+      success: false,
+      error: "અમાન્ય કર્મચારી ID અથવા સત્તાવાર સુરક્ષા PIN. (માન્ય ડેમો ID: GUJ-GOV-9012, PIN: GJ2026)",
     };
   }
 

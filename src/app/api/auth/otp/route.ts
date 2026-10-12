@@ -4,6 +4,7 @@ import {
   verifyCitizenOtp,
   getCitizenBenefitProfile,
   verifyOfficerPin,
+  isDemoCredentialsAllowed,
 } from "@/lib/large-datasets";
 import {
   createOfficerSessionToken,
@@ -130,10 +131,42 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, officer: session });
     }
 
+    // 7. Get Environment Demo Status
+    if (action === "get_demo_status") {
+      const isDemo = isDemoCredentialsAllowed();
+      return NextResponse.json({
+        success: true,
+        demoCredentialsAllowed: isDemo,
+        environment: process.env.NODE_ENV || "development",
+      });
+    }
+
     return NextResponse.json({ success: false, error: "અમાન્ય વિનંતી (Invalid Action)" }, { status: 400 });
   } catch (err: unknown) {
     console.error("Auth OTP API error:", err);
     const message = err instanceof Error ? err.message : "સર્વર ક્ષતિ";
     return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
+}
+
+/**
+ * Public Environment & Demo Mode Status (Read-Only)
+ * Allows client UI to accurately detect whether demo credentials are authorized
+ * in the active server environment without exposing server secrets.
+ */
+export async function GET() {
+  const isDemo = isDemoCredentialsAllowed();
+  return NextResponse.json({
+    success: true,
+    demoCredentialsAllowed: isDemo,
+    environment: process.env.NODE_ENV || "development",
+    demoPin: isDemo ? "GJ2026" : undefined,
+    demoOfficers: [
+      { id: "GUJ-STATE-001", nameGu: "૧. સચિવાલય (રાજ્ય સ્તર)", role: "state_admin", tier: 1 },
+      { id: "GUJ-COL-3001", nameGu: "૨. કલેક્ટર (જિલ્લા સ્તર)", role: "district_collector", tier: 2 },
+      { id: "GUJ-SDM-5002", nameGu: "૩. પ્રાંત / SDM (સબ-ડિવિઝન)", role: "sdm_prant", tier: 3 },
+      { id: "GUJ-GOV-9012", nameGu: "૪. મામલતદાર (તાલુકા સ્તર)", role: "mamlatdar", tier: 4 },
+      { id: "GUJ-TAL-7089", nameGu: "૫. તલાટી મંત્રી (પંચાયત સ્તર)", role: "talati", tier: 5 },
+    ],
+  });
 }

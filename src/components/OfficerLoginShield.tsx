@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Lock,
   Sparkles,
@@ -35,6 +35,29 @@ export default function OfficerLoginShield({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+  const [demoAllowed, setDemoAllowed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    fetch("/api/auth/otp")
+      .then((res) => res.json())
+      .then((data) => {
+        if (mounted && data.success) {
+          setDemoAllowed(Boolean(data.demoCredentialsAllowed));
+        }
+      })
+      .catch(() => {
+        if (mounted) {
+          const clientAllowed =
+            process.env.NODE_ENV !== "production" ||
+            process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS === "true";
+          setDemoAllowed(clientAllowed);
+        }
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const handleLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -119,8 +142,30 @@ export default function OfficerLoginShield({
 
       {/* ── Form Body ── */}
       <div className="p-3 sm:p-8 space-y-2.5 sm:space-y-4">
+        {/* Environment Notice when Demo PIN is Disabled in Production */}
+        {demoAllowed === false && (
+          <div className="p-2.5 sm:p-3 bg-amber-50 border border-amber-300 rounded-xl sm:rounded-2xl space-y-1.5 shadow-2xs">
+            <div className="flex items-center justify-between gap-1.5">
+              <div className="flex items-center gap-1.5 text-amber-950 font-bold text-xs">
+                <AlertTriangle size={14} className="text-amber-700 shrink-0" />
+                <span>સુરક્ષા નીતિ: પ્રોડક્શન વાતાવરણ (Production Mode)</span>
+              </div>
+              <span className="text-[9.5px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                ડેમો PIN અક્ષમ
+              </span>
+            </div>
+            <p className="text-[10.5px] text-amber-900 leading-snug">
+              સામાન્ય ઉત્પાદન સુરક્ષા હેઠળ શેર્ડ ડેમો PIN (GJ2026) અક્ષમ છે. હેકાથોન / ડેમો વાતાવરણ માટે સર્વરમાં <code className="bg-amber-100 px-1 py-0.5 rounded font-mono font-bold text-slate-900">ALLOW_DEMO_CREDENTIALS=true</code> સેટ કરો.
+            </p>
+          </div>
+        )}
+
         {/* Fast Demo Banner for 5 Administrative Tiers */}
-        <div className="p-2 sm:p-3.5 bg-amber-50 border border-amber-300 rounded-xl sm:rounded-2xl space-y-1.5 sm:space-y-2.5 shadow-2xs">
+        <div className={`p-2 sm:p-3.5 rounded-xl sm:rounded-2xl space-y-1.5 sm:space-y-2.5 shadow-2xs border ${
+          demoAllowed === false
+            ? "bg-slate-50 border-slate-200 opacity-60"
+            : "bg-amber-50 border-amber-300"
+        }`}>
           <div className="flex items-center justify-between gap-1.5">
             <div className="flex items-center gap-1.5 min-w-0">
               <Sparkles size={13} className="text-amber-700 shrink-0" />
@@ -128,9 +173,17 @@ export default function OfficerLoginShield({
                 ૫ વહીવટી સ્તર ડેમો (1-Click Fill):
               </p>
             </div>
-            <span className="text-[9.5px] sm:text-[10px] bg-amber-200 text-amber-900 font-mono font-bold px-1.5 py-0.2 rounded-full shrink-0">
-              PIN: GJ2026
-            </span>
+            <div className="flex items-center gap-1.5 shrink-0">
+              {demoAllowed === true && (
+                <span className="text-[9.5px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-full border border-emerald-300 flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse"></span>
+                  ડેમો સક્રિય
+                </span>
+              )}
+              <span className="text-[9.5px] sm:text-[10px] bg-amber-200 text-amber-900 font-mono font-bold px-1.5 py-0.2 rounded-full shrink-0">
+                PIN: GJ2026
+              </span>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold">
@@ -254,7 +307,15 @@ export default function OfficerLoginShield({
               <KeyRound size={15} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" />
             </div>
             <p className="text-[10px] sm:text-[10.5px] text-slate-500 mt-0.5 sm:mt-1">
-              સત્તાવાર ડેમો PIN: <strong className="font-mono text-slate-800">GJ2026</strong>
+              {demoAllowed === false ? (
+                <span className="text-amber-800 font-medium">
+                  🔒 પ્રોડક્શન વાતાવરણ: ડેમો PIN અક્ષમ છે. સત્તાવાર સરકારી પાસવર્ડ વાપરો.
+                </span>
+              ) : (
+                <span>
+                  સત્તાવાર ડેમો PIN: <strong className="font-mono text-slate-800">GJ2026</strong>
+                </span>
+              )}
             </p>
           </div>
 
