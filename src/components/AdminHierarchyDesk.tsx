@@ -422,7 +422,6 @@ export default function AdminHierarchyDesk({
   const [loading, setLoading] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const applicationsRef = useRef<CitizenApplication[]>(applications);
-  applicationsRef.current = applications;
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
   const [reviewModalOpen, setReviewModalOpen] = useState<boolean>(false);
@@ -432,7 +431,14 @@ export default function AdminHierarchyDesk({
 
   const isAnyModalOpen = Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage);
   const modalOpenRef = useRef<boolean>(isAnyModalOpen);
-  modalOpenRef.current = isAnyModalOpen;
+
+  useEffect(() => {
+    applicationsRef.current = applications;
+  }, [applications]);
+
+  useEffect(() => {
+    modalOpenRef.current = isAnyModalOpen;
+  }, [isAnyModalOpen]);
 
   // Freeze background scrolling when any administrative modal is open
   useBodyScrollLock(isAnyModalOpen);
