@@ -4,6 +4,7 @@
 // ============================================
 
 import { GovernmentOffice } from "@/types";
+import { GUJARAT_DISTRICTS } from "@/lib/large-datasets";
 
 export interface ExtendedOffice extends GovernmentOffice {
   nameGu?: string;
@@ -520,13 +521,119 @@ export interface NearestOfficeResult {
   adviceGu: string;
 }
 
+const globalForOffices = globalThis as unknown as {
+  __CUSTOM_OFFICES__?: ExtendedOffice[];
+  __DELETED_OFFICE_IDS__?: string[];
+};
+
+if (!globalForOffices.__CUSTOM_OFFICES__) {
+  globalForOffices.__CUSTOM_OFFICES__ = [];
+}
+if (!globalForOffices.__DELETED_OFFICE_IDS__) {
+  globalForOffices.__DELETED_OFFICE_IDS__ = [];
+}
+
+export function getAllActiveOffices(): ExtendedOffice[] {
+  const custom = globalForOffices.__CUSTOM_OFFICES__ || [];
+  const deleted = new Set(globalForOffices.__DELETED_OFFICE_IDS__ || []);
+
+  const customMap = new Map<string, ExtendedOffice>();
+  custom.forEach((o) => customMap.set(o.id, o));
+
+  const synthesizedDistricts: ExtendedOffice[] = GUJARAT_DISTRICTS.filter(
+    (d) => !OFFICES_DATA.some((o) => o.district.toLowerCase() === d.en.toLowerCase())
+  ).map((d) => ({
+    id: `${d.en.toLowerCase()}-collectorate-jan-seva`,
+    name: `District Collector Office & Jan Seva Kendra (${d.en})`,
+    nameGu: `જિલ્લા કલેક્ટર કચેરી & જન સેવા કેન્દ્ર (${d.gu} / ${d.en})`,
+    type: "Jan Seva Kendra / Collectorate",
+    district: d.en,
+    category: "jan-seva" as const,
+    address: `જિલ્લા સેવા સદન, કલેક્ટર કચેરી કમ્પાઉન્ડ, ${d.gu} (${d.en})`,
+    city: d.en,
+    state: "Gujarat",
+    pincode: "380001",
+    phone: "1800-233-5500",
+    timings: "૧૦:૩૦ AM - ૦૫:૩૦ PM (સોમ થી શનિ)",
+    services: [
+      "આવકનો દાખલો (Income Certificate)",
+      "જાતિનો દાખલો (Caste Certificate)",
+      "રેશનકાર્ડ સેવાઓ (Ration Card Services)",
+      "ડિજિટલ ગુજરાત પોર્ટલ સેવાઓ",
+      "સરકારી સહાય અરજી ખરાઈ ડેસ્ક",
+    ],
+    mapQuery: `Collector+Office+${d.en}+Gujarat`,
+  }));
+
+  const allBase = [...OFFICES_DATA, ...synthesizedDistricts];
+  const result: ExtendedOffice[] = [];
+
+  // 1. Add all custom offices first
+  custom.forEach((o) => {
+    if (!deleted.has(o.id)) {
+      result.push(o);
+    }
+  });
+
+  // 2. Add base offices if not overridden and not deleted
+  allBase.forEach((o) => {
+    if (!customMap.has(o.id) && !deleted.has(o.id)) {
+      result.push(o);
+    }
+  });
+
+  return result;
+}
+
+export function saveCustomOffice(office: ExtendedOffice): ExtendedOffice {
+  if (!globalForOffices.__CUSTOM_OFFICES__) {
+    globalForOffices.__CUSTOM_OFFICES__ = [];
+  }
+  if (!globalForOffices.__DELETED_OFFICE_IDS__) {
+    globalForOffices.__DELETED_OFFICE_IDS__ = [];
+  }
+
+  globalForOffices.__DELETED_OFFICE_IDS__ = globalForOffices.__DELETED_OFFICE_IDS__.filter(
+    (id) => id !== office.id
+  );
+
+  const idx = globalForOffices.__CUSTOM_OFFICES__.findIndex((o) => o.id === office.id);
+  if (idx >= 0) {
+    globalForOffices.__CUSTOM_OFFICES__[idx] = office;
+  } else {
+    globalForOffices.__CUSTOM_OFFICES__.unshift(office);
+  }
+
+  return office;
+}
+
+export function deleteCustomOffice(id: string): boolean {
+  if (!globalForOffices.__CUSTOM_OFFICES__) {
+    globalForOffices.__CUSTOM_OFFICES__ = [];
+  }
+  if (!globalForOffices.__DELETED_OFFICE_IDS__) {
+    globalForOffices.__DELETED_OFFICE_IDS__ = [];
+  }
+
+  globalForOffices.__CUSTOM_OFFICES__ = globalForOffices.__CUSTOM_OFFICES__.filter(
+    (o) => o.id !== id
+  );
+
+  if (!globalForOffices.__DELETED_OFFICE_IDS__.includes(id)) {
+    globalForOffices.__DELETED_OFFICE_IDS__.push(id);
+  }
+
+  return true;
+}
+
 export function findNearestOffices(
   userLat: number,
   userLng: number,
   citizenDistrict: string = "Rajkot",
   citizenTaluka: string = "Gondal"
 ): NearestOfficeResult[] {
-  const scored = OFFICES_DATA.map((office) => {
+  const allOffices = getAllActiveOffices();
+  const scored = allOffices.map((office) => {
     const oLat = office.lat || 22.3039;
     const oLng = office.lng || 70.8022;
     const distanceKm = calculateHaversineKm(userLat, userLng, oLat, oLng);

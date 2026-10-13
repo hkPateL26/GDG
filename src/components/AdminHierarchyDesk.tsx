@@ -6,9 +6,6 @@ import {
   HIERARCHICAL_OFFICERS,
   analyzeApplicationSla,
   translateRejectionToGujarati,
-  getPolicyConfigs,
-  savePolicyConfig,
-  ServicePolicyConfig,
 } from "@/lib/admin-hierarchy-data";
 import {
   GUJARAT_DISTRICTS,
@@ -40,6 +37,7 @@ import {
   SkeletonAdminTable,
 } from "@/components/Skeleton";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import AdminPortalCmsManager from "@/components/AdminPortalCmsManager";
 
 const GUJARATI_NAME_MAP: Record<string, string> = {
   "rameshbhai kantilal patel": "રમેશભાઈ કાંતિલાલ પટેલ",
@@ -452,11 +450,6 @@ export default function AdminHierarchyDesk({
     nextStepGu: string;
   } | null>(null);
 
-  // Policy CMS state
-  const [policyConfigs, setPolicyConfigs] = useState<Record<string, ServicePolicyConfig>>(() => getPolicyConfigs());
-  const [selectedPolicyKey, setSelectedPolicyKey] = useState<string>("income-certificate");
-  const [policySavedAlert, setPolicySavedAlert] = useState<boolean>(false);
-
   // Fetch applications list with strict jurisdiction parameters
   // Uses silent background revalidation to prevent table unmounting or skeleton flashing
   const fetchApplications = useCallback(async (options?: { silent?: boolean }) => {
@@ -796,14 +789,6 @@ export default function AdminHierarchyDesk({
     }
   };
 
-  // Save Policy CMS Changes
-  const handleSavePolicy = (config: ServicePolicyConfig) => {
-    savePolicyConfig(config);
-    setPolicyConfigs(getPolicyConfigs());
-    setPolicySavedAlert(true);
-    setTimeout(() => setPolicySavedAlert(false), 4000);
-  };
-
   // Filtered List strictly scoped to Officer's Jurisdictional Zone
   const filteredApplications = useMemo(() => {
     const seen = new Set<string>();
@@ -1108,7 +1093,7 @@ export default function AdminHierarchyDesk({
             }`}
           >
             <Sliders size={13} className="shrink-0" />
-            <span className="truncate">૩. પોલિસી CMS</span>
+            <span className="truncate">૩. પોર્ટલ & પોલિસી CMS</span>
           </button>
         )}
       </div>
@@ -1598,149 +1583,10 @@ export default function AdminHierarchyDesk({
       )}
 
       {/* ══════════════════════════════════════════════════════════════
-          TAB 3: DYNAMIC POLICY CMS
+          TAB 3: DYNAMIC PORTAL & POLICY CMS (SCHEMES, OFFICES, SLA & FEES)
           ══════════════════════════════════════════════════════════════ */}
       {activeTab === "policy" && currentOfficer.canModifyPolicy && (
-        <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-base font-black text-slate-900">
-                ⚙️ ગુજરાત સરકાર ઈ-ગવર્નન્સ પોલિસી એડમિન CMS
-              </h3>
-              <p className="text-xs text-slate-500">
-                સરકારી ફી, જરૂરી પુરાવા નિયમો અને ૧-કલાક SLA મર્યાદા ડેવલપર વિના સીધા અહીંથી લાઈવ અપડેટ કરો.
-              </p>
-            </div>
-            {policySavedAlert && (
-              <span className="text-xs bg-emerald-100 text-emerald-800 font-bold px-3 py-1 rounded-xl flex items-center gap-1">
-                <CheckCircle2 size={13} /> પોલિસી સફળતાપૂર્વક અપડેટ થઈ ગઈ!
-              </span>
-            )}
-          </div>
-
-          {/* Service Selector Tabs */}
-          <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-            {Object.keys(policyConfigs).map((key) => {
-              const cfg = policyConfigs[key];
-              return (
-                <button
-                  key={key}
-                  type="button"
-                  onClick={() => setSelectedPolicyKey(key)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shrink-0 ${
-                    selectedPolicyKey === key
-                      ? "bg-slate-900 text-white shadow-xs"
-                      : "bg-slate-100 hover:bg-slate-200 text-slate-700"
-                  }`}
-                >
-                  <span>{cfg.serviceNameGu}</span>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Policy Editor Form */}
-          {policyConfigs[selectedPolicyKey] && (
-            <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-3">
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                {/* Official Fee */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    સરકારી ફી (₹ Government Fee)
-                  </label>
-                  <input
-                    type="number"
-                    value={policyConfigs[selectedPolicyKey].officialFee}
-                    onChange={(e) =>
-                      setPolicyConfigs((prev) => ({
-                        ...prev,
-                        [selectedPolicyKey]: {
-                          ...prev[selectedPolicyKey],
-                          officialFee: Number(e.target.value),
-                        },
-                      }))
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400"
-                  />
-                </div>
-
-                {/* SLA Days */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    GRTSA કાનૂની નિકાલ દિવસો (SLA Days)
-                  </label>
-                  <input
-                    type="number"
-                    value={policyConfigs[selectedPolicyKey].slaDays}
-                    onChange={(e) =>
-                      setPolicyConfigs((prev) => ({
-                        ...prev,
-                        [selectedPolicyKey]: {
-                          ...prev[selectedPolicyKey],
-                          slaDays: Number(e.target.value),
-                        },
-                      }))
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400"
-                  />
-                </div>
-
-                {/* 15-Minute SLA Alert */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    AI બોટલનેક એલર્ટ મર્યાદા (મિનિટ)
-                  </label>
-                  <input
-                    type="number"
-                    value={policyConfigs[selectedPolicyKey].slaAlertMinutes}
-                    onChange={(e) =>
-                      setPolicyConfigs((prev) => ({
-                        ...prev,
-                        [selectedPolicyKey]: {
-                          ...prev[selectedPolicyKey],
-                          slaAlertMinutes: Number(e.target.value),
-                        },
-                      }))
-                    }
-                    className="w-full bg-white border border-slate-300 rounded-xl p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-400"
-                  />
-                </div>
-              </div>
-
-              {/* Mandatory Documents List */}
-              <div className="text-xs space-y-1.5">
-                <label className="block font-bold text-slate-700">
-                  ફરજિયાત દસ્તાવેજો (Mandatory Checklist)
-                </label>
-                <div className="space-y-1">
-                  {policyConfigs[selectedPolicyKey].mandatoryDocs.map((doc, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center justify-between bg-white p-2 rounded-lg border border-slate-200"
-                    >
-                      <span className="font-bold text-slate-800">{doc}</span>
-                      <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">
-                        ફરજિયાત
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Save Button */}
-              <div className="pt-1 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => handleSavePolicy(policyConfigs[selectedPolicyKey])}
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer active:scale-95 flex items-center gap-1.5"
-                >
-                  <CheckCircle2 size={13} className="text-emerald-400" />
-                  <span>પોલિસી સેવ કરો</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <AdminPortalCmsManager currentOfficer={currentOfficer} />
       )}
 
       {/* ══════════════════════════════════════════════════════════════

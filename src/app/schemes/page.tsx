@@ -50,6 +50,18 @@ export default function SchemesPage() {
     setPage(1);
   };
 
+  const [refreshKey, setRefreshKey] = useState(0);
+
+  useEffect(() => {
+    const handleUpdate = () => setRefreshKey((k) => k + 1);
+    window.addEventListener("nagrik_schemes_updated", handleUpdate);
+    window.addEventListener("storage", handleUpdate);
+    return () => {
+      window.removeEventListener("nagrik_schemes_updated", handleUpdate);
+      window.removeEventListener("storage", handleUpdate);
+    };
+  }, []);
+
   // Dynamic fetch connected to Cloud Firestore with debouncing and race-condition safety
   useEffect(() => {
     let active = true;
@@ -85,7 +97,7 @@ export default function SchemesPage() {
       active = false;
       clearTimeout(timer);
     };
-  }, [search, selectedCategory]);
+  }, [search, selectedCategory, refreshKey]);
 
   // Pagination
   const totalPages = Math.ceil(schemes.length / PAGE_SIZE);

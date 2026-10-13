@@ -523,9 +523,93 @@ export function getSchemesByCategory(category: string): Scheme[] {
   return SCHEMES_DATA.filter((s) => s.category === category && s.isActive);
 }
 
+const globalForSchemes = globalThis as unknown as {
+  __CUSTOM_SCHEMES__?: Scheme[];
+  __DELETED_SCHEME_IDS__?: string[];
+};
+
+if (!globalForSchemes.__CUSTOM_SCHEMES__) {
+  globalForSchemes.__CUSTOM_SCHEMES__ = [];
+}
+if (!globalForSchemes.__DELETED_SCHEME_IDS__) {
+  globalForSchemes.__DELETED_SCHEME_IDS__ = [];
+}
+
+export function getAllActiveSchemes(): Scheme[] {
+  const custom = globalForSchemes.__CUSTOM_SCHEMES__ || [];
+  const deleted = new Set(globalForSchemes.__DELETED_SCHEME_IDS__ || []);
+
+  // Map custom schemes by ID (overrides bundled or adds new)
+  const customMap = new Map<string, Scheme>();
+  custom.forEach((s) => customMap.set(s.id, s));
+
+  // Merge bundled schemes (skipping deleted ones and overridden ones)
+  const result: Scheme[] = [];
+
+  // 1. Add all custom schemes first
+  custom.forEach((s) => {
+    if (!deleted.has(s.id)) {
+      result.push(s);
+    }
+  });
+
+  // 2. Add bundled schemes if not overridden and not deleted
+  SCHEMES_DATA.forEach((s) => {
+    if (!customMap.has(s.id) && !deleted.has(s.id)) {
+      result.push(s);
+    }
+  });
+
+  return result;
+}
+
+export function saveCustomScheme(scheme: Scheme): Scheme {
+  if (!globalForSchemes.__CUSTOM_SCHEMES__) {
+    globalForSchemes.__CUSTOM_SCHEMES__ = [];
+  }
+  if (!globalForSchemes.__DELETED_SCHEME_IDS__) {
+    globalForSchemes.__DELETED_SCHEME_IDS__ = [];
+  }
+
+  // Remove from deleted set if re-added
+  globalForSchemes.__DELETED_SCHEME_IDS__ = globalForSchemes.__DELETED_SCHEME_IDS__.filter(
+    (id) => id !== scheme.id
+  );
+
+  // Replace or add to custom list
+  const idx = globalForSchemes.__CUSTOM_SCHEMES__.findIndex((s) => s.id === scheme.id);
+  if (idx >= 0) {
+    globalForSchemes.__CUSTOM_SCHEMES__[idx] = scheme;
+  } else {
+    globalForSchemes.__CUSTOM_SCHEMES__.unshift(scheme);
+  }
+
+  return scheme;
+}
+
+export function deleteCustomScheme(id: string): boolean {
+  if (!globalForSchemes.__CUSTOM_SCHEMES__) {
+    globalForSchemes.__CUSTOM_SCHEMES__ = [];
+  }
+  if (!globalForSchemes.__DELETED_SCHEME_IDS__) {
+    globalForSchemes.__DELETED_SCHEME_IDS__ = [];
+  }
+
+  globalForSchemes.__CUSTOM_SCHEMES__ = globalForSchemes.__CUSTOM_SCHEMES__.filter(
+    (s) => s.id !== id
+  );
+
+  if (!globalForSchemes.__DELETED_SCHEME_IDS__.includes(id)) {
+    globalForSchemes.__DELETED_SCHEME_IDS__.push(id);
+  }
+
+  return true;
+}
+
 export function searchSchemes(query: string): Scheme[] {
   const q = query.toLowerCase();
-  return SCHEMES_DATA.filter(
+  const all = getAllActiveSchemes();
+  return all.filter(
     (s) =>
       s.name.toLowerCase().includes(q) ||
       s.nameGu.includes(q) ||
@@ -536,7 +620,15 @@ export function searchSchemes(query: string): Scheme[] {
 }
 
 export function getSchemeById(id: string): Scheme | undefined {
-  return SCHEMES_DATA.find((s) => s.id === id);
+  const cleanId = (id || "").trim();
+  const deleted = new Set(globalForSchemes.__DELETED_SCHEME_IDS__ || []);
+  if (deleted.has(cleanId)) return undefined;
+
+  const custom = globalForSchemes.__CUSTOM_SCHEMES__ || [];
+  const foundCustom = custom.find((s) => s.id === cleanId);
+  if (foundCustom) return foundCustom;
+
+  return SCHEMES_DATA.find((s) => s.id === cleanId);
 }
 
 export const CATEGORY_LABELS: Record<string, { label: string; icon: string; color: string; labelGu: string }> = {
