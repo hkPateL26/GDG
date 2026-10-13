@@ -1,7 +1,7 @@
-export const APP_VERSION = "v2.5.9";
-export const APP_BUILD_NAME = "National DPI Certified Super-App Release";
-export const APP_RELEASE_DATE = "૩૦ સપ્ટેમ્બર ૨૦૨૬";
-export const APP_RELEASE_DATE_EN = "30 September 2026";
+export const APP_VERSION = "v2.6.0";
+export const APP_BUILD_NAME = "National DPI Certified Super-App Release (Live-Sync v2.6.0)";
+export const APP_RELEASE_DATE = "૧૩ ઓક્ટોબર ૨૦૨૬";
+export const APP_RELEASE_DATE_EN = "13 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
 
 export interface LeadDeveloper {

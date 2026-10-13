@@ -643,7 +643,17 @@ export async function PATCH(req: NextRequest) {
         );
       }
 
-      const updated = confirmApplicationPayment(cleanId);
+      let updated = confirmApplicationPayment(cleanId);
+      if (!updated && targetApp) {
+        targetApp.paymentStatus = "paid";
+        targetApp.operatorConfirmed = true;
+        targetApp.status = "approved";
+        targetApp.workflowStage = 3;
+        targetApp.lastUpdated = new Date().toISOString().split("T")[0];
+        updated = targetApp;
+        addCustomApplication(updated);
+      }
+
       if (updated) {
         if (db) {
           setDoc(
@@ -698,7 +708,15 @@ export async function PATCH(req: NextRequest) {
 
       // Stamped with authenticated officer credentials from verified cryptographic session
       const officialDesignation = `${officer.designation} (${officer.name})`;
-      const updated = advanceWorkflowStage(cleanId, targetStage, officialDesignation);
+      let updated = advanceWorkflowStage(cleanId, targetStage, officialDesignation);
+      if (!updated && targetApp) {
+        targetApp.workflowStage = targetStage;
+        targetApp.status = targetStage === 3 ? "approved" : "processing";
+        targetApp.lastUpdated = new Date().toISOString().split("T")[0];
+        targetApp.officerDesignation = officialDesignation;
+        updated = targetApp;
+        addCustomApplication(updated);
+      }
 
       if (updated) {
         if (db) {

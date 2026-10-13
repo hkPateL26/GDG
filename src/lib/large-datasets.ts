@@ -4622,9 +4622,14 @@ export function getCachedSystemDataset(): CitizenApplication[] {
   return CACHED_SYSTEM_DATASET;
 }
 
+function getActiveCustomList(): CitizenApplication[] {
+  return globalForApps.__CUSTOM_USER_APPLICATIONS__ || CUSTOM_USER_APPLICATIONS;
+}
+
 export function getApplicationById(id: string): CitizenApplication | null {
   const cleanId = (id || "").toUpperCase().trim();
-  let app = CUSTOM_USER_APPLICATIONS.find(
+  const customList = getActiveCustomList();
+  let app = customList.find(
     (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
   );
 
@@ -4635,7 +4640,7 @@ export function getApplicationById(id: string): CitizenApplication | null {
     );
     if (found) {
       app = { ...found };
-      CUSTOM_USER_APPLICATIONS.unshift(app);
+      addCustomApplication(app);
     }
   }
 
@@ -4664,7 +4669,8 @@ export function rejectApplication(
 
 export function confirmApplicationPayment(id: string): CitizenApplication | null {
   const cleanId = id.toUpperCase();
-  let app = CUSTOM_USER_APPLICATIONS.find(
+  const customList = getActiveCustomList();
+  let app = customList.find(
     (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
   );
 
@@ -4676,7 +4682,7 @@ export function confirmApplicationPayment(id: string): CitizenApplication | null
     );
     if (found) {
       app = { ...found };
-      CUSTOM_USER_APPLICATIONS.unshift(app);
+      addCustomApplication(app);
     }
   }
 
@@ -4699,7 +4705,8 @@ export function advanceWorkflowStage(
   officerRole?: string
 ): CitizenApplication | null {
   const cleanId = id.toUpperCase();
-  let app = CUSTOM_USER_APPLICATIONS.find(
+  const customList = getActiveCustomList();
+  let app = customList.find(
     (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
   );
 
@@ -4711,7 +4718,7 @@ export function advanceWorkflowStage(
     );
     if (found) {
       app = { ...found };
-      CUSTOM_USER_APPLICATIONS.unshift(app);
+      addCustomApplication(app);
     }
   }
 
