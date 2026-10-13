@@ -13,6 +13,7 @@ import {
   CheckCircle2,
   Lock,
   Sparkles,
+  X,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptic";
 import { useLanguage } from "@/context/LanguageContext";
@@ -57,31 +58,25 @@ export default function OfficialGovernmentUpdateModal() {
     }
   }, []);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      checkLiveVersion();
-    }, 400);
+  const handleDismiss = () => {
+    setIsOpen(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.setItem("nagrik_update_dismissed", "true");
+    }
+  };
 
-    // Poll every 5 seconds so live code updates or deployments immediately pop up the modal
-    const pollInterval = setInterval(checkLiveVersion, 5000);
+  useEffect(() => {
+    checkLiveVersion();
 
     const handleManualCheck = () => {
       setIsOpen(true);
     };
 
-    const handleFocus = () => {
-      checkLiveVersion();
-    };
-
     window.addEventListener("nagrik_check_update", handleManualCheck);
-    window.addEventListener("focus", handleFocus);
     return () => {
-      clearTimeout(timer);
-      clearInterval(pollInterval);
       window.removeEventListener("nagrik_check_update", handleManualCheck);
-      window.removeEventListener("focus", handleFocus);
     };
-  }, [checkLiveVersion, APP_VERSION]);
+  }, [checkLiveVersion]);
 
   const handleApplyUpdate = async () => {
     triggerHaptic("heavy");
@@ -119,6 +114,9 @@ export default function OfficialGovernmentUpdateModal() {
       if (latestHash) {
         localStorage.setItem("nagrik_app_build_hash", latestHash);
       }
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("nagrik_update_dismissed", "true");
+      }
       localStorage.setItem("nagrik_app_updated_at", new Date().toISOString());
 
       setUpdateSuccess(true);
@@ -133,6 +131,9 @@ export default function OfficialGovernmentUpdateModal() {
       localStorage.setItem("nagrik_app_version", APP_VERSION);
       if (serverBuildHash) {
         localStorage.setItem("nagrik_app_build_hash", serverBuildHash);
+      }
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("nagrik_update_dismissed", "true");
       }
       setIsUpdating(false);
       setIsOpen(false);
@@ -166,9 +167,13 @@ export default function OfficialGovernmentUpdateModal() {
       role="dialog"
       aria-modal="true"
       aria-label="Official Government Mandatory Update"
-      className="fixed inset-0 z-[99990] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-md select-none"
+      onClick={handleDismiss}
+      className="fixed inset-0 z-[99990] flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/90 backdrop-blur-md select-none cursor-pointer"
     >
-      <div className="relative w-full sm:max-w-md bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-3xl shadow-2xl text-white overflow-hidden animate-bottom-sheet sm:animate-in sm:fade-in sm:zoom-in-95 duration-200 flex flex-col pb-[env(safe-area-inset-bottom,0px)]">
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="relative w-full sm:max-w-md bg-slate-900 border-t sm:border border-slate-700/80 rounded-t-3xl sm:rounded-3xl shadow-2xl text-white overflow-hidden animate-bottom-sheet sm:animate-in sm:fade-in sm:zoom-in-95 duration-200 flex flex-col pb-[env(safe-area-inset-bottom,0px)] cursor-default"
+      >
         
         {/* ── Compact Official Gov Header ── */}
         <div className="bg-gradient-to-r from-orange-600 via-amber-600 to-orange-500 px-4 pt-2.5 pb-4 sm:p-5 relative shrink-0">
@@ -176,7 +181,18 @@ export default function OfficialGovernmentUpdateModal() {
           <div className="w-full pb-2 flex justify-center sm:hidden">
             <div className="w-11 h-1.5 bg-white/40 rounded-full" />
           </div>
-          <div className="flex items-center gap-3">
+
+          {/* Close button X */}
+          <button
+            type="button"
+            onClick={handleDismiss}
+            className="absolute top-2.5 right-2.5 sm:top-3.5 sm:right-3.5 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition cursor-pointer"
+            title="બંધ કરો (Close)"
+          >
+            <X size={16} />
+          </button>
+
+          <div className="flex items-center gap-3 pr-8">
             <div className="w-11 h-11 rounded-2xl bg-white/15 backdrop-blur-sm border border-white/25 p-1.5 flex items-center justify-center shrink-0 shadow-inner">
               {/* Standard img avoids Next.js preload warning */}
               <img
@@ -245,28 +261,38 @@ export default function OfficialGovernmentUpdateModal() {
 
         </div>
 
-        {/* ── Single Full-Width Compulsory Action Button ── */}
+        {/* ── Action Buttons ── */}
         <div className="p-4 sm:p-5 bg-slate-950 border-t border-slate-800 space-y-2 shrink-0">
-          <button
-            type="button"
-            onClick={handleApplyUpdate}
-            disabled={isUpdating}
-            className="w-full py-3.5 px-4 rounded-2xl font-black text-sm bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-xl shadow-orange-500/25 active:scale-98 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
-          >
-            {isUpdating ? (
-              <>
-                <RefreshCw size={17} className="animate-spin text-white" />
-                <span>
-                  {updateSuccess ? t.btnSuccess : t.btnUpdating}
-                </span>
-              </>
-            ) : (
-              <>
-                <RefreshCw size={16} />
-                <span>{t.btnUpdate}</span>
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleDismiss}
+              className="py-3 px-4 rounded-2xl font-bold text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center justify-center cursor-pointer shrink-0"
+              title="હવે પછી કરો"
+            >
+              <span>{isEn ? "Dismiss" : isHi ? "बाद में" : "પછીથી (Dismiss)"}</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleApplyUpdate}
+              disabled={isUpdating}
+              className="flex-1 py-3 px-4 rounded-2xl font-black text-sm bg-gradient-to-r from-orange-500 via-amber-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white shadow-xl shadow-orange-500/25 active:scale-98 transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-75"
+            >
+              {isUpdating ? (
+                <>
+                  <RefreshCw size={17} className="animate-spin text-white" />
+                  <span>
+                    {updateSuccess ? t.btnSuccess : t.btnUpdating}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <RefreshCw size={16} />
+                  <span>{t.btnUpdate}</span>
+                </>
+              )}
+            </button>
+          </div>
 
           <p className="text-center text-[10.5px] text-slate-500 font-mono">
             {t.release}
