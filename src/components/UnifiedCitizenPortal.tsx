@@ -173,37 +173,22 @@ export default function UnifiedCitizenPortal({
     if (officerSession) {
       return (
         <main className="min-h-screen bg-slate-100 text-slate-900 pb-24 sm:pb-16 overflow-x-hidden">
-          {/* Dual-Tab Live Simulation Top Bar */}
+          {/* Official Officer Top Bar */}
           <div className="bg-slate-950 border-b border-amber-400/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
               <span className="font-black text-amber-300 text-xs sm:text-sm">
                 🏛️ કચેરી એડમિન ડેસ્ક ({officerSession.name})
               </span>
-              <span className="hidden md:inline-block text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-mono font-bold">
-                અધિકારી ટેબ
+              <span className="hidden sm:inline-block text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-mono font-bold">
+                અધિકૃત સ્ક્રુટિની પોર્ટલ
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <a
-                href="/portal?mode=citizen"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white font-black px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
-                title="બીજી ટેબમાં નાગરિક પોર્ટલ ખોલો (Open Citizen Tab in New Window for Live Demo)"
-              >
-                <span>👤 નવી ટેબમાં નાગરિક ડેસ્ક ખોલો (Live Citizen Demo Tab)</span>
-                <ExternalLink size={13} />
-              </a>
-              <button
-                type="button"
-                onClick={() => handleSwitchMode("citizen")}
-                className="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-1 cursor-pointer"
-                title="આ ટેબમાં જ નાગરિક વ્યૂ જુઓ"
-              >
-                <ArrowLeftRight size={12} />
-                <span>નાગરિક વ્યૂ</span>
-              </button>
+              <span className="text-[11px] text-slate-400 font-mono flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+                સુરક્ષિત સત્ર (Active Session)
+              </span>
             </div>
           </div>
 

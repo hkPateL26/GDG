@@ -32,7 +32,6 @@ import {
   FileCheck,
   Receipt,
   RefreshCw,
-  ExternalLink,
 } from "lucide-react";
 import AiBottleneckMonitor from "@/components/AiBottleneckMonitor";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
@@ -935,18 +934,8 @@ export default function AdminHierarchyDesk({
             </div>
           </div>
 
-          {/* Quick Actions: Citizen Live Tab, Refresh, Leave Protocol & Logout */}
+          {/* Quick Actions: Refresh, Leave Protocol & Logout */}
           <div className="flex items-center gap-1.5 sm:gap-2 shrink-0 self-stretch sm:self-auto justify-end pt-1 sm:pt-0 border-t border-slate-800/80 sm:border-0 flex-wrap">
-            <a
-              href="/portal?mode=citizen"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-1 sm:flex-initial px-2.5 sm:px-3 py-1.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center gap-1 cursor-pointer min-h-[34px] sm:min-h-[36px] bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white shadow-xs"
-              title="બીજી ટેબમાં નાગરિક પોર્ટલ ખોલીને નવી અરજી સબમિટ કરો (Live Simulation Tab 2)"
-            >
-              <span>👤 નાગરિક ડેસ્ક (ટેબ ૨)</span>
-              <ExternalLink size={11} />
-            </a>
 
             <button
               type="button"

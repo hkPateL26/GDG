@@ -215,16 +215,6 @@ export default function Navbar() {
                     👤 {citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)
                   </span>
                 </Link>
-              ) : officerSession ? (
-                <Link
-                  href="/portal?mode=citizen"
-                  target="_blank"
-                  className="ml-1 flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow cursor-pointer"
-                  title="બીજી ટેબમાં નાગરિક પોર્ટલ ખોલો (Open Citizen Tab in New Window for Live Demo)"
-                >
-                  <User size={13} className="shrink-0" />
-                  <span>👤 નાગરિક ડેસ્ક ↗</span>
-                </Link>
               ) : null}
 
               {!officerSession && !citizenSession && (
