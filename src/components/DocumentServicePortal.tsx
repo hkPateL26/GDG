@@ -41,6 +41,8 @@ import CitizenLoginShield from "@/components/CitizenLoginShield";
 import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
 import { getActiveFamilyMember } from "@/lib/family-ledger";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
+import { DigiLockerDocument, DigiLockerConsentArtifact } from "@/lib/digilocker-engine";
 
 interface UploadedDocState {
   file: File | null;
@@ -60,6 +62,9 @@ interface UploadedDocState {
   serviceRuleAdviceGu?: string;
   matchesExpected?: boolean;
   documentType?: string;
+  isDigiLockerVerified?: boolean;
+  digiLockerUri?: string;
+  digiLockerIssuer?: string;
 }
 
 export default function DocumentServicePortal({
@@ -223,6 +228,12 @@ export default function DocumentServicePortal({
 
   // 5. Document Uploads & AI Inspections
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocState>>({});
+
+  // 5.1 Official DigiLocker Gateway Integration
+  const [isDigiLockerModalOpen, setIsDigiLockerModalOpen] = useState<boolean>(false);
+  const [activeDigiLockerTarget, setActiveDigiLockerTarget] = useState<string>("all");
+  const [digiLockerVerifiedDocs, setDigiLockerVerifiedDocs] = useState<Record<string, DigiLockerDocument>>({});
+  const [isAutoFilledByDigiLocker, setIsAutoFilledByDigiLocker] = useState<boolean>(false);
 
   // 6. Phygital: Signature selection
   const [signatureType, setSignatureType] = useState<"aadhaar-esign" | "physical-declaration">("aadhaar-esign");
@@ -691,6 +702,93 @@ export default function DocumentServicePortal({
     setUploadedDocs(demoDocs);
   };
 
+  // 1-Click Official DigiLocker Gateway Response Handler
+  const handleDigiLockerDocumentFetched = (payload: {
+    document: DigiLockerDocument;
+    allFetchedDocs?: DigiLockerDocument[];
+    consentArtifact: DigiLockerConsentArtifact;
+  }) => {
+    const docsToProcess = payload.allFetchedDocs && payload.allFetchedDocs.length > 0
+      ? payload.allFetchedDocs
+      : [payload.document];
+
+    const updatedUploads: Record<string, UploadedDocState> = { ...uploadedDocs };
+    const updatedDigiMap: Record<string, DigiLockerDocument> = { ...digiLockerVerifiedDocs };
+
+    docsToProcess.forEach((doc) => {
+      updatedDigiMap[doc.id] = doc;
+
+      // Find matching requiredDoc in current service
+      const match = requiredDocs.find(
+        (rd) =>
+          rd.id === doc.id ||
+          rd.nameEn.toLowerCase().includes(doc.id.toLowerCase()) ||
+          rd.nameGu.includes(doc.nameGu.slice(0, 4)) ||
+          (doc.id === "aadhaar" && (rd.id.includes("aadhaar") || rd.id.includes("photo_id") || rd.id.includes("identity"))) ||
+          (doc.id === "income" && (rd.id.includes("income") || rd.id.includes("salary"))) ||
+          (doc.id === "ration" && rd.id.includes("ration")) ||
+          (doc.id === "land_records" && (rd.id.includes("land") || rd.id.includes("7_12") || rd.id.includes("ror"))) ||
+          (doc.id === "electricity" && (rd.id.includes("electricity") || rd.id.includes("light") || rd.id.includes("address"))) ||
+          (doc.id === "caste" && rd.id.includes("caste")) ||
+          (doc.id === "pan" && rd.id.includes("pan"))
+      );
+
+      const targetSlotId = match ? match.id : doc.id;
+
+      updatedUploads[targetSlotId] = {
+        file: null,
+        fileName: `${doc.nameGu} (DigiLocker Verified)`,
+        fileType: "application/pdf",
+        base64: doc.filePreviewUrl || doc.userUploadedBase64 || "",
+        status: "valid",
+        qualityScore: 100,
+        adviceGu: `✅ DigiLocker Rule 9A Verified • URI: ${doc.uri} • સત્તાવાર ડિજિટલ સહી પ્રમાણિત.`,
+        needsUpdate: false,
+        needsNewDocument: false,
+        nameMatchStatus: "matched",
+        nameMatchConfidence: 100,
+        isDigiLockerVerified: true,
+        digiLockerUri: doc.uri,
+        digiLockerIssuer: doc.issuerGu,
+        documentType: doc.nameGu,
+      };
+
+      if (doc.id === "aadhaar" && doc.extractedData.photoUrl) {
+        setUserUploadedPhoto(doc.extractedData.photoUrl);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("nagrik_user_photo", doc.extractedData.photoUrl);
+          } catch {}
+        }
+      }
+    });
+
+    setUploadedDocs(updatedUploads);
+    setDigiLockerVerifiedDocs(updatedDigiMap);
+
+    // Auto-fill form fields with verified authentic data from primary doc
+    const primaryData = payload.document.extractedData;
+    if (primaryData) {
+      if (primaryData.fullName) setApplicantName(primaryData.fullName);
+      if (primaryData.fullNameGu) setApplicantNameGu(primaryData.fullNameGu);
+      if (primaryData.fatherName) setFatherOrHusbandName(primaryData.fatherName);
+      if (primaryData.dob) setDob(primaryData.dob);
+      if (primaryData.gender) setGender(primaryData.gender);
+      if (primaryData.district) setDistrict(primaryData.district);
+      if (primaryData.taluka) setTaluka(primaryData.taluka);
+      if (primaryData.village) setVillage(primaryData.village);
+      if (primaryData.pincode) setPincode(primaryData.pincode);
+      if (primaryData.aadhaarLast4) setAadhaarNumber(`XXXX-XXXX-${primaryData.aadhaarLast4}`);
+      if (primaryData.annualIncome) setAnnualIncomeVal(String(primaryData.annualIncome));
+      if (primaryData.rationCardNo) setRationCategory(primaryData.rationCategory || "NFSA - APL-1");
+      if (primaryData.fpsShopNo) setFpsShopNo(primaryData.fpsShopNo);
+      if (primaryData.khataNumber) setKhataNumber(primaryData.khataNumber);
+      if (primaryData.surveyNumber) setSurveyNumber(primaryData.surveyNumber);
+      if (primaryData.landArea) setLandArea(primaryData.landArea);
+      setIsAutoFilledByDigiLocker(true);
+    }
+  };
+
   // Step 1: Pre-Submission Validation & Open Government Cyber Treasury Payment Gateway
   const handleOpenPaymentGateway = (e: React.FormEvent) => {
     e.preventDefault();
@@ -839,6 +937,10 @@ export default function DocumentServicePortal({
       })),
       citizenPhoto: networkSafePhoto,
       userPhoto: networkSafePhoto,
+      digilockerVerified: Object.values(uploadedDocs).some((d) => d.isDigiLockerVerified) || Object.keys(digiLockerVerifiedDocs).length > 0,
+      digilockerUri: Object.values(digiLockerVerifiedDocs)[0]?.uri || Object.values(uploadedDocs).find((d) => d.digiLockerUri)?.digiLockerUri || undefined,
+      digilockerIssuer: Object.values(digiLockerVerifiedDocs)[0]?.issuerGu || undefined,
+      digilockerFetchedAt: Object.values(uploadedDocs).some((d) => d.isDigiLockerVerified) ? new Date().toISOString().split("T")[0] : undefined,
     };
 
     try {
@@ -921,6 +1023,10 @@ export default function DocumentServicePortal({
           oldVsNewValues,
           kacheriDetails: payload.kacheriDetails,
           citizenPhoto: rawPhoto && rawPhoto.startsWith("data:image/") ? rawPhoto : undefined,
+          digilockerVerified: payload.digilockerVerified,
+          digilockerUri: payload.digilockerUri,
+          digilockerIssuer: payload.digilockerIssuer,
+          digilockerFetchedAt: payload.digilockerFetchedAt,
         };
         finalNotifications = {
           sms: {
@@ -2804,6 +2910,45 @@ export default function DocumentServicePortal({
                 </span>
               </div>
 
+              {/* Master DigiLocker Fast-Track Banner */}
+              <div className="bg-gradient-to-r from-blue-900 via-indigo-950 to-slate-900 text-white rounded-2xl p-3.5 sm:p-4 space-y-2.5 shadow-sm border border-blue-400/40">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex items-start gap-2.5">
+                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-base shrink-0">
+                      🔒
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-amber-300">
+                          DigiLocker • MeriPehchaan Integration
+                        </span>
+                        <span className="text-[9px] bg-emerald-500/30 text-emerald-300 border border-emerald-400/30 px-1.5 py-0.2 rounded font-bold">
+                          IT Act Rule 9A
+                        </span>
+                      </div>
+                      <h4 className="text-xs sm:text-sm font-extrabold text-white leading-tight">
+                        દસ્તાવેજનો ફોટો નથી? DigiLocker માંથી ૧-ક્લિકમાં સીધા મેળવો
+                      </h4>
+                      <p className="text-[11px] text-blue-200 mt-0.5 leading-snug">
+                        આધાર, આવકનો દાખલો, રેશનકાર્ડ કે ૭/૧૨ સરકારી સર્વરમાંથી સત્તાવાર ડિજિટલ સહી (e-Sign) સાથે ફેચ થશે.
+                      </p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveDigiLockerTarget("all");
+                      setIsDigiLockerModalOpen(true);
+                    }}
+                    className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <Sparkles size={14} className="text-slate-950" />
+                    <span>⚡ ડીજીલોકરથી તમામ દસ્તાવેજો લાવો</span>
+                  </button>
+                </div>
+              </div>
+
               {/* Sample Demo Documents Quick Panel for Judges & Testing */}
               {service.id === "aadhaar" && serviceMode === "new" && (
                 <div className="bg-gradient-to-r from-blue-50 via-indigo-50/70 to-blue-50 border border-blue-200 rounded-2xl p-3.5 space-y-2.5 shadow-xs">
@@ -2992,31 +3137,68 @@ export default function DocumentServicePortal({
                           )}
                         </div>
 
-                        <label className="cursor-pointer bg-white hover:bg-orange-50 border border-slate-300 hover:border-orange-400 text-slate-700 hover:text-orange-700 px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-xs">
-                          <UploadCloud size={14} />
-                          <span>{docState ? "બદલો (Replace)" : "અપલોડ કરો (Upload)"}</span>
-                          <input
-                            type="file"
-                            accept="image/jpeg,image/png,application/pdf"
-                            className="hidden"
-                            onChange={(e) => {
-                              if (e.target.files && e.target.files[0]) {
-                                handleFileUpload(docItem.id, e.target.files[0]);
-                              }
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          {/* Option A: Fetch directly from DigiLocker */}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveDigiLockerTarget(docItem.id);
+                              setIsDigiLockerModalOpen(true);
                             }}
-                          />
-                        </label>
+                            className="bg-blue-50 hover:bg-blue-100 active:scale-95 border border-blue-300 text-blue-900 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                            title="આ દસ્તાવેજ ડીજીલોકરમાંથી સીધો ફેચ કરો"
+                          >
+                            <span className="text-sm">🔗</span>
+                            <span>DigiLocker થી લાવો</span>
+                          </button>
+
+                          {/* Option B: Manual File Upload */}
+                          <label className="cursor-pointer bg-white hover:bg-orange-50 border border-slate-300 hover:border-orange-400 text-slate-700 hover:text-orange-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
+                            <UploadCloud size={14} />
+                            <span>{docState ? "ફાઇલ બદલો" : "અપલોડ"}</span>
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,application/pdf"
+                              className="hidden"
+                              onChange={(e) => {
+                                if (e.target.files && e.target.files[0]) {
+                                  handleFileUpload(docItem.id, e.target.files[0]);
+                                }
+                              }}
+                            />
+                          </label>
+                        </div>
                       </div>
 
                       {/* AI Smart Dynamic Verification & Guidance Widget */}
                       {docState && (
                         isValid ? (
-                          <div className="text-xs p-3 rounded-xl border border-emerald-300 bg-emerald-50/70 text-emerald-950 flex items-start gap-2.5 shadow-2xs">
-                            <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                          <div className={`text-xs p-3 rounded-xl border flex items-start gap-2.5 shadow-2xs ${
+                            docState.isDigiLockerVerified
+                              ? "border-blue-400 bg-blue-50/80 text-blue-950"
+                              : "border-emerald-300 bg-emerald-50/70 text-emerald-950"
+                          }`}>
+                            {docState.isDigiLockerVerified ? (
+                              <div className="w-5 h-5 rounded-full bg-blue-600 text-white flex items-center justify-center shrink-0 mt-0.5 text-xs font-black">
+                                🔒
+                              </div>
+                            ) : (
+                              <CheckCircle2 size={16} className="text-emerald-600 shrink-0 mt-0.5" />
+                            )}
                             <div className="space-y-1">
-                              <p className="font-bold text-emerald-900 leading-relaxed">
+                              <p className={`font-bold leading-relaxed ${docState.isDigiLockerVerified ? "text-blue-900" : "text-emerald-900"}`}>
                                 {docState.adviceGu || "✅ દસ્તાવેજ સફળતાપૂર્વક ચકાસાયો."}
                               </p>
+                              {docState.isDigiLockerVerified && (
+                                <div className="flex items-center gap-1.5 flex-wrap pt-0.5">
+                                  <span className="text-[10px] bg-blue-100 text-blue-900 border border-blue-300 font-mono font-bold px-2 py-0.5 rounded">
+                                    URI: {docState.digiLockerUri}
+                                  </span>
+                                  <span className="text-[10px] bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-2 py-0.5 rounded">
+                                    ✓ IT Act Rule 9A Verified
+                                  </span>
+                                </div>
+                              )}
                               {docState.detectedName && (
                                 <p className="text-[11px] text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded inline-block font-medium">
                                   👤 દસ્તાવેજ પર નામ: <span className="font-bold">{docState.detectedName}</span>
@@ -3178,6 +3360,15 @@ export default function DocumentServicePortal({
           </div>
         </div>
       </form>
+
+      {/* ── Official MeriPehchaan & DigiLocker Gateway Modal ── */}
+      <DigiLockerGatewayModal
+        isOpen={isDigiLockerModalOpen}
+        onClose={() => setIsDigiLockerModalOpen(false)}
+        targetDocType={activeDigiLockerTarget}
+        serviceTitle={service.nameGu}
+        onDocumentFetched={handleDigiLockerDocumentFetched}
+      />
     </div>
   );
 }

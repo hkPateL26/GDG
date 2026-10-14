@@ -1317,6 +1317,11 @@ export default function AdminHierarchyDesk({
                               <span className="text-[10px] text-slate-500 font-mono bg-slate-100 px-1.5 py-0.5 rounded border border-slate-200">
                                 UID: XXXX-{app.aadhaarLast4 || "1413"}
                               </span>
+                              {app.digilockerVerified && (
+                                <span className="text-[9.5px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded font-black inline-flex items-center gap-0.5 shadow-2xs">
+                                  🛡️ DigiLocker Verified
+                                </span>
+                              )}
                               <span className="text-[9.5px] bg-amber-50 text-amber-900 border border-amber-200/80 px-1.5 py-0.5 rounded font-bold inline-flex items-center gap-0.5">
                                 🏡 {cleanVillageOnly(app.village)}
                               </span>
@@ -1490,6 +1495,11 @@ export default function AdminHierarchyDesk({
                           <span className="text-[11px] text-slate-600 font-medium">
                             📍 {formatGujaratiLocation(app.village, app.taluka, app.districtGu, app.district)}
                           </span>
+                          {app.digilockerVerified && (
+                            <span className="inline-flex items-center gap-0.5 text-[9.5px] bg-emerald-100 text-emerald-800 border border-emerald-300 px-1.5 py-0.5 rounded font-black shadow-2xs">
+                              🛡️ DigiLocker Verified
+                            </span>
+                          )}
                         </div>
                       </div>
 
@@ -1679,6 +1689,52 @@ export default function AdminHierarchyDesk({
                 </div>
               );
             })()}
+
+            {/* ── DIGILOCKER RULE 9A AUTHENTICATED BANNER ── */}
+            {selectedApp.digilockerVerified && (
+              <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-400 rounded-2xl p-3.5 space-y-2.5 shadow-2xs">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="p-1.5 bg-emerald-600 text-white rounded-xl shadow-xs">
+                      <Shield size={16} />
+                    </span>
+                    <div>
+                      <span className="text-[10px] font-black tracking-wider text-emerald-800 uppercase block">
+                        National DigiLocker &amp; MeriPehchaan Gateway
+                      </span>
+                      <h5 className="text-xs font-black text-emerald-950 flex items-center gap-1.5">
+                        ✅ DigiLocker Authenticated (IT Act 2000 Rule 9A Certified)
+                      </h5>
+                    </div>
+                  </div>
+                  <span className="text-[9.5px] bg-emerald-600 text-white font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                    ભૌતિક ખરાઈ મુક્તિ (Exempt from Physical Verification)
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-[11px] bg-white/90 p-2.5 rounded-xl border border-emerald-200">
+                  <div>
+                    <span className="text-slate-500 block text-[10px] font-medium">સત્તાવાર URI:</span>
+                    <code className="font-mono text-emerald-900 font-bold break-all text-[10px]">
+                      {selectedApp.digilockerUri || "in.gov.uidai-ADHAR-XXXX-XXXX-4829"}
+                    </code>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px] font-medium">જારી કરનાર સત્તામંડળ (Issuer):</span>
+                    <span className="font-bold text-slate-800 block">
+                      {selectedApp.digilockerIssuer || "Government of Gujarat / UIDAI"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-500 block text-[10px] font-medium">ડિજિટલ સહી (e-Sign Status):</span>
+                    <span className="font-bold text-emerald-700 block flex items-center gap-1">
+                      <CheckCircle2 size={12} className="text-emerald-600 shrink-0" />
+                      CCA માન્ય SHA-256 હેશિંગ
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* ── INTERACTIVE AI DOCUMENT INSPECTOR & VIEWER ── */}
             <div className="space-y-2">

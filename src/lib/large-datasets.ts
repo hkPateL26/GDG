@@ -48,6 +48,10 @@ export interface CitizenApplication {
   citizenPhoto?: string;
   userPhoto?: string;
   trackingSecret?: string;
+  digilockerVerified?: boolean;
+  digilockerUri?: string;
+  digilockerIssuer?: string;
+  digilockerFetchedAt?: string;
 }
 
 export const GUJARAT_DISTRICTS = [

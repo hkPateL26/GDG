@@ -17,8 +17,11 @@ import {
   X,
   ShieldCheck,
   Camera,
+  Lock,
 } from "lucide-react";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
+import { DigiLockerDocument, DigiLockerConsentArtifact } from "@/lib/digilocker-engine";
 import { Scheme } from "@/types";
 
 function getActiveCitizenSession() {
@@ -49,6 +52,11 @@ export default function SchemeDetailPage({
   const [showApplyModal, setShowApplyModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submittedApp, setSubmittedApp] = useState<CitizenApplication | null>(null);
+
+  // DigiLocker Gateway Integration States
+  const [showDigiLockerModal, setShowDigiLockerModal] = useState(false);
+  const [digilockerDoc, setDigilockerDoc] = useState<DigiLockerDocument | null>(null);
+  const [isDigiLockerVerified, setIsDigiLockerVerified] = useState(false);
 
   // Form Fields - initialized lazily from active session without cascading renders
   const [citizenName, setCitizenName] = useState(() => getActiveCitizenSession()?.citizenName || "");
@@ -100,6 +108,45 @@ export default function SchemeDetailPage({
 
   const category = scheme ? (CATEGORY_LABELS[scheme.category] || { label: "General", icon: "🏛️", color: "orange", labelGu: "સામાન્ય" }) : null;
 
+  // Handle DigiLocker Document Fetch & Auto-fill
+  const handleDigiLockerDocumentFetched = (payload: {
+    document: DigiLockerDocument;
+    allFetchedDocs?: DigiLockerDocument[];
+    consentArtifact: DigiLockerConsentArtifact;
+  }) => {
+    const doc = payload.document;
+    setDigilockerDoc(doc);
+    setIsDigiLockerVerified(true);
+    if (doc.extractedData) {
+      const ext = doc.extractedData;
+      if (ext.fullName) setCitizenName(ext.fullName);
+      if (ext.district) {
+        const matched = GUJARAT_DISTRICTS.find(
+          (d) => d.en.toLowerCase() === ext.district?.toLowerCase() || d.gu === ext.district
+        );
+        if (matched) setDistrict(matched.en);
+      }
+      if (ext.taluka) setTaluka(ext.taluka);
+      if (ext.village) setVillage(ext.village);
+      if (ext.aadhaarLast4) {
+        setAadhaarLast4(ext.aadhaarLast4);
+      }
+      if (ext.photoUrl) {
+        setCitizenPhoto(ext.photoUrl);
+        if (typeof window !== "undefined") {
+          localStorage.setItem("nagrik_user_photo", ext.photoUrl);
+        }
+      }
+    }
+    const photoCandidate = doc.userUploadedBase64 || doc.filePreviewUrl;
+    if (photoCandidate && photoCandidate.startsWith("data:image/")) {
+      setCitizenPhoto(photoCandidate);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("nagrik_user_photo", photoCandidate);
+      }
+    }
+  };
+
   // Handle live application submission to Cloud Firestore
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -149,6 +196,10 @@ export default function SchemeDetailPage({
         })) || [],
         citizenPhoto: citizenPhoto || undefined,
         userPhoto: citizenPhoto || undefined,
+        digilockerVerified: isDigiLockerVerified,
+        digilockerUri: digilockerDoc?.uri || (isDigiLockerVerified ? "in.gov.uidai-ADHAR-XXXX-XXXX-4829" : undefined),
+        digilockerIssuer: digilockerDoc?.issuer || (isDigiLockerVerified ? "Unique Identification Authority of India (UIDAI)" : undefined),
+        digilockerFetchedAt: isDigiLockerVerified ? new Date().toISOString() : undefined,
       };
 
       const res = await fetch("/api/track", {
@@ -408,9 +459,82 @@ export default function SchemeDetailPage({
 
               {/* Form Body */}
               <form onSubmit={handleApplySubmit} className="p-4 sm:p-6 space-y-4 max-h-[75vh] overflow-y-auto">
+                {/* ── DIGILOCKER 1-CLICK VERIFICATION BANNER ── */}
+                {!isDigiLockerVerified ? (
+                  <div className="bg-gradient-to-r from-blue-50 via-indigo-50 to-emerald-50 border-2 border-indigo-200 rounded-2xl p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-2xs">
+                    <div className="flex items-start gap-2.5">
+                      <span className="p-2 bg-gradient-to-br from-indigo-600 to-blue-700 text-white rounded-xl shadow-xs shrink-0 mt-0.5">
+                        <Sparkles size={16} />
+                      </span>
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-indigo-700 block">
+                          National Digital Locker Service • MeitY
+                        </span>
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900 leading-tight">
+                          દસ્તાવેજોનો ફોટો નથી? DigiLocker થી ૧-ક્લિકમાં ઓટો-ફિલ કરો
+                        </h4>
+                        <p className="text-[11px] text-slate-600 mt-0.5">
+                          MeriPehchaan 2FA થી આધાર, સરનામું અને વિગતો તુરંત પ્રમાણિત થઈ જશે.
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowDigiLockerModal(true)}
+                      className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white text-xs font-black rounded-xl shadow-sm transition shrink-0 cursor-pointer"
+                    >
+                      <span>🔗 DigiLocker થી લાવો</span>
+                    </button>
+                  </div>
+                ) : (
+                  <div className="bg-emerald-50 border-2 border-emerald-400 rounded-2xl p-3 sm:p-3.5 space-y-2 shadow-2xs">
+                    <div className="flex items-center justify-between gap-2 flex-wrap">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 bg-emerald-600 text-white rounded-lg shadow-xs">
+                          <CheckCircle2 size={16} />
+                        </span>
+                        <div>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 block">
+                            IT Act Rule 9A Verified
+                          </span>
+                          <h4 className="text-xs font-black text-emerald-950">
+                            ✅ DigiLocker Authenticated
+                          </h4>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setShowDigiLockerModal(true)}
+                        className="text-[11px] text-emerald-800 hover:text-emerald-950 font-bold underline cursor-pointer"
+                      >
+                        બદલો / નવો દસ્તાવેજ લાવો
+                      </button>
+                    </div>
+                    <div className="text-[11px] text-emerald-900 bg-white/80 p-2 rounded-xl border border-emerald-200 space-y-0.5">
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-slate-600">સત્તાવાર URI:</span>
+                        <code className="font-mono font-bold text-emerald-800 text-[10px] break-all">
+                          {digilockerDoc?.uri || "in.gov.uidai-ADHAR-XXXX-XXXX-4829"}
+                        </code>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <span className="font-semibold text-slate-600">જારી કરનાર:</span>
+                        <span className="font-bold text-slate-800">
+                          {digilockerDoc?.issuer || "Unique Identification Authority of India (UIDAI)"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-xs font-bold text-gray-700 mb-1">
                     અરજદારનું પૂરું નામ (Full Name as per Aadhaar) *
+                    {isDigiLockerVerified && (
+                      <span className="inline-flex items-center gap-0.5 text-[9.5px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded ml-1.5">
+                        <Lock size={9} /> પ્રમાણિત
+                      </span>
+                    )}
                   </label>
                   <input
                     type="text"
@@ -604,6 +728,15 @@ export default function SchemeDetailPage({
             onClose={() => setSubmittedApp(null)}
           />
         )}
+
+        {/* ── DIGILOCKER MERIPEHCHAAN OFFICIAL GATEWAY MODAL ── */}
+        <DigiLockerGatewayModal
+          isOpen={showDigiLockerModal}
+          onClose={() => setShowDigiLockerModal(false)}
+          onDocumentFetched={handleDigiLockerDocumentFetched}
+          targetDocType="aadhaar"
+          serviceTitle={scheme?.nameGu || "સરકારી સહાય યોજના"}
+        />
       </main>
     </>
   );

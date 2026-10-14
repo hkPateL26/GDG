@@ -1,7 +1,7 @@
-export const APP_VERSION = "v2.7.0";
-export const APP_BUILD_NAME = "National DPI Certified Super-App Release (Dynamic Sachivalay CMS v2.7.0)";
-export const APP_RELEASE_DATE = "૧૩ ઓક્ટોબર ૨૦૨૬";
-export const APP_RELEASE_DATE_EN = "13 October 2026";
+export const APP_VERSION = "v2.8.0";
+export const APP_BUILD_NAME = "National DPI Certified Super-App Release (DigiLocker & MeriPehchaan Gateway v2.8.0)";
+export const APP_RELEASE_DATE = "૧૪ ઓક્ટોબર ૨૦૨૬";
+export const APP_RELEASE_DATE_EN = "14 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
 
 export interface LeadDeveloper {
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "સત્તાવાર DigiLocker & MeriPehchaan ગેટવે",
+    titleEn: "Official DigiLocker & MeriPehchaan Gateway (IT Act Rule 9A)",
+    descGu: "MeriPehchaan 2FA OTP + MPIN, કાયદેસર DPDP કન્સેન્ટ અને અસલ સરકારી URI સાથે ૧-ક્લિક દસ્તાવેજ ફેચ.",
+  },
   {
     titleGu: "સત્તાવાર સરકારી યોજના ડેટાબેઝ અપડેટ",
     titleEn: "Official Government Schemes & Acts Update",

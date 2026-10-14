@@ -398,6 +398,10 @@ export async function POST(req: NextRequest) {
       kacheriDetails = {},
       citizenPhoto,
       userPhoto,
+      digilockerVerified,
+      digilockerUri,
+      digilockerIssuer,
+      digilockerFetchedAt,
     } = body;
 
     const resolvedCitizenName = citizenName || applicantName || "Citizen Applicant";
@@ -481,6 +485,10 @@ export async function POST(req: NextRequest) {
       kacheriDetails,
       citizenPhoto: citizenPhoto || userPhoto || undefined,
       userPhoto: userPhoto || citizenPhoto || undefined,
+      digilockerVerified: Boolean(digilockerVerified),
+      digilockerUri: digilockerUri || undefined,
+      digilockerIssuer: digilockerIssuer || undefined,
+      digilockerFetchedAt: digilockerFetchedAt || (digilockerVerified ? today : undefined),
     };
 
     // 1. Save immediately into server large-dataset in-memory cache (0ms latency)
