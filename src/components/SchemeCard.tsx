@@ -81,10 +81,28 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
           )}
         </ul>
 
+        {/* Dual SLA Display Hierarchy (Citizen Charter vs AI Planning Estimate) */}
+        <div className="bg-amber-50/70 border border-amber-200/60 rounded-xl p-2 text-[11px] space-y-1">
+          <div className="flex items-center justify-between text-amber-950 font-bold">
+            <span className="flex items-center gap-1">⏱️ સત્તાવાર SLA:</span>
+            <span className="bg-white px-1.5 py-0.5 rounded-md border border-amber-300 font-extrabold text-amber-900">
+              {scheme.officialSlaDays || 15} દિવસ
+            </span>
+          </div>
+          <div className="flex items-center justify-between text-emerald-900 font-semibold text-[10px]">
+            <span className="flex items-center gap-1">⚡ અંદાજિત સમય:</span>
+            <span className="font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200">
+              {scheme.planningEstimateDays || "3-5 દિવસ"}
+            </span>
+          </div>
+        </div>
+
         {/* Meta row */}
-        <div className="flex items-center justify-between text-[10px] text-gray-400 pt-1 border-t border-gray-50">
+        <div className="flex items-center justify-between text-[10px] text-gray-500 pt-1 border-t border-gray-100">
           <span>📄 {scheme.documents.length} દસ્તાવેજ</span>
-          <span className="text-blue-500 truncate max-w-[130px] text-right">{scheme.ministry}</span>
+          <span className="text-blue-700 font-medium truncate max-w-[140px] text-right" title={scheme.implementingAuthority || scheme.ministry}>
+            🏢 {scheme.implementingAuthority || scheme.ministry}
+          </span>
         </div>
       </div>
 

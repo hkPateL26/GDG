@@ -18,6 +18,9 @@ import {
   ShieldCheck,
   Camera,
   Lock,
+  Clock,
+  Scale,
+  Award,
 } from "lucide-react";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
@@ -297,6 +300,70 @@ export default function SchemeDetailPage({
 
         {/* Content Container */}
         <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
+          {/* Dual SLA & Statutory Governance Card (Gujarat Citizen Charter / RTS Act 2013) */}
+          <div className="bg-gradient-to-br from-amber-50/90 via-orange-50/60 to-white rounded-3xl p-5 sm:p-6 border border-amber-200/80 shadow-xs">
+            <div className="flex flex-wrap items-center justify-between gap-2 border-b border-amber-200/60 pb-3 mb-4">
+              <div className="flex items-center gap-2">
+                <span className="p-2 rounded-xl bg-amber-500 text-white shadow-xs">
+                  <Scale size={18} />
+                </span>
+                <div>
+                  <h3 className="font-extrabold text-gray-900 text-sm sm:text-base">
+                    સરકારી કાયદાકીય સેવા હક્ક અને સમયમર્યાદા (Statutory SLA)
+                  </h3>
+                  <p className="text-[11px] text-gray-500">
+                    ગુજરાત જાહેર સેવા હક્ક અધિનિયમ (GRTPSA 2013) અને Citizen Charter ધોરણો
+                  </p>
+                </div>
+              </div>
+              <span className="text-[11px] bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300">
+                ✓ કાયદેસર સુનિશ્ચિત સેવા
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              <div className="bg-white p-3.5 rounded-2xl border border-amber-200/80 shadow-2xs">
+                <span className="text-[11px] font-semibold text-gray-500 block mb-1">
+                  ⏱️ સત્તાવાર કાયદાકીય SLA
+                </span>
+                <p className="text-xl font-black text-amber-700">
+                  {scheme.officialSlaDays || 15} દિવસ
+                </p>
+                <span className="text-[10px] text-gray-400">Citizen Charter મર્યાદા</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-2xl border border-emerald-200/80 shadow-2xs">
+                <span className="text-[11px] font-semibold text-gray-500 block mb-1">
+                  ⚡ AI અંદાજિત સમય
+                </span>
+                <p className="text-xl font-black text-emerald-700">
+                  {scheme.planningEstimateDays || "3-5 દિવસ"}
+                </p>
+                <span className="text-[10px] text-emerald-600 font-medium">સરેરાશ વર્કફ્લો ગતિ</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-2xl border border-blue-200/80 shadow-2xs">
+                <span className="text-[11px] font-semibold text-gray-500 block mb-1">
+                  🏢 સત્તાવાર પોર્ટલ / સત્તા
+                </span>
+                <p className="text-xs font-bold text-blue-900 line-clamp-2 leading-tight">
+                  {scheme.implementingAuthority || scheme.ministry}
+                </p>
+                <span className="text-[10px] text-gray-400">નોડલ સત્તા મંડળ</span>
+              </div>
+
+              <div className="bg-white p-3.5 rounded-2xl border border-purple-200/80 shadow-2xs">
+                <span className="text-[11px] font-semibold text-gray-500 block mb-1">
+                  🎯 લક્ષિત લાભાર્થી જૂથ
+                </span>
+                <p className="text-xs font-bold text-purple-900 line-clamp-2 leading-tight">
+                  {scheme.targetBeneficiary || "પાત્રતા ધરાવતા તમામ નાગરિકો"}
+                </p>
+                <span className="text-[10px] text-gray-400">ટાર્ગેટ ગ્રુપ</span>
+              </div>
+            </div>
+          </div>
+
           {/* Overview & Description */}
           <div className="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200 shadow-2xs">
             <h2 className="text-base font-extrabold text-gray-900 mb-2">
@@ -381,23 +448,77 @@ export default function SchemeDetailPage({
             </div>
           </div>
 
-          {/* Required Documents */}
+          {/* Required Documents — 3-Tier Checklist Architecture */}
           <div className="bg-white rounded-3xl p-6 sm:p-7 border border-gray-200 shadow-2xs">
-            <h2 className="text-base font-extrabold text-gray-900 mb-3 flex items-center gap-2">
-              <FileText size={18} className="text-orange-500" />
-              અરજી માટે જરૂરી સરકારી દસ્તાવેજો (Required Documents)
-            </h2>
-            <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm text-gray-800">
-              {scheme.documents.map((doc, i) => (
-                <li
-                  key={`${scheme.id}-doc-${i}`}
-                  className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 px-3.5 py-3 rounded-2xl font-medium"
-                >
-                  <span className="w-2.5 h-2.5 rounded-full bg-orange-500 flex-shrink-0" />
-                  <span>{doc}</span>
-                </li>
-              ))}
-            </ul>
+            <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+              <h2 className="text-base font-extrabold text-gray-900 flex items-center gap-2">
+                <FileText size={18} className="text-orange-500" />
+                અરજી માટે જરૂરી સરકારી દસ્તાવેજો (Document Checklist Engine)
+              </h2>
+              <span className="text-[11px] bg-slate-100 text-slate-700 font-semibold px-2.5 py-1 rounded-full border border-slate-200">
+                IT Act 2000 Rule 9A • DigiLocker Enabled
+              </span>
+            </div>
+
+            {scheme.documentChecklist && scheme.documentChecklist.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {scheme.documentChecklist.map((item, i) => (
+                  <div
+                    key={`${scheme.id}-checklist-${i}`}
+                    className={`p-3.5 rounded-2xl border text-xs sm:text-sm font-medium flex flex-col justify-between gap-1.5 transition ${
+                      item.tier === "mandatory"
+                        ? "bg-rose-50/50 border-rose-200 text-rose-950"
+                        : item.tier === "conditional"
+                        ? "bg-amber-50/50 border-amber-200 text-amber-950"
+                        : "bg-blue-50/50 border-blue-200 text-blue-950"
+                    }`}
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <span className="font-bold">{item.nameGu || item.name}</span>
+                      <span
+                        className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full shrink-0 ${
+                          item.tier === "mandatory"
+                            ? "bg-rose-100 text-rose-700 border border-rose-300"
+                            : item.tier === "conditional"
+                            ? "bg-amber-100 text-amber-800 border border-amber-300"
+                            : "bg-blue-100 text-blue-700 border border-blue-300"
+                        }`}
+                      >
+                        {item.tier === "mandatory" ? "🔴 અનિવાર્ય" : item.tier === "conditional" ? "🟡 શરતી" : "⚪ વૈકલ્પિક"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-black/5">
+                      <span className="text-gray-500">{item.name}</span>
+                      {item.digiLockerSupported ? (
+                        <span className="text-emerald-700 font-bold flex items-center gap-1 bg-emerald-100/80 px-2 py-0.5 rounded-md text-[10px]">
+                          ⚡ DigiLocker સપોર્ટેડ
+                        </span>
+                      ) : (
+                        <span className="text-amber-700 font-medium text-[10px]">
+                          📄 ઑફલાઇન / અપલોડ
+                        </span>
+                      )}
+                    </div>
+                    {item.notes && (
+                      <p className="text-[10px] text-gray-500 italic mt-0.5">ℹ️ {item.notes}</p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs sm:text-sm text-gray-800">
+                {scheme.documents.map((doc, i) => (
+                  <li
+                    key={`${scheme.id}-doc-${i}`}
+                    className="flex items-center gap-2.5 bg-gray-50 border border-gray-200 px-3.5 py-3 rounded-2xl font-medium"
+                  >
+                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500 flex-shrink-0" />
+                    <span>{doc}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
 
           {/* Direct Government Application Action Card */}

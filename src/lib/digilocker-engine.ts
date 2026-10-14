@@ -82,27 +82,34 @@ export function isSlotSupportedByDigiLocker(
   const s = `${slotId} ${slotNameEn} ${slotNameGu}`.toLowerCase();
 
   // EXPLICIT OFFLINE / PHYSICAL REVENUE DOCUMENTS -> NOT IN DIGILOCKER
-  if (
+  // (Only pure offline records like Tippan, Village Map, Police Panchnama, Affidavit, Pedhinama, Site Sketch)
+  const isPureOffline =
     s.includes("tippan") ||
     s.includes("ટિપ્પન") ||
     s.includes("નકશો") ||
-    s.includes("map") ||
+    (s.includes("map") && !s.includes("bitmap")) ||
     s.includes("panchnama") ||
     s.includes("પંચનામું") ||
     s.includes("affidavit") ||
     s.includes("સોગંદનામું") ||
     s.includes("pedhinama") ||
     s.includes("પેઢીનામું") ||
-    s.includes("consent") ||
-    s.includes("સંમતિ") ||
     s.includes("sketch") ||
     s.includes("પ્લાન") ||
-    s.includes("plan") ||
+    s.includes("site_plan") ||
     s.includes("challan") ||
-    s.includes("receipt") ||
-    s.includes("પાવતી") ||
-    s.includes("medical") ||
-    s.includes("doctor")
+    s.includes("ચલણ") ||
+    s.includes("medical_cert") ||
+    s.includes("doctor_cert");
+
+  // If pure offline and does not contain light bill / address / photo / aadhaar, return false
+  if (
+    isPureOffline &&
+    !s.includes("electricity") &&
+    !s.includes("લાઈટ") &&
+    !s.includes("વીજળી") &&
+    !s.includes("address") &&
+    !s.includes("સરનામ")
   ) {
     return false;
   }
@@ -133,6 +140,13 @@ export function isSlotSupportedByDigiLocker(
     s.includes("electricity") ||
     s.includes("વીજળી") ||
     s.includes("light") ||
+    s.includes("લાઈટ") ||
+    s.includes("address") ||
+    s.includes("સરનામ") ||
+    s.includes("residence") ||
+    s.includes("રહેઠાણ") ||
+    s.includes("update") ||
+    s.includes("સુધારા") ||
     s.includes("driving") ||
     s.includes("લાયસન્સ") ||
     s.includes("rc") ||
@@ -176,7 +190,7 @@ export function validateDocSlotCompatibility(
   chosenDocNameGu: string,
   isPdf: boolean = false
 ): SlotCompatibilityResult {
-  const sId = (slotId || "").toLowerCase();
+  const sId = `${slotId || ""} ${slotNameGu || ""}`.toLowerCase();
   const dId = (chosenDocId || "").toLowerCase();
 
   // 0. CHECK IF SLOT IS EVEN IN DIGILOCKER
@@ -290,9 +304,16 @@ export function validateDocSlotCompatibility(
   }
 
   // 8. ELECTRICITY / LIGHT BILL SLOT
-  if (sId.includes("electricity") || sId.includes("light")) {
+  if (sId.includes("electricity") || sId.includes("light") || sId.includes("લાઈટ") || sId.includes("વીજળી")) {
     if (dId === "electricity") {
       return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    // If it's also an address or update slot, accept other residence documents from DigiLocker
+    if (
+      (sId.includes("address") || sId.includes("સરનામ") || sId.includes("update") || sId.includes("સુધારા")) &&
+      ["ration", "domicile", "aadhaar"].includes(dId)
+    ) {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 90 };
     }
     return {
       isCompatible: false,
@@ -380,8 +401,8 @@ export function validateDocSlotCompatibility(
     };
   }
 
-  // 15. GENERAL RESIDENCE PROOF (Electricity / Ration / Domicile / Aadhaar)
-  if (sId.includes("residence") || sId.includes("address")) {
+  // 15. GENERAL RESIDENCE / ADDRESS PROOF (Electricity / Ration / Domicile / Aadhaar)
+  if (sId.includes("residence") || sId.includes("address") || sId.includes("સરનામ") || sId.includes("રહેઠાણ")) {
     if (["electricity", "ration", "domicile", "aadhaar"].includes(dId)) {
       return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
     }
@@ -389,7 +410,20 @@ export function validateDocSlotCompatibility(
       isCompatible: false,
       isStrictMismatch: true,
       matchScore: 0,
-      warningMessageGu: `❌ અસંગત દસ્તાવેજ: રહેઠાણ પુરાવા માટે ફક્ત વીજળી બિલ, રેશનકાર્ડ, ડોમિસાઇલ કે આધાર માન્ય છે.`,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: રહેઠાણ / નવા સરનામાના પુરાવા માટે ફક્ત વીજળી બિલ, રેશનકાર્ડ, ડોમિસાઇલ કે આધાર માન્ય છે.`,
+    };
+  }
+
+  // 16. UPDATE / CORRECTION PROOF (Address / DOB / Name change)
+  if (sId.includes("update") || sId.includes("સુધારા")) {
+    if (["electricity", "birth_certificate", "ssc_marksheet", "ration", "domicile", "aadhaar"].includes(dId)) {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: સુધારા માટે ફક્ત લાઈટ બિલ, જન્મ પ્રમાણપત્ર, ધોરણ ૧૦ માર્કશીટ, રેશનકાર્ડ કે ડોમિસાઇલ માન્ય છે.`,
     };
   }
 

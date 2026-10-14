@@ -2,6 +2,14 @@
 // NagrikSeva AI - TypeScript Types
 // ============================================
 
+export interface SchemeDocumentRequirement {
+  name: string;
+  nameGu: string;
+  tier: "mandatory" | "conditional" | "optional";
+  digiLockerSupported: boolean;
+  notes?: string;
+}
+
 export interface Scheme {
   id: string;
   name: string;
@@ -16,6 +24,12 @@ export interface Scheme {
   icon: string;
   ministry: string;
   isActive: boolean;
+  // Dual SLA Display Hierarchy (SFIC 2026 / Gujarat Citizen Charter Standards)
+  officialSlaDays?: number; // Official statutory processing days under Gujarat Right to Public Services Act (GRTPSA 2013)
+  planningEstimateDays?: string; // AI dynamic pendency planning estimate (e.g., "3-5 દિવસ")
+  implementingAuthority?: string; // Nodal Implementing Authority / Dedicated Portal (e.g. i-Khedut, Digital Gujarat, e-Samaj Kalyan)
+  targetBeneficiary?: string; // Target beneficiary group description
+  documentChecklist?: SchemeDocumentRequirement[]; // 3-Tier Granular Document Architecture
 }
 
 export type SchemeCategory =
