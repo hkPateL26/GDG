@@ -92,10 +92,10 @@ export default function CitizenPortalHeader({
 
               <div className="text-[11px] sm:text-xs text-slate-600 mt-1 flex items-center gap-x-2 gap-y-1 flex-wrap leading-snug">
                 <span className="font-mono font-bold text-slate-700 whitespace-nowrap">
-                  📱 +91 {citizen.mobile || "9825012345"}
+                  📱 +91 {citizen.mobile || "9974442291"}
                 </span>
                 <span className="sm:hidden font-mono text-[10.5px] text-slate-600 bg-white/80 border border-slate-200 px-1.5 py-0.2 rounded whitespace-nowrap">
-                  🪪 XXXX-{citizen.aadhaarLast4 || "4829"}
+                  🪪 XXXX-{citizen.aadhaarLast4 || "1413"}
                 </span>
                 <span className="truncate">
                   📍 મુ. {citizen.village || "ગોમટા"}, તા. {citizen.taluka || "ગોંડલ"}, જિ.{" "}

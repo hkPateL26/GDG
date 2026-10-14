@@ -1078,7 +1078,7 @@ export default function DocumentServicePortal({
       serviceType: serviceMode,
       biometricRequired: isBiometricNeeded,
       signatureType,
-      mobile: mobileNumber || "9825012345",
+      mobile: mobileNumber || "9974442291",
       email: emailAddress || "citizen@gujarat.gov.in",
       aadhaarLast4:
         service.id === "aadhaar" && serviceMode === "new"
@@ -1358,10 +1358,10 @@ export default function DocumentServicePortal({
           serviceTitle="નાગરિક દસ્તાવેજ સેવા & સુધારો પોર્ટલ"
           onSuccess={(cit) => {
             setCitizenSession(cit);
-            setApplicantName(cit.citizenName || "Rameshbhai Kantilal Patel");
-            setApplicantNameGu(cit.citizenNameGu || "રમેશભાઈ કાંતિલાલ પટેલ");
-            setMobileNumber(cit.mobile || "9825012345");
-            setAadhaarNumber(`XXXX-XXXX-${cit.aadhaarLast4 || "4829"}`);
+            setApplicantName(cit.citizenName || "Hari Vinodrai Patel");
+            setApplicantNameGu(cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
+            setMobileNumber(cit.mobile || "9974442291");
+            setAadhaarNumber(`XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
             if (cit.district) setDistrict(cit.district);
             if (cit.taluka) setTaluka(cit.taluka);
             if (cit.village) setVillage(cit.village);
@@ -2557,7 +2557,7 @@ export default function DocumentServicePortal({
                       maxLength={10}
                       value={mobileNumber}
                       onChange={(e) => setMobileNumber(e.target.value)}
-                      placeholder="9825012345"
+                      placeholder="9974442291"
                       className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
                     />
                   </div>
@@ -3110,25 +3110,13 @@ export default function DocumentServicePortal({
                         </span>
                       </div>
                       <h4 className="text-xs sm:text-sm font-extrabold text-white leading-tight">
-                        દસ્તાવેજનો ફોટો નથી? DigiLocker માંથી ૧-ક્લિકમાં સીધા મેળવો
+                        દસ્તાવેજનો ફોટો નથી? નીચે દરેક સ્લોટમાંથી DigiLocker વડે ૧-ક્લિકમાં લાવો
                       </h4>
                       <p className="text-[11px] text-blue-200 mt-0.5 leading-snug">
-                        આધાર, આવકનો દાખલો, રેશનકાર્ડ કે ૭/૧૨ સરકારી સર્વરમાંથી સત્તાવાર ડિજિટલ સહી (e-Sign) સાથે ફેચ થશે.
+                        આધાર, આવકનો દાખલો, રેશનકાર્ડ, લાઈટબિલ કે ૭/૧૨ સરકારી સર્વરમાંથી સત્તાવાર ડિજિટલ સહી (e-Sign) સાથે સુરક્ષિત ફેચ થશે.
                       </p>
                     </div>
                   </div>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveDigiLockerTarget("all");
-                      setIsDigiLockerModalOpen(true);
-                    }}
-                    className="px-4 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-300 hover:to-amber-400 active:scale-95 text-slate-950 font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
-                  >
-                    <Sparkles size={14} className="text-slate-950" />
-                    <span>⚡ ડીજીલોકરથી તમામ દસ્તાવેજો લાવો</span>
-                  </button>
                 </div>
               </div>
 
@@ -3591,6 +3579,10 @@ export default function DocumentServicePortal({
           (activeDigiLockerTarget === "applicant_photo" ? "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો" : "દસ્તાવેજ")
         }
         serviceTitle={service.nameGu}
+        citizenName={applicantName || citizenSession?.citizenName || "Hari Vinodrai Patel"}
+        citizenNameGu={applicantNameGu || citizenSession?.citizenNameGu || "હરી વિનોદરાઈ પટેલ"}
+        citizenMobile={mobileNumber || citizenSession?.mobile || "9974442291"}
+        citizenAadhaar={aadhaarNumber || `XXXX-XXXX-${citizenSession?.aadhaarLast4 || "1413"}`}
         onDocumentFetched={handleDigiLockerDocumentFetched}
       />
 

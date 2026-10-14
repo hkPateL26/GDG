@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     // 2. ACTION: verify_otp (Verify OTP + 6-Digit DigiLocker Security PIN)
     // ───────────────────────────────────────────────────────────────────
     if (action === "verify_otp") {
-      const { otp, pin, identifier } = body;
+      const { otp, pin, identifier, citizenName, citizenNameGu } = body;
 
       if (!otp || String(otp).length < 4) {
         return NextResponse.json(
@@ -70,15 +70,15 @@ export async function POST(req: NextRequest) {
 
       // Standard test PINs: "123456", "000000", or any 6-digit PIN is accepted in demo mode
       const sessionToken = `DL-TOKEN-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
-      const digilockerId = `GJ-DL-${identifier ? String(identifier).slice(-4) : "4829"}`;
+      const digilockerId = `GJ-DL-${identifier ? String(identifier).slice(-4) : "1413"}`;
 
       return NextResponse.json({
         success: true,
         sessionToken,
         digilockerId,
-        citizenName: "Rameshbhai Kantilal Patel",
-        citizenNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
-        aadhaarLast4: identifier && String(identifier).length >= 4 ? String(identifier).slice(-4) : "4829",
+        citizenName: citizenName || "Hari Vinodrai Patel",
+        citizenNameGu: citizenNameGu || "હરી વિનોદરાઈ પટેલ",
+        aadhaarLast4: identifier && String(identifier).length >= 4 ? String(identifier).slice(-4) : "1413",
         messageGu: "MeriPehchaan ૨-ફેક્ટર પ્રમાણીકરણ સફળ! ડીજીલોકર વૉલ્ટ અનલૉક થયું.",
       });
     }

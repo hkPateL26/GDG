@@ -484,11 +484,11 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
     nameGu: "આધાર કાર્ડ (વિશિષ્ટ ઓળખ)",
     category: "identity",
     docType: "ADHAR",
-    uri: "in.gov.uidai-ADHAR-XXXX-XXXX-4829",
+    uri: "in.gov.uidai-ADHAR-XXXX-XXXX-1413",
     issuer: "Unique Identification Authority of India (UIDAI)",
     issuerGu: "યુનિક આઇડેન્ટિફિકેશન ઓથોરિટી ઓફ ઇન્ડિયા (UIDAI), ભારત સરકાર",
     issuerCode: "GOI-UIDAI-01",
-    docNumber: "XXXX-XXXX-4829",
+    docNumber: "XXXX-XXXX-1413",
     issueDate: "15/06/2018",
     validTill: "આજીવન (Lifetime Valid)",
     digitalSignature: {
@@ -500,10 +500,10 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "9f83c12a781b0451e9412d09871fc317e0b51201aa8810e7b8f04b2c45e89d12",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
-      fatherName: "Kantilal Laljibhai Patel",
-      fatherNameGu: "કાંતિલાલ લાલજીભાઈ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
+      fatherName: "Vinodrai Karshanbhai Patel",
+      fatherNameGu: "વિનોદરાઈ કરશનભાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "પ્લોટ નં. ૨૪, પટેલ ચોક, ગોમટા ગામ, તા. ગોંડલ, જિ. રાજકોટ",
@@ -538,10 +538,10 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "7b41e3d0912fbb3421ec8901aa4567c89f012e45da890123bc45ef78901234aa",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
-      fatherName: "Kantilal Laljibhai Patel",
-      fatherNameGu: "કાંતિલાલ લાલજીભાઈ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
+      fatherName: "Vinodrai Karshanbhai Patel",
+      fatherNameGu: "વિનોદરાઈ કરશનભાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "ગોમટા, તાલુકો ગોંડલ, જિલ્લો રાજકોટ",
@@ -576,10 +576,10 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "a1b2c3d4e5f67890123456789abcdef0123456789abcdef0123456789abcdef0",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
-      fatherName: "Kantilal Laljibhai Patel",
-      fatherNameGu: "કાંતિલાલ લાલજીભાઈ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
+      fatherName: "Vinodrai Karshanbhai Patel",
+      fatherNameGu: "વિનોદરાઈ કરશનભાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "ગોમટા, ગોંડલ, રાજકોટ",
@@ -615,8 +615,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "fedcba09876543210fedcba09876543210fedcba09876543210fedcba0987654",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "ગોમટા સીમ વિસ્તાર, ગોંડલ",
@@ -652,8 +652,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "8899aabbccddeeff00112233445566778899aabbccddeeff0011223344556677",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "પ્લોટ નં. ૨૪, પટેલ ચોક, ગોમટા, ગોંડલ, રાજકોટ",
@@ -688,8 +688,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef",
     },
     extractedData: {
-      fullName: "Ramesh Kantilal Patel",
-      fullNameGu: "રમેશ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -725,8 +725,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "33445566778899aabbccddeeff00112233445566778899aabbccddeeff001122",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -762,8 +762,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "5566778899aabbccddeeff00112233445566778899aabbccddeeff0011223344",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -799,8 +799,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "66778899aabbccddeeff00112233445566778899aabbccddeeff001122334455",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -835,8 +835,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "778899aabbccddeeff00112233445566778899aabbccddeeff00112233445566",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -871,8 +871,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "8899aabbccddeeff00112233445566778899aabbccddeeff0011223344556677",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "ગોમટા, ગોંડલ, રાજકોટ",
@@ -906,8 +906,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "99aabbccddeeff00112233445566778899aabbccddeeff001122334455667788",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -942,8 +942,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "aabbccddeeff00112233445566778899aabbccddeeff00112233445566778899",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -978,8 +978,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "bbccddeeff00112233445566778899aabbccddeeff00112233445566778899aa",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -1014,8 +1014,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "ccddeeff00112233445566778899aabbccddeeff00112233445566778899aabb",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -1050,9 +1050,9 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "ddeeff00112233445566778899aabbccddeeff00112233445566778899aabbcc",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
-      fatherName: "Kantilal Laljibhai Patel",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
+      fatherName: "Vinodrai Karshanbhai Patel",
       dob: "1982-06-15",
       gender: "male",
       address: "ગોમટા, ગોંડલ, રાજકોટ",
@@ -1086,8 +1086,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "eeff00112233445566778899aabbccddeeff00112233445566778899aabbccdd",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       dob: "1982-06-15",
       gender: "male",
       address: "ગોમટા, ગોંડલ, રાજકોટ",
@@ -1121,8 +1121,8 @@ export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
       sha256: "ff00112233445566778899aabbccddeeff00112233445566778899aabbccddee",
     },
     extractedData: {
-      fullName: "Rameshbhai Kantilal Patel",
-      fullNameGu: "રમેશભાઈ કાંતિલાલ પટેલ",
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
       fatherName: "Kantilal Patel",
       dob: "1982-06-15",
       gender: "male",
@@ -1172,24 +1172,61 @@ export const DIGILOCKER_MASTER_DOC_TYPES: MasterDocTypeOption[] = [
 // Vault Helper Functions
 // ─────────────────────────────────────────────────────────────────────────
 
-export function getIssuedDocuments(): DigiLockerDocument[] {
+export function getIssuedDocuments(
+  overrideNameGu?: string,
+  overrideNameEn?: string,
+  overrideAadhaarLast4?: string
+): DigiLockerDocument[] {
+  let citizenNameGu = overrideNameGu;
+  let citizenNameEn = overrideNameEn;
+  let aadhaarLast4 = overrideAadhaarLast4;
+
+  if (typeof window !== "undefined") {
+    try {
+      const sessRaw = localStorage.getItem("nagrik_citizen_session");
+      if (sessRaw) {
+        const sess = JSON.parse(sessRaw);
+        if (!citizenNameGu && sess.citizenNameGu) citizenNameGu = sess.citizenNameGu;
+        if (!citizenNameEn && sess.citizenName) citizenNameEn = sess.citizenName;
+        if (!aadhaarLast4 && sess.aadhaarLast4) aadhaarLast4 = sess.aadhaarLast4;
+      }
+    } catch {}
+  }
+
+  const baseDocs = DEFAULT_ISSUED_DOCUMENTS.map((doc) => {
+    const updated = { ...doc };
+    if (citizenNameGu || citizenNameEn || aadhaarLast4) {
+      updated.extractedData = {
+        ...updated.extractedData,
+        fullNameGu: citizenNameGu || updated.extractedData.fullNameGu,
+        fullName: citizenNameEn || updated.extractedData.fullName,
+        aadhaarLast4: aadhaarLast4 || updated.extractedData.aadhaarLast4,
+      };
+      if (doc.id === "aadhaar" && aadhaarLast4) {
+        updated.docNumber = `XXXX-XXXX-${aadhaarLast4}`;
+        updated.uri = `in.gov.uidai-ADHAR-XXXX-XXXX-${aadhaarLast4}`;
+      }
+    }
+    return updated;
+  });
+
   if (typeof window === "undefined") {
-    return DEFAULT_ISSUED_DOCUMENTS;
+    return baseDocs;
   }
 
   try {
     const raw = localStorage.getItem("nagrik_digilocker_vault");
-    if (!raw) return DEFAULT_ISSUED_DOCUMENTS;
+    if (!raw) return baseDocs;
     const customDocs: DigiLockerDocument[] = JSON.parse(raw);
 
     // Merge custom user-linked documents with default documents
     const docMap = new Map<string, DigiLockerDocument>();
-    DEFAULT_ISSUED_DOCUMENTS.forEach((d) => docMap.set(d.id, d));
+    baseDocs.forEach((d) => docMap.set(d.id, d));
     customDocs.forEach((d) => docMap.set(d.id, { ...d, isCustomLinked: true }));
 
     return Array.from(docMap.values());
   } catch {
-    return DEFAULT_ISSUED_DOCUMENTS;
+    return baseDocs;
   }
 }
 
