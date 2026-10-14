@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.8.0";
-export const APP_BUILD_NAME = "National DPI Certified Super-App Release (DigiLocker & MeriPehchaan Gateway v2.8.0)";
+export const APP_VERSION = "v2.8.1";
+export const APP_BUILD_NAME = "National DPI Certified Super-App Release (Full DigiLocker Suite & Scroll Lock v2.8.1)";
 export const APP_RELEASE_DATE = "૧૪ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "14 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";

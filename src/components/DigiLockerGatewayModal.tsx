@@ -28,6 +28,7 @@ import {
   saveDocumentToPersonalVault,
   generateConsentArtifact,
   DigiLockerConsentArtifact,
+  DIGILOCKER_MASTER_DOC_TYPES,
 } from "@/lib/digilocker-engine";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
@@ -70,10 +71,18 @@ export default function DigiLockerGatewayModal({
   const [showCustomUploadDrawer, setShowCustomUploadDrawer] = useState(false);
 
   // Custom User Document Linking State
-  const [customDocName, setCustomDocName] = useState("");
-  const [customDocType, setCustomDocType] = useState("income");
+  const [customDocType, setCustomDocType] = useState(() => {
+    if (targetDocType && targetDocType !== "all") {
+      const match = DIGILOCKER_MASTER_DOC_TYPES.find(
+        (d) => d.id === targetDocType || d.docType.toLowerCase() === targetDocType.toLowerCase()
+      );
+      if (match) return match.id;
+    }
+    return "income";
+  });
   const [customDocBase64, setCustomDocBase64] = useState<string>("");
   const [customDocFileName, setCustomDocFileName] = useState("");
+  const [customDocFileSize, setCustomDocFileSize] = useState("");
 
   // OTP Countdown timer
   useEffect(() => {
@@ -208,6 +217,9 @@ export default function DigiLockerGatewayModal({
     if (!file) return;
 
     setCustomDocFileName(file.name);
+    const sizeInKb = Math.round(file.size / 1024);
+    setCustomDocFileSize(sizeInKb > 1024 ? `${(sizeInKb / 1024).toFixed(1)} MB` : `${sizeInKb} KB`);
+
     const reader = new FileReader();
     reader.onload = (ev) => {
       setCustomDocBase64(ev.target?.result as string);
@@ -216,27 +228,37 @@ export default function DigiLockerGatewayModal({
   };
 
   const handleSaveCustomToVault = () => {
-    if (!customDocName.trim() || !customDocBase64) {
-      alert("કૃપા કરીને દસ્તાવેજનું નામ અને ફાઇલ પસંદ કરો.");
+    if (!customDocBase64) {
+      alert("કૃપા કરીને અસલ ફાઇલ (PDF અથવા ફોટો) પસંદ કરો.");
       return;
     }
 
-    const newDoc: DigiLockerDocument = {
+    const docDef = DIGILOCKER_MASTER_DOC_TYPES.find((d) => d.id === customDocType) || {
       id: customDocType,
-      name: customDocName,
-      nameGu: customDocName,
-      category: "revenue",
-      docType: customDocType.toUpperCase().slice(0, 5),
+      nameGu: "અસલ પ્રમાણપત્ર",
+      nameEn: "Official Government Certificate",
+      category: "revenue" as const,
+      docType: "GOVCR",
+      issuerGu: "સક્ષમ સત્તાધિકારી, ગુજરાત સરકાર",
+      issuerEn: "Competent Authority, Government of Gujarat",
+    };
+
+    const newDoc: DigiLockerDocument = {
+      id: docDef.id,
+      name: docDef.nameEn,
+      nameGu: docDef.nameGu,
+      category: docDef.category,
+      docType: docDef.docType,
       uri: `in.gov.gujarat.user-VAULT-2026-${Date.now().toString().slice(-6)}`,
-      issuer: "User Linked Official Certificate (DigiLocker Vault)",
-      issuerGu: "નાગરિક દ્વારા લિંક થયેલ અસલ દસ્તાવેજ (ડિજિટલી પ્રમાણિત)",
-      issuerCode: "USER-VAULT-01",
+      issuer: docDef.issuerEn,
+      issuerGu: docDef.issuerGu,
+      issuerCode: `USER-VAULT-${docDef.docType}`,
       docNumber: `VAULT/${Date.now().toString().slice(-6)}`,
       issueDate: new Date().toLocaleDateString("en-GB"),
-      validTill: "ચાલુ નાણાકીય વર્ષ",
+      validTill: "આજીવન / સત્તાવાર માન્ય",
       digitalSignature: {
         signedBy: "CCA India - Validated DigiLocker Vault",
-        designation: "Certified Document Repository",
+        designation: "Certified Document Repository (Rule 9A Valid)",
         certAuthority: "CCA India Certified",
         timestamp: new Date().toISOString().replace("T", " ").slice(0, 19),
         status: "VALID",
@@ -252,7 +274,7 @@ export default function DigiLockerGatewayModal({
         taluka: "Gondal",
         village: "ગોમટા (Gomta)",
         pincode: "360311",
-        aadhaarLast4: "4829",
+        aadhaarLast4: identifier.length >= 4 ? identifier.slice(-4) : "4829",
       },
       userUploadedBase64: customDocBase64,
       filePreviewUrl: customDocBase64,
@@ -261,15 +283,41 @@ export default function DigiLockerGatewayModal({
     saveDocumentToPersonalVault(newDoc);
     setIssuedDocs(getIssuedDocuments());
     setShowCustomUploadDrawer(false);
-    setCustomDocName("");
     setCustomDocBase64("");
     setCustomDocFileName("");
+    setCustomDocFileSize("");
+
+    // Immediately fetch and bind this document with legal electronic consent
+    const consent = generateConsentArtifact(
+      identifier || "4829",
+      [newDoc.uri],
+      `${serviceTitle} ખરાઈ હેતુ (Rule 9A Authenticated)`
+    );
+
+    onDocumentFetched({
+      document: newDoc,
+      consentArtifact: consent,
+    });
+    onClose();
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto animate-in fade-in duration-200">
+    <div
+      className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in duration-200"
+      onClick={onClose}
+      onWheel={(e) => e.stopPropagation()}
+      onTouchMove={(e) => {
+        if (e.target === e.currentTarget) {
+          e.preventDefault();
+        }
+      }}
+    >
       {/* Container: Bottom-sheet on mobile, centered modal on desktop */}
-      <div className="bg-white w-full max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-300">
+      <div
+        className="bg-white w-full max-w-xl rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[92vh] sm:max-h-[88vh] overscroll-contain animate-in slide-in-from-bottom-6 sm:slide-in-from-bottom-2 duration-300"
+        onClick={(e) => e.stopPropagation()}
+        onWheel={(e) => e.stopPropagation()}
+      >
         {/* ── National Tricolor Top Ribbon ── */}
         <div className="h-1.5 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] shrink-0" />
 
@@ -663,57 +711,76 @@ export default function DigiLockerGatewayModal({
                     </button>
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  <div className="space-y-2 text-xs">
                     <div>
-                      <label className="block font-bold text-slate-700 mb-0.5">દસ્તાવેજનો પ્રકાર</label>
+                      <label className="block font-bold text-slate-700 mb-1">
+                        દસ્તાવેજનો પ્રકાર પસંદ કરો (Select Document Type)
+                      </label>
                       <select
                         value={customDocType}
                         onChange={(e) => setCustomDocType(e.target.value)}
-                        className="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs"
+                        className="w-full p-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-amber-500 focus:outline-hidden"
                       >
-                        <option value="income">આવકનો દાખલો (Income Certificate)</option>
-                        <option value="aadhaar">આધાર કાર્ડ (Aadhaar Card)</option>
-                        <option value="ration">રેશનકાર્ડ (Ration Card)</option>
-                        <option value="land_records">૭/૧૨ જમીન ઉતારો (7/12 RoR)</option>
-                        <option value="caste">જાતિનો દાખલો (Caste Certificate)</option>
+                        {DIGILOCKER_MASTER_DOC_TYPES.map((dt) => (
+                          <option key={dt.id} value={dt.id}>
+                            {dt.nameGu}
+                          </option>
+                        ))}
                       </select>
+                      {(() => {
+                        const sel = DIGILOCKER_MASTER_DOC_TYPES.find((d) => d.id === customDocType);
+                        return sel ? (
+                          <p className="text-[10.5px] text-slate-500 mt-1">
+                            🏛️ સત્તાવાર વિભાગ: <strong className="text-slate-700">{sel.issuerGu}</strong>
+                          </p>
+                        ) : null;
+                      })()}
                     </div>
 
-                    <div>
-                      <label className="block font-bold text-slate-700 mb-0.5">દસ્તાવેજનું નામ / શીર્ષક</label>
-                      <input
-                        type="text"
-                        value={customDocName}
-                        onChange={(e) => setCustomDocName(e.target.value)}
-                        placeholder="દા.ત. મારો અસલ આવકનો દાખલો ૨૦૨૬"
-                        className="w-full p-2 bg-white border border-slate-300 rounded-lg text-xs font-semibold"
-                      />
+                    <div className="space-y-1">
+                      <label className="block text-xs font-bold text-slate-700">
+                        અસલ ફાઇલ સિલેક્ટ કરો (PDF અથવા ફોટો)
+                      </label>
+                      <label
+                        className={`cursor-pointer border-2 border-dashed p-3 rounded-xl flex items-center justify-center gap-2 text-xs font-bold transition ${
+                          customDocBase64
+                            ? "border-emerald-500 bg-emerald-50/50 text-emerald-900"
+                            : "border-slate-300 hover:border-amber-500 bg-white text-slate-600"
+                        }`}
+                      >
+                        {customDocBase64 ? (
+                          <CheckCircle2 size={18} className="text-emerald-600 shrink-0" />
+                        ) : (
+                          <UploadCloud size={18} className="text-amber-600 shrink-0" />
+                        )}
+                        <span className="truncate max-w-[280px]">
+                          {customDocFileName
+                            ? `${customDocFileName} (${customDocFileSize || "તૈયાર"})`
+                            : "અહીં ક્લિક કરીને PDF અથવા ફોટો પસંદ કરો"}
+                        </span>
+                        <input
+                          type="file"
+                          accept="image/*,application/pdf"
+                          className="hidden"
+                          onChange={handleCustomFileUpload}
+                        />
+                      </label>
                     </div>
-                  </div>
 
-                  <div className="space-y-1">
-                    <label className="block text-xs font-bold text-slate-700">ફાઇલ પસંદ કરો (PDF, JPG, PNG)</label>
-                    <label className="cursor-pointer border-2 border-dashed border-slate-300 hover:border-amber-500 bg-white p-3 rounded-xl flex items-center justify-center gap-2 text-xs text-slate-600 font-bold transition">
-                      <UploadCloud size={16} className="text-amber-600" />
-                      <span>{customDocFileName || "અહીં ક્લિક કરીને ફાઇલ સિલેક્ટ કરો"}</span>
-                      <input
-                        type="file"
-                        accept="image/*,application/pdf"
-                        className="hidden"
-                        onChange={handleCustomFileUpload}
-                      />
-                    </label>
-                  </div>
-
-                  <div className="flex justify-end pt-1">
-                    <button
-                      type="button"
-                      onClick={handleSaveCustomToVault}
-                      disabled={!customDocName || !customDocBase64}
-                      className="px-4 py-1.5 bg-amber-600 hover:bg-amber-700 active:scale-95 text-white text-xs font-bold rounded-xl transition disabled:opacity-50 cursor-pointer"
-                    >
-                      વૉલ્ટમાં સાચવો & જોડો
-                    </button>
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-slate-500">
+                        🔒 IT Act Rule 9A મુજબ સુરક્ષિત ડિજિટલ સહી થશે
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleSaveCustomToVault}
+                        disabled={!customDocBase64}
+                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-slate-950 font-black text-xs rounded-xl shadow-sm transition disabled:opacity-50 cursor-pointer flex items-center gap-1.5"
+                      >
+                        <Check size={14} />
+                        <span>વોલ્ટમાં સાચવો & મેળવો</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

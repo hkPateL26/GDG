@@ -34,6 +34,7 @@ import {
   Camera,
   LogOut,
   RotateCw,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -234,6 +235,8 @@ export default function DocumentServicePortal({
   const [activeDigiLockerTarget, setActiveDigiLockerTarget] = useState<string>("all");
   const [digiLockerVerifiedDocs, setDigiLockerVerifiedDocs] = useState<Record<string, DigiLockerDocument>>({});
   const [isAutoFilledByDigiLocker, setIsAutoFilledByDigiLocker] = useState<boolean>(false);
+  const [previewDocModal, setPreviewDocModal] = useState<{ title: string; src: string; isPdf?: boolean } | null>(null);
+  useBodyScrollLock(!!previewDocModal);
 
   // 6. Phygital: Signature selection
   const [signatureType, setSignatureType] = useState<"aadhaar-esign" | "physical-declaration">("aadhaar-esign");
@@ -730,16 +733,33 @@ export default function DocumentServicePortal({
           (doc.id === "land_records" && (rd.id.includes("land") || rd.id.includes("7_12") || rd.id.includes("ror"))) ||
           (doc.id === "electricity" && (rd.id.includes("electricity") || rd.id.includes("light") || rd.id.includes("address"))) ||
           (doc.id === "caste" && rd.id.includes("caste")) ||
-          (doc.id === "pan" && rd.id.includes("pan"))
+          (doc.id === "pan" && rd.id.includes("pan")) ||
+          (doc.id === "driving_licence" && (rd.id.includes("driving") || rd.id.includes("licence"))) ||
+          (doc.id === "rc_book" && (rd.id.includes("rc") || rd.id.includes("vehicle"))) ||
+          (doc.id === "birth_certificate" && rd.id.includes("birth")) ||
+          (doc.id === "domicile" && rd.id.includes("domicile"))
       );
 
-      const targetSlotId = match ? match.id : doc.id;
+      // If citizen opened DigiLocker for a specific slot, bind directly to that slot
+      const targetSlotId =
+        activeDigiLockerTarget && activeDigiLockerTarget !== "all"
+          ? activeDigiLockerTarget
+          : match
+          ? match.id
+          : doc.id;
+
+      const fileData = doc.userUploadedBase64 || doc.filePreviewUrl || "";
+      const isImg =
+        fileData.startsWith("data:image/") ||
+        fileData.endsWith(".png") ||
+        fileData.endsWith(".jpg") ||
+        fileData.endsWith(".jpeg");
 
       updatedUploads[targetSlotId] = {
         file: null,
-        fileName: `${doc.nameGu} (DigiLocker Verified)`,
-        fileType: "application/pdf",
-        base64: doc.filePreviewUrl || doc.userUploadedBase64 || "",
+        fileName: `${doc.nameGu} (DigiLocker)`,
+        fileType: isImg ? "image/jpeg" : "application/pdf",
+        base64: fileData,
         status: "valid",
         qualityScore: 100,
         adviceGu: `✅ DigiLocker Rule 9A Verified • URI: ${doc.uri} • સત્તાવાર ડિજિટલ સહી પ્રમાણિત.`,
@@ -753,12 +773,15 @@ export default function DocumentServicePortal({
         documentType: doc.nameGu,
       };
 
-      if (doc.id === "aadhaar" && doc.extractedData.photoUrl) {
-        setUserUploadedPhoto(doc.extractedData.photoUrl);
-        if (typeof window !== "undefined") {
-          try {
-            localStorage.setItem("nagrik_user_photo", doc.extractedData.photoUrl);
-          } catch {}
+      if ((doc.id === "aadhaar" || targetSlotId === "applicant_photo") && (doc.extractedData?.photoUrl || fileData)) {
+        const photoCandidate = doc.extractedData?.photoUrl || fileData;
+        if (photoCandidate.startsWith("data:image/") || photoCandidate.includes(".png") || photoCandidate.includes(".jpg")) {
+          setUserUploadedPhoto(photoCandidate);
+          if (typeof window !== "undefined") {
+            try {
+              localStorage.setItem("nagrik_user_photo", photoCandidate);
+            } catch {}
+          }
         }
       }
     });
@@ -3126,10 +3149,31 @@ export default function DocumentServicePortal({
                             />
                           )}
                           {docState?.fileName ? (
-                            <span className="font-mono text-slate-700 font-semibold bg-white border border-slate-200 px-2.5 py-1 rounded-md flex items-center gap-1.5 truncate max-w-[220px]">
-                              <FileText size={13} className="text-orange-600" />
-                              {docState.fileName}
-                            </span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span className="font-mono text-slate-700 font-semibold bg-white border border-slate-200 px-2.5 py-1 rounded-md flex items-center gap-1.5 truncate max-w-[200px]">
+                                <FileText size={13} className="text-orange-600 shrink-0" />
+                                <span className="truncate">{docState.fileName}</span>
+                              </span>
+                              {docState.base64 && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setPreviewDocModal({
+                                      title: docState.fileName,
+                                      src: docState.base64,
+                                      isPdf:
+                                        docState.base64.startsWith("data:application/pdf") ||
+                                        docState.fileName.toLowerCase().includes(".pdf"),
+                                    });
+                                  }}
+                                  className="px-2 py-1 bg-white hover:bg-slate-100 active:scale-95 text-blue-700 hover:text-blue-900 rounded-md text-[11px] font-bold flex items-center gap-1 border border-slate-200 shadow-2xs cursor-pointer"
+                                  title="દસ્તાવેજ જુઓ (View Attached Document)"
+                                >
+                                  <Eye size={12} />
+                                  <span>જુઓ</span>
+                                </button>
+                              )}
+                            </div>
                           ) : (
                             <span className="text-slate-400 text-[11px]">
                               JPG, PNG અથવા PDF અપલોડ કરો (મહત્તમ 5MB)
@@ -3369,6 +3413,51 @@ export default function DocumentServicePortal({
         serviceTitle={service.nameGu}
         onDocumentFetched={handleDigiLockerDocumentFetched}
       />
+
+      {/* ── Document Preview Popup Modal (PDF or Image) ── */}
+      {previewDocModal && (
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 overscroll-contain"
+          onClick={() => setPreviewDocModal(null)}
+          onWheel={(e) => e.stopPropagation()}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-2xl w-full p-4 sm:p-5 space-y-3 max-h-[90vh] flex flex-col animate-in zoom-in-95 duration-150"
+            onClick={(e) => e.stopPropagation()}
+            onWheel={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between border-b pb-2">
+              <h4 className="font-black text-sm text-slate-900 truncate flex items-center gap-2">
+                <span>📄</span>
+                <span>{previewDocModal.title}</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => setPreviewDocModal(null)}
+                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto flex items-center justify-center bg-slate-100 rounded-2xl p-2 min-h-[250px]">
+              {previewDocModal.isPdf ? (
+                <iframe
+                  src={previewDocModal.src}
+                  className="w-full h-[65vh] rounded-xl border border-slate-300 bg-white"
+                  title="PDF Document"
+                />
+              ) : (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={previewDocModal.src}
+                  alt={previewDocModal.title}
+                  className="max-h-[65vh] max-w-full object-contain rounded-xl shadow-xs"
+                />
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

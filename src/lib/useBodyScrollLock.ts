@@ -10,7 +10,10 @@ export function lockBodyScroll() {
   if (activeLocks === 0) {
     document.documentElement.classList.add("modal-open");
     document.body.classList.add("modal-open");
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
+    document.documentElement.style.touchAction = "none";
+    document.body.style.touchAction = "none";
   }
 
   activeLocks++;
@@ -31,8 +34,10 @@ export function forceUnlockBodyScroll() {
   activeLocks = 0;
   document.documentElement.classList.remove("modal-open");
   document.body.classList.remove("modal-open");
-  document.body.style.overflow = "";
   document.documentElement.style.overflow = "";
+  document.body.style.overflow = "";
+  document.documentElement.style.touchAction = "";
+  document.body.style.touchAction = "";
   document.body.style.paddingRight = "";
 }
 
