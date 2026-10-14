@@ -297,7 +297,8 @@ function getLocalFallbackReply(query: string, lang = "gu", citizenContext?: Citi
       eligList.join("\n") +
       `\n\n📄 **જરૂરી આધાર પુરાવા (Checklist):**\n` +
       matchedScheme.documents.map((d) => `• ${d}`).join("\n") +
-      `\n\n⏱️ **નાગરિક અધિકારપત્ર SLA:** ૧ થી ૭ કામકાજી દિવસ\n` +
+      `\n\n⏱️ **નાગરિક અધિકારપત્ર કાયદાકીય SLA:** ${matchedScheme.officialSlaDays || 15} દિવસ (⚡ અંદાજિત સમય: ${matchedScheme.planningEstimateDays || "3-5 દિવસ"})\n` +
+      `🏢 **અમલીકરણ સત્તા / વિભાગ:** ${matchedScheme.implementingAuthority || matchedScheme.ministry}\n` +
       `🌐 **સત્તાવાર પોર્ટલ:** [${matchedScheme.applicationUrl}](${matchedScheme.applicationUrl})`;
 
     return {
