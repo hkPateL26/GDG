@@ -29,6 +29,7 @@ import {
   FileCheck,
   Receipt,
   RefreshCw,
+  Brain,
 } from "lucide-react";
 import AiBottleneckMonitor from "@/components/AiBottleneckMonitor";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
@@ -38,6 +39,7 @@ import {
 } from "@/components/Skeleton";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import AdminPortalCmsManager from "@/components/AdminPortalCmsManager";
+import SecretariatApexBiDashboard from "@/components/SecretariatApexBiDashboard";
 
 const GUJARATI_NAME_MAP: Record<string, string> = {
   "rameshbhai kantilal patel": "રમેશભાઈ કાંતિલાલ પટેલ",
@@ -348,7 +350,7 @@ export default function AdminHierarchyDesk({
   );
 
   // Active Desk Tab
-  const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy" | "sachivalay_bi">("queue");
 
   // Cascading Filters scoped by Officer Jurisdiction
   const [selectedDistrict, setSelectedDistrict] = useState<string>(() => {
@@ -1096,6 +1098,21 @@ export default function AdminHierarchyDesk({
             <span className="truncate">૩. પોર્ટલ & પોલિસી CMS</span>
           </button>
         )}
+
+        {currentOfficer.role === "state_admin" && (
+          <button
+            type="button"
+            onClick={() => setActiveTab("sachivalay_bi")}
+            className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
+              activeTab === "sachivalay_bi"
+                ? "bg-indigo-950 text-white shadow-sm ring-1 ring-indigo-800"
+                : "bg-white text-indigo-950 hover:bg-indigo-50 border border-indigo-200 active:scale-95"
+            }`}
+          >
+            <Brain size={13} className={`shrink-0 ${activeTab === "sachivalay_bi" ? "text-amber-400" : "text-indigo-600"}`} />
+            <span className="truncate">૪. સચિવાલય Apex BI & ૬-માસિક ML</span>
+          </button>
+        )}
       </div>
 
       {/* ══════════════════════════════════════════════════════════════
@@ -1597,6 +1614,13 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {activeTab === "policy" && currentOfficer.canModifyPolicy && (
         <AdminPortalCmsManager currentOfficer={currentOfficer} />
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          TAB 4: APEX IAS SECRETARIAT BI & 6-MONTH ML PREDICTIVE PIPELINE
+          ══════════════════════════════════════════════════════════════ */}
+      {activeTab === "sachivalay_bi" && currentOfficer.role === "state_admin" && (
+        <SecretariatApexBiDashboard />
       )}
 
       {/* ══════════════════════════════════════════════════════════════

@@ -9,15 +9,13 @@ import { db } from "@/lib/firebase";
 import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/firestore";
 import { getAllActiveSchemes, saveCustomScheme, deleteCustomScheme, getSchemeById, SCHEMES_DATA } from "@/lib/schemes-data";
 import { Scheme } from "@/types";
-
-// In-memory server cache to emulate L1 edge cache for high-concurrency requests
-let cachedSchemes: { data: Scheme[]; timestamp: number } | null = null;
-const CACHE_TTL_MS = 15000; // 15 seconds
+import { redisCache } from "@/lib/redis-cache";
 
 async function getAllSchemesFromFirestore(): Promise<{ schemes: Scheme[]; fromDb: boolean }> {
-  const now = Date.now();
-  if (cachedSchemes && now - cachedSchemes.timestamp < CACHE_TTL_MS) {
-    return { schemes: cachedSchemes.data, fromDb: true };
+  // 1. Check Redis L1 Edge Cache (<1ms lookup)
+  const cached = await redisCache.get<Scheme[]>("all_schemes_cache");
+  if (cached && Array.isArray(cached) && cached.length > 0) {
+    return { schemes: cached, fromDb: true };
   }
 
   const bundled = getAllActiveSchemes();
@@ -49,7 +47,7 @@ async function getAllSchemesFromFirestore(): Promise<{ schemes: Scheme[]; fromDb
           }
         });
 
-        cachedSchemes = { data: merged, timestamp: now };
+        await redisCache.set("all_schemes_cache", merged, 60);
         return { schemes: merged, fromDb: true };
       }
     } catch (err) {
@@ -57,6 +55,7 @@ async function getAllSchemesFromFirestore(): Promise<{ schemes: Scheme[]; fromDb
     }
   }
 
+  await redisCache.set("all_schemes_cache", bundled, 60);
   return { schemes: bundled, fromDb: false };
 }
 
@@ -218,11 +217,16 @@ export async function POST(req: NextRequest) {
       icon: body.icon || "📋",
       ministry: body.ministry || "ગુજરાત સરકાર",
       isActive: body.isActive !== false,
+      officialSlaDays: body.officialSlaDays ? Number(body.officialSlaDays) : 15,
+      planningEstimateDays: body.planningEstimateDays || "3-5 દિવસ",
+      implementingAuthority: body.implementingAuthority || body.ministry || "ગુજરાત સરકાર",
+      targetBeneficiary: body.targetBeneficiary || "પાત્રતા ધરાવતા તમામ નાગરિકો",
+      documentChecklist: Array.isArray(body.documentChecklist) ? body.documentChecklist : undefined,
     };
 
-    // 1. Save to in-memory custom registry
+    // 1. Save to in-memory custom registry and bust Redis cache
     saveCustomScheme(scheme);
-    cachedSchemes = null; // Invalidate cache
+    await redisCache.del("all_schemes_cache");
 
     // 2. Persist to Cloud Firestore
     if (db) {
@@ -269,9 +273,9 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // 1. Delete in-memory
+    // 1. Delete in-memory and bust Redis cache
     deleteCustomScheme(id);
-    cachedSchemes = null;
+    await redisCache.del("all_schemes_cache");
 
     // 2. Delete / Deactivate in Firestore
     if (db) {

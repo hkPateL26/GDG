@@ -12,6 +12,12 @@ import {
   ServicePolicyConfig,
 } from "@/lib/admin-hierarchy-data";
 import {
+  PublicNotice,
+  getPublicNotices,
+  savePublicNotice,
+  deletePublicNotice,
+} from "@/lib/public-notices-data";
+import {
   Plus,
   Edit2,
   Trash2,
@@ -27,6 +33,7 @@ import {
   Loader2,
   Check,
   RefreshCw,
+  Bell,
 } from "lucide-react";
 
 interface AdminPortalCmsManagerProps {
@@ -34,7 +41,7 @@ interface AdminPortalCmsManagerProps {
 }
 
 export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCmsManagerProps) {
-  const [subTab, setSubTab] = useState<"schemes" | "offices" | "policy">("schemes");
+  const [subTab, setSubTab] = useState<"schemes" | "offices" | "policy" | "notices">("schemes");
 
   // Feedback Notification Banner
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -71,6 +78,10 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
   const [formSchemeDocuments, setFormSchemeDocuments] = useState("");
   const [formSchemeUrl, setFormSchemeUrl] = useState("");
   const [formSchemeActive, setFormSchemeActive] = useState(true);
+  const [formOfficialSlaDays, setFormOfficialSlaDays] = useState<number>(15);
+  const [formPlanningEstimateDays, setFormPlanningEstimateDays] = useState<string>("3-7 દિવસ");
+  const [formImplementingAuthority, setFormImplementingAuthority] = useState<string>("જિલ્લા પંચાયત / સંબંધિત વિભાગ");
+  const [formTargetBeneficiary, setFormTargetBeneficiary] = useState<string>("ગુજરાતના નાગરિકો");
 
   // Fetch live schemes from API
   const refreshSchemes = async () => {
@@ -109,6 +120,10 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
     setFormSchemeDocuments("આધાર કાર્ડ (Aadhaar Card)\nબેંક પાસબુક (Bank Passbook)\nજમીન ૭/૧૨ અને ૮-અ નકલ\nમોબાઈલ નંબર");
     setFormSchemeUrl("https://ikhedut.gujarat.gov.in");
     setFormSchemeActive(true);
+    setFormOfficialSlaDays(15);
+    setFormPlanningEstimateDays("3-7 દિવસ");
+    setFormImplementingAuthority("જિલ્લા પંચાયત / સંબંધિત વિભાગ");
+    setFormTargetBeneficiary("ગુજરાતના નાગરિકો");
     setIsSchemeModalOpen(true);
   };
 
@@ -130,6 +145,10 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
     setFormSchemeDocuments((s.documents || []).join("\n"));
     setFormSchemeUrl(s.applicationUrl || "");
     setFormSchemeActive(s.isActive !== false);
+    setFormOfficialSlaDays(s.officialSlaDays || 15);
+    setFormPlanningEstimateDays(s.planningEstimateDays || "3-7 દિવસ");
+    setFormImplementingAuthority(s.implementingAuthority || "જિલ્લા પંચાયત / સંબંધિત વિભાગ");
+    setFormTargetBeneficiary(s.targetBeneficiary || "ગુજરાતના નાગરિકો");
     setIsSchemeModalOpen(true);
   };
 
@@ -180,6 +199,10 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
       documents: docsArray.length > 0 ? docsArray : ["આધાર કાર્ડ (Aadhaar Card)"],
       applicationUrl: formSchemeUrl.trim(),
       isActive: formSchemeActive,
+      officialSlaDays: Number(formOfficialSlaDays) || 15,
+      planningEstimateDays: formPlanningEstimateDays.trim() || undefined,
+      implementingAuthority: formImplementingAuthority.trim() || undefined,
+      targetBeneficiary: formTargetBeneficiary.trim() || undefined,
     };
 
     try {
@@ -462,6 +485,138 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
     showFeedback(`સેવા "${cfg.serviceNameGu}" ની ફી અને SLA પોલિસી સફળતાપૂર્વક અપડેટ થઈ ગઈ!`);
   };
 
+  // ══════════════════════════════════════════════════════════════
+  // SECTION 4: PUBLIC NOTICES & CIRCULARS CMS STATE & HANDLERS
+  // ══════════════════════════════════════════════════════════════
+  const [notices, setNotices] = useState<PublicNotice[]>(() => getPublicNotices());
+  const [noticeSearch, setNoticeSearch] = useState("");
+  const [noticeCategoryFilter, setNoticeCategoryFilter] = useState("all");
+  const [isNoticeModalOpen, setIsNoticeModalOpen] = useState(false);
+  const [editingNoticeId, setEditingNoticeId] = useState<string | null>(null);
+  const [isSavingNotice, setIsSavingNotice] = useState(false);
+
+  // Notice Form Fields
+  const [formNoticeId, setFormNoticeId] = useState("");
+  const [formNoticeTitleGu, setFormNoticeTitleGu] = useState("");
+  const [formNoticeTitleEn, setFormNoticeTitleEn] = useState("");
+  const [formNoticeDept, setFormNoticeDept] = useState("સામાન્ય વહીવટ વિભાગ (GAD), ગાંધીનગર");
+  const [formNoticeDate, setFormNoticeDate] = useState("૨૦૨૬-૧૦-૧૪");
+  const [formNoticeCategory, setFormNoticeCategory] = useState<"circular" | "recruitment" | "welfare" | "tender" | "urgent">("circular");
+  const [formNoticeBadge, setFormNoticeBadge] = useState("પરિપત્ર");
+  const [formNoticeUrl, setFormNoticeUrl] = useState("");
+  const [formNoticePriority, setFormNoticePriority] = useState<"high" | "normal">("normal");
+  const [formNoticeActive, setFormNoticeActive] = useState(true);
+  const [formNoticeContentGu, setFormNoticeContentGu] = useState("");
+
+  const refreshNotices = async () => {
+    try {
+      const res = await fetch("/api/notices");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success && Array.isArray(data.notices)) {
+          setNotices(data.notices);
+        }
+      }
+    } catch (e) {
+      console.warn("Could not refresh notices:", e);
+    }
+  };
+
+  useEffect(() => {
+    refreshNotices();
+  }, []);
+
+  const openAddNoticeModal = () => {
+    setEditingNoticeId(null);
+    setFormNoticeId("notice-" + Date.now());
+    setFormNoticeTitleGu("");
+    setFormNoticeTitleEn("");
+    setFormNoticeDept("સામાન્ય વહીવટ વિભાગ (GAD), ગાંધીનગર");
+    setFormNoticeDate("૨૦૨૬-૧૦-૧૪");
+    setFormNoticeCategory("circular");
+    setFormNoticeBadge("પરિપત્ર");
+    setFormNoticeUrl("");
+    setFormNoticePriority("normal");
+    setFormNoticeActive(true);
+    setFormNoticeContentGu("");
+    setIsNoticeModalOpen(true);
+  };
+
+  const openEditNoticeModal = (n: PublicNotice) => {
+    setEditingNoticeId(n.id);
+    setFormNoticeId(n.id);
+    setFormNoticeTitleGu(n.titleGu);
+    setFormNoticeTitleEn(n.titleEn || "");
+    setFormNoticeDept(n.department);
+    setFormNoticeDate(n.date);
+    setFormNoticeCategory(n.category);
+    setFormNoticeBadge(n.badge);
+    setFormNoticeUrl(n.downloadUrl || "");
+    setFormNoticePriority(n.priority);
+    setFormNoticeActive(n.isActive);
+    setFormNoticeContentGu(n.contentGu || "");
+    setIsNoticeModalOpen(true);
+  };
+
+  const handleSaveNotice = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formNoticeTitleGu.trim()) {
+      alert("પરિપત્રનું ગુજરાતી શીર્ષક ફરજિયાત છે.");
+      return;
+    }
+    setIsSavingNotice(true);
+    const newNotice: PublicNotice = {
+      id: formNoticeId.trim() || "notice-" + Date.now(),
+      titleGu: formNoticeTitleGu.trim(),
+      titleEn: formNoticeTitleEn.trim() || formNoticeTitleGu.trim(),
+      department: formNoticeDept.trim(),
+      date: formNoticeDate.trim(),
+      category: formNoticeCategory,
+      badge: formNoticeBadge.trim() || "પરિપત્ર",
+      downloadUrl: formNoticeUrl.trim() || undefined,
+      priority: formNoticePriority,
+      isActive: formNoticeActive,
+      contentGu: formNoticeContentGu.trim() || undefined,
+    };
+
+    savePublicNotice(newNotice);
+    setNotices(getPublicNotices());
+
+    try {
+      await fetch("/api/notices", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newNotice),
+      });
+    } catch (e) {
+      console.warn("API post notice error:", e);
+    }
+
+    setIsSavingNotice(false);
+    setIsNoticeModalOpen(false);
+    showFeedback(`પરિપત્ર/નોટિસ "${newNotice.titleGu}" સફળતાપૂર્વક સાચવવામાં આવી!`);
+  };
+
+  const handleDeleteNotice = async (id: string, titleGu: string) => {
+    if (!confirm(`શું તમે ખરેખર આ નોટિસ "${titleGu}" રદ કરવા માંગો છો?`)) return;
+    deletePublicNotice(id);
+    setNotices(getPublicNotices());
+    showFeedback(`નોટિસ સફળતાપૂર્વક રદ કરવામાં આવી.`);
+  };
+
+  const filteredNotices = useMemo(() => {
+    return notices.filter((n) => {
+      const matchCat = noticeCategoryFilter === "all" || n.category === noticeCategoryFilter;
+      const q = noticeSearch.toLowerCase();
+      const matchSearch =
+        !noticeSearch ||
+        n.titleGu.includes(noticeSearch) ||
+        n.titleEn.toLowerCase().includes(q) ||
+        n.department.includes(noticeSearch);
+      return matchCat && matchSearch;
+    });
+  }, [notices, noticeCategoryFilter, noticeSearch]);
+
   return (
     <div className="bg-white rounded-2xl p-4 sm:p-6 border border-slate-200 shadow-xs space-y-5">
       {/* ── Top Header Banner ── */}
@@ -477,7 +632,7 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
             </span>
           </div>
           <p className="text-xs text-slate-500 mt-0.5">
-            નવી સરકારી કલ્યાણકારી યોજનાઓ, જન સેવા કેન્દ્રો અને પ્રમાણપત્ર નિયમો સીધા Google Cloud Firestore ડેટાબેઝમાં લાઈવ સેવ કરો.
+            નવી સરકારી કલ્યાણકારી યોજનાઓ, જન સેવા કેન્દ્રો, જાહેર પરિપત્રો અને પ્રમાણપત્ર નિયમો સીધા Google Cloud Firestore ડેટાબેઝમાં લાઈવ સેવ કરો.
           </p>
         </div>
 
@@ -535,6 +690,19 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
         >
           <Sliders size={14} />
           <span>૩. પ્રમાણપત્ર SLA & ફી પોલિસી</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setSubTab("notices")}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 cursor-pointer shrink-0 ${
+            subTab === "notices"
+              ? "bg-amber-600 text-white shadow-sm ring-1 ring-amber-700"
+              : "bg-slate-100 hover:bg-slate-200 text-slate-700"
+          }`}
+        >
+          <Bell size={14} />
+          <span>૪. જાહેર પરિપત્રો & નોટિસ ({notices.length})</span>
         </button>
       </div>
 
@@ -925,6 +1093,149 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
       )}
 
       {/* ══════════════════════════════════════════════════════════════
+          SUB-TAB 4: PUBLIC NOTICES & CIRCULARS CMS
+          ══════════════════════════════════════════════════════════════ */}
+      {subTab === "notices" && (
+        <div className="space-y-4 animate-in fade-in duration-200">
+          {/* Action Row: New Circular + Search + Category Filter */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div className="flex items-center gap-2 flex-1 max-w-xl">
+              <div className="relative flex-1">
+                <Search size={14} className="absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={noticeSearch}
+                  onChange={(e) => setNoticeSearch(e.target.value)}
+                  placeholder="પરિપત્ર અથવા નોટિસ શોધો (Search notices/circulars)..."
+                  className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+
+              <select
+                value={noticeCategoryFilter}
+                onChange={(e) => setNoticeCategoryFilter(e.target.value)}
+                className="bg-slate-50 border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-700 focus:outline-hidden"
+              >
+                <option value="all">તમામ પ્રકાર (All Categories)</option>
+                <option value="urgent">🚨 અતિ મહત્વપૂર્ણ (Urgent)</option>
+                <option value="circular">📜 સત્તાવાર પરિપત્ર (Circular)</option>
+                <option value="welfare">🤝 કલ્યાણકારી યોજના (Welfare)</option>
+                <option value="recruitment">💼 ભરતી જાહેરાત (Recruitment)</option>
+                <option value="tender">🏗️ ટેન્ડર & બોલી (Tender)</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              onClick={openAddNoticeModal}
+              className="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white rounded-xl text-xs font-black flex items-center justify-center gap-1.5 transition shadow-sm active:scale-95 cursor-pointer"
+            >
+              <Plus size={15} />
+              <span>➕ નવો જાહેર પરિપત્ર બહાર પાડો (Publish Notice)</span>
+            </button>
+          </div>
+
+          {/* Status Strip */}
+          <div className="flex items-center justify-between text-[11px] text-slate-500 font-bold px-1">
+            <span>કુલ સક્રિય પરિપત્રો/નોટિસ: {filteredNotices.length}</span>
+            <span className="text-emerald-700 flex items-center gap-1">
+              <CheckCircle2 size={12} /> Redis L1 Cache સિંક & ઓટોમેટિક પબ્લિશ
+            </span>
+          </div>
+
+          {/* Notices Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {filteredNotices.map((n) => (
+              <div
+                key={n.id}
+                className={`bg-white border rounded-2xl p-4 flex flex-col justify-between transition shadow-2xs group ${
+                  n.priority === "high" ? "border-amber-400/80 bg-amber-50/20" : "border-slate-200"
+                }`}
+              >
+                <div>
+                  <div className="flex items-start justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span
+                        className={`text-[10px] font-black px-2 py-0.5 rounded-full ${
+                          n.priority === "high"
+                            ? "bg-rose-100 text-rose-800 border border-rose-300 animate-pulse"
+                            : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {n.badge}
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full">
+                        📅 {n.date}
+                      </span>
+                    </div>
+
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                        n.isActive ? "bg-emerald-100 text-emerald-800" : "bg-slate-200 text-slate-500"
+                      }`}
+                    >
+                      {n.isActive ? "● સક્રિય (Live)" : "○ નિષ્ક્રિય"}
+                    </span>
+                  </div>
+
+                  <h4 className="font-black text-slate-900 text-sm leading-snug line-clamp-2">
+                    {n.titleGu}
+                  </h4>
+                  <p className="text-[11px] text-slate-500 font-medium mt-0.5 line-clamp-1">
+                    {n.titleEn}
+                  </p>
+                  <p className="text-[11px] text-amber-800 font-bold mt-1.5 flex items-center gap-1">
+                    <span>🏛️ {n.department}</span>
+                  </p>
+
+                  {n.contentGu && (
+                    <p className="text-xs text-slate-600 mt-2 bg-slate-50 p-2 rounded-xl border border-slate-100 line-clamp-2">
+                      {n.contentGu}
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-3 mt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1">
+                    {n.downloadUrl && (
+                      <a
+                        href={n.downloadUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-bold rounded-lg flex items-center gap-1 transition"
+                      >
+                        <ExternalLink size={11} />
+                        <span>સત્તાવાર લિંક</span>
+                      </a>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => openEditNoticeModal(n)}
+                      className="p-1.5 hover:bg-amber-100 text-slate-600 hover:text-amber-800 rounded-lg transition cursor-pointer"
+                      title="સુધારો કરો (Edit)"
+                    >
+                      <Edit2 size={13} />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteNotice(n.id, n.titleGu)}
+                      className="p-1.5 hover:bg-rose-100 text-slate-600 hover:text-rose-700 rounded-lg transition cursor-pointer"
+                      title="રદ કરો (Delete)"
+                    >
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
           MODAL: ADD / EDIT WELFARE SCHEME
           ══════════════════════════════════════════════════════════════ */}
       {isSchemeModalOpen && (
@@ -1125,6 +1436,66 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
                     onChange={(e) => setFormSchemeIncomeLimit(Number(e.target.value))}
                     placeholder="0 = કોઈ મર્યાદા નહિ"
                     className="w-full bg-slate-50 border border-slate-300 rounded-xl p-1.5 text-center font-bold"
+                  />
+                </div>
+              </div>
+
+              {/* Row: Official SLA Days & Internal Target Days */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    સત્તાવાર કાનૂની નિકાલ સમયગાળો (Official SLA Days) *
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={180}
+                    value={formOfficialSlaDays}
+                    onChange={(e) => setFormOfficialSlaDays(Number(e.target.value))}
+                    placeholder="દા.ત. 15 (દિવસ)"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-orange-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">ગુજરાત જન સેવા અધિકાર અધિનિયમ (GTSRA) માનક દિવસો</p>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    આંતરિક આયોજન લક્ષ્યાંક (Internal Target Days) *
+                  </label>
+                  <input
+                    type="text"
+                    value={formPlanningEstimateDays}
+                    onChange={(e) => setFormPlanningEstimateDays(e.target.value)}
+                    placeholder="દા.ત. 3-7 દિવસ"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-orange-500"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-0.5">અપેક્ષિત ઝડપી નિકાલ લક્ષ્યાંક</p>
+                </div>
+              </div>
+
+              {/* Row: Implementing Authority & Target Beneficiary */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    અમલીકરણ કચેરી / સત્તામંડળ (Implementing Authority)
+                  </label>
+                  <input
+                    type="text"
+                    value={formImplementingAuthority}
+                    onChange={(e) => setFormImplementingAuthority(e.target.value)}
+                    placeholder="દા.ત. જિલ્લા પંચાયત / તાલુકા વિકાસ અધિકારી (TDO)"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    લક્ષિત લાભાર્થી જૂથ (Target Beneficiary)
+                  </label>
+                  <input
+                    type="text"
+                    value={formTargetBeneficiary}
+                    onChange={(e) => setFormTargetBeneficiary(e.target.value)}
+                    placeholder="દા.ત. સીમાંત ખેડૂતો / વિચરતી જાતિ / શ્રમિકો"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 font-medium focus:outline-hidden focus:ring-1 focus:ring-orange-500"
                   />
                 </div>
               </div>
@@ -1401,6 +1772,209 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
                     <>
                       <Check size={14} />
                       <span>કચેરી સેવ કરો (Save to Firestore)</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          MODAL: ADD / EDIT PUBLIC NOTICE & CIRCULAR
+          ══════════════════════════════════════════════════════════════ */}
+      {isNoticeModalOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
+          onClick={() => setIsNoticeModalOpen(false)}
+        >
+          <div
+            className="relative w-full max-w-2xl bg-white rounded-3xl shadow-2xl border border-slate-300 text-slate-900 p-4 sm:p-6 space-y-4 max-h-[92vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">📜</span>
+                <div>
+                  <h3 className="text-sm sm:text-base font-black text-slate-900">
+                    {editingNoticeId ? "જાહેર પરિપત્ર / નોટિસમાં સુધારો કરો" : "નવો જાહેર પરિપત્ર / નોટિસ બહાર પાડો"}
+                  </h3>
+                  <p className="text-[11px] text-slate-500">
+                    તમામ નાગરિકો માટે સત્તાવાર પોર્ટલ પર ડાયનામિક રીતે પ્રસિદ્ધ થશે.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsNoticeModalOpen(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNotice} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  પરિપત્ર / નોટિસનું ગુજરાતી શીર્ષક (Title in Gujarati) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formNoticeTitleGu}
+                  onChange={(e) => setFormNoticeTitleGu(e.target.value)}
+                  placeholder="દા.ત. PM કિસાન ૧૯મો હપ્તો મેળવવા માટે બાયોમેટ્રિક e-KYC ફરજિયાત પરિપત્ર"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-bold text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  અંગ્રેજી શીર્ષક (Title in English)
+                </label>
+                <input
+                  type="text"
+                  value={formNoticeTitleEn}
+                  onChange={(e) => setFormNoticeTitleEn(e.target.value)}
+                  placeholder="e.g. Mandatory Biometric e-KYC Circular for PM-KISAN Release"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 focus:outline-hidden focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    સંબંધિત મંત્રાલય / વિભાગ (Department)
+                  </label>
+                  <input
+                    type="text"
+                    value={formNoticeDept}
+                    onChange={(e) => setFormNoticeDept(e.target.value)}
+                    placeholder="દા.ત. કૃષિ અને સહકાર વિભાગ, ગાંધીનગર"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900 font-medium"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    પ્રસિદ્ધિ તારીખ (Notice Date)
+                  </label>
+                  <input
+                    type="text"
+                    value={formNoticeDate}
+                    onChange={(e) => setFormNoticeDate(e.target.value)}
+                    placeholder="દા.ત. ૨૦૨૬-૧૦-૧૪"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-medium"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    પ્રકાર (Category)
+                  </label>
+                  <select
+                    value={formNoticeCategory}
+                    onChange={(e) => setFormNoticeCategory(e.target.value as "circular" | "recruitment" | "welfare" | "tender" | "urgent")}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-bold text-slate-800"
+                  >
+                    <option value="circular">સત્તાવાર પરિપત્ર (Circular)</option>
+                    <option value="urgent">અતિ મહત્વપૂર્ણ (Urgent)</option>
+                    <option value="welfare">કલ્યાણ યોજના (Welfare)</option>
+                    <option value="recruitment">ભરતી (Recruitment)</option>
+                    <option value="tender">ટેન્ડર (Tender)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    બેજ લેબલ (Badge Text)
+                  </label>
+                  <input
+                    type="text"
+                    value={formNoticeBadge}
+                    onChange={(e) => setFormNoticeBadge(e.target.value)}
+                    placeholder="દા.ત. પરિપત્ર, અતિ મહત્વપૂર્ણ"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-bold"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    અગ્રતા (Priority)
+                  </label>
+                  <select
+                    value={formNoticePriority}
+                    onChange={(e) => setFormNoticePriority(e.target.value as "high" | "normal")}
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-bold text-slate-800"
+                  >
+                    <option value="normal">સામાન્ય (Normal)</option>
+                    <option value="high">ઉચ્ચ અગ્રતા (High / Urgent)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  વિગત / વર્ણન (Notice Summary / Instructions)
+                </label>
+                <textarea
+                  rows={2}
+                  value={formNoticeContentGu}
+                  onChange={(e) => setFormNoticeContentGu(e.target.value)}
+                  placeholder="નોટિસ કે પરિપત્ર સંબંધિત અગત્યની સૂચનાઓ અહીં દાખલ કરો..."
+                  className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 text-slate-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+                <div className="sm:col-span-2">
+                  <label className="block font-bold text-slate-700 mb-1">
+                    સત્તાવાર PDF / પોર્ટલ URL
+                  </label>
+                  <input
+                    type="url"
+                    value={formNoticeUrl}
+                    onChange={(e) => setFormNoticeUrl(e.target.value)}
+                    placeholder="https://gad.gujarat.gov.in/circulars.pdf"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-xl p-2 font-mono text-slate-900"
+                  />
+                </div>
+                <div className="pt-4 flex items-center gap-2">
+                  <input
+                    type="checkbox"
+                    id="noticeActiveChk"
+                    checked={formNoticeActive}
+                    onChange={(e) => setFormNoticeActive(e.target.checked)}
+                    className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 cursor-pointer"
+                  />
+                  <label htmlFor="noticeActiveChk" className="font-bold text-slate-800 cursor-pointer select-none">
+                    જાહેર લાઈવ (Active)
+                  </label>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setIsNoticeModalOpen(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl transition cursor-pointer"
+                >
+                  રદ કરો
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSavingNotice}
+                  className="px-5 py-2 bg-gradient-to-r from-amber-600 to-orange-500 hover:from-amber-700 hover:to-orange-600 text-white font-black rounded-xl shadow-md transition flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                >
+                  {isSavingNotice ? (
+                    <>
+                      <Loader2 size={14} className="animate-spin" />
+                      <span>સેવ થઈ રહ્યું છે...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Check size={14} />
+                      <span>{editingNoticeId ? "ફેરફાર સેવ કરો" : "પરિપત્ર પ્રસિદ્ધ કરો (Publish)"}</span>
                     </>
                   )}
                 </button>

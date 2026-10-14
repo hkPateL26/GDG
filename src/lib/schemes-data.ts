@@ -1653,6 +1653,757 @@ export const SCHEMES_DATA: Scheme[] = [
     }
   ]
 },
+
+  // ── 10. EXTRA EXPLORATION SCHEMES (14 ADDITIONAL EXPANSION SCHEMES) ──
+  {
+  id: "pmjjby",
+  name: "PM Jeevan Jyoti Bima Yojana (PMJJBY)",
+  nameGu: "પ્રધાનમંત્રી જીવન જ્યોતિ વીમા યોજના",
+  nameHi: "प्रधानमंत्री जीवन ज्योति बीमा योजना",
+  category: "social",
+  description: "Affordable renewable life insurance scheme offering ₹2 Lakh life cover for death due to any cause at an annual premium of just ₹436.",
+  benefits: [
+    "કોઈપણ કારણસર મૃત્યુ થવાના કિસ્સામાં વારસદારને ₹૨,૦૦,૦૦૦ નું જીવન વીમા કવચ",
+    "વાર્ષિક માત્ર ₹૪૩૬ નું નજીવું પ્રીમિયમ સીધું બેંક ખાતામાંથી ઓટો-ડેબિટ",
+    "કોઈપણ તબીબી તપાસણી વગર ૧૮ થી ૫૦ વર્ષના નાગરિકો માટે સરળ નોંધણી"
+  ],
+  eligibility: {
+    minAge: 18,
+    maxAge: 50,
+    gender: "all"
+  },
+  documents: [
+    "આધાર કાર્ડ (Aadhaar Card)",
+    "બેંક પાસબુક (Aadhaar Seeded Bank Account)",
+    "વારસદારની વિગત (Nominee Details)",
+    "ઓટો-ડેબિટ સંમતિપત્રક"
+  ],
+  applicationUrl: "https://jansuraksha.gov.in",
+  icon: "☂️",
+  ministry: "નાણાકીય સેવા વિભાગ (DFS), નાણાં મંત્રાલય",
+  isActive: true,
+  officialSlaDays: 7,
+  planningEstimateDays: "૧-૨ દિવસ",
+  implementingAuthority: "તમામ કોમર્શિયલ & ગ્રામીણ બેંકો / LIC",
+  targetBeneficiary: "૧૮ થી ૫૦ વર્ષની વયના તમામ બેંક ખાતાધારકો",
+  documentChecklist: [
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Bank Passbook",
+      nameGu: "બેંક પાસબુક",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Auto Debit Consent",
+      nameGu: "ઓટો-ડેબિટ ફોર્મ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    }
+  ]
+},
+  {
+  id: "pmsby",
+  name: "PM Suraksha Bima Yojana (PMSBY)",
+  nameGu: "પ્રધાનમંત્રી સુરક્ષા વીમા યોજના (અકસ્માત વીમો)",
+  nameHi: "प्रधानमंत्री सुरक्षा बीमा योजना",
+  category: "social",
+  description: "Accident insurance scheme providing ₹2 Lakh cover for accidental death or permanent total disability at an annual premium of just ₹20.",
+  benefits: [
+    "અકસ્માતે મૃત્યુ અથવા કાયમી સંપૂર્ણ અપંગતામાં ₹૨,૦૦,૦૦૦ નું આર્થિક કવચ",
+    "કાયમી આંશિક અપંગતાના કિસ્સામાં ₹૧,૦૦,૦૦૦ સહાય",
+    "વાર્ષિક માત્ર ₹૨૦ ના પ્રીમિયમ પર ગરીબ અને શ્રમિક પરિવારોનું સુરક્ષા કવચ"
+  ],
+  eligibility: {
+    minAge: 18,
+    maxAge: 70,
+    gender: "all"
+  },
+  documents: [
+    "આધાર કાર્ડ",
+    "બચત બેંક ખાતું",
+    "વારસદાર ઓળખપત્ર"
+  ],
+  applicationUrl: "https://jansuraksha.gov.in",
+  icon: "🛡️",
+  ministry: "નાણાકીય સેવા વિભાગ, ભારત સરકાર",
+  isActive: true,
+  officialSlaDays: 7,
+  planningEstimateDays: "૧-૨ દિવસ",
+  implementingAuthority: "તમામ બેંકો / જન સુરક્ષા પોર્ટલ",
+  targetBeneficiary: "૧૮ થી ૭૦ વર્ષના તમામ બેંક ખાતાધારક નાગરિકો",
+  documentChecklist: [
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Bank Account Details",
+      nameGu: "બેંક પાસબુક",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "standup-india",
+  name: "Stand-Up India Scheme",
+  nameGu: "સ્ટેન્ડ-અપ ઇન્ડિયા યોજના (ઉદ્યોગ સાહસિક લોન)",
+  nameHi: "स्टैंड-अप इंडिया योजना",
+  category: "business",
+  description: "Bank loans between ₹10 Lakh and ₹1 Crore to at least one SC or ST borrower and at least one woman borrower per bank branch for setting up greenfield enterprises.",
+  benefits: [
+    "ઉત્પાદન, સેવા અથવા વેપાર ક્ષેત્રમાં ₹૧૦ લાખ થી ₹૧ કરોડ સુધીની બેંક લોન સહાય",
+    "અનુસૂચિત જાતિ (SC), અનુસૂચિત જનજાતિ (ST) અને મહિલા સાહસિકોને અગ્રતા",
+    "ક્રેડિટ ગેરંટી ફંડ સ્કીમ (CGFSI) દ્વારા મુક્ત ગેરંટી કવચ"
+  ],
+  eligibility: {
+    minAge: 18,
+    maxAge: 65,
+    gender: "all",
+    category: [
+      "SC",
+      "ST"
+    ]
+  },
+  documents: [
+    "આધાર કાર્ડ અને પાન કાર્ડ",
+    "જાતિનું પ્રમાણપત્ર (SC/ST માટે)",
+    "પ્રોજેક્ટ રિપોર્ટ અને બિઝનેસ પ્લાન",
+    "કચેરી/ફેક્ટરીનું સરનામું અને લીઝ એગ્રીમેન્ટ",
+    "છેલ્લા ૩ વર્ષના આઈટી રિટર્ન / બેંક સ્ટેટમેન્ટ"
+  ],
+  applicationUrl: "https://standupmitra.in",
+  icon: "🚀",
+  ministry: "નાણાં મંત્રાલય અને સિડબી (SIDBI)",
+  isActive: true,
+  officialSlaDays: 30,
+  planningEstimateDays: "૧૨-૧૫ દિવસ",
+  implementingAuthority: "SIDBI / તમામ શેડ્યુલ્ડ કોમર્શિયલ બેંકો",
+  targetBeneficiary: "SC, ST અને મહિલા ગ્રીનફિલ્ડ ઉદ્યોગસાહસિકો",
+  documentChecklist: [
+    {
+      name: "PAN & Aadhaar",
+      nameGu: "પાન અને આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Caste Certificate",
+      nameGu: "જાતિ પ્રમાણપત્ર",
+      tier: "conditional",
+      digiLockerSupported: true
+    },
+    {
+      name: "Project Report",
+      nameGu: "પ્રોજેક્ટ રિપોર્ટ અને એસ્ટીમેટ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    }
+  ]
+},
+  {
+  id: "pmegp",
+  name: "Prime Minister's Employment Generation Programme (PMEGP)",
+  nameGu: "પ્રધાનમંત્રી રોજગાર નિર્માણ કાર્યક્રમ (PMEGP સબસિડી)",
+  nameHi: "प्रधानमंत्री रोजगार सृजन कार्यक्रम",
+  category: "business",
+  description: "Credit-linked subsidy programme offering up to 35% government subsidy on project loans up to ₹50 Lakh for manufacturing and ₹20 Lakh for services.",
+  benefits: [
+    "મેન્યુફેક્ચરિંગ સેક્ટરમાં ₹૫૦ લાખ અને સર્વિસ સેક્ટરમાં ₹૨૦ લાખ સુધી લોન",
+    "ગ્રામીણ વિસ્તારમાં સામાન્ય વર્ગ માટે ૨૫% અને અનામત વર્ગ/મહિલાઓ માટે ૩૫% સરકારી સબસિડી",
+    "શહેરી વિસ્તારમાં ૧૫% થી ૨૫% કેપિટલ સબસિડી સીધી બેંકમાં જમા"
+  ],
+  eligibility: {
+    minAge: 18,
+    maxAge: 99,
+    gender: "all"
+  },
+  documents: [
+    "આધાર કાર્ડ",
+    "શૈક્ષણિક લાયકાત (ધોરણ ૮ પાસ માર્કશીટ)",
+    "પ્રોજેક્ટ રિપોર્ટ (DPR)",
+    "સ્પેશિયલ કેટેગરી/જાતિ પ્રમાણપત્ર",
+    "રૂરલ એરિયા સર્ટિફિકેટ (ગ્રામ્ય વિસ્તાર સબસિડી માટે)"
+  ],
+  applicationUrl: "https://kviconline.gov.in",
+  icon: "🏭",
+  ministry: "સૂક્ષ્મ, લઘુ અને મધ્યમ ઉદ્યોગ મંત્રાલય (MoMSME)",
+  isActive: true,
+  officialSlaDays: 45,
+  planningEstimateDays: "૧૫-૨૦ દિવસ",
+  implementingAuthority: "KVIC / KVIB / જિલ્લા ઉદ્યોગ કેન્દ્ર (DIC)",
+  targetBeneficiary: "નવો સ્વરોજગાર શરૂ કરવા માંગતા ૧૮+ વર્ષના યુવાનો",
+  documentChecklist: [
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Class 8+ Marksheet",
+      nameGu: "શૈક્ષણિક લાયકાત પ્રમાણપત્ર",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Detailed Project Report",
+      nameGu: "પ્રોજેક્ટ વિગતવાર અહેવાલ (DPR)",
+      tier: "mandatory",
+      digiLockerSupported: false
+    }
+  ]
+},
+  {
+  id: "pmksy-irrigation",
+  name: "PM Krishi Sinchayee Yojana (Micro Irrigation)",
+  nameGu: "PM કૃષિ સિંચાઈ યોજના (ટપક & ફુવારા સિંચાઈ)",
+  nameHi: "प्रधानमंत्री कृषि सिंचाई योजना",
+  category: "agriculture",
+  description: "Comprehensive drip and sprinkler micro-irrigation subsidy scheme covering up to 70% of installation cost under 'Per Drop More Crop'.",
+  benefits: [
+    "ટપક (Drip) અને ફુવારા (Sprinkler) સિંચાઈ પદ્ધતિ પર ૫૫% થી ૭૦% સરકારી સબસિડી",
+    "પાણી અને વીજળીની ૫૦% સુધી બચત અને પાક ઉત્પાદનમાં ૩૦% વધારો",
+    "ગુજરાત ગ્રીન રિવોલ્યુશન કંપની (GGRC) દ્વારા સીધી ચુકવણી અને વોરંટી"
+  ],
+  eligibility: {
+    occupation: [
+      "farmer"
+    ],
+    minAge: 18,
+    maxAge: 99,
+    gender: "all",
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "૭/૧૨ અને ૮-અ જમીન નકલ",
+    "પાણીનો સ્ત્રોત પુરાવો (કૂવો/બોરવેલ/કેનાલ સંમતિ)",
+    "વીજ કનેક્શન બિલ",
+    "આધાર કાર્ડ અને બેંક પાસબુક"
+  ],
+  applicationUrl: "https://ggrc.co.in",
+  icon: "💧",
+  ministry: "કૃષિ મંત્રાલય અને GGRC ગુજરાત",
+  isActive: true,
+  officialSlaDays: 30,
+  planningEstimateDays: "૧૦-૧૨ દિવસ",
+  implementingAuthority: "ગુજરાત ગ્રીન રિવોલ્યુશન કંપની (GGRC) / i-Khedut",
+  targetBeneficiary: "ખેતીની જમીન અને સિંચાઈ સ્ત્રોત ધરાવતા ખેડૂતો",
+  documentChecklist: [
+    {
+      name: "7/12 Land Record",
+      nameGu: "૭/૧૨ અને ૮-અ ઉતારા",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Electricity Bill",
+      nameGu: "કૃષિ વીજ કનેક્શન બિલ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "soil-health-card",
+  name: "Soil Health Card Scheme",
+  nameGu: "સોઇલ હેલ્થ કાર્ડ યોજના (જમીન આરોગ્ય ચકાસણી)",
+  nameHi: "मृदा स्वास्थ्य कार्ड योजना",
+  category: "agriculture",
+  description: "Free laboratory soil nutrient testing providing scientific crop-wise fertilizer dosage recommendations to improve farm soil fertility and reduce input cost.",
+  benefits: [
+    "ખેતરની માટીનું ૧૨ મુખ્ય પોષક તત્વો (N, P, K, માઇક્રોન્યુટ્રિઅન્ટ્સ) માટે મફત પૃથ્થકરણ",
+    "જમીનને અનુરૂપ ખાતરના સચોટ ડોઝની ભલામણ પત્રિકા (સોઈલ હેલ્થ કાર્ડ)",
+    "બિનજરૂરી રાસાયણિક ખાતરોનો ખર્ચ ઘટે છે અને જમીનની ફળદ્રુપતા જળવાય છે"
+  ],
+  eligibility: {
+    occupation: [
+      "farmer"
+    ],
+    minAge: 18,
+    maxAge: 99,
+    gender: "all"
+  },
+  documents: [
+    "૭/૧૨ જમીન નકલ",
+    "આધાર કાર્ડ",
+    "મોબાઈલ નંબર"
+  ],
+  applicationUrl: "https://soilhealth.dac.gov.in",
+  icon: "🧪",
+  ministry: "કૃષિ અને ખેડૂત કલ્યાણ મંત્રાલય, ભારત સરકાર",
+  isActive: true,
+  officialSlaDays: 21,
+  planningEstimateDays: "૫-૭ દિવસ",
+  implementingAuthority: "જિલ્લા માટી ચકાસણી પ્રયોગશાળા / i-Khedut",
+  targetBeneficiary: "ગુજરાતના તમામ ખાતેદાર ખેડૂતો",
+  documentChecklist: [
+    {
+      name: "7/12 RoR",
+      nameGu: "૭/૧૨ જમીન નકલ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "dr-ambedkar-awas",
+  name: "Dr. Ambedkar Awas Yojana",
+  nameGu: "ડૉ. આંબેડકર આવાસ યોજના (મકાન બાંધકામ સહાય)",
+  nameHi: "डॉ. आंबेडकर आवास योजना",
+  category: "housing",
+  description: "Gujarat Social Justice department financial assistance of ₹1,20,000 in 3 installments for constructing pucca house on owned plot for SC families.",
+  benefits: [
+    "પાકું મકાન બનાવવા માટે કુલ ₹૧,૨૦,૦૦૦ ની સીધી સરકારી સહાય (૩ હપ્તામાં)",
+    "શૌચાલય બાંધકામ માટે સ્વચ્છ ભારત મિશન હેઠળ વધારાના ₹૧૨,૦૦૦ સહાય",
+    "અનુસૂચિત જાતિ (SC) ના બેઘર અથવા કાચા છાપરામાં રહેતા પરિવારો માટે કાયમી આશરો"
+  ],
+  eligibility: {
+    minAge: 18,
+    maxAge: 99,
+    gender: "all",
+    incomeLimit: 150000,
+    category: [
+      "SC"
+    ],
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "આધાર કાર્ડ",
+    "જાતિ પ્રમાણપત્ર (SC સર્ટિફિકેટ)",
+    "પ્લોટ/જમીન માલિકીનો દસ્તાવેજ અથવા સનદ",
+    "આવકનો દાખલો (રૂ. ૧.૨૦ લાખ ગ્રામ્ય / ૧.૫૦ લાખ શહેરી)",
+    "કાચા મકાનનો ફોટો"
+  ],
+  applicationUrl: "https://esamajkalyan.gujarat.gov.in",
+  icon: "🏡",
+  ministry: "સામાજિક ન્યાય અને અધિકારીતા વિભાગ, ગુજરાત",
+  isActive: true,
+  officialSlaDays: 45,
+  planningEstimateDays: "૧૫-૨૦ દિવસ",
+  implementingAuthority: "e-Samaj Kalyan Portal / જિલ્લા સમાજ કલ્યાણ અધિકારી",
+  targetBeneficiary: "અનુસૂચિત જાતિ (SC) ના કાચા મકાનમાં રહેતા પરિવારો",
+  documentChecklist: [
+    {
+      name: "Caste Certificate",
+      nameGu: "SC જાતિ પ્રમાણપત્ર",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Plot Ownership / Sanad",
+      nameGu: "પ્લોટ માલિકી દસ્તાવેજ/સનદ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Income Certificate",
+      nameGu: "આવકનો દાખલો",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "saraswati-sadhana-cycle",
+  name: "Saraswati Sadhana Yojana (Free Bicycle for Girls)",
+  nameGu: "સરસ્વતી સાધના યોજના (કન્યાઓને મફત સાયકલ સહાય)",
+  nameHi: "सरस्वती साधना योजना",
+  category: "education",
+  description: "Free brand-new bicycle distributed to SC and developing caste girl students studying in Class 9 to enable safe and convenient daily school commute.",
+  benefits: [
+    "ધોરણ ૯ માં પ્રવેશ મેળવતી દીકરીઓને વિનામૂલ્યે નવી બ્રાન્ડેડ સાયકલનું વિતરણ",
+    "ગામડેથી શાળાનું અંતર કાપવામાં સરળતા અને મુસાફરી ખર્ચમાં ૧૦૦% રાહત",
+    "કન્યા કેળવણીમાં ઉત્સાહ અને માધ્યમિક શાળા ડ્રોપઆઉટ રેટમાં ઘટાડો"
+  ],
+  eligibility: {
+    minAge: 13,
+    maxAge: 17,
+    gender: "female",
+    category: [
+      "SC",
+      "OBC"
+    ],
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "વિદ્યાર્થિનીનું આધાર કાર્ડ",
+    "ધોરણ ૮ પાસ માર્કશીટ",
+    "ધોરણ ૯ શાળા પ્રવેશ/બોનાફાઇડ સર્ટિફિકેટ",
+    "જાતિનું પ્રમાણપત્ર"
+  ],
+  applicationUrl: "https://esamajkalyan.gujarat.gov.in",
+  icon: "🚲",
+  ministry: "સામાજિક ન્યાય અને અધિકારીતા વિભાગ, ગુજરાત",
+  isActive: true,
+  officialSlaDays: 15,
+  planningEstimateDays: "૩-૫ દિવસ",
+  implementingAuthority: "શાળા આચાર્ય / e-Samaj Kalyan",
+  targetBeneficiary: "ધોરણ ૯ માં અભ્યાસ કરતી અનુસૂચિત અને પછાત વર્ગની દીકરીઓ",
+  documentChecklist: [
+    {
+      name: "Aadhaar Card",
+      nameGu: "વિદ્યાર્થિનીનું આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "School Bonafide",
+      nameGu: "ધોરણ ૯ બોનાફાઇડ સર્ટિફિકેટ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Caste Certificate",
+      nameGu: "જાતિ પ્રમાણપત્ર",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "vidya-lakshmi-bond",
+  name: "Vidya Lakshmi Bond Yojana",
+  nameGu: "વિદ્યા લક્ષ્મી બોન્ડ યોજના (કન્યા પ્રવેશ પ્રોત્સાહન)",
+  nameHi: "विद्या लक्ष्मी बॉन्ड योजना",
+  category: "education",
+  description: "Government incentive bond of ₹2,000 presented in the name of girl child upon enrollment in Class 1 in low female-literacy villages of Gujarat.",
+  benefits: [
+    "ધોરણ ૧ માં પ્રવેશ લેતી કન્યાના નામે ₹૨,૦૦૦ નો વિદ્યા લક્ષ્મી બોન્ડ",
+    "ધોરણ ૮ સફળતાપૂર્વક પાસ કર્યા બાદ વ્યાજ સહિત પાકતી મુદતે નાણાં ઉપલબ્ધ",
+    "ઓછી સ્ત્રી સાક્ષરતા ધરાવતા ગ્રામીણ વિસ્તારોમાં કન્યા શિક્ષણને પ્રોત્સાહન"
+  ],
+  eligibility: {
+    minAge: 5,
+    maxAge: 8,
+    gender: "female",
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "બાળકીના જન્મનો દાખલો",
+    "માતા-પિતાનું આધાર કાર્ડ",
+    "શાળા પ્રવેશ પ્રમાણપત્ર",
+    "રેશનકાર્ડ"
+  ],
+  applicationUrl: "https://gujaratindia.gov.in",
+  icon: "📜",
+  ministry: "પ્રાથમિક શિક્ષણ નિયામકની કચેરી, ગુજરાત",
+  isActive: true,
+  officialSlaDays: 15,
+  planningEstimateDays: "૩-૫ દિવસ",
+  implementingAuthority: "પ્રાથમિક શિક્ષણ વિભાગ / તાલુકા પ્રાથમિક શિક્ષણાધિકારી (TPEO)",
+  targetBeneficiary: "ગ્રામીણ વિસ્તારમાં ધોરણ ૧ માં પ્રવેશ મેળવતી દીકરીઓ",
+  documentChecklist: [
+    {
+      name: "Birth Certificate",
+      nameGu: "જન્મનો દાખલો",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "School Enrollment",
+      nameGu: "શાળા પ્રવેશ પ્રમાણપત્ર",
+      tier: "mandatory",
+      digiLockerSupported: false
+    }
+  ]
+},
+  {
+  id: "pak-sangrah-godown",
+  name: "Mukhyamantri Pak Sangrah Sanrachna (Godown Sahay)",
+  nameGu: "મુખ્યમંત્રી પાક સંગ્રહ સંરચના યોજના (ગોડાઉન સહાય)",
+  nameHi: "मुख्यमंत्री फसल भंडारण संरचना योजना",
+  category: "agriculture",
+  description: "State capital subsidy of ₹75,000 for constructing on-farm storage godown to protect harvested agricultural produce from moisture, pests, and unseasonal rain.",
+  benefits: [
+    "ખેતરમાં પાક સંગ્રહ માટે ગોડાઉન બાંધવા ₹૭૫,૦૦૦ અથવા ખર્ચના ૫૦% સબસિડી સીધી DBT મારફતે",
+    "લણણી પછીના પાકને વરસાદ, ભેજ, કીટકો અને ઉંદરથી સુરક્ષિત રાખી શકાય છે",
+    "બજારભાવ સારા મળે ત્યાં સુધી ખેડૂત પોતાનો પાક સાચવી શકે છે (Distress Sale અટકે છે)"
+  ],
+  eligibility: {
+    occupation: [
+      "farmer"
+    ],
+    minAge: 18,
+    maxAge: 99,
+    gender: "all",
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "૭/૧૨ અને ૮-અ જમીન નકલ",
+    "બાંધકામ કરવાનો નકશો અને એસ્ટીમેટ",
+    "આધાર કાર્ડ અને બેંક પાસબુક",
+    "બાંધકામ પૂર્ણ થયા પછી જીઓ-ટેગિંગ ફોટો"
+  ],
+  applicationUrl: "https://ikhedut.gujarat.gov.in",
+  icon: "🏬",
+  ministry: "કૃષિ અને ખેડૂત કલ્યાણ વિભાગ, ગુજરાત",
+  isActive: true,
+  officialSlaDays: 30,
+  planningEstimateDays: "૧૦-૧૨ દિવસ",
+  implementingAuthority: "i-Khedut Portal / જિલ્લા ખેતીવાડી અધિકારી",
+  targetBeneficiary: "ગુજરાતના તમામ ખાતેદાર ખેડૂતો",
+  documentChecklist: [
+    {
+      name: "7/12 Land Record",
+      nameGu: "૭/૧૨ અને ૮-અ જમીન નકલ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Godown Estimate / Plan",
+      nameGu: "બાંધકામ નકશો/એસ્ટીમેટ",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Aadhaar & Bank Details",
+      nameGu: "આધાર અને બેંક પાસબુક",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "smart-toolkit-iti",
+  name: "Smart Tool Kit Sahay for ITI Trainees",
+  nameGu: "ITI તાલીમાર્થીઓ માટે સ્માર્ટ ટૂલકિટ સહાય",
+  nameHi: "आईटीआई प्रशिक्षुओं के लिए स्मार्ट टूलकिट सहायता",
+  category: "education",
+  description: "Modern professional toolkit assistance provided to ITI trainees upon successful course completion to start immediate self-employment or technical freelancing.",
+  benefits: [
+    "ઈલેક્ટ્રિશિયન, ફિટર, વેલ્ડર, પ્લમ્બર, ડીઝલ મિકેનિક જેવા ટ્રેડ માટે ₹૧૫,૦૦૦ સુધીની મફત ટૂલકિટ",
+    "આધુનિક બ્રાન્ડેડ સાધનોથી યુવાન તાલીમ પૂરી થતાં જ તાત્કાલિક કમાણી શરૂ કરી શકે છે",
+    "ઉદ્યોગસાહસિકતા અને સ્થાનિક રોજગાર નિર્માણને પ્રોત્સાહન"
+  ],
+  eligibility: {
+    minAge: 18,
+    maxAge: 35,
+    gender: "all",
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "આધાર કાર્ડ",
+    "ITI પાસ સર્ટિફિકેટ / નેશનલ ટ્રેડ સર્ટિફિકેટ (NTC)",
+    "રેશનકાર્ડ",
+    "બેંક પાસબુક"
+  ],
+  applicationUrl: "https://iti.gujarat.gov.in",
+  icon: "🔧",
+  ministry: "શ્રમ, કૌશલ્ય વિકાસ અને રોજગાર વિભાગ, ગુજરાત",
+  isActive: true,
+  officialSlaDays: 21,
+  planningEstimateDays: "૫-૭ દિવસ",
+  implementingAuthority: "રોજગાર અને તાલીમ નિયામકની કચેરી (DET Gujarat)",
+  targetBeneficiary: "સરકારી અથવા ગ્રાન્ટેડ ITI માંથી પાસ થયેલા તાલીમાર્થીઓ",
+  documentChecklist: [
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "ITI NTC Certificate",
+      nameGu: "ITI પાસિંગ પ્રમાણપત્ર",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "vrudh-pension-central",
+  name: "Indira Gandhi National Old Age Pension (IGNOAPS)",
+  nameGu: "ઇન્દિરા ગાંધી રાષ્ટ્રીય વૃદ્ધ પેન્શન સહાય (IGNOAPS)",
+  nameHi: "इंदिरा गांधी राष्ट्रीय वृद्धावस्था पेंशन योजना",
+  category: "social",
+  description: "Central government social assistance monthly pension for BPL senior citizens aged 60 and above to provide elderly social security.",
+  benefits: [
+    "૬૦ થી ૭૯ વર્ષના વૃદ્ધોને પ્રતિ માસ ₹૧,૦૦૦ અને ૮૦ વર્ષથી વધુ વયના વૃદ્ધોને પ્રતિ માસ ₹૧,૨૫૦ પેન્શન",
+    "સીધા બેંક અથવા પોસ્ટ ઓફિસ ખાતામાં DBT દ્વારા દર મહિને નિયમિત જમા",
+    "વૃદ્ધાવસ્થામાં આર્થિક સ્વાવલંબન અને ગૌરવપૂર્ણ જીવનનો આધાર"
+  ],
+  eligibility: {
+    minAge: 60,
+    maxAge: 99,
+    gender: "all",
+    incomeLimit: 150000
+  },
+  documents: [
+    "આધાર કાર્ડ / ઉંમરનો પુરાવો",
+    "BPL પ્રમાણપત્ર / BPL સ્કોરકાર્ડ",
+    "બેંક અથવા પોસ્ટ ઓફિસ પાસબુક",
+    "રેશનકાર્ડ"
+  ],
+  applicationUrl: "https://nsap.nic.in",
+  icon: "🧓",
+  ministry: "ગ્રામ વિકાસ મંત્રાલય, ભારત સરકાર (NSAP)",
+  isActive: true,
+  officialSlaDays: 30,
+  planningEstimateDays: "૧૦-૧૫ દિવસ",
+  implementingAuthority: "NSAP / મામલતદાર સામાજિક સુરક્ષા શાખા",
+  targetBeneficiary: "૬૦ વર્ષથી વધુ ઉંમરના BPL વૃદ્ધ નાગરિકો",
+  documentChecklist: [
+    {
+      name: "Aadhaar / Age Proof",
+      nameGu: "આધાર કાર્ડ / શાળા છોડ્યાનો દાખલો",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "BPL Certificate",
+      nameGu: "BPL કાર્ડ / યાદીમાં નામનો દાખલો",
+      tier: "mandatory",
+      digiLockerSupported: false
+    },
+    {
+      name: "Bank Passbook",
+      nameGu: "બેંક પાસબુક",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "naps-apprenticeship",
+  name: "National Apprenticeship Promotion Scheme (NAPS)",
+  nameGu: "રાષ્ટ્રીય એપ્રેન્ટિસશીપ પ્રોત્સાહન યોજના (NAPS સ્ટાઈપેન્ડ)",
+  nameHi: "राष्ट्रीय शिक्षुता प्रोत्साहन योजना",
+  category: "business",
+  description: "Government stipend financial support sharing 25% of prescribed stipend up to ₹1,500/month per apprentice with industrial employers.",
+  benefits: [
+    "તાલીમાર્થીઓને પ્રતિ માસ ₹૬,૦૦૦ થી ₹૧૫,૦૦૦ સુધીનું નિશ્ચિત સ્ટાઈપેન્ડ",
+    "સરકાર દ્વારા સીધા ખાતામાં ₹૧,૫૦૦ પ્રતિ માસ DBT સહાય",
+    "ટોચની ઔદ્યોગિક કંપનીઓમાં ઓન-ધ-જોબ વ્યવહારુ કાર્ય અનુભવ"
+  ],
+  eligibility: {
+    minAge: 16,
+    maxAge: 35,
+    gender: "all"
+  },
+  documents: [
+    "આધાર કાર્ડ",
+    "૧૦મું/૧૨મું/ITI/ડિપ્લોમા/ડિગ્રી માર્કશીટ",
+    "બેંક પાસબુક",
+    "રિઝ્યુમ / બાયોડેટા"
+  ],
+  applicationUrl: "https://apprenticeshipindia.gov.in",
+  icon: "🎓",
+  ministry: "કૌશલ્ય વિકાસ અને ઉદ્યોગસાહસિકતા મંત્રાલય (MSDE)",
+  isActive: true,
+  officialSlaDays: 14,
+  planningEstimateDays: "૩-૫ દિવસ",
+  implementingAuthority: "MSDE / NSDC / રાજ્ય એપ્રેન્ટિસશીપ એડવાઈઝર",
+  targetBeneficiary: "૧૬ થી ૩૫ વર્ષના ડિપ્લોમા, આઈટીઆઈ અને ગ્રેજ્યુએટ યુવાનો",
+  documentChecklist: [
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Educational Qualification",
+      nameGu: "શૈક્ષણિક લાયકાત માર્કશીટ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Bank Account Details",
+      nameGu: "બેંક પાસબુક",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
+  {
+  id: "sant-surdas-divyang",
+  name: "Sant Surdas Divyang Pension Yojana",
+  nameGu: "સંત સૂરદાસ દિવ્યાંગ પેન્શન સહાય યોજના",
+  nameHi: "संत सूरदास दिव्यांग पेंशन योजना",
+  category: "social",
+  description: "Gujarat State disability pension scheme providing ₹1,000 monthly financial maintenance to severely disabled individuals with 80% or more disability.",
+  benefits: [
+    "૮૦% કે તેથી વધુ વિકલાંગતા ધરાવતા દિવ્યાંગ નાગરિકોને દર મહિને ₹૧,૦૦૦ આજીવન સહાય",
+    "સીધા દિવ્યાંગ લાભાર્થીના બેંક ખાતામાં DBT દ્વારા માસિક જમા",
+    "દિવ્યાંગ સાધનો અને કૃત્રિમ અંગો માટે શિબિરોમાં વિનામૂલ્યે સહાય"
+  ],
+  eligibility: {
+    minAge: 0,
+    maxAge: 99,
+    gender: "all",
+    incomeLimit: 150000,
+    state: [
+      "Gujarat"
+    ]
+  },
+  documents: [
+    "દિવ્યાંગતા ઓળખપત્ર (UDID Card - 80%+ સર્ટિફિકેટ)",
+    "આધાર કાર્ડ",
+    "આવકનો દાખલો (રૂ. ૧.૨૦ લાખ ગ્રામ્ય / ૧.૫૦ લાખ શહેરી)",
+    "બેંક પાસબુક"
+  ],
+  applicationUrl: "https://esamajkalyan.gujarat.gov.in",
+  icon: "♿",
+  ministry: "સામાજિક ન્યાય અને અધિકારીતા વિભાગ, ગુજરાત",
+  isActive: true,
+  officialSlaDays: 21,
+  planningEstimateDays: "૫-૭ દિવસ",
+  implementingAuthority: "જિલ્લા સમાજ સુરક્ષા અધિકારી / e-Samaj Kalyan",
+  targetBeneficiary: "૮૦% કે તેથી વધુ દિવ્યાંગતા ધરાવતા દિવ્યાંગ નાગરિકો",
+  documentChecklist: [
+    {
+      name: "UDID Disability Card",
+      nameGu: "UDID કાર્ડ (૮૦%+ સર્ટિફિકેટ)",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Aadhaar Card",
+      nameGu: "આધાર કાર્ડ",
+      tier: "mandatory",
+      digiLockerSupported: true
+    },
+    {
+      name: "Income Certificate",
+      nameGu: "આવક દાખલો",
+      tier: "mandatory",
+      digiLockerSupported: true
+    }
+  ]
+},
 ];
 
 // Helper functions for offline fallback & server-side lookup
