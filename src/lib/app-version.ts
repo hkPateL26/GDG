@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.8.2";
-export const APP_BUILD_NAME = "National DPI Release v2.8.2 - Live Cloud Firestore DigiLocker Vault & SHA-256 Slot Mismatch Shield";
+export const APP_VERSION = "v2.8.3";
+export const APP_BUILD_NAME = "National DPI Release v2.8.3 - Strict Offline Record Separation & Zero-Leakage DigiLocker Guard";
 export const APP_RELEASE_DATE = "૧૪ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "14 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";

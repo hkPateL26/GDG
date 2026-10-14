@@ -43,7 +43,12 @@ import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
 import { getActiveFamilyMember } from "@/lib/family-ledger";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
-import { DigiLockerDocument, DigiLockerConsentArtifact } from "@/lib/digilocker-engine";
+import {
+  DigiLockerDocument,
+  DigiLockerConsentArtifact,
+  isSlotSupportedByDigiLocker,
+  validateDocSlotCompatibility,
+} from "@/lib/digilocker-engine";
 
 interface UploadedDocState {
   file: File | null;
@@ -732,93 +737,220 @@ export default function DocumentServicePortal({
   };
 
   // 1-Click Official DigiLocker Gateway Response Handler
+  // 1-Click Official DigiLocker Gateway Response Handler
   const handleDigiLockerDocumentFetched = (payload: {
     document: DigiLockerDocument;
     allFetchedDocs?: DigiLockerDocument[];
     consentArtifact: DigiLockerConsentArtifact;
   }) => {
-    const docsToProcess = payload.allFetchedDocs && payload.allFetchedDocs.length > 0
-      ? payload.allFetchedDocs
-      : [payload.document];
-
     const updatedUploads: Record<string, UploadedDocState> = { ...uploadedDocs };
     const updatedDigiMap: Record<string, DigiLockerDocument> = { ...digiLockerVerifiedDocs };
 
-    docsToProcess.forEach((doc) => {
-      updatedDigiMap[doc.id] = doc;
+    // Record verified docs in map
+    if (payload.allFetchedDocs && payload.allFetchedDocs.length > 0) {
+      payload.allFetchedDocs.forEach((d) => {
+        updatedDigiMap[d.id] = d;
+      });
+    } else if (payload.document) {
+      updatedDigiMap[payload.document.id] = payload.document;
+    }
 
-      // Find matching requiredDoc in current service
-      const match = requiredDocs.find(
-        (rd) =>
-          rd.id === doc.id ||
-          rd.nameEn.toLowerCase().includes(doc.id.toLowerCase()) ||
-          rd.nameGu.includes(doc.nameGu.slice(0, 4)) ||
-          (doc.id === "aadhaar" && (rd.id.includes("aadhaar") || rd.id.includes("photo_id") || rd.id.includes("identity"))) ||
-          (doc.id === "income" && (rd.id.includes("income") || rd.id.includes("salary"))) ||
-          (doc.id === "ration" && rd.id.includes("ration")) ||
-          (doc.id === "land_records" && (rd.id.includes("land") || rd.id.includes("7_12") || rd.id.includes("ror"))) ||
-          (doc.id === "electricity" && (rd.id.includes("electricity") || rd.id.includes("light") || rd.id.includes("address"))) ||
-          (doc.id === "caste" && rd.id.includes("caste")) ||
-          (doc.id === "pan" && rd.id.includes("pan")) ||
-          (doc.id === "driving_licence" && (rd.id.includes("driving") || rd.id.includes("licence"))) ||
-          (doc.id === "rc_book" && (rd.id.includes("rc") || rd.id.includes("vehicle"))) ||
-          (doc.id === "birth_certificate" && rd.id.includes("birth")) ||
-          (doc.id === "domicile" && rd.id.includes("domicile"))
-      );
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENARIO A: BULK FETCH ("Fetch All Required" clicked)
+    // ─────────────────────────────────────────────────────────────────────────
+    if (payload.allFetchedDocs && payload.allFetchedDocs.length > 0) {
+      const availableDocs = payload.allFetchedDocs;
 
-      // If citizen opened DigiLocker for a specific slot, bind directly to that slot
-      const targetSlotId =
-        activeDigiLockerTarget && activeDigiLockerTarget !== "all"
-          ? activeDigiLockerTarget
-          : match
-          ? match.id
-          : doc.id;
+      // Iterate through required slots for current service
+      requiredDocs.forEach((slot) => {
+        // 1. If slot is NOT supported by DigiLocker (e.g. tippan_copy, panchnama, affidavit), SKIP COMPLETELY!
+        if (!isSlotSupportedByDigiLocker(slot.id, slot.nameEn, slot.nameGu)) {
+          return;
+        }
 
-      const fileData = doc.userUploadedBase64 || doc.filePreviewUrl || "";
-      const isImg =
-        fileData.startsWith("data:image/") ||
-        fileData.endsWith(".png") ||
-        fileData.endsWith(".jpg") ||
-        fileData.endsWith(".jpeg");
+        // 2. Special handling for Applicant Passport Photo slot
+        const isPhotoSlot =
+          slot.id === "applicant_photo" ||
+          slot.id === "photo_proof" ||
+          slot.id === "passport_photo" ||
+          slot.id === "photo" ||
+          (slot.id.includes("photo") && !slot.id.includes("photo_id") && !slot.id.includes("identity"));
 
-      updatedUploads[targetSlotId] = {
-        file: null,
-        fileName: doc.fileName || `${doc.nameGu} (DigiLocker)`,
-        fileType: isImg ? "image/jpeg" : "application/pdf",
-        base64: fileData,
-        fileSize: doc.fileSize || "180 KB",
-        sha256Hash: doc.sha256Hash || doc.digitalSignature?.sha256 || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        status: "valid",
-        qualityScore: 100,
-        adviceGu: `✅ DigiLocker Rule 9A Verified • URI: ${doc.uri} • સત્તાવાર ડિજિટલ સહી પ્રમાણિત.`,
-        needsUpdate: false,
-        needsNewDocument: false,
-        nameMatchStatus: "matched",
-        nameMatchConfidence: 100,
-        isDigiLockerVerified: true,
-        digiLockerUri: doc.uri,
-        digiLockerIssuer: doc.issuerGu,
-        documentType: doc.nameGu,
-      };
+        if (isPhotoSlot) {
+          // Look for Aadhaar doc or explicit photo doc
+          const aadhaarDoc = availableDocs.find((d) => d.id === "aadhaar" || d.docType === "ADHAR");
+          const photoUrl = aadhaarDoc?.extractedData?.photoUrl || "/demo-docs/aadhaar_photo_hq.png";
 
-      if ((doc.id === "aadhaar" || targetSlotId === "applicant_photo") && (doc.extractedData?.photoUrl || fileData)) {
-        const photoCandidate = doc.extractedData?.photoUrl || fileData;
-        if (photoCandidate.startsWith("data:image/") || photoCandidate.includes(".png") || photoCandidate.includes(".jpg")) {
-          setUserUploadedPhoto(photoCandidate);
+          updatedUploads[slot.id] = {
+            file: null,
+            fileName: "aadhaar_verified_photo.jpg",
+            fileType: "image/jpeg",
+            base64: photoUrl,
+            fileSize: "85 KB",
+            sha256Hash:
+              aadhaarDoc?.sha256Hash || "8f3b2c1a0e9d7c4b5a6f8e7d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b",
+            status: "valid",
+            qualityScore: 100,
+            adviceGu: `✅ DigiLocker UIDAI Verified • આધાર કાર્ડમાંથી અરજદારનો રંગીન પાસપોર્ટ ફોટો સફળતાપૂર્વક મેળવાયો.`,
+            needsUpdate: false,
+            needsNewDocument: false,
+            nameMatchStatus: "matched",
+            nameMatchConfidence: 100,
+            isDigiLockerVerified: true,
+            digiLockerUri: aadhaarDoc?.uri || "in.gov.uidai-ADHAR-XXXX-XXXX-4589",
+            digiLockerIssuer: aadhaarDoc?.issuerGu || "ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ (UIDAI)",
+            documentType: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો",
+          };
+
+          setUserUploadedPhoto(photoUrl);
           if (typeof window !== "undefined") {
             try {
-              localStorage.setItem("nagrik_user_photo", photoCandidate);
+              localStorage.setItem("nagrik_user_photo", photoUrl);
             } catch {}
           }
+          return;
         }
+
+        // 3. For any other slot, find STRICT compatible doc from DigiLocker
+        const matchingDoc = availableDocs.find((doc) => {
+          const isDocPdf = doc.fileMimeType?.includes("pdf") || (doc.fileName || "").toLowerCase().endsWith(".pdf");
+          const compat = validateDocSlotCompatibility(slot.id, slot.nameGu, doc.id, doc.nameGu, isDocPdf);
+          return compat.isCompatible && !compat.isStrictMismatch;
+        });
+
+        if (matchingDoc) {
+          const fileData = matchingDoc.userUploadedBase64 || matchingDoc.filePreviewUrl || "";
+          const isImg =
+            fileData.startsWith("data:image/") ||
+            fileData.endsWith(".png") ||
+            fileData.endsWith(".jpg") ||
+            fileData.endsWith(".jpeg");
+
+          updatedUploads[slot.id] = {
+            file: null,
+            fileName: matchingDoc.fileName || `${matchingDoc.nameGu} (DigiLocker)`,
+            fileType: isImg ? "image/jpeg" : "application/pdf",
+            base64: fileData,
+            fileSize: matchingDoc.fileSize || "180 KB",
+            sha256Hash:
+              matchingDoc.sha256Hash ||
+              matchingDoc.digitalSignature?.sha256 ||
+              "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            status: "valid",
+            qualityScore: 100,
+            adviceGu: `✅ DigiLocker Rule 9A Verified • URI: ${matchingDoc.uri} • સત્તાવાર ડિજિટલ સહી પ્રમાણિત.`,
+            needsUpdate: false,
+            needsNewDocument: false,
+            nameMatchStatus: "matched",
+            nameMatchConfidence: 100,
+            isDigiLockerVerified: true,
+            digiLockerUri: matchingDoc.uri,
+            digiLockerIssuer: matchingDoc.issuerGu,
+            documentType: matchingDoc.nameGu,
+          };
+        }
+      });
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SCENARIO B: SINGLE SLOT TARGETED FETCH
+    // ─────────────────────────────────────────────────────────────────────────
+    else if (payload.document) {
+      const doc = payload.document;
+      const targetSlot =
+        activeDigiLockerTarget && activeDigiLockerTarget !== "all"
+          ? activeDigiLockerTarget
+          : doc.id;
+
+      const targetSlotObj = requiredDocs.find((s) => s.id === targetSlot);
+      const targetSlotNameGu = targetSlotObj?.nameGu || targetSlot;
+
+      // Strict Slot Compatibility Check (Hard Block - Zero Leakage)
+      const isDocPdf = doc.fileMimeType?.includes("pdf") || (doc.fileName || "").toLowerCase().endsWith(".pdf");
+      const compat = validateDocSlotCompatibility(targetSlot, targetSlotNameGu, doc.id, doc.nameGu, isDocPdf);
+
+      if (!compat.isCompatible || compat.isStrictMismatch) {
+        alert(compat.warningMessageGu || "આ દસ્તાવેજ પસંદ કરેલા સ્લોટ માટે અમાન્ય છે!");
+        return;
       }
-    });
+
+      // Check if target slot is photo
+      const isPhotoSlot =
+        targetSlot === "applicant_photo" ||
+        targetSlot === "photo_proof" ||
+        targetSlot === "passport_photo" ||
+        targetSlot === "photo" ||
+        (targetSlot.includes("photo") && !targetSlot.includes("photo_id") && !targetSlot.includes("identity"));
+
+      if (isPhotoSlot) {
+        const photoCandidate = doc.extractedData?.photoUrl || "/demo-docs/aadhaar_photo_hq.png";
+        updatedUploads[targetSlot] = {
+          file: null,
+          fileName: "aadhaar_verified_photo.jpg",
+          fileType: "image/jpeg",
+          base64: photoCandidate,
+          fileSize: "85 KB",
+          sha256Hash:
+            doc.sha256Hash ||
+            doc.digitalSignature?.sha256 ||
+            "8f3b2c1a0e9d7c4b5a6f8e7d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b",
+          status: "valid",
+          qualityScore: 100,
+          adviceGu: `✅ DigiLocker UIDAI Verified • આધાર કાર્ડમાંથી અરજદારનો રંગીન પાસપોર્ટ ફોટો સફળતાપૂર્વક મેળવાયો.`,
+          needsUpdate: false,
+          needsNewDocument: false,
+          nameMatchStatus: "matched",
+          nameMatchConfidence: 100,
+          isDigiLockerVerified: true,
+          digiLockerUri: doc.uri,
+          digiLockerIssuer: doc.issuerGu,
+          documentType: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો",
+        };
+
+        setUserUploadedPhoto(photoCandidate);
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("nagrik_user_photo", photoCandidate);
+          } catch {}
+        }
+      } else {
+        const fileData = doc.userUploadedBase64 || doc.filePreviewUrl || "";
+        const isImg =
+          fileData.startsWith("data:image/") ||
+          fileData.endsWith(".png") ||
+          fileData.endsWith(".jpg") ||
+          fileData.endsWith(".jpeg");
+
+        updatedUploads[targetSlot] = {
+          file: null,
+          fileName: doc.fileName || `${doc.nameGu} (DigiLocker)`,
+          fileType: isImg ? "image/jpeg" : "application/pdf",
+          base64: fileData,
+          fileSize: doc.fileSize || "180 KB",
+          sha256Hash:
+            doc.sha256Hash ||
+            doc.digitalSignature?.sha256 ||
+            "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          status: "valid",
+          qualityScore: 100,
+          adviceGu: `✅ DigiLocker Rule 9A Verified • URI: ${doc.uri} • સત્તાવાર ડિજિટલ સહી પ્રમાણિત.`,
+          needsUpdate: false,
+          needsNewDocument: false,
+          nameMatchStatus: "matched",
+          nameMatchConfidence: 100,
+          isDigiLockerVerified: true,
+          digiLockerUri: doc.uri,
+          digiLockerIssuer: doc.issuerGu,
+          documentType: doc.nameGu,
+        };
+      }
+    }
 
     setUploadedDocs(updatedUploads);
     setDigiLockerVerifiedDocs(updatedDigiMap);
 
     // Auto-fill form fields with verified authentic data from primary doc
-    const primaryData = payload.document.extractedData;
+    const primaryData = payload.document?.extractedData || payload.allFetchedDocs?.[0]?.extractedData;
     if (primaryData) {
       if (primaryData.fullName) setApplicantName(primaryData.fullName);
       if (primaryData.fullNameGu) setApplicantNameGu(primaryData.fullNameGu);
@@ -3215,19 +3347,29 @@ export default function DocumentServicePortal({
                         </div>
 
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          {/* Option A: Fetch directly from DigiLocker */}
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setActiveDigiLockerTarget(docItem.id);
-                              setIsDigiLockerModalOpen(true);
-                            }}
-                            className="bg-blue-50 hover:bg-blue-100 active:scale-95 border border-blue-300 text-blue-900 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
-                            title="આ દસ્તાવેજ ડીજીલોકરમાંથી સીધો ફેચ કરો"
-                          >
-                            <span className="text-sm">🔗</span>
-                            <span>DigiLocker થી લાવો</span>
-                          </button>
+                          {/* Option A: Fetch directly from DigiLocker (Only for supported categories) */}
+                          {isSlotSupportedByDigiLocker(docItem.id, docItem.nameEn, docItem.nameGu) ? (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setActiveDigiLockerTarget(docItem.id);
+                                setIsDigiLockerModalOpen(true);
+                              }}
+                              className="bg-blue-50 hover:bg-blue-100 active:scale-95 border border-blue-300 text-blue-900 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs cursor-pointer"
+                              title="આ દસ્તાવેજ ડીજીલોકરમાંથી સીધો ફેચ કરો"
+                            >
+                              <span className="text-sm">🔗</span>
+                              <span>DigiLocker થી લાવો</span>
+                            </button>
+                          ) : (
+                            <span
+                              className="text-[11px] text-slate-500 bg-slate-100 border border-slate-200 px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 cursor-not-allowed select-none"
+                              title="આ દસ્તાવેજ સ્થાનિક કચેરીનો ઓફલાઇન મહેસૂલી રેકોર્ડ છે, DigiLocker માં ઉપલબ્ધ નથી"
+                            >
+                              <span className="text-slate-400">🏛️</span>
+                              <span>ડીજીલોકરમાં ઉપલબ્ધ નથી</span>
+                            </span>
+                          )}
 
                           {/* Option B: Manual File Upload */}
                           <label className="cursor-pointer bg-white hover:bg-orange-50 border border-slate-300 hover:border-orange-400 text-slate-700 hover:text-orange-700 px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-2xs">
@@ -3235,7 +3377,7 @@ export default function DocumentServicePortal({
                             <span>{docState ? "ફાઇલ બદલો" : "અપલોડ"}</span>
                             <input
                               type="file"
-                              accept="image/jpeg,image/png,application/pdf"
+                              accept={docItem.id === "applicant_photo" ? "image/jpeg,image/png" : "image/jpeg,image/png,application/pdf"}
                               className="hidden"
                               onChange={(e) => {
                                 if (e.target.files && e.target.files[0]) {

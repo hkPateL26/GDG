@@ -69,6 +69,106 @@ export interface SlotCompatibilityResult {
   matchScore: number; // 0 to 100
 }
 
+// ─────────────────────────────────────────────────────────────────────────
+// DigiLocker Slot Availability Checker
+// Returns true ONLY if the document requirement can be satisfied via DigiLocker.
+// Returns false for offline/physical revenue papers (e.g. Tippan, Panchnama, Affidavit).
+// ─────────────────────────────────────────────────────────────────────────
+export function isSlotSupportedByDigiLocker(
+  slotId: string,
+  slotNameEn: string = "",
+  slotNameGu: string = ""
+): boolean {
+  const s = `${slotId} ${slotNameEn} ${slotNameGu}`.toLowerCase();
+
+  // EXPLICIT OFFLINE / PHYSICAL REVENUE DOCUMENTS -> NOT IN DIGILOCKER
+  if (
+    s.includes("tippan") ||
+    s.includes("ટિપ્પન") ||
+    s.includes("નકશો") ||
+    s.includes("map") ||
+    s.includes("panchnama") ||
+    s.includes("પંચનામું") ||
+    s.includes("affidavit") ||
+    s.includes("સોગંદનામું") ||
+    s.includes("pedhinama") ||
+    s.includes("પેઢીનામું") ||
+    s.includes("consent") ||
+    s.includes("સંમતિ") ||
+    s.includes("sketch") ||
+    s.includes("પ્લાન") ||
+    s.includes("plan") ||
+    s.includes("challan") ||
+    s.includes("receipt") ||
+    s.includes("પાવતી") ||
+    s.includes("medical") ||
+    s.includes("doctor")
+  ) {
+    return false;
+  }
+
+  // SUPPORTED OFFICIAL DIGILOCKER CATEGORIES
+  if (
+    s.includes("photo") ||
+    s.includes("ફોટો") ||
+    s.includes("aadhaar") ||
+    s.includes("આધાર") ||
+    s.includes("income") ||
+    s.includes("આવક") ||
+    s.includes("salary") ||
+    s.includes("ration") ||
+    s.includes("રેશન") ||
+    s.includes("7_12") ||
+    s.includes("૭/૧૨") ||
+    s.includes("8_a") ||
+    s.includes("૮-અ") ||
+    s.includes("ror") ||
+    s.includes("ઉતારો") ||
+    s.includes("caste") ||
+    s.includes("જાતિ") ||
+    s.includes("non_creamy") ||
+    s.includes("ક્રીમીલેયર") ||
+    s.includes("domicile") ||
+    s.includes("ડોમિસાઇલ") ||
+    s.includes("electricity") ||
+    s.includes("વીજળી") ||
+    s.includes("light") ||
+    s.includes("driving") ||
+    s.includes("લાયસન્સ") ||
+    s.includes("rc") ||
+    s.includes("vehicle") ||
+    s.includes("વાહન") ||
+    s.includes("ssc") ||
+    s.includes("hsc") ||
+    s.includes("marksheet") ||
+    s.includes("ગુણપત્રક") ||
+    s.includes("10th") ||
+    s.includes("12th") ||
+    s.includes("disability") ||
+    s.includes("દિવ્યાંગ") ||
+    s.includes("udid") ||
+    s.includes("pan") ||
+    s.includes("પાન") ||
+    s.includes("ayushman") ||
+    s.includes("pmjay") ||
+    s.includes("આયુષ્માન") ||
+    s.includes("birth") ||
+    s.includes("જન્મ") ||
+    s.includes("pension") ||
+    s.includes("પેન્શન") ||
+    s.includes("ppo") ||
+    s.includes("voter") ||
+    s.includes("ચૂંટણી") ||
+    s.includes("epic") ||
+    s.includes("identity") ||
+    s.includes("ઓળખ")
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 export function validateDocSlotCompatibility(
   slotId: string,
   slotNameGu: string,
@@ -78,6 +178,16 @@ export function validateDocSlotCompatibility(
 ): SlotCompatibilityResult {
   const sId = (slotId || "").toLowerCase();
   const dId = (chosenDocId || "").toLowerCase();
+
+  // 0. CHECK IF SLOT IS EVEN IN DIGILOCKER
+  if (!isSlotSupportedByDigiLocker(slotId, "", slotNameGu)) {
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ આ દસ્તાવેજ ('${slotNameGu}') ડીજીલોકરમાં ઇશ્યૂ થતો નથી. કૃપા કરીને કચેરીમાંથી મેળવેલ અસલ નકલ સીધી અપલોડ કરો.`,
+    };
+  }
 
   // 1. PASSPORT PHOTO SLOT
   if (sId.includes("photo") && !sId.includes("photo_id") && !sId.includes("identity")) {
@@ -89,57 +199,54 @@ export function validateDocSlotCompatibility(
         warningMessageGu: `❌ અમાન્ય ફાઇલ પ્રકાર: 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટમાં PDF ફાઇલ માન્ય નથી! ફક્ત અરજદારનો રંગીન પાસપોર્ટ ફોટો (JPG / PNG) જ અપલોડ કરો.`,
       };
     }
+    // ONLY Aadhaar (photo extract) or direct photo is allowed!
     if (dId === "aadhaar" || dId === "photo" || dId.includes("photo")) {
-      return {
-        isCompatible: true,
-        isStrictMismatch: false,
-        matchScore: 100,
-      };
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
     }
     return {
       isCompatible: false,
       isStrictMismatch: true,
-      matchScore: 10,
-      warningMessageGu: `❌ અસંગત દસ્તાવેજ: તમે 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટ માટે '${chosenDocNameGu}' પસંદ કર્યું છે. આ સ્લોટમાં ફક્ત અરજદારનો ફોટો જ માન્ય છે.`,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટમાં '${chosenDocNameGu}' માન્ય નથી! ફક્ત અરજદારનો રંગીન પાસપોર્ટ ફોટો અથવા આધાર ફોટો જ માન્ય છે.`,
     };
   }
 
-  // 2. INCOME PROOF SLOT
+  // 2. LAND RECORD SLOT (7/12 & 8-A)
+  if (sId.includes("7_12") || sId.includes("8_a") || sId.includes("ror") || sId.includes("land") || sId.includes("survey_7_12")) {
+    if (dId === "land_records") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: '${slotNameGu}' સ્લોટમાં ફક્ત '૭/૧૨ અને ૮-અ જમીન ઉતારો' જ માન્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+    };
+  }
+
+  // 3. INCOME PROOF SLOT
   if (sId.includes("income") || sId.includes("salary")) {
     if (dId === "income" || dId === "non_creamy_layer") {
       return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
     }
     return {
       isCompatible: false,
-      isStrictMismatch: false,
-      matchScore: 30,
-      warningMessageGu: `⚠️ ધ્યાન આપો: તમે '${slotNameGu}' સ્લોટ માટે '${chosenDocNameGu}' પસંદ કરી રહ્યા છો. સામાન્ય રીતે આ સ્લોટમાં 'આવકનો દાખલો' જરૂરી હોય છે.`,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: '${slotNameGu}' સ્લોટમાં ફક્ત 'આવકનો દાખલો' જ માન્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
     };
   }
 
-  // 3. IDENTITY PROOF SLOT
-  if (sId.includes("identity") || sId.includes("photo_id") || sId.includes("aadhaar") || sId.includes("current_aadhaar")) {
-    if (["aadhaar", "pan", "voter_id", "driving_licence"].includes(dId)) {
+  // 4. AADHAAR CARD SPECIFIC SLOT
+  if (sId.includes("aadhaar") || sId.includes("aadhar") || sId.includes("applicant_aadhaar")) {
+    if (dId === "aadhaar") {
       return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
     }
     return {
       isCompatible: false,
-      isStrictMismatch: false,
-      matchScore: 40,
-      warningMessageGu: `⚠️ ઓળખ પુરાવા માટે આધાર, પાન, ચૂંટણી કાર્ડ કે ડ્રાઇવિંગ લાયસન્સ યોગ્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
-    };
-  }
-
-  // 4. RESIDENCE PROOF SLOT
-  if (sId.includes("residence") || sId.includes("address") || sId.includes("light")) {
-    if (["electricity", "ration", "domicile", "aadhaar"].includes(dId)) {
-      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
-    }
-    return {
-      isCompatible: false,
-      isStrictMismatch: false,
-      matchScore: 40,
-      warningMessageGu: `⚠️ રહેઠાણ પુરાવા માટે વીજળી બિલ, રેશનકાર્ડ કે ડોમિસાઇલ પ્રમાણપત્ર યોગ્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: '${slotNameGu}' સ્લોટમાં ફક્ત 'આધાર કાર્ડ' જ માન્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
     };
   }
 
@@ -150,9 +257,9 @@ export function validateDocSlotCompatibility(
     }
     return {
       isCompatible: false,
-      isStrictMismatch: false,
-      matchScore: 20,
-      warningMessageGu: `⚠️ રેશનકાર્ડ સ્લોટ માટે 'ડિજિટલ રેશનકાર્ડ' જરૂરી છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: રેશનકાર્ડ સ્લોટ માટે ફક્ત 'ડિજિટલ રેશનકાર્ડ' જ માન્ય છે.`,
     };
   }
 
@@ -163,26 +270,161 @@ export function validateDocSlotCompatibility(
     }
     return {
       isCompatible: false,
-      isStrictMismatch: false,
-      matchScore: 20,
-      warningMessageGu: `⚠️ જાતિ પુરાવા માટે 'જાતિનો દાખલો' જરૂરી છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: જાતિ સ્લોટ માટે ફક્ત 'જાતિનો દાખલો' જ માન્ય છે.`,
     };
   }
 
-  // 7. LAND RECORD SLOT
-  if (sId.includes("land") || sId.includes("7_12") || sId.includes("ror")) {
-    if (dId === "land_records") {
+  // 7. NON CREAMY LAYER SLOT
+  if (sId.includes("non_creamy") || sId.includes("ncl")) {
+    if (dId === "non_creamy_layer") {
       return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
     }
     return {
       isCompatible: false,
-      isStrictMismatch: false,
-      matchScore: 20,
-      warningMessageGu: `⚠️ જમીન વિગત માટે '૭/૧૨ & ૮-અ ઉતારો' જરૂરી છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: નોન-ક્રીમીલેયર સ્લોટ માટે ફક્ત 'નોન-ક્રીમીલેયર પ્રમાણપત્ર' જ માન્ય છે.`,
     };
   }
 
-  return { isCompatible: true, isStrictMismatch: false, matchScore: 90 };
+  // 8. ELECTRICITY / LIGHT BILL SLOT
+  if (sId.includes("electricity") || sId.includes("light")) {
+    if (dId === "electricity") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: વીજળી બિલ સ્લોટ માટે ફક્ત 'વીજળી બિલ (PGVCL/UGVCL)' જ માન્ય છે.`,
+    };
+  }
+
+  // 9. DOMICILE CERTIFICATE SLOT
+  if (sId.includes("domicile")) {
+    if (dId === "domicile") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: ડોમિસાઇલ સ્લોટ માટે ફક્ત 'ડોમિસાઇલ પ્રમાણપત્ર' જ માન્ય છે.`,
+    };
+  }
+
+  // 10. DRIVING LICENCE SLOT
+  if (sId.includes("driving") || sId.includes("licence")) {
+    if (dId === "driving_licence") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: ડ્રાઇવિંગ લાયસન્સ સ્લોટ માટે ફક્ત 'ડ્રાઇવિંગ લાયસન્સ' જ માન્ય છે.`,
+    };
+  }
+
+  // 11. VEHICLE RC BOOK SLOT
+  if (sId.includes("rc_book") || sId.includes("vehicle") || sId.includes("rc")) {
+    if (dId === "rc_book") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: વાહન રજિસ્ટ્રેશન સ્લોટ માટે ફક્ત 'RC બુક' જ માન્ય છે.`,
+    };
+  }
+
+  // 12. BIRTH CERTIFICATE SLOT
+  if (sId.includes("birth")) {
+    if (dId === "birth_certificate") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: જન્મ પ્રમાણપત્ર સ્લોટ માટે ફક્ત 'જન્મ પ્રમાણપત્ર' જ માન્ય છે.`,
+    };
+  }
+
+  // 13. PAN CARD SLOT
+  if (sId.includes("pan") && !sId.includes("panchnama")) {
+    if (dId === "pan") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: પાન કાર્ડ સ્લોટ માટે ફક્ત 'પાન કાર્ડ' જ માન્ય છે.`,
+    };
+  }
+
+  // 14. GENERAL IDENTITY PROOF (Aadhaar / PAN / Voter ID / DL)
+  if (sId.includes("identity") || sId.includes("photo_id")) {
+    if (["aadhaar", "pan", "voter_id", "driving_licence"].includes(dId)) {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: ઓળખ પુરાવા માટે ફક્ત આધાર, પાન, ચૂંટણી કાર્ડ કે ડ્રાઇવિંગ લાયસન્સ માન્ય છે.`,
+    };
+  }
+
+  // 15. GENERAL RESIDENCE PROOF (Electricity / Ration / Domicile / Aadhaar)
+  if (sId.includes("residence") || sId.includes("address")) {
+    if (["electricity", "ration", "domicile", "aadhaar"].includes(dId)) {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: રહેઠાણ પુરાવા માટે ફક્ત વીજળી બિલ, રેશનકાર્ડ, ડોમિસાઇલ કે આધાર માન્ય છે.`,
+    };
+  }
+
+  // 16. EDUCATION MARKSHEET (SSC / HSC)
+  if (sId.includes("ssc") || sId.includes("10th")) {
+    if (dId === "ssc_marksheet") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: ધોરણ ૧૦ સ્લોટ માટે ફક્ત ધોરણ ૧૦ નું ગુણપત્રક જ માન્ય છે.`,
+    };
+  }
+
+  if (sId.includes("hsc") || sId.includes("12th")) {
+    if (dId === "hsc_marksheet") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 0,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: ધોરણ ૧૨ સ્લોટ માટે ફક્ત ધોરણ ૧૨ નું ગુણપત્રક જ માન્ય છે.`,
+    };
+  }
+
+  // ALL OTHER UNKNOWN SLOTS: STRICT MISMATCH! ZERO LEAKAGE!
+  return {
+    isCompatible: false,
+    isStrictMismatch: true,
+    matchScore: 0,
+    warningMessageGu: `❌ આ દસ્તાવેજ ('${slotNameGu}') ડીજીલોકરમાં ઇશ્યૂ થતો નથી. કૃપા કરીને કચેરીમાંથી મેળવેલ અસલ નકલ સીધી અપલોડ કરો.`,
+  };
 }
 
 export interface DigiLockerConsentArtifact {

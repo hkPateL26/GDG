@@ -30,6 +30,7 @@ import {
   DigiLockerConsentArtifact,
   DIGILOCKER_MASTER_DOC_TYPES,
   validateDocSlotCompatibility,
+  isSlotSupportedByDigiLocker,
 } from "@/lib/digilocker-engine";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
@@ -222,20 +223,22 @@ export default function DigiLockerGatewayModal({
   };
 
   const handleSelectAndFetchDocument = (doc: DigiLockerDocument) => {
-    // 1. Strict Slot Mismatch Check
+    // 1. Strict Slot Mismatch Check (Hard Block - Zero Leakage)
+    const isDocPdf = doc.fileMimeType?.includes("pdf") || (doc.fileName || "").toLowerCase().endsWith(".pdf");
     const compat = validateDocSlotCompatibility(
       effectiveTargetSlotId,
       effectiveTargetSlotName,
       doc.id,
       doc.nameGu,
-      false
+      isDocPdf
     );
 
-    if (compat.isStrictMismatch) {
-      const confirmMismatch = window.confirm(
-        `⚠️ સ્લોટ મિસમેચ ચેતવણી:\n\nતમે '${effectiveTargetSlotName}' સ્લોટ માટે '${doc.nameGu}' પસંદ કરી રહ્યા છો.\n\n${compat.warningMessageGu || "આ દસ્તાવેજ પસંદ કરેલા સ્લોટ માટે યોગ્ય નથી."}\n\nશું તમે ખરેખર આગળ વધવા માગો છો?`
+    if (!compat.isCompatible || compat.isStrictMismatch) {
+      alert(
+        compat.warningMessageGu ||
+          `❌ અમાન્ય દસ્તાવેજ: '${doc.nameGu}' આ સ્લોટ ('${effectiveTargetSlotName}') માટે માન્ય નથી.`
       );
-      if (!confirmMismatch) return;
+      return;
     }
 
     setIsLoading(true);
@@ -794,7 +797,40 @@ export default function DigiLockerGatewayModal({
                 </div>
               )}
 
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              {/* Target Slot Not In DigiLocker Notice */}
+              {effectiveTargetSlotId !== "all" && !isSlotSupportedByDigiLocker(effectiveTargetSlotId, "", effectiveTargetSlotName) ? (
+                <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 text-center space-y-4 my-2">
+                  <div className="w-14 h-14 rounded-full bg-amber-100 border-2 border-amber-300 mx-auto flex items-center justify-center text-3xl shadow-xs">
+                    🏛️
+                  </div>
+                  <div className="space-y-1">
+                    <span className="text-xs bg-amber-200/80 text-amber-900 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
+                      ઓફલાઇન મહેસૂલી રેકોર્ડ
+                    </span>
+                    <h4 className="font-black text-base sm:text-lg text-slate-900 pt-2">
+                      &apos;{effectiveTargetSlotName}&apos; ડીજીલોકરમાં ઉપલબ્ધ હોતો નથી
+                    </h4>
+                  </div>
+                  <p className="text-xs sm:text-sm text-slate-600 leading-relaxed max-w-lg mx-auto">
+                    આ દસ્તાવેજ સ્થાનિક તાલુકા/મામલતદાર/DILR કચેરીનો જૂનો કે પ્રત્યક્ષ ભૌતિક રેકોર્ડ (દા.ત. ગામ નકશો, જૂની ટિપ્પન નકલ, પંચનામું, પેઢીનામું) હોવાથી રાષ્ટ્રીય DigiLocker સર્વરમાં ઓનલાઇન જારી થતો નથી.
+                  </p>
+                  <div className="bg-white border border-amber-200 rounded-xl p-3 text-xs text-amber-950 font-medium max-w-md mx-auto text-left flex items-start gap-2">
+                    <span className="text-amber-600 font-bold shrink-0">💡 સૂચના:</span>
+                    <span>કૃપા કરીને તાલુકા કે DILR કચેરીમાંથી મેળવેલ નકલનો સીધો ફોટો અથવા સ્કેન PDF અપલોડ કરો.</span>
+                  </div>
+                  <div className="pt-2">
+                    <button
+                      type="button"
+                      onClick={onClose}
+                      className="px-6 py-2.5 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 active:scale-95 text-slate-950 font-black text-xs sm:text-sm rounded-xl shadow-md transition cursor-pointer"
+                    >
+                      ✓ સમજાયું • કચેરી નકલ સીધી અપલોડ કરો
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
                   <h4 className="text-sm sm:text-base font-extrabold text-slate-900 flex items-center gap-1.5">
                     <span>📂 તમારા ડીજીલોકરમાં ઉપલબ્ધ સરકારી દસ્તાવેજો</span>
@@ -804,16 +840,18 @@ export default function DigiLockerGatewayModal({
                   </p>
                 </div>
 
-                {/* Master Action: Fetch All Required */}
-                <button
-                  type="button"
-                  onClick={handleFetchAllRequired}
-                  disabled={isLoading}
-                  className="px-3.5 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 shrink-0 cursor-pointer"
-                >
-                  <Sparkles size={13} className="text-amber-300" />
-                  <span>⚡ તમામ દસ્તાવેજો એકસાથે લાવો (Fetch All)</span>
-                </button>
+                {/* Master Action: Fetch All Required (ONLY if in 'all' mode) */}
+                {effectiveTargetSlotId === "all" && (
+                  <button
+                    type="button"
+                    onClick={handleFetchAllRequired}
+                    disabled={isLoading}
+                    className="px-3.5 py-1.5 bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 shrink-0 cursor-pointer"
+                  >
+                    <Sparkles size={13} className="text-amber-300" />
+                    <span>⚡ તમામ દસ્તાવેજો એકસાથે લાવો (Fetch All)</span>
+                  </button>
+                )}
               </div>
 
               {/* Custom Real Document Linking Button */}
@@ -1021,12 +1059,13 @@ export default function DigiLockerGatewayModal({
                     doc.id === effectiveTargetSlotId ||
                     doc.docType.toLowerCase() === effectiveTargetSlotId.toLowerCase();
 
+                  const isDocPdf = doc.fileMimeType?.includes("pdf") || (doc.fileName || "").toLowerCase().endsWith(".pdf");
                   const docCompat = validateDocSlotCompatibility(
                     effectiveTargetSlotId,
                     effectiveTargetSlotName,
                     doc.id,
                     doc.nameGu,
-                    false
+                    isDocPdf
                   );
 
                   return (
@@ -1070,9 +1109,9 @@ export default function DigiLockerGatewayModal({
                                     <span>આ સ્લોટ માટે સુસંગત</span>
                                   </span>
                                 ) : (
-                                  <span className="text-[9.5px] bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2 py-0.2 rounded-full flex items-center gap-1">
-                                    <AlertTriangle size={10} className="text-amber-600" />
-                                    <span>સ્લોટ મિસમેચ</span>
+                                  <span className="text-[9.5px] bg-rose-100 text-rose-800 border border-rose-300 font-bold px-2 py-0.2 rounded-full flex items-center gap-1">
+                                    <AlertTriangle size={10} className="text-rose-600" />
+                                    <span>અસંગત દસ્તાવેજ</span>
                                   </span>
                                 )
                               )}
@@ -1108,20 +1147,33 @@ export default function DigiLockerGatewayModal({
                             : `ઓળખ: ${doc.docNumber}`}
                         </span>
 
-                        <button
-                          type="button"
-                          onClick={() => handleSelectAndFetchDocument(doc)}
-                          disabled={isLoading}
-                          className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold transition flex items-center gap-1.5 text-xs shadow-xs cursor-pointer disabled:opacity-50"
-                        >
-                          <Check size={14} />
-                          <span>આ દસ્તાવેજ પસંદ કરો</span>
-                        </button>
+                        {effectiveTargetSlotId !== "all" && !docCompat.isCompatible ? (
+                          <button
+                            type="button"
+                            disabled
+                            className="px-3.5 py-1.5 bg-slate-200 text-slate-400 rounded-xl font-bold text-xs cursor-not-allowed flex items-center gap-1.5 shrink-0"
+                            title={docCompat.warningMessageGu || "આ દસ્તાવેજ આ સ્લોટ માટે અસંગત છે"}
+                          >
+                            <span>❌ અસંગત દસ્તાવેજ</span>
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => handleSelectAndFetchDocument(doc)}
+                            disabled={isLoading}
+                            className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl font-bold transition flex items-center gap-1.5 text-xs shadow-xs cursor-pointer disabled:opacity-50"
+                          >
+                            <Check size={14} />
+                            <span>આ દસ્તાવેજ પસંદ કરો</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   );
                 })}
-              </div>
+                </div>
+                </>
+              )}
             </div>
           )}
         </div>
