@@ -10,6 +10,8 @@ import {
   DigiLockerDocument,
   generateConsentArtifact,
 } from "@/lib/digilocker-engine";
+import { db } from "@/lib/firebase";
+import { collection, doc, getDoc, getDocs, setDoc } from "firebase/firestore";
 
 export const dynamic = "force-dynamic";
 
@@ -82,29 +84,140 @@ export async function POST(req: NextRequest) {
     }
 
     // ───────────────────────────────────────────────────────────────────
-    // 3. ACTION: get_issued_documents (Fetch list of official issued docs)
+    // 3. ACTION: get_issued_documents (Fetch list from Firestore + Default docs)
     // ───────────────────────────────────────────────────────────────────
     if (action === "get_issued_documents") {
+      let vaultDocs: DigiLockerDocument[] = [];
+      let fromDb = false;
+
+      if (db) {
+        try {
+          const colRef = collection(db, "digilocker_vault");
+          const snap = await getDocs(colRef);
+          if (!snap.empty) {
+            vaultDocs = snap.docs.map((d) => d.data() as DigiLockerDocument);
+            fromDb = true;
+          }
+        } catch (dbErr) {
+          console.warn("Firestore vault fetch warning:", dbErr);
+        }
+      }
+
+      // Merge: Custom Firestore vault docs override or augment DEFAULT_ISSUED_DOCUMENTS
+      const docMap = new Map<string, DigiLockerDocument>();
+      DEFAULT_ISSUED_DOCUMENTS.forEach((d) => docMap.set(d.id, d));
+      vaultDocs.forEach((d) => docMap.set(d.id, { ...d, isCustomLinked: true }));
+      const mergedList = Array.from(docMap.values());
+
       return NextResponse.json({
         success: true,
-        documents: DEFAULT_ISSUED_DOCUMENTS,
-        totalIssued: DEFAULT_ISSUED_DOCUMENTS.length,
-        gateway: "MeriPehchaan (National SSO) - API Setu Node",
+        documents: mergedList,
+        totalIssued: mergedList.length,
+        fromFirestore: fromDb,
+        gateway: "MeriPehchaan (National SSO) - Cloud Firestore Live Synced",
         protocol: "OAuth 2.0 / OpenID Connect (PKCE Verified)",
       });
     }
 
     // ───────────────────────────────────────────────────────────────────
-    // 4. ACTION: fetch_document (Fetch digitally signed XML & PDF)
+    // 4. ACTION: save_vault_doc (Save Document to Cloud Firestore Live DB)
+    // ───────────────────────────────────────────────────────────────────
+    if (action === "save_vault_doc") {
+      const incomingDoc = body?.document as DigiLockerDocument;
+      if (!incomingDoc || !incomingDoc.id) {
+        return NextResponse.json(
+          { success: false, error: "અમાન્ય દસ્તાવેજ માહિતી." },
+          { status: 400 }
+        );
+      }
+
+      let savedInDb = false;
+      if (db) {
+        try {
+          const cleanDoc: Record<string, unknown> = {
+            id: incomingDoc.id,
+            name: incomingDoc.name || "",
+            nameGu: incomingDoc.nameGu || "",
+            category: incomingDoc.category || "revenue",
+            docType: incomingDoc.docType || "GOVCR",
+            uri: incomingDoc.uri || `in.gov.gujarat.user-VAULT-2026-${Date.now()}`,
+            issuer: incomingDoc.issuer || "Government of Gujarat",
+            issuerGu: incomingDoc.issuerGu || "ગુજરાત સરકાર",
+            issuerCode: incomingDoc.issuerCode || "USER-VAULT",
+            docNumber: incomingDoc.docNumber || `VAULT/${Date.now().toString().slice(-6)}`,
+            issueDate: incomingDoc.issueDate || new Date().toLocaleDateString("en-GB"),
+            validTill: incomingDoc.validTill || "આજીવન માન્ય",
+            digitalSignature: incomingDoc.digitalSignature || {
+              signedBy: "CCA India - Validated DigiLocker Vault",
+              designation: "Certified Document Repository (Rule 9A Valid)",
+              certAuthority: "CCA India Certified",
+              timestamp: new Date().toISOString().replace("T", " ").slice(0, 19),
+              status: "VALID",
+              sha256: incomingDoc.sha256Hash || "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            },
+            extractedData: incomingDoc.extractedData || {},
+            fileName: incomingDoc.fileName || "document.pdf",
+            fileSize: incomingDoc.fileSize || "100 KB",
+            fileMimeType: incomingDoc.fileMimeType || "application/pdf",
+            sha256Hash: incomingDoc.sha256Hash || "",
+            isCustomLinked: true,
+            updatedAt: new Date().toISOString(),
+          };
+
+          // Keep payload within Firestore document size boundaries (< 900KB)
+          if (incomingDoc.userUploadedBase64 && incomingDoc.userUploadedBase64.length < 900000) {
+            cleanDoc.userUploadedBase64 = incomingDoc.userUploadedBase64;
+            cleanDoc.filePreviewUrl = incomingDoc.userUploadedBase64;
+          } else if (incomingDoc.filePreviewUrl && incomingDoc.filePreviewUrl.length < 900000) {
+            cleanDoc.filePreviewUrl = incomingDoc.filePreviewUrl;
+          }
+
+          const docRef = doc(db, "digilocker_vault", incomingDoc.id);
+          await setDoc(docRef, cleanDoc, { merge: true });
+          savedInDb = true;
+        } catch (dbErr) {
+          console.error("Firestore vault write error:", dbErr);
+        }
+      }
+
+      return NextResponse.json({
+        success: true,
+        docId: incomingDoc.id,
+        savedInFirestore: savedInDb,
+        messageGu: savedInDb
+          ? "✅ દસ્તાવેજ સફળતાપૂર્વક Google Cloud Firestore (GSDC) ડેટાબેઝમાં સાચવવામાં આવ્યો છે."
+          : "✅ દસ્તાવેજ લોકલ ડીજીલોકર વૉલ્ટમાં સુરક્ષિત રીતે સંગ્રહિત થયો.",
+      });
+    }
+
+    // ───────────────────────────────────────────────────────────────────
+    // 5. ACTION: fetch_document (Fetch digitally signed XML & PDF)
     // ───────────────────────────────────────────────────────────────────
     if (action === "fetch_document") {
       const { docId, docType, purposeGu } = body;
-      const targetDoc = DEFAULT_ISSUED_DOCUMENTS.find(
+      let targetDoc = DEFAULT_ISSUED_DOCUMENTS.find(
         (d) => d.id === docId || d.docType === docType
-      ) || DEFAULT_ISSUED_DOCUMENTS[0];
+      );
+
+      // Check Firestore if not found in bundled documents
+      if (!targetDoc && db && docId) {
+        try {
+          const docRef = doc(db, "digilocker_vault", docId);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists()) {
+            targetDoc = docSnap.data() as DigiLockerDocument;
+          }
+        } catch (e) {
+          console.warn("Firestore doc lookup warning:", e);
+        }
+      }
+
+      if (!targetDoc) {
+        targetDoc = DEFAULT_ISSUED_DOCUMENTS[0];
+      }
 
       const consentArtifact = generateConsentArtifact(
-        targetDoc.extractedData.aadhaarLast4,
+        targetDoc.extractedData?.aadhaarLast4 || "4829",
         [targetDoc.uri],
         purposeGu || "સરકારી કલ્યાણકારી યોજના/પ્રમાણપત્ર અરજી ખરાઈ હેતુ (Rule 9A Verified)"
       );

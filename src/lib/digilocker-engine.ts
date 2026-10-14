@@ -56,6 +56,133 @@ export interface DigiLockerDocument {
   filePreviewUrl?: string;
   userUploadedBase64?: string;
   isCustomLinked?: boolean;
+  fileName?: string;
+  fileSize?: string;
+  fileMimeType?: string;
+  sha256Hash?: string;
+}
+
+export interface SlotCompatibilityResult {
+  isCompatible: boolean;
+  isStrictMismatch: boolean; // e.g. Trying to put a PDF into a passport photo slot
+  warningMessageGu?: string;
+  matchScore: number; // 0 to 100
+}
+
+export function validateDocSlotCompatibility(
+  slotId: string,
+  slotNameGu: string,
+  chosenDocId: string,
+  chosenDocNameGu: string,
+  isPdf: boolean = false
+): SlotCompatibilityResult {
+  const sId = (slotId || "").toLowerCase();
+  const dId = (chosenDocId || "").toLowerCase();
+
+  // 1. PASSPORT PHOTO SLOT
+  if (sId.includes("photo") && !sId.includes("photo_id") && !sId.includes("identity")) {
+    if (isPdf) {
+      return {
+        isCompatible: false,
+        isStrictMismatch: true,
+        matchScore: 0,
+        warningMessageGu: `❌ અમાન્ય ફાઇલ પ્રકાર: 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટમાં PDF ફાઇલ માન્ય નથી! ફક્ત અરજદારનો રંગીન પાસપોર્ટ ફોટો (JPG / PNG) જ અપલોડ કરો.`,
+      };
+    }
+    if (dId === "aadhaar" || dId === "photo" || dId.includes("photo")) {
+      return {
+        isCompatible: true,
+        isStrictMismatch: false,
+        matchScore: 100,
+      };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: true,
+      matchScore: 10,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: તમે 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટ માટે '${chosenDocNameGu}' પસંદ કર્યું છે. આ સ્લોટમાં ફક્ત અરજદારનો ફોટો જ માન્ય છે.`,
+    };
+  }
+
+  // 2. INCOME PROOF SLOT
+  if (sId.includes("income") || sId.includes("salary")) {
+    if (dId === "income" || dId === "non_creamy_layer") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: false,
+      matchScore: 30,
+      warningMessageGu: `⚠️ ધ્યાન આપો: તમે '${slotNameGu}' સ્લોટ માટે '${chosenDocNameGu}' પસંદ કરી રહ્યા છો. સામાન્ય રીતે આ સ્લોટમાં 'આવકનો દાખલો' જરૂરી હોય છે.`,
+    };
+  }
+
+  // 3. IDENTITY PROOF SLOT
+  if (sId.includes("identity") || sId.includes("photo_id") || sId.includes("aadhaar") || sId.includes("current_aadhaar")) {
+    if (["aadhaar", "pan", "voter_id", "driving_licence"].includes(dId)) {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: false,
+      matchScore: 40,
+      warningMessageGu: `⚠️ ઓળખ પુરાવા માટે આધાર, પાન, ચૂંટણી કાર્ડ કે ડ્રાઇવિંગ લાયસન્સ યોગ્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+    };
+  }
+
+  // 4. RESIDENCE PROOF SLOT
+  if (sId.includes("residence") || sId.includes("address") || sId.includes("light")) {
+    if (["electricity", "ration", "domicile", "aadhaar"].includes(dId)) {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: false,
+      matchScore: 40,
+      warningMessageGu: `⚠️ રહેઠાણ પુરાવા માટે વીજળી બિલ, રેશનકાર્ડ કે ડોમિસાઇલ પ્રમાણપત્ર યોગ્ય છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+    };
+  }
+
+  // 5. RATION CARD SLOT
+  if (sId.includes("ration")) {
+    if (dId === "ration") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: false,
+      matchScore: 20,
+      warningMessageGu: `⚠️ રેશનકાર્ડ સ્લોટ માટે 'ડિજિટલ રેશનકાર્ડ' જરૂરી છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+    };
+  }
+
+  // 6. CASTE CERTIFICATE SLOT
+  if (sId.includes("caste")) {
+    if (dId === "caste") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: false,
+      matchScore: 20,
+      warningMessageGu: `⚠️ જાતિ પુરાવા માટે 'જાતિનો દાખલો' જરૂરી છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+    };
+  }
+
+  // 7. LAND RECORD SLOT
+  if (sId.includes("land") || sId.includes("7_12") || sId.includes("ror")) {
+    if (dId === "land_records") {
+      return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
+    }
+    return {
+      isCompatible: false,
+      isStrictMismatch: false,
+      matchScore: 20,
+      warningMessageGu: `⚠️ જમીન વિગત માટે '૭/૧૨ & ૮-અ ઉતારો' જરૂરી છે. તમે '${chosenDocNameGu}' પસંદ કર્યું છે.`,
+    };
+  }
+
+  return { isCompatible: true, isStrictMismatch: false, matchScore: 90 };
 }
 
 export interface DigiLockerConsentArtifact {
