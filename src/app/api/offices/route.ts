@@ -1,14 +1,30 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/firebase";
-import { collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
+import { collection, getDocs, doc, setDoc } from "firebase/firestore";
 import {
   getAllActiveOffices,
   saveCustomOffice,
   deleteCustomOffice,
   ExtendedOffice,
 } from "@/lib/offices-data";
+import { redisCache } from "@/lib/redis-cache";
 
 export const dynamic = "force-dynamic";
+
+const CACHE_KEY_OFFICES_PREFIX = "offices:all:v1";
+
+/**
+ * Helper to execute Firestore operations with strict timeout
+ * so the API NEVER hangs indefinitely if Firestore stream retries.
+ */
+function firestoreTimeout<T>(promise: Promise<T>, ms = 1200): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Firestore timeout after ${ms}ms`)), ms)
+    ),
+  ]);
+}
 
 export async function GET(req: NextRequest) {
   const startTime = performance.now();
@@ -21,12 +37,13 @@ export async function GET(req: NextRequest) {
     const bundled = getAllActiveOffices();
     let allOffices = bundled;
 
+    // Optional Firestore sync with strict 1.2s timeout
     if (db) {
       try {
         const colRef = collection(db, "offices");
-        const snapshot = await getDocs(colRef);
+        const snapshot = await firestoreTimeout(getDocs(colRef), 1200);
 
-        if (!snapshot.empty) {
+        if (snapshot && !snapshot.empty) {
           const dbDocs = snapshot.docs.map((d) => ({
             id: d.id,
             ...d.data(),
@@ -53,8 +70,9 @@ export async function GET(req: NextRequest) {
 
           allOffices = merged;
         }
-      } catch (dbErr) {
-        console.warn("Firestore offices fetch error:", dbErr);
+      } catch (dbErr: any) {
+        // Fallback to local memory immediately without hanging
+        console.warn("Firestore offices fetch warning (using memory):", dbErr?.message || dbErr);
       }
     }
 
@@ -130,14 +148,15 @@ export async function POST(req: NextRequest) {
       pincode: body.pincode?.trim() || "360001",
       phone: body.phone?.trim() || "1800-233-5500",
       timings: body.timings?.trim() || "૧૦:૩૦ AM - ૦૫:૩૦ PM (સોમ થી શનિ)",
-      services: Array.isArray(body.services) && body.services.length > 0
-        ? body.services
-        : [
-            "આવકનો દાખલો (Income Certificate)",
-            "જાતિનો દાખલો (Caste Certificate)",
-            "રેશનકાર્ડ સેવાઓ (Ration Card Services)",
-            "ડિજિટલ ગુજરાત પોર્ટલ સેવાઓ",
-          ],
+      services:
+        Array.isArray(body.services) && body.services.length > 0
+          ? body.services
+          : [
+              "આવકનો દાખલો (Income Certificate)",
+              "જાતિનો દાખલો (Caste Certificate)",
+              "રેશનકાર્ડ સેવાઓ (Ration Card Services)",
+              "ડિજિટલ ગુજરાત પોર્ટલ સેવાઓ",
+            ],
       mapQuery: body.mapQuery?.trim() || `${body.name}+${body.district}+Gujarat`,
       lat: typeof body.lat === "number" ? body.lat : 22.3039,
       lng: typeof body.lng === "number" ? body.lng : 70.8022,
@@ -145,16 +164,23 @@ export async function POST(req: NextRequest) {
       estimatedWaitMins: body.estimatedWaitMins || 15,
     };
 
-    // 1. In-memory
+    // 1. In-memory & Local Storage Registry (Instant <1ms)
     saveCustomOffice(office);
 
-    // 2. Firestore
+    // 2. Bust Redis Cache
+    try {
+      await redisCache.del(CACHE_KEY_OFFICES_PREFIX);
+    } catch {
+      // cache non-fatal
+    }
+
+    // 3. Firestore (Non-blocking background save with timeout safety - NEVER blocks HTTP response)
     if (db) {
-      try {
-        await setDoc(doc(db, "offices", office.id), office);
-      } catch (dbErr) {
-        console.warn("Firestore office save warning:", dbErr);
-      }
+      firestoreTimeout(setDoc(doc(db, "offices", office.id), office), 1500).catch(
+        (dbErr: any) => {
+          console.warn("Firestore office background save warning (skipped):", dbErr?.message || dbErr);
+        }
+      );
     }
 
     return NextResponse.json({
@@ -192,20 +218,24 @@ export async function DELETE(req: NextRequest) {
       );
     }
 
-    // 1. In-memory
+    // 1. In-memory Registry (Instant <1ms)
     deleteCustomOffice(id);
 
-    // 2. Firestore
+    // 2. Bust Redis Cache
+    try {
+      await redisCache.del(CACHE_KEY_OFFICES_PREFIX);
+    } catch {
+      // cache non-fatal
+    }
+
+    // 3. Firestore (Non-blocking background delete with timeout safety)
     if (db) {
-      try {
-        await setDoc(
-          doc(db, "offices", id),
-          { id, _deleted: true },
-          { merge: true }
-        );
-      } catch (dbErr) {
-        console.warn("Firestore office delete warning:", dbErr);
-      }
+      firestoreTimeout(
+        setDoc(doc(db, "offices", id), { id, _deleted: true }, { merge: true }),
+        1500
+      ).catch((dbErr: any) => {
+        console.warn("Firestore office background delete warning (skipped):", dbErr?.message || dbErr);
+      });
     }
 
     return NextResponse.json({

@@ -534,8 +534,32 @@ if (!globalForOffices.__DELETED_OFFICE_IDS__) {
 }
 
 export function getAllActiveOffices(): ExtendedOffice[] {
-  const custom = globalForOffices.__CUSTOM_OFFICES__ || [];
+  let custom = [...(globalForOffices.__CUSTOM_OFFICES__ || [])];
   const deleted = new Set(globalForOffices.__DELETED_OFFICE_IDS__ || []);
+
+  if (typeof window !== "undefined") {
+    try {
+      const stored = localStorage.getItem("nagrik_custom_offices");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          const map = new Map<string, ExtendedOffice>();
+          custom.forEach((o) => map.set(o.id, o));
+          parsed.forEach((o: ExtendedOffice) => map.set(o.id, o));
+          custom = Array.from(map.values());
+        }
+      }
+      const storedDel = localStorage.getItem("nagrik_deleted_office_ids");
+      if (storedDel) {
+        const parsedDel = JSON.parse(storedDel);
+        if (Array.isArray(parsedDel)) {
+          parsedDel.forEach((id: string) => deleted.add(id));
+        }
+      }
+    } catch (e) {
+      console.warn("Could not read custom offices from localStorage:", e);
+    }
+  }
 
   const customMap = new Map<string, ExtendedOffice>();
   custom.forEach((o) => customMap.set(o.id, o));
@@ -604,6 +628,15 @@ export function saveCustomOffice(office: ExtendedOffice): ExtendedOffice {
     globalForOffices.__CUSTOM_OFFICES__.unshift(office);
   }
 
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("nagrik_custom_offices", JSON.stringify(globalForOffices.__CUSTOM_OFFICES__));
+      localStorage.setItem("nagrik_deleted_office_ids", JSON.stringify(globalForOffices.__DELETED_OFFICE_IDS__));
+    } catch (e) {
+      console.warn("Could not sync office to localStorage:", e);
+    }
+  }
+
   return office;
 }
 
@@ -621,6 +654,15 @@ export function deleteCustomOffice(id: string): boolean {
 
   if (!globalForOffices.__DELETED_OFFICE_IDS__.includes(id)) {
     globalForOffices.__DELETED_OFFICE_IDS__.push(id);
+  }
+
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem("nagrik_custom_offices", JSON.stringify(globalForOffices.__CUSTOM_OFFICES__));
+      localStorage.setItem("nagrik_deleted_office_ids", JSON.stringify(globalForOffices.__DELETED_OFFICE_IDS__));
+    } catch (e) {
+      console.warn("Could not sync office deletion to localStorage:", e);
+    }
   }
 
   return true;

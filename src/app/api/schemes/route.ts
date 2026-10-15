@@ -23,9 +23,12 @@ async function getAllSchemesFromFirestore(): Promise<{ schemes: Scheme[]; fromDb
   if (db) {
     try {
       const colRef = collection(db, "schemes");
-      const snapshot = await getDocs(colRef);
+      const snapshot = await Promise.race([
+        getDocs(colRef),
+        new Promise<null>((_, rej) => setTimeout(() => rej(new Error("Firestore schemes timeout")), 1200))
+      ]);
 
-      if (!snapshot.empty) {
+      if (snapshot && !snapshot.empty) {
         const dbDocs = snapshot.docs.map((d) => ({ id: d.id, ...d.data() })) as (Scheme & { _deleted?: boolean })[];
 
         const dbMap = new Map<string, Scheme & { _deleted?: boolean }>();
@@ -228,13 +231,14 @@ export async function POST(req: NextRequest) {
     saveCustomScheme(scheme);
     await redisCache.del("all_schemes_cache");
 
-    // 2. Persist to Cloud Firestore
+    // 2. Persist to Cloud Firestore (Non-blocking background save - NEVER blocks response)
     if (db) {
-      try {
-        await setDoc(doc(db, "schemes", scheme.id), scheme);
-      } catch (dbErr) {
-        console.warn("Firestore scheme save warning:", dbErr);
-      }
+      Promise.race([
+        setDoc(doc(db, "schemes", scheme.id), scheme),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("Firestore timeout")), 1500))
+      ]).catch((dbErr: any) => {
+        console.warn("Firestore scheme background save warning (skipped):", dbErr?.message || dbErr);
+      });
     }
 
     return NextResponse.json({
@@ -277,17 +281,18 @@ export async function DELETE(req: NextRequest) {
     deleteCustomScheme(id);
     await redisCache.del("all_schemes_cache");
 
-    // 2. Delete / Deactivate in Firestore
+    // 2. Delete / Deactivate in Firestore (Non-blocking background delete)
     if (db) {
-      try {
-        await setDoc(
+      Promise.race([
+        setDoc(
           doc(db, "schemes", id),
           { id, _deleted: true, isActive: false },
           { merge: true }
-        );
-      } catch (dbErr) {
-        console.warn("Firestore scheme delete warning:", dbErr);
-      }
+        ),
+        new Promise((_, rej) => setTimeout(() => rej(new Error("Firestore timeout")), 1500))
+      ]).catch((dbErr: any) => {
+        console.warn("Firestore scheme background delete warning (skipped):", dbErr?.message || dbErr);
+      });
     }
 
     return NextResponse.json({

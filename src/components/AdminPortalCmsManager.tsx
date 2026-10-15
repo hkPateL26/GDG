@@ -205,40 +205,41 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
       targetBeneficiary: formTargetBeneficiary.trim() || undefined,
     };
 
+    // 1. Instant Optimistic State Update
+    setSchemes((prev) => {
+      const idx = prev.findIndex((s) => s.id === cleanId);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = newScheme;
+        return updated;
+      }
+      return [newScheme, ...prev];
+    });
+
+    // 2. Broadcast cross-tab sync
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("nagrik_schemes_updated"));
+      localStorage.setItem("nagrik_last_scheme_sync", Date.now().toString());
+    }
+
+    // 3. Fast UI Feedback & Close Modal immediately
+    showFeedback(`યોજના "${newScheme.nameGu}" સફળતાપૂર્વક સાચવવામાં આવી છે!`);
+    setIsSchemeModalOpen(false);
+
+    // 4. Background Server Sync with 3.5s safety timeout
     try {
-      const res = await fetch("/api/schemes", {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      await fetch("/api/schemes", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newScheme),
+        signal: controller.signal,
       });
-
-      if (res.ok) {
-        // Update local list
-        setSchemes((prev) => {
-          const idx = prev.findIndex((s) => s.id === cleanId);
-          if (idx >= 0) {
-            const updated = [...prev];
-            updated[idx] = newScheme;
-            return updated;
-          }
-          return [newScheme, ...prev];
-        });
-
-        // Broadcast cross-tab sync
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("nagrik_schemes_updated"));
-          localStorage.setItem("nagrik_last_scheme_sync", Date.now().toString());
-        }
-
-        showFeedback(`યોજના "${newScheme.nameGu}" સફળતાપૂર્વક સાચવવામાં આવી છે અને Firestore માં સિંક થઈ ગઈ છે!`);
-        setIsSchemeModalOpen(false);
-      } else {
-        const err = await res.json();
-        alert(err.error || "યોજના સાચવવામાં ક્ષતિ આવી.");
-      }
-    } catch (err) {
-      console.error("Save scheme error:", err);
-      alert("સર્વર સાથે સંપર્ક થઈ શક્યો નહીં.");
+      clearTimeout(timeoutId);
+    } catch (err: any) {
+      console.warn("Background server scheme sync notice:", err?.message || err);
     } finally {
       setIsSavingScheme(false);
     }
@@ -249,23 +250,25 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
       return;
     }
 
-    try {
-      const res = await fetch(`/api/schemes?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
+    // 1. Instant Optimistic State Update
+    setSchemes((prev) => prev.filter((s) => s.id !== id));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("nagrik_schemes_updated"));
+    }
+    showFeedback(`યોજના "${nameGu}" સફળતાપૂર્વક રદ કરવામાં આવી છે.`);
 
-      if (res.ok) {
-        setSchemes((prev) => prev.filter((s) => s.id !== id));
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("nagrik_schemes_updated"));
-        }
-        showFeedback(`યોજના "${nameGu}" સફળતાપૂર્વક રદ કરવામાં આવી છે.`);
-      } else {
-        alert("યોજના રદ કરવામાં ક્ષતિ આવી.");
-      }
-    } catch (e) {
-      console.error("Delete scheme error:", e);
-      alert("યોજના રદ કરવામાં ક્ષતિ આવી.");
+    // 2. Background Server Sync with 3.5s safety timeout
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      await fetch(`/api/schemes?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (e: any) {
+      console.warn("Background server scheme delete notice:", e?.message || e);
     }
   };
 
@@ -395,37 +398,53 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
       estimatedWaitMins: 15,
     };
 
+    // 1. Instant Optimistic State Update
+    setOffices((prev) => {
+      const idx = prev.findIndex((o) => o.id === cleanId);
+      if (idx >= 0) {
+        const updated = [...prev];
+        updated[idx] = newOffice;
+        return updated;
+      }
+      return [newOffice, ...prev];
+    });
+
+    // 2. Local Storage Sync & Event Dispatch
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nagrik_custom_offices");
+        const list: ExtendedOffice[] = stored ? JSON.parse(stored) : [];
+        const existingIdx = list.findIndex((o) => o.id === cleanId);
+        if (existingIdx >= 0) {
+          list[existingIdx] = newOffice;
+        } else {
+          list.unshift(newOffice);
+        }
+        localStorage.setItem("nagrik_custom_offices", JSON.stringify(list));
+        window.dispatchEvent(new CustomEvent("nagrik_offices_updated"));
+      } catch (e) {
+        console.warn("Could not save to localStorage:", e);
+      }
+    }
+
+    // 3. Fast UI Feedback & Close Modal immediately
+    showFeedback(`કચેરી "${newOffice.nameGu}" સફળતાપૂર્વક સાચવવામાં આવી છે!`);
+    setIsOfficeModalOpen(false);
+
+    // 4. Background Server Sync with 3.5s safety timeout
     try {
-      const res = await fetch("/api/offices", {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      await fetch("/api/offices", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(newOffice),
+        signal: controller.signal,
       });
-
-      if (res.ok) {
-        setOffices((prev) => {
-          const idx = prev.findIndex((o) => o.id === cleanId);
-          if (idx >= 0) {
-            const updated = [...prev];
-            updated[idx] = newOffice;
-            return updated;
-          }
-          return [newOffice, ...prev];
-        });
-
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("nagrik_offices_updated"));
-        }
-
-        showFeedback(`કચેરી "${newOffice.nameGu}" સફળતાપૂર્વક સાચવવામાં આવી છે અને Firestore માં સિંક થઈ ગઈ છે!`);
-        setIsOfficeModalOpen(false);
-      } else {
-        const err = await res.json();
-        alert(err.error || "કચેરી સાચવવામાં ક્ષતિ આવી.");
-      }
-    } catch (err) {
-      console.error("Save office error:", err);
-      alert("સર્વર સાથે સંપર્ક થઈ શક્યો નહીં.");
+      clearTimeout(timeoutId);
+    } catch (err: any) {
+      console.warn("Background server office sync notice:", err?.message || err);
     } finally {
       setIsSavingOffice(false);
     }
@@ -436,23 +455,44 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
       return;
     }
 
-    try {
-      const res = await fetch(`/api/offices?id=${encodeURIComponent(id)}`, {
-        method: "DELETE",
-      });
+    // 1. Instant Optimistic State Update
+    setOffices((prev) => prev.filter((o) => o.id !== id));
 
-      if (res.ok) {
-        setOffices((prev) => prev.filter((o) => o.id !== id));
-        if (typeof window !== "undefined") {
-          window.dispatchEvent(new CustomEvent("nagrik_offices_updated"));
+    // 2. Local Storage Sync
+    if (typeof window !== "undefined") {
+      try {
+        const stored = localStorage.getItem("nagrik_custom_offices");
+        if (stored) {
+          const list: ExtendedOffice[] = JSON.parse(stored);
+          const filtered = list.filter((o) => o.id !== id);
+          localStorage.setItem("nagrik_custom_offices", JSON.stringify(filtered));
         }
-        showFeedback(`કચેરી "${nameGu}" સફળતાપૂર્વક રદ કરવામાં આવી છે.`);
-      } else {
-        alert("કચેરી રદ કરવામાં ક્ષતિ આવી.");
+        const delStored = localStorage.getItem("nagrik_deleted_office_ids");
+        const delList: string[] = delStored ? JSON.parse(delStored) : [];
+        if (!delList.includes(id)) {
+          delList.push(id);
+          localStorage.setItem("nagrik_deleted_office_ids", JSON.stringify(delList));
+        }
+        window.dispatchEvent(new CustomEvent("nagrik_offices_updated"));
+      } catch (e) {
+        console.warn("Could not update localStorage on delete:", e);
       }
-    } catch (e) {
-      console.error("Delete office error:", e);
-      alert("કચેરી રદ કરવામાં ક્ષતિ આવી.");
+    }
+
+    showFeedback(`કચેરી "${nameGu}" સફળતાપૂર્વક રદ કરવામાં આવી છે.`);
+
+    // 3. Background Server Sync with 3.5s safety timeout
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      await fetch(`/api/offices?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+    } catch (e: any) {
+      console.warn("Background server office delete notice:", e?.message || e);
     }
   };
 
