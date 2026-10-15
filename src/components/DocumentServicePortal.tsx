@@ -35,6 +35,7 @@ import {
   LogOut,
   RotateCw,
   X,
+  Lock,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -77,13 +78,18 @@ interface UploadedDocState {
 
 export default function DocumentServicePortal({
   hideCitizenHeader = false,
+  initialPaymentOpen = false,
 }: {
   hideCitizenHeader?: boolean;
+  initialPaymentOpen?: boolean;
 } = {}) {
   // 1. Service Selection & Mode
   const [selectedServiceId, setSelectedServiceId] = useState<string>(() => {
     if (typeof window !== "undefined") {
       try {
+        const params = new URLSearchParams(window.location.search);
+        const srv = params.get("service");
+        if (srv) return srv;
         const saved = sessionStorage.getItem("nagrik_reapply_context");
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -97,6 +103,9 @@ export default function DocumentServicePortal({
   const [serviceMode, setServiceMode] = useState<"new" | "update">(() => {
     if (typeof window !== "undefined") {
       try {
+        const params = new URLSearchParams(window.location.search);
+        const mode = params.get("mode");
+        if (mode === "new" || mode === "update") return mode;
         const saved = sessionStorage.getItem("nagrik_reapply_context");
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -258,13 +267,68 @@ export default function DocumentServicePortal({
   const [signatureType, setSignatureType] = useState<"aadhaar-esign" | "physical-declaration">("aadhaar-esign");
 
   // 7. Payment Gateway Modal State (Cyber Treasury / Bharat BillPay)
-  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(false);
+  const [showPaymentModal, setShowPaymentModal] = useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("step") === "payment" || window.location.pathname.startsWith("/payment")) {
+        return true;
+      }
+    }
+    return Boolean(initialPaymentOpen);
+  });
   const [paymentMethod, setPaymentMethod] = useState<"upi" | "card" | "challan">("upi");
   const [isProcessingPayment, setIsProcessingPayment] = useState<boolean>(false);
-  const [activeTxnId, setActiveTxnId] = useState<string>("");
-  const [activeChallanNo, setActiveChallanNo] = useState<string>("");
+  const [activeTxnId, setActiveTxnId] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("ref") || params.get("txn") || `TXN-GUJ-${Math.floor(100000 + Math.random() * 899999)}`;
+    }
+    return `TXN-GUJ-${Math.floor(100000 + Math.random() * 899999)}`;
+  });
+  const [activeChallanNo, setActiveChallanNo] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      return params.get("grn") || params.get("challan") || `GRN-2026-${Math.floor(10000 + Math.random() * 89999)}`;
+    }
+    return `GRN-2026-${Math.floor(10000 + Math.random() * 89999)}`;
+  });
   const [showSlipModal, setShowSlipModal] = useState<boolean>(false);
   const [copiedVpa, setCopiedVpa] = useState<boolean>(false);
+
+  // Synchronize browser history and back button with modal states
+  const handleClosePaymentModal = () => {
+    setShowPaymentModal(false);
+    setIsProcessingPayment(false);
+    if (typeof window !== "undefined") {
+      try {
+        window.history.pushState(null, "", "/documents");
+      } catch (e) {
+        console.warn("History pushState error:", e);
+      }
+    }
+  };
+
+  const handleCloseReceiptModal = () => {
+    setSubmittedApp(null);
+    if (typeof window !== "undefined") {
+      try {
+        window.history.pushState(null, "", "/documents");
+      } catch (e) {
+        console.warn("History pushState error:", e);
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/payment")) {
+        setShowPaymentModal(false);
+        setSubmittedApp(null);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   // 8. Submission & Notification Alert Simulation
   const [submitting, setSubmitting] = useState<boolean>(false);
@@ -1031,8 +1095,19 @@ export default function DocumentServicePortal({
     setActiveTxnId(newTxn);
     setActiveChallanNo(newChallan);
 
-    // Open Payment Modal
+    // Open Payment Modal and synchronize browser address bar to /payment
     setShowPaymentModal(true);
+    if (typeof window !== "undefined") {
+      try {
+        window.history.pushState(
+          { modal: "payment", challan: newChallan },
+          "",
+          `/payment?service=${encodeURIComponent(service.id)}&mode=${encodeURIComponent(serviceMode)}&grn=${encodeURIComponent(newChallan)}&fee=${service.fee}`
+        );
+      } catch (e) {
+        console.warn("History pushState error:", e);
+      }
+    }
   };
 
   // Razorpay Dynamic SDK Script Loader
@@ -1300,6 +1375,19 @@ export default function DocumentServicePortal({
     setIsProcessingPayment(false);
     setSubmitting(false);
 
+    // Update browser address bar to official payment receipt path
+    if (typeof window !== "undefined") {
+      try {
+        window.history.pushState(
+          { modal: "receipt", id: instantApp.id },
+          "",
+          `/payment/receipt?id=${encodeURIComponent(instantApp.id)}&grn=${encodeURIComponent(instantApp.challanNo || "")}`
+        );
+      } catch (e) {
+        console.warn("History pushState error:", e);
+      }
+    }
+
     // 3. IMMEDIATE LOCALSTORAGE PERSISTENCE (Quota-safe)
     if (typeof window !== "undefined") {
       const storageSafeApp = {
@@ -1556,8 +1644,9 @@ export default function DocumentServicePortal({
                 </div>
               </div>
               <button
-                onClick={() => setShowPaymentModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg"
+                type="button"
+                onClick={handleClosePaymentModal}
+                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
                 ✕
               </button>
@@ -1590,7 +1679,7 @@ export default function DocumentServicePortal({
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("upi")}
-                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] ${
+                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] cursor-pointer ${
                     paymentMethod === "upi"
                       ? "bg-orange-50 border-orange-500 text-orange-900 ring-2 ring-orange-500/20 shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -1603,7 +1692,7 @@ export default function DocumentServicePortal({
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("card")}
-                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] ${
+                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] cursor-pointer ${
                     paymentMethod === "card"
                       ? "bg-orange-50 border-orange-500 text-orange-900 ring-2 ring-orange-500/20 shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -1616,7 +1705,7 @@ export default function DocumentServicePortal({
                 <button
                   type="button"
                   onClick={() => setPaymentMethod("challan")}
-                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] ${
+                  className={`p-2 sm:p-2.5 rounded-xl border text-[11px] sm:text-xs font-bold transition flex flex-col items-center justify-center gap-1 min-h-[58px] cursor-pointer ${
                     paymentMethod === "challan"
                       ? "bg-orange-50 border-orange-500 text-orange-900 ring-2 ring-orange-500/20 shadow-xs"
                       : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100"
@@ -1671,7 +1760,7 @@ export default function DocumentServicePortal({
                                 setCopiedVpa(true);
                                 setTimeout(() => setCopiedVpa(false), 2000);
                               }}
-                              className="text-[9.5px] text-orange-600 hover:text-orange-700 font-bold px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200"
+                              className="text-[9.5px] text-orange-600 hover:text-orange-700 font-bold px-1.5 py-0.5 rounded bg-orange-50 border border-orange-200 cursor-pointer"
                             >
                               {copiedVpa ? "✓ કૉપી થયું" : "કૉપી"}
                             </button>
@@ -1682,72 +1771,74 @@ export default function DocumentServicePortal({
                           <span className="font-mono font-black text-orange-600">₹ {service.fee}.00</span>
                         </div>
                       </div>
-
-                      {/* Mobile One-Tap Direct UPI App Opener */}
-                      <a
-                        href={`upi://pay?pa=cybertreasury.gujarat@sbi&pn=Cyber%20Treasury%20Gujarat&am=${service.fee}&cu=INR&tn=NagrikSeva%20Fee%20${activeChallanNo}`}
-                        className="flex items-center justify-center gap-1.5 w-full py-2 px-3 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-xs font-bold shadow-xs transition sm:hidden"
-                      >
-                        <Smartphone size={14} />
-                        <span>મોબાઈલ UPI એપમાં સીધું ખોલો (GPay / PhonePe)</span>
-                      </a>
                     </div>
                   </div>
 
-                  {/* Official Razorpay Gateway Trigger */}
-                  <button
-                    type="button"
-                    onClick={handleRazorpayLiveCheckout}
-                    disabled={isProcessingPayment}
-                    className="w-full py-2.5 px-3 bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-900 active:scale-95 text-white rounded-xl text-xs font-black shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    <CreditCard size={15} />
-                    <span>🚀 Razorpay લાઈવ ગેટવેથી ચૂકવો (GPay / PhonePe / Paytm / Cards)</span>
-                  </button>
-
-                  <div className="relative flex py-1 items-center">
-                    <div className="flex-grow border-t border-orange-200"></div>
-                    <span className="flex-shrink mx-2 text-[10px] font-bold text-slate-500 uppercase">અથવા સીધો ભારત ક્યુઆર</span>
-                    <div className="flex-grow border-t border-orange-200"></div>
+                  {/* Single Unified Official Gujarat Cyber Treasury Online Payment Button */}
+                  <div className="pt-1 space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={handleRazorpayLiveCheckout}
+                      disabled={isProcessingPayment}
+                      className="w-full py-3.5 px-4 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-[0.98] text-white rounded-2xl font-black shadow-lg transition flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60 border-2 border-amber-400/50"
+                    >
+                      <div className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
+                        <span className="text-base sm:text-lg">🏛️</span>
+                        <span>સત્તાવાર સાયબર ટ્રેઝરી દ્વારા ચૂકવણી કરો (Pay ₹ {service.fee})</span>
+                        <Lock size={15} className="text-amber-300 shrink-0" />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-amber-200/90 font-medium font-sans">
+                        <span>UPI (GPay / PhonePe / Paytm / BHIM)</span>
+                        <span>•</span>
+                        <span>કાર્ડ</span>
+                        <span>•</span>
+                        <span>નેટ બેંકિંગ</span>
+                      </div>
+                    </button>
+                    <p className="text-[10px] sm:text-[11px] text-center text-slate-500 font-medium">
+                      🔒 નાણાં વિભાગ, ગુજરાત સરકાર • Cyber Treasury e-Grass ૨૫૬-બીટ SSL સુરક્ષિત પેમેન્ટ ગેટવે (Powered by Razorpay DPI)
+                    </p>
                   </div>
-
-                  {/* Instant Approval Simulation / Paid Trigger Button */}
-                  <button
-                    type="button"
-                    onClick={() => handleFinalPaymentSubmit()}
-                    disabled={isProcessingPayment}
-                    className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-xl text-xs font-extrabold shadow-sm transition flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Check size={16} />
-                    <span>✓ ભારત ક્યુઆર ચુકવણી સ્કેન થઈ ગઈ? (સાયબર ટ્રેઝરી ઈ-રસીદ જનરેટ કરો)</span>
-                  </button>
                 </div>
               )}
 
               {/* Card / Netbanking Details */}
               {paymentMethod === "card" && (
-                <div className="border border-slate-200 bg-slate-50 rounded-2xl p-3.5 space-y-2.5 text-xs">
+                <div className="border border-slate-200 bg-slate-50 rounded-2xl p-3.5 space-y-3 text-xs">
                   <p className="font-bold text-slate-800">બેંક પસંદ કરો (State Bank of India / HDFC / BOB / ICICI):</p>
                   <select className="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-orange-500">
                     <option>State Bank of India (Cyber Treasury Gateway)</option>
                     <option>Bank of Baroda (e-Grass Direct)</option>
                     <option>HDFC Bank NetBanking</option>
                     <option>ICICI Bank Corporate/Retail</option>
+                    <option>Axis Bank / Kotak Mahindra Bank</option>
                   </select>
 
-                  <button
-                    type="button"
-                    onClick={handleRazorpayLiveCheckout}
-                    disabled={isProcessingPayment}
-                    className="w-full py-2.5 px-3 bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-900 active:scale-95 text-white rounded-xl text-xs font-black shadow-md transition flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
-                  >
-                    <CreditCard size={15} />
-                    <span>🚀 Razorpay દ્વારા કાર્ડ / નેટબેંકિંગથી સુરક્ષિત ચૂકવો</span>
-                  </button>
-
-                  <p className="text-[11px] text-slate-500">
-                    🔒 RBI માન્ય ૨૫૬-બીટ SSL અને Razorpay એન્ક્રિપ્શન દ્વારા ૧૦૦% સુરક્ષિત.
-                  </p>
+                  {/* Single Unified Official Gujarat Cyber Treasury Online Payment Button */}
+                  <div className="pt-1 space-y-1.5">
+                    <button
+                      type="button"
+                      onClick={handleRazorpayLiveCheckout}
+                      disabled={isProcessingPayment}
+                      className="w-full py-3.5 px-4 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-[0.98] text-white rounded-2xl font-black shadow-lg transition flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60 border-2 border-amber-400/50"
+                    >
+                      <div className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
+                        <span className="text-base sm:text-lg">🏛️</span>
+                        <span>સત્તાવાર સાયબર ટ્રેઝરી દ્વારા ચૂકવણી કરો (Pay ₹ {service.fee})</span>
+                        <Lock size={15} className="text-amber-300 shrink-0" />
+                      </div>
+                      <div className="flex items-center gap-1.5 text-[10px] text-amber-200/90 font-medium font-sans">
+                        <span>ડેબિટ કાર્ડ (RuPay / Visa / Master)</span>
+                        <span>•</span>
+                        <span>નેટ બેંકિંગ</span>
+                        <span>•</span>
+                        <span>ક્રેડિટ કાર્ડ</span>
+                      </div>
+                    </button>
+                    <p className="text-[10px] sm:text-[11px] text-center text-slate-500 font-medium">
+                      🔒 નાણાં વિભાગ, ગુજરાત સરકાર • ૨૫૬-બીટ SSL એન્ક્રિપ્ટેડ સાયબર ટ્રેઝરી ગેટવે (Powered by Razorpay DPI)
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -1779,36 +1870,23 @@ export default function DocumentServicePortal({
               <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
                 <button
                   type="button"
-                  onClick={() => setShowPaymentModal(false)}
+                  onClick={handleClosePaymentModal}
                   disabled={isProcessingPayment}
-                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap text-center shrink-0"
+                  className="px-5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl text-xs sm:text-sm font-bold transition whitespace-nowrap text-center shrink-0 cursor-pointer"
                 >
                   રદ કરો
                 </button>
 
-                {/* Only render bottom submit button for Card and Cash Challan, as UPI has its dedicated single top button */}
-                {paymentMethod !== "upi" && (
+                {/* Only render bottom submit button for Cash Challan (Online payment has dedicated Razorpay button above) */}
+                {paymentMethod === "challan" && (
                   <button
                     type="button"
                     onClick={() => handleFinalPaymentSubmit()}
                     disabled={isProcessingPayment}
-                    className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap"
+                    className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
                   >
-                    {isProcessingPayment ? (
-                      <>
-                        <Loader2 size={16} className="animate-spin" />
-                        <span>ચુકવણી ચકાસણી થઈ રહી છે...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check size={18} />
-                        <span>
-                          {paymentMethod === "challan"
-                            ? "ચલણ જનરેટ કરો & સબમિટ"
-                            : `ફી ₹ ${service.fee} ચૂકવો & સત્તાવાર પહોંચ મેળવો`}
-                        </span>
-                      </>
-                    )}
+                    <Landmark size={18} />
+                    <span>ઓફલાઇન રોકડ ચલણ જનરેટ કરો & સબમિટ</span>
                   </button>
                 )}
               </div>
@@ -1823,6 +1901,16 @@ export default function DocumentServicePortal({
           <div className={`bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-5 shadow-2xl border-2 relative ${
             submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
           }`}>
+            {/* Top Right Close Button */}
+            <button
+              type="button"
+              onClick={handleCloseReceiptModal}
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+              title="બંધ કરો"
+            >
+              <X size={20} />
+            </button>
+
             {/* Header */}
             <div className="text-center space-y-1.5">
               <div className={`w-14 h-14 rounded-full flex items-center justify-center mx-auto shadow-inner ${
@@ -1981,8 +2069,9 @@ export default function DocumentServicePortal({
               </Link>
 
               <button
-                onClick={() => setSubmittedApp(null)}
-                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition whitespace-nowrap"
+                type="button"
+                onClick={handleCloseReceiptModal}
+                className="py-3 px-4 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-700 rounded-xl font-bold text-xs transition whitespace-nowrap cursor-pointer"
               >
                 નવી અરજી
               </button>

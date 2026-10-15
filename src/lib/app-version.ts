@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.8.8";
-export const APP_BUILD_NAME = "National DPI Release v2.8.8 - Zero-Latency Instant Receipt Generation & Async Parallel Verification";
+export const APP_VERSION = "v2.8.9";
+export const APP_BUILD_NAME = "National DPI Release v2.8.9 - Unified Official Cyber Treasury Gateway & /payment URL Route";
 export const APP_RELEASE_DATE = "૧૫ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "15 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "સત્તાવાર સાયબર ટ્રેઝરી યુનિફાઇડ પેમેન્ટ & /payment URL",
+    titleEn: "Unified Cyber Treasury Payment & Official /payment URL",
+    descGu: "વધારાના બટનો હટાવીને સત્તાવાર સાયબર ટ્રેઝરી Razorpay બટન સેટ કર્યું અને પેમેન્ટ સમયે બ્રાઉઝર એડ્રેસ બારમાં /payment URL લાઈવ સિંક કર્યું.",
+  },
   {
     titleGu: "ઝીરો-લેટન્સી ઇન્સ્ટન્ટ સરકારી પહોંચ (<૧૫ms)",
     titleEn: "Zero-Latency Instant Receipt Generation (<15ms)",

@@ -18,11 +18,13 @@ export type PortalTabType = "track" | "documents" | "eligibility";
 interface UnifiedCitizenPortalProps {
   initialTab?: PortalTabType;
   initialMode?: "citizen" | "officer";
+  initialPaymentOpen?: boolean;
 }
 
 export default function UnifiedCitizenPortal({
   initialTab = "track",
   initialMode = "citizen",
+  initialPaymentOpen = false,
 }: UnifiedCitizenPortalProps) {
   const [activeTab, setActiveTab] = useState<PortalTabType>(initialTab);
   const [authMode, setAuthMode] = useState<"citizen" | "officer">(initialMode);
@@ -336,7 +338,7 @@ export default function UnifiedCitizenPortal({
           )}
 
           {activeTab === "documents" && (
-            <DocumentServicePortal hideCitizenHeader={true} />
+            <DocumentServicePortal hideCitizenHeader={true} initialPaymentOpen={initialPaymentOpen} />
           )}
 
           {activeTab === "eligibility" && (
