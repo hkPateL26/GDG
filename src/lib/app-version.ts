@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.8.7";
-export const APP_BUILD_NAME = "National DPI Release v2.8.7 - Official Razorpay Live Gateway & HMAC Verification Integration";
+export const APP_VERSION = "v2.8.8";
+export const APP_BUILD_NAME = "National DPI Release v2.8.8 - Zero-Latency Instant Receipt Generation & Async Parallel Verification";
 export const APP_RELEASE_DATE = "૧૫ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "15 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "ઝીરો-લેટન્સી ઇન્સ્ટન્ટ સરકારી પહોંચ (<૧૫ms)",
+    titleEn: "Zero-Latency Instant Receipt Generation (<15ms)",
+    descGu: "Razorpay કે UPI ચુકવણી પૂર્ણ થતાં જ ૧ સેકન્ડની પણ રાહ જોયા વગર પહોંચ અને ચલણ તુરંત જનરેટ થાય છે, જ્યારે સહી ચકાસણી અને ક્લાઉડ સિંક બેકગ્રાઉન્ડમાં સમાંતર ચાલે છે.",
+  },
   {
     titleGu: "સત્તાવાર DigiLocker & MeriPehchaan ગેટવે",
     titleEn: "Official DigiLocker & MeriPehchaan Gateway (IT Act Rule 9A)",

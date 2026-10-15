@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Confirmed Payment! Update Ledger and Firestore
+    // 2. Confirmed Payment! Update Ledger and Firestore (Non-blocking async sync)
     const cleanId = (applicationId || "").trim().toUpperCase();
     if (cleanId) {
       confirmApplicationPayment(cleanId);
@@ -95,16 +95,19 @@ export async function POST(req: NextRequest) {
       if (db) {
         try {
           const docRef = doc(db, "citizen_applications", cleanId);
-          const snap = await getDoc(docRef);
-          if (snap.exists()) {
-            const data = snap.data() as CitizenApplication;
-            data.paymentStatus = "paid";
-            data.operatorConfirmed = true;
-            data.status = "approved";
-            data.workflowStage = 3;
-            data.lastUpdated = new Date().toISOString().split("T")[0];
-            await setDoc(docRef, data, { merge: true });
-          }
+          setDoc(
+            docRef,
+            {
+              paymentStatus: "paid",
+              operatorConfirmed: true,
+              status: "approved",
+              workflowStage: 3,
+              lastUpdated: new Date().toISOString().split("T")[0],
+            },
+            { merge: true }
+          ).catch((dbErr) => {
+            console.warn("Firestore payment update warning:", dbErr);
+          });
         } catch (dbErr) {
           console.warn("Firestore payment update warning:", dbErr);
         }

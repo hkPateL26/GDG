@@ -408,13 +408,19 @@ export async function POST(req: NextRequest) {
     const resolvedCitizenNameGu = citizenNameGu || applicantName || citizenName || "નાગરિક અરજદાર";
     const resolvedPaymentStatus = paymentMethod === "challan" ? "pending_challan" : paymentStatus;
 
-    // Generate unique official Application ID with cryptographic entropy
-    const trackingSecret = crypto.randomBytes(16).toString("hex");
+    // Generate or adopt client-provided official Application ID and tracking secret
+    const trackingSecret =
+      body.trackingSecret && typeof body.trackingSecret === "string" && body.trackingSecret.length >= 16
+        ? body.trackingSecret
+        : crypto.randomBytes(16).toString("hex");
     const now = new Date();
     const today = now.toISOString().split("T")[0];
     const year = now.getFullYear();
     const randomSuffix = crypto.randomInt(100000, 999999);
-    const id = `APP-GUJ-${year}-${randomSuffix}`;
+    const id =
+      body.id && typeof body.id === "string" && /^APP-GUJ-(?:\d{4}-)?\d{4,8}$/.test(body.id)
+        ? body.id
+        : `APP-GUJ-${year}-${randomSuffix}`;
 
     // Auto-schedule biometric appointment if required
     const appointmentDate = biometricRequired ? "2026-09-29" : undefined;
