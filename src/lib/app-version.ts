@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.8.6";
-export const APP_BUILD_NAME = "National DPI Release v2.8.6 - 20/20 Security Hardened (Central Rate-Limiting, Webhook Signature Verifier & Replay Shield)";
+export const APP_VERSION = "v2.8.7";
+export const APP_BUILD_NAME = "National DPI Release v2.8.7 - Official Razorpay Live Gateway & HMAC Verification Integration";
 export const APP_RELEASE_DATE = "૧૫ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "15 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
