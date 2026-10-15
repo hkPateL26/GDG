@@ -4,6 +4,7 @@ import { queryApplications, CitizenApplication } from "@/lib/large-datasets";
 import { analyzeApplicationSla } from "@/lib/admin-hierarchy-data";
 import { ChatHistory, DocumentVerificationReport } from "@/types";
 import { NextRequest, NextResponse } from "next/server";
+import { extractClientIp, checkRateLimit } from "@/lib/rate-limit";
 
 interface CitizenContext {
   name?: string;
@@ -484,6 +485,24 @@ function analyzeDocumentReport(fileName: string, _mimeType: string, lang = "gu")
 
 export async function POST(req: NextRequest) {
   try {
+    // IP Rate Limiting (Prevents Token Exhaustion & Bot Abuse: Max 30 req/min)
+    const clientIp = extractClientIp(req);
+    const rateCheck = checkRateLimit(clientIp, {
+      keyPrefix: "chat-ai",
+      windowMs: 60 * 1000,
+      maxRequests: 30,
+    });
+
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          error: `AI સહાયક પર ખૂબ ઝડપી મેસેજ આવી રહ્યા છે. કૃપા કરીને ${rateCheck.retryAfterSeconds} સેકન્ડ પછી નવો પ્રશ્ન પૂછો.`,
+          code: "RATE_LIMIT_EXCEEDED",
+        },
+        { status: 429, headers: { "Retry-After": String(rateCheck.retryAfterSeconds) } }
+      );
+    }
+
     const {
       message,
       history,

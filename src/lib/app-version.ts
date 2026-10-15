@@ -1,7 +1,7 @@
-export const APP_VERSION = "v2.8.5";
-export const APP_BUILD_NAME = "National DPI Release v2.8.5 - 100% Dynamic MeriPehchaan Auth & Username PIN Integration";
-export const APP_RELEASE_DATE = "૧૪ ઓક્ટોબર ૨૦૨૬";
-export const APP_RELEASE_DATE_EN = "14 October 2026";
+export const APP_VERSION = "v2.8.6";
+export const APP_BUILD_NAME = "National DPI Release v2.8.6 - 20/20 Security Hardened (Central Rate-Limiting, Webhook Signature Verifier & Replay Shield)";
+export const APP_RELEASE_DATE = "૧૫ ઓક્ટોબર ૨૦૨૬";
+export const APP_RELEASE_DATE_EN = "15 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
 
 export interface LeadDeveloper {

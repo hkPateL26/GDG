@@ -16,13 +16,21 @@ import {
   getDemoGateCookieConfig,
   DEFAULT_DEMO_GATE_PASSCODE,
 } from "@/lib/officer-auth";
+import {
+  extractClientIp,
+  checkRateLimit,
+  isAuthLocked,
+  recordFailedAuthAttempt,
+  resetAuthLockout,
+} from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
   try {
+    const clientIp = extractClientIp(req);
     const body = await req.json();
     const { action, mobile, aadhaarLast4, otp, officerId, pin, passcode } = body;
 
-    // 1. Send 6-Digit OTP to Citizen's Mobile
+    // 1. Send 6-Digit OTP to Citizen's Mobile (Protected against SMS Bombing)
     if (action === "send_otp") {
       if (!mobile || !aadhaarLast4) {
         return NextResponse.json(
@@ -30,11 +38,41 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
+      // Check Account Lockout status
+      const lockCheck = isAuthLocked(mobile);
+      if (lockCheck.isLocked) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `વારંવાર ખોટા પ્રયાસોને લીધે આ નંબર ${lockCheck.remainingLockSeconds} સેકન્ડ માટે અસ્થાયી બ્લોક થયેલ છે. કૃપા કરીને થોડીવાર રાહ જુઓ.`,
+          },
+          { status: 423 } // HTTP 423 Locked
+        );
+      }
+
+      // IP Rate Limit: Max 6 OTP sends per minute
+      const rateCheck = checkRateLimit(clientIp, {
+        keyPrefix: "otp-send",
+        windowMs: 60 * 1000,
+        maxRequests: 6,
+      });
+
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `ઘણા બધા OTP મોકલવાનો પ્રયાસ થયો. સુરક્ષા ખાતર કૃપા કરીને ${rateCheck.retryAfterSeconds} સેકન્ડ પછી પ્રયાસ કરો.`,
+          },
+          { status: 429, headers: { "Retry-After": String(rateCheck.retryAfterSeconds) } }
+        );
+      }
+
       const res = requestCitizenOtp(mobile, aadhaarLast4);
       return NextResponse.json(res, { status: res.success ? 200 : 400 });
     }
 
-    // 2. Cryptographically Verify OTP + Aadhaar Binding on Server
+    // 2. Cryptographically Verify OTP + Aadhaar Binding on Server (Anti Brute-Force)
     if (action === "verify_otp") {
       if (!mobile || !otp || !aadhaarLast4) {
         return NextResponse.json(
@@ -42,8 +80,61 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+
+      // Check if mobile is locked due to repeated failures
+      const lockCheck = isAuthLocked(mobile);
+      if (lockCheck.isLocked) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `વારંવાર ખોટો OTP નાખવાને કારણે આ એકાઉન્ટ ${lockCheck.remainingLockSeconds} સેકન્ડ માટે બ્લોક છે.`,
+          },
+          { status: 423 }
+        );
+      }
+
+      // Rate Limit verification requests: Max 12 attempts per minute per IP
+      const rateCheck = checkRateLimit(clientIp, {
+        keyPrefix: "otp-verify",
+        windowMs: 60 * 1000,
+        maxRequests: 12,
+      });
+
+      if (!rateCheck.allowed) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `વધુ પડતા વેરિફિકેશન પ્રયાસો! કૃપા કરીને ${rateCheck.retryAfterSeconds} સેકન્ડ પછી પ્રયાસ કરો.`,
+          },
+          { status: 429, headers: { "Retry-After": String(rateCheck.retryAfterSeconds) } }
+        );
+      }
+
       const res = verifyCitizenOtp(mobile, otp, aadhaarLast4);
-      return NextResponse.json(res, { status: res.success ? 200 : 400 });
+
+      if (!res.success) {
+        const attempt = recordFailedAuthAttempt(mobile, 5, 10 * 60 * 1000);
+        if (attempt.locked) {
+          return NextResponse.json(
+            {
+              success: false,
+              error: "સુરક્ષા એલર્ટ: ૫ વખત ખોટો OTP દાખલ કરવાને લીધે આ ખાતું ૧૦ મિનિટ માટે બ્લોક કરવામાં આવ્યું છે.",
+            },
+            { status: 423 }
+          );
+        }
+        return NextResponse.json(
+          {
+            ...res,
+            error: `${res.error} (બાકી રહેલા પ્રયાસો: ${attempt.remainingAttempts})`,
+          },
+          { status: 400 }
+        );
+      }
+
+      // Reset lockout on successful verification
+      resetAuthLockout(mobile);
+      return NextResponse.json(res, { status: 200 });
     }
 
     // 3. Fetch Citizen Profile & Past Benefit Ledger (for Eligibility & Vault)
