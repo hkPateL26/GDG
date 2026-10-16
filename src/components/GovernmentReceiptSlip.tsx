@@ -307,7 +307,7 @@ export default function GovernmentReceiptSlip({
                   </>
                 )}
               </div>
-              <p className="text-[8px] text-slate-500 mt-0.5 font-mono">DPI Portal: nagrik-seva.gov.in</p>
+              <p className="text-[8px] text-slate-500 mt-0.5 font-mono">DPI Portal: nagrikseva-ai-one.vercel.app</p>
               {/* Simulated Barcode */}
               <div className="font-mono text-[10px] tracking-widest text-slate-800 font-black mt-0.5">
                 ||| | ||||| || |||||| | ||
@@ -354,7 +354,9 @@ export default function GovernmentReceiptSlip({
             </div>
             <div>
               <span className="text-slate-500 block text-[8px] uppercase font-bold">આધાર e-KYC ખરાઈ:</span>
-              <strong className="text-emerald-700 text-[10px]">✓ UIDAI બાયોમેટ્રિક પ્રમાણિત</strong>
+              <strong className={app.digilockerVerified ? "text-emerald-700 text-[10px]" : "text-amber-700 text-[10px]"}>
+                {app.digilockerVerified ? "✓ DigiLocker e-KYC પ્રમાણિત" : "સ્વયં-ઘોષણા / ખરાઈ હેઠળ"}
+              </strong>
             </div>
           </div>
 
@@ -662,7 +664,7 @@ export default function GovernmentReceiptSlip({
               <div>
                 {/* Simulated Cursive Official Signature */}
                 <p className="font-serif italic text-base sm:text-lg text-slate-800 leading-none select-none font-bold">
-                  K. R. Vaghela
+                  {app.approvedBy || app.officerName || (isChallanPending ? "Jan Seva Kendra" : "Mamlatdar & Executive Magistrate")}
                 </p>
                 <div className="border-t border-slate-400 mt-1 pt-0.5">
                   <p className="text-[9.5px] font-black text-slate-900">

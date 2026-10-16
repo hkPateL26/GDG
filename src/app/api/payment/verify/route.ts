@@ -43,7 +43,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "vZzX2lR01orHItU0C3ORL5Sq";
+    const isDemoAllowed =
+      process.env.NODE_ENV !== "production" ||
+      process.env.ALLOW_DEMO_CREDENTIALS === "true";
+
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || (isDemoAllowed ? "vZzX2lR01orHItU0C3ORL5Sq" : "");
 
     // 1. In demo/sandbox test mode with synthetic orders
     const isSyntheticOrder =
@@ -51,10 +55,24 @@ export async function POST(req: NextRequest) {
       razorpay_payment_id.startsWith("pay_sim_") ||
       razorpay_payment_id.startsWith("pay_demo_");
 
+    if (isSyntheticOrder && !isDemoAllowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "ઉત્પાદન વાતાવરણમાં સિન્થેટિક/ટેસ્ટ પેમેન્ટ અમાન્ય છે.",
+          code: "SYNTHETIC_ORDERS_FORBIDDEN",
+        },
+        { status: 403 }
+      );
+    }
+
     let isSignatureValid = false;
 
     if (razorpay_signature && !isSyntheticOrder) {
       try {
+        if (!keySecret) {
+          throw new Error("Missing RAZORPAY_KEY_SECRET in server environment");
+        }
         const textToSign = `${razorpay_order_id}|${razorpay_payment_id}`;
         const expectedSignature = crypto
           .createHmac("sha256", keySecret)
@@ -71,7 +89,7 @@ export async function POST(req: NextRequest) {
         console.warn("Signature calculation warning:", sigErr);
         isSignatureValid = false;
       }
-    } else if (isSyntheticOrder) {
+    } else if (isSyntheticOrder && isDemoAllowed) {
       // In sandbox simulation, allow verified test payment
       isSignatureValid = true;
     }

@@ -55,9 +55,16 @@ export function getOfficerAuthSecret(): string {
     return secret;
   }
 
-  // If in production without explicit secret configured in environment variables,
-  // use a high-entropy deterministic fallback key so demo and serverless deployments
-  // maintain consistent cryptographic signing and session validation across instances.
+  const isDemo = process.env.ALLOW_DEMO_CREDENTIALS === "true";
+
+  if (process.env.NODE_ENV === "production" && !isDemo) {
+    throw new Error(
+      "FATAL: OFFICER_AUTH_SECRET is not configured or shorter than 32 characters in production. Refusing to operate in insecure mode."
+    );
+  }
+
+  // In authorized demo mode in production without explicit secret configured in environment variables,
+  // use a deterministic key so demo and serverless deployments maintain consistent sessions.
   if (process.env.NODE_ENV === "production") {
     return "9f83b271d44a2c5e03947b1e8461b2e6734d8a1c905e32b45f1a7d6e8b2c9a1f";
   }
