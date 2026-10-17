@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.0";
-export const APP_BUILD_NAME = "National DPI Release v2.9.0 - CI/CD Real-Time Pipeline & Saral Mode Accessible View";
+export const APP_VERSION = "v2.9.1";
+export const APP_BUILD_NAME = "National DPI Release v2.9.1 - 1-Click AI Vision Auto-Fill & Zero-Typing Submissions";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "૧-ક્લિક AI ઓટો-ફિલ (Zero-Typing Application)",
+    titleEn: "1-Click AI Auto-Fill via Gemini Vision",
+    descGu: "દસ્તાવેજ (આધાર/રેશન કાર્ડ) અપલોડ કરતાં જ Gemini Vision તમામ વિગતો (નામ, જન્મ તારીખ, સરનામું, ગામ) આપોઆપ વાંચીને ૧-ક્લિકમાં આખું ફોર્મ ભરી આપે છે.",
+  },
   {
     titleGu: "સરળ મોડ (Saral Mode - Accessible View)",
     titleEn: "Saral Citizen Mode (WCAG 2.1 AAA Accessible View)",
