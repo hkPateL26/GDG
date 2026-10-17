@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test test/officer-auth-config.test.mjs test/demo-credentials-isolation.test.mjs"
+    "test": "node --test test/officer-auth-config.test.mjs test/demo-credentials-isolation.test.mjs test/digital-notary.test.mjs"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.28.0",

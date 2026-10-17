@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
 import { CheckCircle2, Download, Clock, X } from "lucide-react";
+import { generateCertificateSeal } from "@/lib/digital-notary";
 
 interface GovernmentReceiptSlipProps {
   app: CitizenApplication;
@@ -20,8 +21,9 @@ export default function GovernmentReceiptSlip({
     ? `GJ-CHALLAN-2026-${app.challanNo || app.id}`
     : `GJ-DPI-2026-${app.id}`;
   const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
+  const certSeal = generateCertificateSeal(app);
   const secretParam = app.trackingSecret ? `&secret=${encodeURIComponent(app.trackingSecret)}` : "";
-  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}${secretParam}`;
+  const verifyUrl = `${origin}/verify?id=${encodeURIComponent(app.id)}&seal=${encodeURIComponent(certSeal)}${secretParam}`;
 
   // Automatically treat as modal if onClose is provided or isModalPreview is true
   const showModalControls = isModalPreview || Boolean(onClose);
@@ -596,6 +598,9 @@ export default function GovernmentReceiptSlip({
               <div className="text-[8.5px] text-slate-600 leading-tight">
                 <p className="font-bold text-slate-900">QR કોડ સ્કેન કરો</p>
                 <p>મોબાઈલ દ્વારા પહોંચની સત્યતા તપાસો.</p>
+                <p className="font-mono text-[7.5px] font-bold text-emerald-800">
+                  સીલ: {certSeal}
+                </p>
                 <a
                   href={verifyUrl}
                   target="_blank"

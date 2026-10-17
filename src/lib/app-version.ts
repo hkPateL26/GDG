@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.1";
-export const APP_BUILD_NAME = "National DPI Release v2.9.1 - 1-Click AI Vision Auto-Fill & Zero-Typing Submissions";
+export const APP_VERSION = "v2.9.2";
+export const APP_BUILD_NAME = "National DPI Release v2.9.2 - Cryptographic SHA-256 Digital Notary & Public Verification Gateway";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "ક્રિપ્ટોગ્રાફિક SHA-256 ડિજિટલ નોટરી & સાર્વજનિક ચકાસણી પોર્ટલ (/verify)",
+    titleEn: "Cryptographic SHA-256 Digital Notary & Public Verification Gateway",
+    descGu: "દરેક સરકારી પ્રમાણપત્ર અને રસીદ પર ગણતરીબદ્ધ SHA-256 સીલ અને QR કોડ જનરેટ થાય છે, જે /verify પોર્ટલ પર સ્કેન કરીને કોઈપણ સરકારી અધિકારી કે નાગરિક દ્વારા ક્ષણવારમાં પ્રમાણિત કરી શકાય છે (IT Act ૨૦૦૦).",
+  },
   {
     titleGu: "૧-ક્લિક AI ઓટો-ફિલ (Zero-Typing Application)",
     titleEn: "1-Click AI Auto-Fill via Gemini Vision",
