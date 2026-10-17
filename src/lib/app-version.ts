@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.2";
-export const APP_BUILD_NAME = "National DPI Release v2.9.2 - Cryptographic SHA-256 Digital Notary & Public Verification Gateway";
+export const APP_VERSION = "v2.9.3";
+export const APP_BUILD_NAME = "National DPI Release v2.9.3 - Rural Offline PWA & Background Sync Resilience Engine";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "ગ્રામીણ ઑફલાઇન PWA & બેકગ્રાઉન્ડ સિંક એન્જિન (v2.9.3)",
+    titleEn: "Rural Offline PWA & Background Sync Resilience Engine",
+    descGu: "ઇન્ટરનેટ ડાઉન હોય કે 2G નેટવર્ક હોય ત્યારે પણ તમામ સરકારી રસીદો, પ્રમાણપત્રો અને ડેટા ઑફલાઇન સુરક્ષિત રહે છે. અરજી ઑફલાઇન સબમિટ થઈને નેટવર્ક આવતાં જ આપોઆપ ક્લાઉડ સર્વર સાથે સિંક થાય છે.",
+  },
   {
     titleGu: "ક્રિપ્ટોગ્રાફિક SHA-256 ડિજિટલ નોટરી & સાર્વજનિક ચકાસણી પોર્ટલ (/verify)",
     titleEn: "Cryptographic SHA-256 Digital Notary & Public Verification Gateway",

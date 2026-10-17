@@ -43,6 +43,7 @@ import CitizenLoginShield from "@/components/CitizenLoginShield";
 import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
 import { getActiveFamilyMember } from "@/lib/family-ledger";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import { queueOfflineAction } from "@/lib/offline-sync";
 import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
 import {
   DigiLockerDocument,
@@ -1547,7 +1548,12 @@ export default function DocumentServicePortal({
         }
       })
       .catch((netErr) => {
-        console.warn("Background server registration note:", netErr);
+        console.warn("Background server registration note (saved offline):", netErr);
+        try {
+          queueOfflineAction("application_submit", payload, instantApp.id);
+        } catch (queueErr) {
+          console.warn("Offline queue error:", queueErr);
+        }
       });
 
     // Parallel Background Sync B: Cryptographic Razorpay Signature Verification
