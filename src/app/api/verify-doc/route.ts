@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 if (!process.env.GOOGLE_GENAI_API_KEY) {
-  throw new Error("GOOGLE_GENAI_API_KEY is not set in .env.local");
+  // Optional key in build env
 }
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY);
+const genAI = process.env.GOOGLE_GENAI_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY) : null;
 
 const STRICT_VERIFICATION_PROMPT = `You are the STRICT Chief Document Verification Officer for NagrikSeva AI (Government of Gujarat).
 Your mandate: ZERO FRAUD, ZERO MISMATCH, STRICT QUALITY CONTROL. 
@@ -305,7 +305,8 @@ export async function POST(req: NextRequest) {
     ];
     let parsedData: DocumentAnalysisResult | null = null;
 
-    for (const modelName of visionModels) {
+    if (genAI) {
+      for (const modelName of visionModels) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
@@ -366,6 +367,8 @@ export async function POST(req: NextRequest) {
         console.warn(`Vision model ${modelName} failed:`, msg);
       }
     }
+
+  }
 
     // Fallback if vision models fail or encounter temporary 503 spike
     if (!parsedData) {
@@ -651,6 +654,8 @@ export async function POST(req: NextRequest) {
           ],
         };
       }
+    }
+
     if (parsedData && parsedData.isValidForGovt && !parsedData.autoFillProfile) {
       const detected = parsedData.extractedInfo?.detectedName || applicantName || "નાગરિક અરજદાર";
       parsedData.autoFillProfile = {
