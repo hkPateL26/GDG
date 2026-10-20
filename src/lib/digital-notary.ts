@@ -55,3 +55,43 @@ export function verifyCertificateSeal(app: NotaryApplicationPayload, providedSea
   const expected = generateCertificateSeal(app);
   return expected.toUpperCase() === providedSeal.trim().toUpperCase();
 }
+
+/**
+ * Parses raw text or URL scanned from a certificate/receipt QR code
+ * Extracts official application ID and cryptographic seal if present
+ */
+export function parseQrVerifyUrl(urlOrText: string): { id: string; seal: string } | null {
+  if (!urlOrText || typeof urlOrText !== "string") return null;
+  const raw = urlOrText.trim();
+
+  try {
+    if (raw.includes("?") || raw.startsWith("http://") || raw.startsWith("https://") || raw.startsWith("/")) {
+      const dummyBase = "https://nagrikseva-ai.gov.in";
+      const parsedUrl = new URL(raw.startsWith("http") ? raw : `${dummyBase}${raw.startsWith("/") ? "" : "/"}${raw}`);
+      const id = parsedUrl.searchParams.get("id");
+      const seal = parsedUrl.searchParams.get("seal") || "";
+
+      if (id) {
+        return { id: id.trim().toUpperCase(), seal: seal.trim().toUpperCase() };
+      }
+    }
+  } catch {
+    // Fall back to regex parsing
+  }
+
+  const idMatch = raw.match(/[?&]id=([A-Za-z0-9\-_]+)/i);
+  const sealMatch = raw.match(/[?&]seal=([A-Za-z0-9\-_]+)/i);
+  if (idMatch && idMatch[1]) {
+    return {
+      id: idMatch[1].toUpperCase(),
+      seal: sealMatch && sealMatch[1] ? sealMatch[1].toUpperCase() : "",
+    };
+  }
+
+  const rawIdMatch = raw.match(/(APP-[A-Z0-9\-_]+)/i);
+  if (rawIdMatch && rawIdMatch[1]) {
+    return { id: rawIdMatch[1].toUpperCase(), seal: "" };
+  }
+
+  return null;
+}

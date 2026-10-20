@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.3";
-export const APP_BUILD_NAME = "National DPI Release v2.9.3 - Rural Offline PWA & Background Sync Resilience Engine";
+export const APP_VERSION = "v2.9.4";
+export const APP_BUILD_NAME = "National DPI Release v2.9.4 - Live Camera QR Code Scanner & Statutory Verification Gateway";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "લાઈવ કેમેરા QR સ્કેનર & ડિજિટલ ખરાઈ ગેટવે (v2.9.4)",
+    titleEn: "Live Camera QR Code Scanner & Instant Verification Gateway",
+    descGu: "કોઈપણ સરકારી પ્રમાણપત્ર કે પહોંચ પર છપાયેલ QR કોડને ફોન કેમેરાથી લાઈવ સ્કેન કરીને અથવા ફોટો અપલોડ કરીને ક્ષણવારમાં કાનૂની અસલિયત (IT Act ૨૦૦૦) ચકાસી શકાય છે.",
+  },
   {
     titleGu: "ગ્રામીણ ઑફલાઇન PWA & બેકગ્રાઉન્ડ સિંક એન્જિન (v2.9.3)",
     titleEn: "Rural Offline PWA & Background Sync Resilience Engine",

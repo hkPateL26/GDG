@@ -1,7 +1,7 @@
 "use client";
 
-import { Suspense, useState, useEffect } from "react";
-import { useSearchParams } from "next/navigation";
+import { Suspense, useState, useEffect, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import {
@@ -18,24 +18,78 @@ import {
   Lock,
   ArrowRight,
   ExternalLink,
+  Camera,
+  CameraOff,
+  QrCode,
+  Search,
+  UploadCloud,
+  RefreshCw,
+  Sparkles,
+  Check,
 } from "lucide-react";
 import { queryApplications, CitizenApplication } from "@/lib/large-datasets";
-import { verifyCertificateSeal, generateCertificateSeal } from "@/lib/digital-notary";
+import {
+  verifyCertificateSeal,
+  generateCertificateSeal,
+  parseQrVerifyUrl,
+} from "@/lib/digital-notary";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
+
+// Sample verified certificates for quick testing & demo verification
+const DEMO_TEST_CERTIFICATES = [
+  {
+    id: "APP-GUJ-5481",
+    labelGu: "આવકનો દાખલો (Income Certificate)",
+    scheme: "આવકનું પ્રમાણપત્ર (મહેસૂલ વિભાગ)",
+    nameGu: "હરીભાઈ વિનોદરાય પટેલ",
+    district: "રાજકોટ",
+  },
+  {
+    id: "APP-GUJ-7492",
+    labelGu: "રેશન કાર્ડ સ્વીકૃતિ (NFSA Ration Card)",
+    scheme: "રાષ્ટ્રીય અન્ન સલામતી રેશન કાર્ડ",
+    nameGu: "જીતકુમાર રમેશભાઈ જાજલ",
+    district: "અમદાવાદ",
+  },
+  {
+    id: "APP-GUJ-9283",
+    labelGu: "જાતિનું પ્રમાણપત્ર (Caste Certificate)",
+    scheme: "સામાજિક અને શૈક્ષણિક પછાત વર્ગ પ્રમાણપત્ર",
+    nameGu: "કિશનભાઈ હરજીભાઈ ખૂંટ",
+    district: "સુરત",
+  },
+];
 
 function VerifyContent() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const idParam = searchParams.get("id") || "";
   const sealParam = searchParams.get("seal") || "";
 
+  const [activeTab, setActiveTab] = useState<"camera" | "manual">("camera");
+  const [manualInput, setManualInput] = useState<string>("");
   const [matchedApp, setMatchedApp] = useState<CitizenApplication | null>(null);
   const [isValidSeal, setIsValidSeal] = useState<boolean | null>(null);
   const [expectedSeal, setExpectedSeal] = useState<string>("");
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
 
+  // Camera & Scanner State
+  const [isCameraActive, setIsCameraActive] = useState<boolean>(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [cameraFacing, setCameraFacing] = useState<"environment" | "user">("environment");
+  const [scanning, setScanning] = useState<boolean>(false);
+  const [copiedLink, setCopiedLink] = useState<boolean>(false);
+
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const streamRef = useRef<MediaStream | null>(null);
+  const scanIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
+
+  // Evaluate certificate whenever idParam or sealParam changes
   useEffect(() => {
     if (!idParam) {
-      setIsValidSeal(false);
+      setMatchedApp(null);
+      setIsValidSeal(null);
       return;
     }
 
@@ -88,10 +142,172 @@ function VerifyContent() {
       const valid = verifyCertificateSeal(app, sealParam);
       setIsValidSeal(valid);
     } else {
-      // If no seal provided in URL, show valid status with generated seal
       setIsValidSeal(true);
     }
+
+    // Stop camera when verification result is displayed
+    stopCamera();
   }, [idParam, sealParam]);
+
+  // Clean up camera stream on unmount
+  useEffect(() => {
+    return () => {
+      stopCamera();
+    };
+  }, []);
+
+  // Camera Management
+  const startCamera = async (facing: "environment" | "user" = cameraFacing) => {
+    stopCamera();
+    setCameraError(null);
+    setScanning(true);
+
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error("આ બ્રાઉઝરમાં કેમેરા સુવિધા ઉપલબ્ધ નથી.");
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: facing },
+        audio: false,
+      });
+
+      streamRef.current = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        videoRef.current.setAttribute("playsinline", "true");
+        await videoRef.current.play();
+      }
+
+      setIsCameraActive(true);
+      startQrDetectionLoop();
+    } catch (err: any) {
+      console.warn("Camera start note:", err);
+      setCameraError(
+        err.name === "NotAllowedError"
+          ? "કેમેરા પરવાનગી નકારી છે. કૃપા કરીને બ્રાઉઝરમાં કેમેરા પરવાનગી આપો."
+          : "કેમેરા શરૂ કરવામાં મુશ્કેલી આવી. કૃપા કરીને QR ફોટો અપલોડ કરો અથવા નંબર દાખલ કરો."
+      );
+      setIsCameraActive(false);
+      setScanning(false);
+    }
+  };
+
+  const stopCamera = () => {
+    if (scanIntervalRef.current) {
+      clearInterval(scanIntervalRef.current);
+      scanIntervalRef.current = null;
+    }
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach((track) => track.stop());
+      streamRef.current = null;
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null;
+    }
+    setIsCameraActive(false);
+    setScanning(false);
+  };
+
+  const toggleCameraFacing = () => {
+    const nextFacing = cameraFacing === "environment" ? "user" : "environment";
+    setCameraFacing(nextFacing);
+    if (isCameraActive) {
+      startCamera(nextFacing);
+    }
+  };
+
+  // QR Code detection loop using Native BarcodeDetector if available
+  const startQrDetectionLoop = () => {
+    if (typeof window === "undefined") return;
+
+    if ("BarcodeDetector" in window) {
+      try {
+        const barcodeDetector = new (window as any).BarcodeDetector({
+          formats: ["qr_code"],
+        });
+
+        scanIntervalRef.current = setInterval(async () => {
+          if (!videoRef.current || videoRef.current.readyState < 2) return;
+          try {
+            const barcodes = await barcodeDetector.detect(videoRef.current);
+            if (barcodes && barcodes.length > 0) {
+              const rawValue = barcodes[0].rawValue;
+              if (rawValue) {
+                handleScannedResult(rawValue);
+              }
+            }
+          } catch {}
+        }, 500);
+      } catch (detectorErr) {
+        console.warn("BarcodeDetector loop notice:", detectorErr);
+      }
+    }
+  };
+
+  const handleScannedResult = (rawText: string) => {
+    const parsed = parseQrVerifyUrl(rawText);
+    if (parsed && parsed.id) {
+      stopCamera();
+      const targetUrl = parsed.seal
+        ? `/verify?id=${encodeURIComponent(parsed.id)}&seal=${encodeURIComponent(parsed.seal)}`
+        : `/verify?id=${encodeURIComponent(parsed.id)}`;
+      router.push(targetUrl);
+    }
+  };
+
+  // Image File QR Decoder Fallback
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setCameraError(null);
+    try {
+      if ("BarcodeDetector" in window) {
+        const bitmap = await createImageBitmap(file);
+        const barcodeDetector = new (window as any).BarcodeDetector({
+          formats: ["qr_code"],
+        });
+        const barcodes = await barcodeDetector.detect(bitmap);
+        if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+          handleScannedResult(barcodes[0].rawValue);
+          return;
+        }
+      }
+      // If BarcodeDetector was not supported or did not find a code
+      setCameraError("આ ફોટામાંથી QR કોડ વંચાયો નથી. કૃપા કરીને નીચે અરજી નંબર સીધો દાખલ કરો.");
+    } catch {
+      setCameraError("ફોટો પ્રક્રિયા કરવામાં ક્ષતિ. કૃપા કરીને નીચે અરજી નંબર દાખલ કરો.");
+    }
+  };
+
+  const handleManualSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!manualInput.trim()) return;
+    const parsed = parseQrVerifyUrl(manualInput);
+    if (parsed && parsed.id) {
+      const targetUrl = parsed.seal
+        ? `/verify?id=${encodeURIComponent(parsed.id)}&seal=${encodeURIComponent(parsed.seal)}`
+        : `/verify?id=${encodeURIComponent(parsed.id)}`;
+      router.push(targetUrl);
+    } else {
+      router.push(`/verify?id=${encodeURIComponent(manualInput.trim().toUpperCase())}`);
+    }
+  };
+
+  const handleSampleClick = (sampleId: string) => {
+    const sampleApp = { id: sampleId, citizenName: "Haribhai Patel", aadhaarLast4: "1413" };
+    const seal = generateCertificateSeal(sampleApp);
+    router.push(`/verify?id=${encodeURIComponent(sampleId)}&seal=${encodeURIComponent(seal)}`);
+  };
+
+  const copyVerifyLink = () => {
+    if (typeof window !== "undefined") {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
 
   return (
     <>
@@ -119,8 +335,10 @@ function VerifyContent() {
             </p>
           </div>
 
-          {/* Verification Result Card */}
-          {isValidSeal ? (
+          {/* ───────────────────────────────────────────────────────────── */}
+          {/* CASE 1: Verification Result Display (When ID param is set)    */}
+          {/* ───────────────────────────────────────────────────────────── */}
+          {idParam && isValidSeal ? (
             <div className="bg-slate-950 rounded-3xl border-2 border-emerald-500/80 shadow-2xl p-5 sm:p-7 space-y-5 relative overflow-hidden">
               <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-400 to-green-500" />
 
@@ -177,7 +395,8 @@ function VerifyContent() {
                         નાયબ મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ
                       </p>
                       <p className="text-[11px] text-slate-400">
-                        તાલુકો: {matchedApp.taluka || "ગોંડલ"}, જિલ્લો: {matchedApp.districtGu || matchedApp.district || "રાજકોટ"}
+                        તાલુકો: {matchedApp.taluka || "ગોંડલ"}, જિલ્લો:{" "}
+                        {matchedApp.districtGu || matchedApp.district || "રાજકોટ"}
                       </p>
                     </div>
 
@@ -213,7 +432,7 @@ function VerifyContent() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+                  <div className="pt-2 flex flex-col sm:flex-row items-center gap-2.5">
                     <button
                       type="button"
                       onClick={() => setShowCertificateModal(true)}
@@ -223,19 +442,31 @@ function VerifyContent() {
                       <span>અસલ પ્રમાણપત્ર જુઓ / પ્રિન્ટ કરો</span>
                     </button>
 
-                    <Link
-                      href={`/track?id=${encodeURIComponent(matchedApp.id)}`}
+                    <button
+                      type="button"
+                      onClick={copyVerifyLink}
+                      className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-3 px-4 rounded-xl text-xs sm:text-sm border border-slate-700 flex items-center justify-center gap-1.5 transition"
+                    >
+                      {copiedLink ? <Check size={14} className="text-emerald-400" /> : <ExternalLink size={14} />}
+                      <span>{copiedLink ? "લિંક કૉપિ થઈ!" : "ચકાસણી લિંક કૉપિ"}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => router.push("/verify")}
                       className="w-full sm:w-auto bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-4 rounded-xl text-xs sm:text-sm border border-slate-700 flex items-center justify-center gap-1.5 transition"
                     >
-                      <span>લાઈવ ટ્રેકિંગ</span>
-                      <ArrowRight size={14} />
-                    </Link>
+                      <QrCode size={14} className="text-amber-400" />
+                      <span>બીજું સ્કેન કરો</span>
+                    </button>
                   </div>
                 </div>
               )}
             </div>
-          ) : (
-            /* Invalid / Tampered Certificate Warning */
+          ) : idParam && isValidSeal === false ? (
+            /* ───────────────────────────────────────────────────────────── */
+            /* CASE 2: Invalid / Tampered Certificate Warning                */
+            /* ───────────────────────────────────────────────────────────── */
             <div className="bg-slate-950 rounded-3xl border-2 border-red-500/80 shadow-2xl p-6 sm:p-8 space-y-4 text-center">
               <div className="w-16 h-16 rounded-full bg-red-500/20 text-red-500 border border-red-500/40 flex items-center justify-center mx-auto">
                 <ShieldAlert size={36} />
@@ -246,7 +477,15 @@ function VerifyContent() {
               <p className="text-xs sm:text-sm text-slate-300 max-w-md mx-auto leading-relaxed">
                 આ પ્રમાણપત્રનો ક્રિપ્ટોગ્રાફિક સીલ સરકારી ડેટાબેઝ સાથે મેળ ખાતો નથી. આ દસ્તાવેજ બનાવટી, જૂનો અથવા તેમાં અનધિકૃત ફેરફાર થયેલ હોઈ શકે છે.
               </p>
-              <div className="pt-2">
+              <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => router.push("/verify")}
+                  className="inline-flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-950 px-4 py-2.5 rounded-xl text-xs font-bold transition shadow-md"
+                >
+                  <QrCode size={14} />
+                  <span>ફરીથી QR સ્કેન કરો</span>
+                </button>
                 <Link
                   href="/"
                   className="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition border border-slate-700"
@@ -255,12 +494,234 @@ function VerifyContent() {
                 </Link>
               </div>
             </div>
+          ) : (
+            /* ───────────────────────────────────────────────────────────── */
+            /* CASE 3: Active Scanner & Search Portal (When no params)       */
+            /* ───────────────────────────────────────────────────────────── */
+            <div className="space-y-5">
+              {/* Tabs */}
+              <div className="flex bg-slate-800/80 p-1 rounded-2xl border border-slate-700 max-w-md mx-auto">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab("camera")}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition ${
+                    activeTab === "camera"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Camera size={16} />
+                  <span>લાઈવ કેમેરા સ્કેનર</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveTab("manual");
+                    stopCamera();
+                  }}
+                  className={`flex-1 py-2.5 px-4 rounded-xl text-xs sm:text-sm font-bold flex items-center justify-center gap-2 transition ${
+                    activeTab === "manual"
+                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-slate-950 shadow-md"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  <Search size={16} />
+                  <span>અરજી નં. દાખલ કરો</span>
+                </button>
+              </div>
+
+              {/* CAMERA TAB */}
+              {activeTab === "camera" && (
+                <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl p-5 sm:p-6 space-y-4">
+                  <div className="relative aspect-square max-w-sm mx-auto bg-slate-900 rounded-2xl overflow-hidden border-2 border-slate-700 flex flex-col items-center justify-center">
+                    {/* Live Video Element */}
+                    <video
+                      ref={videoRef}
+                      className={`w-full h-full object-cover ${isCameraActive ? "block" : "hidden"}`}
+                      autoPlay
+                      playsInline
+                      muted
+                    />
+
+                    {/* Scanning Laser Animation Overlay */}
+                    {isCameraActive && (
+                      <div className="absolute inset-0 pointer-events-none flex flex-col items-center justify-center">
+                        <div className="w-56 h-56 border-2 border-amber-400/80 rounded-2xl relative shadow-[0_0_20px_rgba(251,191,36,0.3)]">
+                          {/* Corner Markers */}
+                          <div className="absolute -top-1 -left-1 w-5 h-5 border-t-4 border-l-4 border-amber-400 rounded-tl-sm" />
+                          <div className="absolute -top-1 -right-1 w-5 h-5 border-t-4 border-r-4 border-amber-400 rounded-tr-sm" />
+                          <div className="absolute -bottom-1 -left-1 w-5 h-5 border-b-4 border-l-4 border-amber-400 rounded-bl-sm" />
+                          <div className="absolute -bottom-1 -right-1 w-5 h-5 border-b-4 border-r-4 border-amber-400 rounded-br-sm" />
+
+                          {/* Animated Scan Line */}
+                          <div className="absolute left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-amber-300 to-transparent shadow-[0_0_8px_#f59e0b] animate-[bounce_2s_infinite]" />
+                        </div>
+                        <p className="absolute bottom-3 text-[11px] font-bold text-amber-300 bg-slate-950/80 px-3 py-1 rounded-full border border-amber-500/30">
+                          QR કોડને ફ્રેમમાં લાવો
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Camera Inactive State */}
+                    {!isCameraActive && (
+                      <div className="text-center p-6 space-y-3">
+                        <div className="w-16 h-16 rounded-2xl bg-slate-800 text-amber-400 flex items-center justify-center mx-auto border border-slate-700 shadow-inner">
+                          <QrCode size={34} />
+                        </div>
+                        <div>
+                          <h3 className="font-extrabold text-sm text-white">
+                            પ્રમાણપત્ર QR કોડ સ્કેનર
+                          </h3>
+                          <p className="text-xs text-slate-400 max-w-xs mt-1">
+                            કોઈપણ સરકારી પ્રમાણપત્ર કે પહોંચ પરનો QR કોડ સ્કેન કરીને ક્ષણવારમાં ખરાઈ કરો.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => startCamera()}
+                          className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black px-5 py-2.5 rounded-xl text-xs shadow-lg inline-flex items-center gap-2 active:scale-95 transition cursor-pointer"
+                        >
+                          <Camera size={15} />
+                          <span>કેમેરા શરૂ કરો (Start Camera)</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Camera Controls */}
+                  {isCameraActive && (
+                    <div className="flex items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={toggleCameraFacing}
+                        className="bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold px-3 py-2 rounded-xl border border-slate-700 inline-flex items-center gap-1.5 transition"
+                      >
+                        <RefreshCw size={13} />
+                        <span>કેમેરા બદલો ({cameraFacing === "environment" ? "પાછળ" : "આગળ"})</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={stopCamera}
+                        className="bg-red-950 hover:bg-red-900 text-red-300 text-xs font-bold px-3 py-2 rounded-xl border border-red-800/50 inline-flex items-center gap-1.5 transition"
+                      >
+                        <CameraOff size={13} />
+                        <span>કેમેરા બંધ કરો</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Camera Error Message */}
+                  {cameraError && (
+                    <p className="text-xs text-red-400 text-center bg-red-950/60 border border-red-800/40 p-2.5 rounded-xl">
+                      {cameraError}
+                    </p>
+                  )}
+
+                  {/* Alternative: Image File Upload */}
+                  <div className="pt-2 text-center border-t border-slate-800/80">
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="text-xs text-slate-400 hover:text-amber-400 inline-flex items-center gap-1.5 transition py-1"
+                    >
+                      <UploadCloud size={14} />
+                      <span>ગેલરીમાંથી QR કોડ ફોટો અપલોડ કરો (Upload Image)</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* MANUAL SEARCH TAB */}
+              {activeTab === "manual" && (
+                <div className="bg-slate-950 rounded-3xl border border-slate-800 shadow-2xl p-5 sm:p-6 space-y-4">
+                  <div>
+                    <h3 className="font-extrabold text-sm text-white">
+                      અરજી નંબર અથવા સંપૂર્ણ URL દ્વારા ખરાઈ
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      દા.ત. APP-GUJ-5481 અથવા QR સ્કેન કરેલી લિંક અહીં પેસ્ટ કરો
+                    </p>
+                  </div>
+
+                  <form onSubmit={handleManualSearch} className="space-y-3">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={manualInput}
+                        onChange={(e) => setManualInput(e.target.value)}
+                        placeholder="APP-GUJ-7492 અથવા verify URL..."
+                        className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white font-mono placeholder:font-sans placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      />
+                    </div>
+                    <button
+                      type="submit"
+                      className="w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-slate-950 font-black py-3 px-4 rounded-xl text-xs sm:text-sm shadow-lg flex items-center justify-center gap-2 active:scale-95 transition cursor-pointer"
+                    >
+                      <Search size={16} />
+                      <span>પ્રમાણપત્ર ચકાસો (Verify Now)</span>
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* ───────────────────────────────────────────────────────────── */}
+              {/* 1-Click Demo Sample Certificates                              */}
+              {/* ───────────────────────────────────────────────────────────── */}
+              <div className="bg-slate-950/80 rounded-3xl border border-slate-800/80 p-5 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+                    <Sparkles size={14} className="text-amber-400" />
+                    <span>ઝડપી ચકાસણી માટે નમૂના પ્રમાણપત્રો (1-Click Test Badges):</span>
+                  </h4>
+                  <span className="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded font-mono">
+                    DEMO
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {DEMO_TEST_CERTIFICATES.map((demo) => (
+                    <button
+                      key={demo.id}
+                      type="button"
+                      onClick={() => handleSampleClick(demo.id)}
+                      className="text-left bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800 hover:border-amber-500/40 p-3 rounded-2xl transition group space-y-1"
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-mono text-[11px] font-bold text-amber-400 group-hover:text-amber-300">
+                          {demo.id}
+                        </span>
+                        <ArrowRight
+                          size={12}
+                          className="text-slate-600 group-hover:text-amber-400 transition transform group-hover:translate-x-0.5"
+                        />
+                      </div>
+                      <p className="text-xs font-bold text-white line-clamp-1">
+                        {demo.labelGu}
+                      </p>
+                      <p className="text-[10px] text-slate-400">
+                        {demo.nameGu} ({demo.district})
+                      </p>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           )}
 
           {/* Official Verification Notice */}
           <div className="text-center text-[11px] text-slate-500 space-y-1">
             <p>ગુજરાત જાહેર સેવા હક અધિનિયમ, ૨૦૧૩ • e-Governance Cyber Treasury</p>
-            <p>કોઈપણ સરકારી દસ્તાવેજની ખરાઈ માટે સત્તાવાર હેલ્પલાઈન: <strong>૧૪૫૬૭</strong></p>
+            <p>
+              કોઈપણ સરકારી દસ્તાવેજની ખરાઈ માટે સત્તાવાર હેલ્પલાઈન: <strong>૧૪૫૬૭</strong>
+            </p>
           </div>
         </div>
       </main>

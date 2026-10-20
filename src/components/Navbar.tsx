@@ -19,6 +19,7 @@ import {
   Search,
   FolderLock,
   ClipboardCheck,
+  ShieldCheck,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
@@ -114,6 +115,7 @@ export default function Navbar() {
     { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
     { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
+    { href: "/verify",             label: currentLang === "en" ? "Verify" : currentLang === "hi" ? "सत्यापन" : "ખરાઈ (Verify)", Icon: ShieldCheck },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },
   ];
 
@@ -557,6 +559,20 @@ export default function Navbar() {
                     sub: currentLang === "en" ? "1-Min AI Check" : currentLang === "hi" ? "१ मिनट में जांचें" : "૧ મિનિટમાં ચેક",
                     Icon: ClipboardCheck,
                     bg: "bg-orange-50 border-orange-200/80 text-orange-700",
+                  },
+                  {
+                    href: "/verify",
+                    label: currentLang === "en" ? "Verify Certificate" : currentLang === "hi" ? "प्रमाणपत्र सत्यापन" : "પ્રમાણપત્ર ખરાઈ",
+                    sub: currentLang === "en" ? "Live QR Scanner" : currentLang === "hi" ? "लाइव QR स्कैनर" : "લાઈવ QR સ્કેનર",
+                    Icon: ShieldCheck,
+                    bg: "bg-amber-50 border-amber-200/80 text-amber-700",
+                  },
+                  {
+                    href: "/locator",
+                    label: currentLang === "en" ? "Kacheri Locator" : currentLang === "hi" ? "कचहरी लोकेटर" : "સરકારી કચેરી શોધો",
+                    sub: currentLang === "en" ? "Geo Maps" : currentLang === "hi" ? "भू-मानचित्र" : "નકશો & સંપર્ક",
+                    Icon: MapPin,
+                    bg: "bg-teal-50 border-teal-200/80 text-teal-700",
                   },
                 ].map(({ href, label, sub, Icon, bg }) => {
                   const active = pathname === href;
