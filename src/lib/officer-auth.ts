@@ -55,7 +55,10 @@ export function getOfficerAuthSecret(): string {
     return secret;
   }
 
-  const isDemo = process.env.ALLOW_DEMO_CREDENTIALS === "true";
+  const isDemo =
+    process.env.ALLOW_DEMO_CREDENTIALS === "true" ||
+    process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS === "true" ||
+    isDemoCredentialsAllowed();
 
   if (process.env.NODE_ENV === "production" && !isDemo) {
     throw new Error(

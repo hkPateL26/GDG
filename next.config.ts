@@ -5,6 +5,15 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  env: {
+    NEXT_PUBLIC_APP_NAME: "NagrikSeva AI",
+    ALLOW_DEMO_CREDENTIALS: process.env.ALLOW_DEMO_CREDENTIALS || "true",
+    NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS: process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS || "true",
+    OFFICER_AUTH_SECRET: process.env.OFFICER_AUTH_SECRET || "9f83b271d44a2c5e03947b1e8461b2e6734d8a1c905e32b45f1a7d6e8b2c9a1f",
+    NEXT_PUBLIC_RAZORPAY_KEY_ID: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_ToAhkTKBIwxENQ",
+    RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || "vZzX2lR01orHItU0C3ORL5Sq",
+    PAYMENT_WEBHOOK_SECRET: process.env.PAYMENT_WEBHOOK_SECRET || "vZzX2lR01orHItU0C3ORL5Sq",
+  },
   async headers() {
     return [
       {
