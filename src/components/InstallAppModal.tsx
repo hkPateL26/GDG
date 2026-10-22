@@ -210,23 +210,34 @@ export default function InstallAppModal({
                   </div>
                 </div>
               ) : (
-                /* Android 1-Click Install Button */
-                <button
-                  onClick={handleInstallClick}
-                  disabled={isInstalling}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-sm transition active:scale-95 cursor-pointer disabled:opacity-80"
-                >
-                  {isInstalling ? (
-                    <>
-                      <RefreshCw size={18} className="animate-spin" />
-                      <span>એપ ઇન્સ્ટોલ થઈ રહી છે...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download size={18} /> ફોનમાં હમણાં જ ઇન્સ્ટોલ કરો (૧-ક્લિક)
-                    </>
-                  )}
-                </button>
+                /* Android 1-Click Install Button & Direct APK */
+                <div className="space-y-2.5">
+                  <button
+                    onClick={handleInstallClick}
+                    disabled={isInstalling}
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-sm transition active:scale-95 cursor-pointer disabled:opacity-80"
+                  >
+                    {isInstalling ? (
+                      <>
+                        <RefreshCw size={18} className="animate-spin" />
+                        <span>એપ ઇન્સ્ટોલ થઈ રહી છે...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download size={18} /> ફોનમાં હમણાં જ ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href="/download/nagrik-seva-ai.apk"
+                    download="nagrik-seva-ai.apk"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-2xl border border-slate-700 flex items-center justify-center gap-2 text-xs transition active:scale-95 text-center shadow-md cursor-pointer"
+                  >
+                    <Download size={16} className="text-emerald-400" />
+                    <span>સીધું Android APK ડાઉનલોડ કરો (.apk ફાઈલ)</span>
+                  </a>
+                </div>
               )}
             </div>
           ) : (
@@ -271,22 +282,33 @@ export default function InstallAppModal({
               </div>
 
               {/* Also Provide Desktop Browser Install if supported */}
-              <button
-                onClick={handleInstallClick}
-                disabled={isInstalling}
-                className="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
-              >
-                {isInstalling ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>ઇન્સ્ટોલ થઈ રહ્યું છે...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download size={14} /> આ લેપટોપ / PC પર ઇન્સ્ટોલ કરો (૧-ક્લિક)
-                  </>
-                )}
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={handleInstallClick}
+                  disabled={isInstalling}
+                  className="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                >
+                  {isInstalling ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>ઇન્સ્ટોલ થઈ રહ્યું છે...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download size={14} /> આ લેપટોપ / PC પર ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href="/download/nagrik-seva-ai.apk"
+                  download="nagrik-seva-ai.apk"
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-3 rounded-xl border border-slate-300 flex items-center justify-center gap-2 text-[11px] transition text-center cursor-pointer"
+                >
+                  <Download size={14} className="text-orange-600" />
+                  <span>Android APK ફાઈલ ડાઉનલોડ કરો (.apk)</span>
+                </a>
+              </div>
             </div>
           )}
 

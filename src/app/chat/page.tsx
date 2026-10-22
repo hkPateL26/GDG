@@ -9,11 +9,7 @@ export default function ChatPage() {
 
   return (
     <div
-      className={`fixed inset-x-0 top-0 ${
-        isStandalone
-          ? "bottom-[calc(4.45rem+env(safe-area-inset-bottom,0px))] sm:pb-20"
-          : "bottom-0 sm:pb-0"
-      } sm:static sm:h-auto sm:min-h-screen xl:pb-0 flex flex-col overflow-hidden sm:overflow-visible bg-slate-100 sm:bg-gradient-to-br sm:from-orange-50 sm:via-white sm:to-green-50 z-30 sm:z-auto`}
+      className="fixed inset-x-0 top-0 bottom-[calc(4.45rem+env(safe-area-inset-bottom,0px))] sm:static sm:h-auto sm:min-h-screen xl:bottom-0 xl:pb-0 flex flex-col overflow-hidden sm:overflow-visible bg-slate-100 sm:bg-gradient-to-br sm:from-orange-50 sm:via-white sm:to-green-50 z-30 sm:z-auto"
     >
       <Navbar />
       <main className="flex-1 min-h-0 overflow-hidden sm:overflow-visible p-0 sm:py-5 lg:py-6 sm:px-4 flex flex-col">

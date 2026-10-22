@@ -93,8 +93,14 @@ export default function MobileBottomNav() {
     return false;
   };
 
-  // Strictly show Bottom Menu ONLY when running inside the Installed App (PWA Standalone mode)
-  if (!isStandalone) return null;
+  // Show Bottom Menu on Mobile screens, Installed PWA, or Native Android App
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <nav

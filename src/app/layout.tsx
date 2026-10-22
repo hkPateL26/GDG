@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
+import AndroidNativeBridge from "@/components/AndroidNativeBridge";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import HapticFeedbackProvider from "@/components/HapticFeedbackProvider";
 import ServiceWorkerRegister from "@/components/ServiceWorkerRegister";
@@ -45,7 +46,7 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="gu" className={inter.className} suppressHydrationWarning>
-      <body className="min-h-screen bg-gray-50 antialiased" suppressHydrationWarning>
+      <body className="min-h-screen bg-gray-50 antialiased pb-20 xl:pb-0" suppressHydrationWarning>
         <LanguageProvider>
           <AppSplashScreen />
           <OfficialGovernmentUpdateModal />
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <NetworkStatusBanner />
           <HapticFeedbackProvider />
           <GlobalModalScrollLocker />
+          <AndroidNativeBridge />
           {children}
           <Footer />
           <MobileBottomNav />
