@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.4";
-export const APP_BUILD_NAME = "National DPI Release v2.9.4 - Live Camera QR Code Scanner & Statutory Verification Gateway";
+export const APP_VERSION = "v2.9.5";
+export const APP_BUILD_NAME = "National DPI Release v2.9.5 - Official Citizen WhatsApp Dispatch & Gujarat Samvaad Share Gateway";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "સત્તાવાર વોટ્સએપ નાગરિક સૂચના & ગુજરાત સંવાદ ગેટવે (v2.9.5)",
+    titleEn: "Official Citizen WhatsApp Notification & Gujarat Samvaad Share Gateway",
+    descGu: "અરજી જમા થતાં જ નાગરિકને લાઈવ ટ્રેકિંગ અને ડિજિટલ નોટરી ખરાઈ લિંક સાથેનો સત્તાવાર ગુજરાતી વોટ્સએપ મેસેજ ૧-ક્લિકમાં શેર અને મોકલવાની સુવિધા. સરકારી પહોંચ પરથી પણ સીધો વોટ્સએપ પર મેળવી શકાય છે.",
+  },
   {
     titleGu: "લાઈવ કેમેરા QR સ્કેનર & ડિજિટલ ખરાઈ ગેટવે (v2.9.4)",
     titleEn: "Live Camera QR Code Scanner & Instant Verification Gateway",

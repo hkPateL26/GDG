@@ -2,7 +2,8 @@
 
 import { useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, Download, Clock, X } from "lucide-react";
+import { CheckCircle2, Download, Clock, X, MessageSquare } from "lucide-react";
+import { getWhatsAppShareUrl } from "@/lib/whatsapp-dispatch";
 import { generateCertificateSeal } from "@/lib/digital-notary";
 
 interface GovernmentReceiptSlipProps {
@@ -221,6 +222,37 @@ export default function GovernmentReceiptSlip({
                   ? "રોકડ ચલણ ડાઉનલોડ (PDF)"
                   : "PDF ડાઉનલોડ / પ્રિન્ટ"}
               </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                const url = getWhatsAppShareUrl({
+                  id: app.id,
+                  citizenName: app.citizenName,
+                  citizenNameGu: app.citizenNameGu,
+                  schemeName: app.schemeName,
+                  schemeNameGu: app.schemeNameGu,
+                  feeAmount: app.feeAmount,
+                  paymentStatus: app.paymentStatus,
+                  challanNo: app.challanNo,
+                  txnId: app.txnId,
+                  mobile: app.mobile,
+                  trackingSecret: app.trackingSecret,
+                  taluka: app.taluka,
+                  district: app.district,
+                  districtGu: app.districtGu,
+                });
+                if (typeof window !== "undefined") {
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="px-3.5 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-1.5 shadow-md shrink-0 cursor-pointer border border-emerald-500/30"
+              title="વોટ્સએપ પર મેળવો (Share to WhatsApp)"
+            >
+              <MessageSquare size={16} className="fill-white" />
+              <span className="hidden sm:inline">વોટ્સએપ પર મેળવો</span>
+              <span className="sm:hidden">વોટ્સએપ</span>
             </button>
 
             {onClose && (

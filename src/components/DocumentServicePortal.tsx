@@ -39,6 +39,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import WhatsAppDispatchCard from "@/components/WhatsAppDispatchCard";
 import CitizenLoginShield from "@/components/CitizenLoginShield";
 import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
 import { getActiveFamilyMember } from "@/lib/family-ledger";
@@ -2092,7 +2093,27 @@ export default function DocumentServicePortal({
                   <span>ઓટોમેટેડ નાગરિક સૂચનાઓ (Live SMS & Email Alert Simulated):</span>
                 </h4>
 
-                {/* SMS Simulation */}
+                {/* Official WhatsApp Citizen Notification Simulator & Share Gateway */}
+            <WhatsAppDispatchCard
+              app={{
+                id: submittedApp.id,
+                citizenName: submittedApp.citizenName,
+                citizenNameGu: submittedApp.citizenNameGu,
+                schemeName: submittedApp.schemeName,
+                schemeNameGu: submittedApp.schemeNameGu,
+                feeAmount: submittedApp.feeAmount || service.fee,
+                paymentStatus: submittedApp.paymentStatus,
+                challanNo: submittedApp.challanNo,
+                txnId: submittedApp.txnId,
+                mobile: submittedApp.mobile || mobile,
+                trackingSecret: submittedApp.trackingSecret,
+                taluka: submittedApp.taluka || taluka,
+                district: submittedApp.district || district,
+                districtGu: submittedApp.districtGu,
+              }}
+            />
+
+            {/* SMS Simulation */}
                 {notificationPayload.sms && (
                   <div className="bg-slate-900 text-slate-100 rounded-2xl p-3.5 space-y-1.5 shadow-md">
                     <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1">
