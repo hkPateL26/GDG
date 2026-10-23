@@ -9,6 +9,17 @@ const config: CapacitorConfig = {
     cleartext: true,
     androidScheme: 'https',
     appendUserAgent: 'NagrikSevaNativeAndroid',
+    allowNavigation: [
+      '*.razorpay.com',
+      'checkout.razorpay.com',
+      'api.razorpay.com',
+      '*.billdesk.com',
+      '*.payu.in',
+      '*.google.com',
+      '*.googleapis.com',
+      '*.gstatic.com',
+      'nagrikseva-ai-one.vercel.app'
+    ],
   },
   plugins: {
     SplashScreen: {

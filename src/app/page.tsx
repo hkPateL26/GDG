@@ -84,11 +84,11 @@ export default function Home() {
           {/* 2. PhonePe / UMANG 4-Column Unique Quick Services Grid (No duplicate Bottom Nav items) */}
           <div className="bg-white rounded-3xl p-3.5 border border-slate-200/80 shadow-2xs">
             <div className="flex items-center justify-between mb-2.5 px-0.5">
-              <h2 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+              <h2 className="text-sm font-black text-slate-800 flex items-center gap-2">
                 <Sparkles size={14} className="text-orange-500 shrink-0" />
                 <span>ઝડપી નાગરિક સેવાઓ (Quick Tools)</span>
               </h2>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
                 1-Click
               </span>
             </div>
@@ -101,11 +101,11 @@ export default function Home() {
                   className="app-touch-card flex flex-col items-center justify-start group min-w-0"
                 >
                   <div
-                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center shadow-2xs transition-transform group-active:scale-92 ${bg}`}
+                    className={`w-14 h-14 rounded-2xl border flex items-center justify-center shadow-xs transition-transform group-active:scale-92 ${bg}`}
                   >
-                    <Icon size={21} strokeWidth={2.1} />
+                    <Icon size={25} strokeWidth={2.2} />
                   </div>
-                  <span className="text-[11px] font-bold text-slate-700 mt-1.5 text-center whitespace-nowrap truncate w-full px-0.5">
+                  <span className="text-xs font-bold text-slate-700 mt-2 text-center whitespace-nowrap truncate w-full px-0.5">
                     {label}
                   </span>
                 </Link>
@@ -120,10 +120,10 @@ export default function Home() {
                 key={s.label}
                 className="bg-white rounded-2xl py-2 px-1.5 border border-slate-200/80 shadow-2xs text-center"
               >
-                <div className="text-sm font-black text-orange-600 leading-tight">
+                <div className="text-base font-black text-orange-600 leading-tight">
                   {s.num}
                 </div>
-                <div className="text-[10px] font-semibold text-slate-500 truncate mt-0.5">
+                <div className="text-xs font-bold text-slate-500 truncate mt-1">
                   {s.shortLabel}
                 </div>
               </div>

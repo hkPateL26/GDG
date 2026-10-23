@@ -53,11 +53,11 @@ export default function DynamicFeaturedSchemes({ variant }: DynamicFeaturedSchem
     return (
       <div className="space-y-2 pt-0.5">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+          <h2 className="text-sm font-black text-slate-800 flex items-center gap-2">
             <LayoutGrid size={14} className="text-orange-500 shrink-0" />
             <span>મુખ્ય સરકારી યોજનાઓ (સ્વાઈપ કરો)</span>
           </h2>
-          <span className="text-[10px] font-semibold text-slate-400">
+          <span className="text-xs font-bold text-slate-500">
             ← સ્વાઈપ →
           </span>
         </div>

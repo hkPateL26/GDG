@@ -38,6 +38,26 @@ body.is-native-android {
   overscroll-behavior-y: contain;
 }
 
+/* ── Native Mobile App Typography & Scale Enforcement ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media screen and (max-width: 640px) {
+  html {
+    font-size: 15.5px;
+  }
+
+  body {
+    line-height: 1.5;
+  }
+
+  .app-touch-card {
+    touch-action: manipulation;
+  }
+}
+
 /* ── Native App Touch Lock on Mobile (Disables accidental website text highlight) ── */
 @media screen and (max-width: 1024px) {
   nav,

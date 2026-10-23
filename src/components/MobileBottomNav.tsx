@@ -105,9 +105,9 @@ export default function MobileBottomNav() {
   return (
     <nav
       aria-label="Mobile Bottom Navigation"
-      className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/88 backdrop-blur-2xl border-t border-slate-200/80 shadow-[0_-8px_30px_rgba(15,23,42,0.07)] px-1.5 pt-1.5 pb-[max(env(safe-area-inset-bottom,8px),8px)] print:hidden select-none"
+      className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-2xl border-t border-slate-200/90 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] px-2 pt-2 pb-[max(env(safe-area-inset-bottom,12px),12px)] print:hidden select-none"
     >
-      <div className="grid grid-cols-5 items-center max-w-md mx-auto w-full gap-0.5">
+      <div className="grid grid-cols-5 items-center max-w-md mx-auto w-full gap-1">
         {navItems.map((item) => {
           const isActive = isItemActive(item.key);
           const IconComponent = item.icon;
@@ -124,20 +124,20 @@ export default function MobileBottomNav() {
                 >
                   {/* Material 3 / WhatsApp Active Pill with AI Sparkle */}
                   <div
-                    className={`relative w-14 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    className={`relative w-15 h-8.5 rounded-full flex items-center justify-center transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/30 scale-105"
                         : "bg-slate-900 text-amber-300 hover:bg-slate-800 shadow-xs"
                     }`}
                   >
-                    <IconComponent size={19} className="stroke-[2.3]" />
+                    <IconComponent size={21} className="stroke-[2.3]" />
                     <Sparkles
-                      size={10}
+                      size={11}
                       className="absolute top-1 right-2 text-amber-300 animate-pulse"
                     />
                   </div>
                   <span
-                    className={`text-[10.5px] leading-tight mt-1 transition-colors whitespace-nowrap truncate max-w-full px-0.5 ${
+                    className={`text-xs leading-tight mt-1 transition-colors whitespace-nowrap truncate max-w-full px-0.5 ${
                       isActive ? "font-black text-orange-600" : "font-bold text-slate-700"
                     }`}
                   >
@@ -161,26 +161,26 @@ export default function MobileBottomNav() {
               >
                 {/* WhatsApp / Material 3 Active Pill Indicator */}
                 <div
-                  className={`relative flex items-center justify-center w-14 h-8 rounded-full transition-all duration-200 ${
+                  className={`relative flex items-center justify-center w-15 h-8.5 rounded-full transition-all duration-200 ${
                     isActive
                       ? "bg-orange-100/95 text-orange-600 shadow-2xs"
                       : "bg-transparent text-slate-500"
                   }`}
                 >
                   <IconComponent
-                    size={19}
+                    size={21}
                     className={`transition-transform duration-200 ${
-                      isActive ? "stroke-[2.5] scale-105" : "stroke-[1.9]"
+                      isActive ? "stroke-[2.5] scale-105" : "stroke-[2.0]"
                     }`}
                   />
                   {item.badge && (
-                    <span className="absolute -top-1 right-1 text-[8px] bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded-full leading-tight shadow-2xs">
+                    <span className="absolute -top-1 right-1 text-[9px] bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded-full leading-tight shadow-2xs">
                       {item.badge}
                     </span>
                   )}
                 </div>
                 <span
-                  className={`text-[10.5px] leading-tight tracking-tight mt-1 transition-all whitespace-nowrap truncate max-w-full px-0.5 ${
+                  className={`text-xs leading-tight tracking-tight mt-1 transition-all whitespace-nowrap truncate max-w-full px-0.5 ${
                     isActive ? "font-black text-orange-700" : "font-semibold text-slate-600"
                   }`}
                 >

@@ -79,16 +79,16 @@ export default function MobileGreetingCard() {
   ).trim();
 
   return (
-    <div className="bg-gradient-to-br from-orange-600 via-orange-500 to-emerald-600 rounded-3xl p-3.5 text-white shadow-md relative overflow-hidden">
+    <div className="bg-gradient-to-br from-orange-600 via-orange-500 to-emerald-600 rounded-3xl p-4 text-white shadow-md relative overflow-hidden">
       {/* Row 1: Top Status Badges + 14567 Helpline Pill */}
-      <div className="flex items-center justify-between gap-1.5 mb-2.5">
+      <div className="flex items-center justify-between gap-2 mb-3">
         <div className="flex items-center gap-1.5 min-w-0 flex-wrap">
-          <span className="text-[9.5px] font-extrabold uppercase tracking-wider bg-white/20 px-2 py-0.5 rounded-full whitespace-nowrap">
+          <span className="text-xs font-extrabold uppercase tracking-wider bg-white/20 px-2.5 py-1 rounded-full whitespace-nowrap">
             Digital Gujarat DPI
           </span>
           {(citizen || officer) && (
-            <span className="text-[9.5px] font-extrabold bg-emerald-950/45 border border-emerald-300/40 text-emerald-100 px-2 py-0.5 rounded-full inline-flex items-center gap-1 whitespace-nowrap">
-              <CheckCircle2 size={10} className="text-emerald-300 shrink-0" />
+            <span className="text-xs font-extrabold bg-emerald-950/45 border border-emerald-300/40 text-emerald-100 px-2.5 py-1 rounded-full inline-flex items-center gap-1 whitespace-nowrap">
+              <CheckCircle2 size={12} className="text-emerald-300 shrink-0" />
               <span>{officer ? "અધિકારી" : "2FA પ્રમાણિત"}</span>
             </span>
           )}
@@ -96,29 +96,29 @@ export default function MobileGreetingCard() {
 
         <a
           href="tel:14567"
-          className="app-touch-card flex items-center gap-1 bg-slate-950/35 hover:bg-slate-950/50 border border-white/25 px-2.5 py-1 rounded-full text-[10px] font-bold whitespace-nowrap shrink-0"
+          className="app-touch-card flex items-center gap-1.5 bg-slate-950/40 hover:bg-slate-950/60 border border-white/30 px-3 py-1 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition"
         >
-          <PhoneCall size={11} className="text-amber-300 shrink-0" />
+          <PhoneCall size={12} className="text-amber-300 shrink-0" />
           <span>14567 હેલ્પલાઈન</span>
         </a>
       </div>
 
       {/* Row 2: Full-Width Emblem + Greeting Name + Subtitle */}
-      <div className="flex items-center gap-2.5 min-w-0">
-        <div className="w-10 h-10 rounded-2xl bg-white/95 p-1.5 flex items-center justify-center shrink-0 shadow-xs">
+      <div className="flex items-center gap-3 min-w-0">
+        <div className="w-12 h-12 rounded-2xl bg-white/95 p-2 flex items-center justify-center shrink-0 shadow-sm">
           <img
             src="/icon.svg"
             alt="National Emblem"
-            width="28"
-            height="28"
-            className="w-7 h-7 object-contain"
+            width="32"
+            height="32"
+            className="w-8 h-8 object-contain"
           />
         </div>
         <div className="min-w-0 flex-1">
-          <h1 className="text-[15px] font-black tracking-tight leading-snug text-white">
+          <h1 className="text-lg font-black tracking-tight leading-snug text-white">
             {loggedInName ? `નમસ્તે, ${loggedInName}\u00A0🙏` : "નમસ્તે નાગરિક\u00A0🙏"}
           </h1>
-          <p className="text-[11px] text-orange-50/95 leading-snug mt-0.5">
+          <p className="text-xs text-orange-50 leading-relaxed mt-0.5">
             સરકારી યોજનાઓ, પાત્રતા ચકાસણી અને ડિજિટલ પ્રમાણપત્રો — બધું એક જ જગ્યાએ
           </p>
         </div>
