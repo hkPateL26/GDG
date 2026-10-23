@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
 
     const amountInPaise = Math.round(Number(amount) * 100);
 
-    // Call official Razorpay Orders API
+    // Call official Razorpay Orders API with AUTO-CAPTURE (payment_capture: 1)
     try {
       const basicAuth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
       const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
@@ -62,6 +62,7 @@ export async function POST(req: NextRequest) {
           amount: amountInPaise,
           currency: "INR",
           receipt: applicationId.slice(-40),
+          payment_capture: 1, // CRITICAL: Auto-captures payment immediately upon authorization so it NEVER stays in 'created'
           notes: {
             applicationId,
             serviceName,
@@ -102,11 +103,12 @@ export async function POST(req: NextRequest) {
       currency: "INR",
       keyId,
       applicationId,
-      mode: "resilient_fallback",
+      mode: "sandbox_simulated",
+      note: "સરકારી સાયબર ટ્રેઝરી સેન્ડબોક્સ મોડ સક્રિય છે.",
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to create order";
-    console.error("Order creation error:", err);
+    console.error("Payment order create error:", err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }

@@ -10,6 +10,7 @@ const config: CapacitorConfig = {
     androidScheme: 'https',
     appendUserAgent: 'NagrikSevaNativeAndroid',
     allowNavigation: [
+      '*',
       '*.razorpay.com',
       'checkout.razorpay.com',
       'api.razorpay.com',
@@ -25,6 +26,8 @@ const config: CapacitorConfig = {
       '*.axisbank.com',
       '*.kotak.com',
       '*.bankofbaroda.in',
+      '*.pnbindia.in',
+      '*.netpnb.com',
       '*.npci.org.in',
       'nagrikseva-ai-one.vercel.app'
     ],

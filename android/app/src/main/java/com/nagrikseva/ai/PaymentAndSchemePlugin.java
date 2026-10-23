@@ -29,7 +29,7 @@ public class PaymentAndSchemePlugin extends Plugin {
                 settings.setSupportMultipleWindows(false);
                 settings.setJavaScriptCanOpenWindowsAutomatically(true);
 
-                // Ensure 1:1 mobile scaling (fixes tiny UI issues)
+                // Ensure 1:1 mobile scaling
                 settings.setUseWideViewPort(false);
                 settings.setLoadWithOverviewMode(false);
                 settings.setTextZoom(100);
@@ -127,26 +127,10 @@ public class PaymentAndSchemePlugin extends Plugin {
             }
         }
 
-        // 4. Razorpay, Payment Gateways & Banking Portals -> Keep inside the WebView!
+        // 4. All HTTP/HTTPS Pages, Payment Gateways & All Bank 3DS/OTP Pages -> Keep inside the WebView!
+        // Returning false instructs Capacitor to NOT open external browser, keeping authentication in-app.
         if (scheme.equals("http") || scheme.equals("https")) {
-            String host = url.getHost();
-            if (host != null) {
-                host = host.toLowerCase();
-                if (host.contains("razorpay.com") ||
-                    host.contains("billdesk.com") ||
-                    host.contains("payu.in") ||
-                    host.contains("hdfcbank.com") ||
-                    host.contains("icicibank.com") ||
-                    host.contains("sbi.co.in") ||
-                    host.contains("onlinesbi") ||
-                    host.contains("axisbank.com") ||
-                    host.contains("kotak.com") ||
-                    host.contains("bankofbaroda.in") ||
-                    host.contains("npci.org.in") ||
-                    host.contains("vercel.app")) {
-                    return Boolean.FALSE; // Stay inside WebView
-                }
-            }
+            return Boolean.FALSE;
         }
 
         return null; // Defer to default Capacitor navigation policy
