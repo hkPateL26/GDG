@@ -1222,6 +1222,50 @@ export default function DocumentServicePortal({
       }
 
       // 2. Open Official Razorpay Checkout Modal
+      const callbackUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/api/payment/callback?applicationId=${encodeURIComponent(activeChallanNo)}`
+          : undefined;
+
+      let pollTimer: NodeJS.Timeout | null = null;
+      let isCompleted = false;
+
+      const finishPaymentOnce = async (
+        paymentId: string,
+        rzpResp?: { razorpay_payment_id: string; razorpay_order_id?: string; razorpay_signature?: string },
+        orderId?: string
+      ) => {
+        if (isCompleted) return;
+        isCompleted = true;
+        if (pollTimer) clearInterval(pollTimer);
+        setIsProcessingPayment(false);
+        await handleFinalPaymentSubmit(paymentId, rzpResp, orderId);
+      };
+
+      // Real-time 2-second background status polling: Catches UPI app returns & background authorizations instantly!
+      if (orderData.orderId && !orderData.orderId.startsWith("order_test_")) {
+        pollTimer = setInterval(async () => {
+          if (isCompleted) return;
+          try {
+            const sRes = await fetch(
+              `/api/payment/status?orderId=${encodeURIComponent(orderData.orderId)}&applicationId=${encodeURIComponent(activeChallanNo)}`
+            );
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              if (sData.success && sData.paid && sData.paymentId) {
+                await finishPaymentOnce(
+                  sData.paymentId,
+                  { razorpay_payment_id: sData.paymentId, razorpay_order_id: orderData.orderId },
+                  orderData.orderId
+                );
+              }
+            }
+          } catch (pollErr) {
+            console.warn("Polling status warning:", pollErr);
+          }
+        }, 2000);
+      }
+
       const options = {
         key: orderData.keyId,
         amount: orderData.amount,
@@ -1230,6 +1274,8 @@ export default function DocumentServicePortal({
         description: `${service.nameGu} - સરકારી અરજી ફી`,
         image: "/icon.svg",
         order_id: orderData.orderId.startsWith("order_test_") ? undefined : orderData.orderId,
+        callback_url: callbackUrl,
+        redirect: true,
         prefill: {
           name: applicantName || citizenSession?.citizenName || "Hari Patel",
           email: emailAddress || "citizen@gujarat.gov.in",
@@ -1247,8 +1293,7 @@ export default function DocumentServicePortal({
           razorpay_order_id?: string;
           razorpay_signature?: string;
         }) {
-          // Immediately pop up receipt and complete verification in background!
-          await handleFinalPaymentSubmit(
+          await finishPaymentOnce(
             response.razorpay_payment_id,
             response,
             orderData.orderId
@@ -1256,6 +1301,7 @@ export default function DocumentServicePortal({
         },
         modal: {
           ondismiss: function () {
+            if (pollTimer) clearInterval(pollTimer);
             setIsProcessingPayment(false);
           },
         },
@@ -1265,6 +1311,7 @@ export default function DocumentServicePortal({
       const rzpInstance = new window.Razorpay(options);
       rzpInstance.on("payment.failed", function (resp: unknown) {
         console.warn("Razorpay payment failed or cancelled:", resp);
+        if (pollTimer) clearInterval(pollTimer);
         setIsProcessingPayment(false);
       });
       rzpInstance.open();
@@ -1846,30 +1893,9 @@ export default function DocumentServicePortal({
                     </div>
                   </div>
 
-                                    {/* Single Unified Official Gujarat Cyber Treasury Online Razorpay Button */}
-                  <div className="pt-2 space-y-1.5">
-                    <button
-                      type="button"
-                      onClick={handleRazorpayLiveCheckout}
-                      disabled={isProcessingPayment}
-                      className="w-full py-3.5 px-4 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-[0.98] text-white rounded-2xl font-black shadow-lg transition flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60 border-2 border-amber-400/50"
-                    >
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
-                        <span className="text-base sm:text-lg">🏛️</span>
-                        <span>સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવણી કરો (Pay ₹ {service.fee})</span>
-                        <Lock size={15} className="text-amber-300 shrink-0" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-amber-200/90 font-medium font-sans">
-                        <span>UPI (GPay / PhonePe / Paytm)</span>
-                        <span>•</span>
-                        <span>કાર્ડ</span>
-                        <span>•</span>
-                        <span>નેટ બેંકિંગ</span>
-                      </div>
-                    </button>
-                    <p className="text-[10px] sm:text-[11px] text-center text-slate-500 font-medium">
-                      🔒 નાણાં વિભાગ, ગુજરાત સરકાર • Cyber Treasury e-Grass ૨૫૬-બીટ SSL સુરક્ષિત પેમેન્ટ ગેટવે (Powered by Razorpay DPI)
-                    </p>
+                                    <div className="mt-3 p-3 rounded-xl bg-amber-50/90 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2.5 font-medium shadow-sm">
+                    <span className="text-lg shrink-0">🏛️</span>
+                    <span>નીચે આપેલ સત્તાવાર બટન પર ક્લિક કરવાથી સુરક્ષિત Razorpay સાયબર ટ્રેઝરી ગેટવે ખુલશે (તમામ UPI, GPay, PhonePe, Paytm અને QR કોડ સ્વીકાર્ય).</span>
                   </div>
                 </div>
               )}
@@ -1886,30 +1912,9 @@ export default function DocumentServicePortal({
                     <option>Axis Bank / Kotak Mahindra Bank</option>
                   </select>
 
-                  {/* Single Unified Official Gujarat Cyber Treasury Online Payment Button */}
-                  <div className="pt-1 space-y-1.5">
-                    <button
-                      type="button"
-                      onClick={handleRazorpayLiveCheckout}
-                      disabled={isProcessingPayment}
-                      className="w-full py-3.5 px-4 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-[0.98] text-white rounded-2xl font-black shadow-lg transition flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60 border-2 border-amber-400/50"
-                    >
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
-                        <span className="text-base sm:text-lg">🏛️</span>
-                        <span>સત્તાવાર સાયબર ટ્રેઝરી દ્વારા ચૂકવણી કરો (Pay ₹ {service.fee})</span>
-                        <Lock size={15} className="text-amber-300 shrink-0" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-amber-200/90 font-medium font-sans">
-                        <span>ડેબિટ કાર્ડ (RuPay / Visa / Master)</span>
-                        <span>•</span>
-                        <span>નેટ બેંકિંગ</span>
-                        <span>•</span>
-                        <span>ક્રેડિટ કાર્ડ</span>
-                      </div>
-                    </button>
-                    <p className="text-[10px] sm:text-[11px] text-center text-slate-500 font-medium">
-                      🔒 નાણાં વિભાગ, ગુજરાત સરકાર • ૨૫૬-બીટ SSL એન્ક્રિપ્ટેડ સાયબર ટ્રેઝરી ગેટવે (Powered by Razorpay DPI)
-                    </p>
+                  <div className="mt-2 p-3 rounded-xl bg-amber-50/90 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2.5 font-medium shadow-sm">
+                    <span className="text-lg shrink-0">🏛️</span>
+                    <span>નીચે આપેલ સત્તાવાર બટન પર ક્લિક કરવાથી ૨૫૬-બીટ SSL એન્ક્રિપ્ટેડ બેંકિંગ ગેટવે ખુલશે (RuPay, Visa, Master કાર્ડ અને નેટ બેંકિંગ સ્વીકાર્ય).</span>
                   </div>
                 </div>
               )}
@@ -1955,10 +1960,11 @@ export default function DocumentServicePortal({
                     type="button"
                     onClick={handleRazorpayLiveCheckout}
                     disabled={isProcessingPayment}
-                    className="px-6 py-2.5 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border border-amber-400/40"
+                    className="px-6 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
                   >
-                    <Lock size={16} className="text-amber-300" />
-                    <span>Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee})</span>
+                    <span className="text-base sm:text-lg">🏛️</span>
+                    <span>સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee})</span>
+                    <Lock size={15} className="text-amber-300 shrink-0" />
                   </button>
                 ) : (
                   <button
