@@ -10,6 +10,7 @@ import {
   User,
   KeyRound,
   ShieldCheck,
+  Building2,
   X,
 } from "lucide-react";
 
@@ -172,9 +173,7 @@ export default function OfficerLoginShield({
       <div className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-3 sm:p-7 text-white relative space-y-1 sm:space-y-2">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-lg sm:text-2xl shadow-inner shrink-0">
-              🏛️
-            </div>
+            <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-amber-400/20 border border-amber-400/30 flex items-center justify-center text-lg sm:text-2xl shadow-inner shrink-0"><Building2 size={24} className="text-amber-400" /></div>
             <div>
               <span className="hidden sm:inline-block text-[10.5px] font-bold text-amber-300 uppercase tracking-widest bg-amber-400/10 border border-amber-400/20 px-2 py-0.2 rounded-full mb-0.5">
                 ગુજરાત સરકાર &bull; વહીવટી પોર્ટલ

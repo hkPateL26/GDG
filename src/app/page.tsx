@@ -17,11 +17,14 @@ import {
   IndianRupee,
   HeartPulse,
   Search,
+  Languages,
+  Mic,
+  ShieldCheck,
 } from "lucide-react";
 
 const QUICK_SERVICES = [
   { icon: Sparkles,    label: "પાત્રતા કેલ્ક્યુલેટર (Eligibility)", href: "/eligibility" },
-  { icon: IndianRupee, label: "💰 કુટુંબ લાભ કેલ્ક્યુલેટર & પાસ", href: "/benefit-calculator" },
+  { icon: IndianRupee, label: "કુટુંબ લાભ કેલ્ક્યુલેટર & પાસ", href: "/benefit-calculator" },
   { icon: MapPin,      label: "નજીકની કચેરી (Jan Seva Locator)",   href: "/locator" },
   { icon: FileText,    label: "રેશન કાર્ડ ગાઈડ & ચેકલિસ્ટ",        href: "/documents?type=ration" },
   { icon: HeartPulse,  label: "આયુષ્માન કાર્ડ કેવી રીતે કઢાવવું?",  href: "/documents?type=health" },
@@ -56,10 +59,10 @@ const SUPER_APP_GRID = [
 ];
 
 const STATS = [
-  { num: "26+",  label: "સરકારી યોજનાઓ",          shortLabel: "યોજનાઓ",   emoji: "📋" },
-  { num: "16",   label: "ભાષાઓ (ગુજ/હિં/અંગ્રેજી)", shortLabel: "ભાષાઓ",    emoji: "🗣️" },
-  { num: "24/7", label: "AI & વોઈસ સપોર્ટ",        shortLabel: "AI વોઈસ",  emoji: "🎙️" },
-  { num: "100%", label: "મફત નાગરિક સેવા",          shortLabel: "મફત સેવા", emoji: "✅" },
+  { num: "26+",  label: "સરકારી યોજનાઓ",          shortLabel: "યોજનાઓ",   icon: LayoutGrid },
+  { num: "16",   label: "ભાષાઓ (ગુજ/હિં/અંગ્રેજી)", shortLabel: "ભાષાઓ",    icon: Languages },
+  { num: "24/7", label: "AI & વોઈસ સપોર્ટ",        shortLabel: "AI વોઈસ",  icon: Mic },
+  { num: "100%", label: "મફત નાગરિક સેવા",          shortLabel: "મફત સેવા", icon: ShieldCheck },
 ];
 
 export default function Home() {
@@ -169,7 +172,7 @@ export default function Home() {
                 href="/benefit-calculator"
                 className="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition shadow active:scale-95"
               >
-                💰 લાભ ગણો & WhatsApp પાસ
+                લાભ ગણો & WhatsApp પાસ
               </Link>
               <Link
                 href="/locator"
@@ -184,13 +187,18 @@ export default function Home() {
         {/* ── Desktop Stats ── */}
         <section className="hidden sm:block bg-white border-b shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-center">
-            {STATS.map((s) => (
-              <div key={s.label} className="py-2">
-                <div className="text-xl sm:text-2xl mb-0.5">{s.emoji}</div>
-                <div className="text-xl sm:text-2xl font-bold text-orange-500">{s.num}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-              </div>
-            ))}
+            {STATS.map((s) => {
+              const IconComp = s.icon;
+              return (
+                <div key={s.label} className="py-2">
+                  <div className="flex items-center justify-center mb-1 text-orange-600">
+                    {IconComp ? <IconComp size={22} className="stroke-[2.2]" /> : null}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold text-orange-500">{s.num}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                </div>
+              );
+            })}
           </div>
         </section>
 

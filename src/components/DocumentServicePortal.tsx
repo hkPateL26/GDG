@@ -36,6 +36,7 @@ import {
   RotateCw,
   X,
   Lock,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
@@ -1743,15 +1744,17 @@ export default function DocumentServicePortal({
     <div className="space-y-6">
       {/* ── Official Cyber Treasury Payment Gateway Modal ── */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-5 shadow-2xl border-2 border-orange-500 relative">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-4 shadow-2xl border-t-2 sm:border-2 border-orange-500 relative max-h-[92vh] overflow-y-auto animate-bottom-sheet sm:animate-none">
+            {/* Mobile Native Pull Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden shrink-0" />
             {/* Top National Ribbon */}
             <div className="h-1.5 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] rounded-full mb-1" />
 
             <div className="flex items-start justify-between border-b pb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">🏛️</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#002B49] text-amber-400 flex items-center justify-center shrink-0 shadow-sm border border-amber-400/30"><Landmark size={20} /></div>
                   <div>
                     <h3 className="font-black text-slate-900 text-sm sm:text-base leading-tight">
                       ગુજરાત સાયબર ટ્રેઝરી પોર્ટલ (Cyber Treasury e-Grass)
@@ -1894,7 +1897,7 @@ export default function DocumentServicePortal({
                   </div>
 
                                     <div className="mt-3 p-3 rounded-xl bg-amber-50/90 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2.5 font-medium shadow-sm">
-                    <span className="text-lg shrink-0">🏛️</span>
+                    <ShieldCheck size={18} className="text-amber-800 shrink-0" />
                     <span>નીચે આપેલ સત્તાવાર બટન પર ક્લિક કરવાથી સુરક્ષિત Razorpay સાયબર ટ્રેઝરી ગેટવે ખુલશે (તમામ UPI, GPay, PhonePe, Paytm અને QR કોડ સ્વીકાર્ય).</span>
                   </div>
                 </div>
@@ -1913,7 +1916,7 @@ export default function DocumentServicePortal({
                   </select>
 
                   <div className="mt-2 p-3 rounded-xl bg-amber-50/90 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2.5 font-medium shadow-sm">
-                    <span className="text-lg shrink-0">🏛️</span>
+                    <ShieldCheck size={18} className="text-amber-800 shrink-0" />
                     <span>નીચે આપેલ સત્તાવાર બટન પર ક્લિક કરવાથી ૨૫૬-બીટ SSL એન્ક્રિપ્ટેડ બેંકિંગ ગેટવે ખુલશે (RuPay, Visa, Master કાર્ડ અને નેટ બેંકિંગ સ્વીકાર્ય).</span>
                   </div>
                 </div>
@@ -1962,7 +1965,7 @@ export default function DocumentServicePortal({
                     disabled={isProcessingPayment}
                     className="px-6 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
                   >
-                    <span className="text-base sm:text-lg">🏛️</span>
+                    <Landmark size={18} className="text-amber-300 shrink-0" />
                     <span>સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee})</span>
                     <Lock size={15} className="text-amber-300 shrink-0" />
                   </button>
@@ -1985,10 +1988,12 @@ export default function DocumentServicePortal({
 
       {/* ── Submission Success & Real-Time Alert Modal ── */}
       {submittedApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <div className={`bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-5 shadow-2xl border-2 relative ${
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+          <div className={`bg-white rounded-t-[28px] rounded-b-none sm:rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-4 shadow-2xl border-t-2 sm:border-2 relative max-h-[92vh] overflow-y-auto animate-bottom-sheet sm:animate-none ${
             submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
           }`}>
+            {/* Mobile Native Pull Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden shrink-0" />
             {/* Top Right Close Button */}
             <button
               type="button"
@@ -2138,7 +2143,7 @@ export default function DocumentServicePortal({
                 {notificationPayload.sms && (
                   <div className="bg-slate-900 text-slate-100 rounded-2xl p-3.5 space-y-1.5 shadow-md">
                     <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1">
-                      <span className="font-mono text-orange-400 font-bold">📱 GOVT-GUJ SMS ALERT</span>
+                      <span className="font-mono text-orange-400 font-bold">GOVT-GUJ SMS ALERT</span>
                       <span>To: {notificationPayload.sms.sentTo}</span>
                     </div>
                     <p className="text-xs font-mono leading-relaxed text-slate-200">
@@ -2208,7 +2213,7 @@ export default function DocumentServicePortal({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 p-4 rounded-2xl border border-orange-200 shadow-xs">
         <div>
           <h2 className="font-extrabold text-slate-900 text-base sm:text-lg flex items-center gap-2">
-            <span className="p-1 bg-orange-600 text-white rounded-lg text-xs">🏛️</span>
+            <span className="p-1.5 bg-[#002B49] text-amber-300 rounded-lg inline-flex items-center justify-center"><Landmark size={15} /></span>
             <span>ડિજિટલ દસ્તાવેજ સેવા & સુધારો પોર્ટલ (Service Portal)</span>
           </h2>
           <p className="text-xs text-slate-600">
@@ -2233,7 +2238,7 @@ export default function DocumentServicePortal({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="bg-rose-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-xs">
                 <RotateCw size={12} className="animate-spin-slow" />
-                <span>🔄 પુનઃ અરજી મોડ (Re-Apply Mode)</span>
+                <span>પુનઃ અરજી મોડ (Re-Apply Mode)</span>
               </span>
               <span className="font-mono font-bold text-xs text-rose-800 bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200">
                 અગાઉનો અરજી ક્રમાંક: {reapplyContext.appId}
@@ -2272,7 +2277,7 @@ export default function DocumentServicePortal({
                   2FA પ્રમાણિત અરજદાર: {citizenSession.citizenNameGu || citizenSession.citizenName}
                 </p>
                 <p className="text-[11px] text-emerald-700">
-                  📱 +91 {citizenSession.mobile} &bull; 🪪 આધાર: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
+                  +91 {citizenSession.mobile} &bull; આધાર કાર્ડ: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
                 </p>
               </div>
             </div>

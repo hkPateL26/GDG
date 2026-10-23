@@ -20,6 +20,7 @@ import {
   FolderLock,
   ClipboardCheck,
   ShieldCheck,
+  Eye,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
@@ -208,7 +209,7 @@ export default function Navbar() {
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
                   <span className="max-w-[170px] truncate">
-                    🏛️ {officerSession.name || "કચેરી એડમિન"} (
+                    {officerSession.name || "કચેરી એડમિન"} (
                     {officerSession.role === "talati"
                       ? "તલાટી"
                       : officerSession.role === "district_collector"
@@ -231,7 +232,7 @@ export default function Navbar() {
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="max-w-[160px] truncate">
-                    👤 {citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)
+                    {citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)
                   </span>
                 </Link>
               ) : null}
@@ -249,7 +250,7 @@ export default function Navbar() {
                     title="લૉગિન પોર્ટલ પસંદ કરો"
                   >
                     <Lock size={13} className="shrink-0" />
-                    <span>🔐 લૉગિન</span>
+                    <span>લૉગિન</span>
                     <ChevronDown
                       size={12}
                       className={`transition-transform duration-200 ${showLoginDropdown ? "rotate-180" : ""}`}
@@ -335,8 +336,8 @@ export default function Navbar() {
               }`}
               title="સરળ મોડ (Simple View)"
             >
-              <span>👵</span>
-              <span className="text-[10.5px] font-extrabold">{isSaralMode ? "પૂર્ણ" : "સરળ"}</span>
+              <Eye size={13} className="shrink-0 text-amber-900" />
+              <span className="text-[11px] font-extrabold">{isSaralMode ? "પૂર્ણ" : "સરળ"}</span>
             </button>
 
             {/* 🌐 Mobile Language Switcher */}

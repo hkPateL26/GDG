@@ -6,10 +6,9 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Home,
   LayoutGrid,
-  Bot,
-  MapPin,
-  User,
-  Sparkles,
+  FileText,
+  Search,
+  ShieldCheck,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptic";
 import { useLanguage } from "@/context/LanguageContext";
@@ -59,37 +58,37 @@ export default function MobileBottomNav() {
       icon: LayoutGrid,
     },
     {
-      key: "chat",
-      href: "/chat",
-      label: isEn ? "AI Chat" : isHi ? "AI सहायक" : "AI સહાયક",
-      icon: Bot,
+      key: "documents",
+      href: "/documents",
+      label: isEn ? "Services" : isHi ? "सेवाएं" : "અરજીઓ",
+      icon: FileText,
       highlight: true,
     },
     {
-      key: "locator",
-      href: "/locator",
-      label: isEn ? "Offices" : isHi ? "कार्यालय" : "કચેરી",
-      icon: MapPin,
+      key: "track",
+      href: "/track",
+      label: isEn ? "Track" : isHi ? "ट्रैक" : "ટ્રેકિંગ",
+      icon: Search,
     },
     {
-      key: "login",
+      key: "vault",
       href: "/portal",
       label: citizenSession
         ? isEn ? "Vault" : isHi ? "वॉल्ट" : "વોલ્ટ"
         : officerSession
         ? isEn ? "Desk" : isHi ? "डेस्क" : "ડેસ્ક"
         : isEn ? "Login" : isHi ? "लॉगिन" : "લૉગિન",
-      icon: User,
-      badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "अधिकारी" : "કચેરી") : undefined,
+      icon: ShieldCheck,
+      badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "અધિકારી" : "કચેરી") : undefined,
     },
   ];
 
   const isItemActive = (key: string) => {
     if (key === "home") return pathname === "/";
     if (key === "schemes") return pathname.startsWith("/schemes");
-    if (key === "chat") return pathname.startsWith("/chat");
-    if (key === "locator") return pathname.startsWith("/locator");
-    if (key === "login") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
+    if (key === "documents") return pathname.startsWith("/documents");
+    if (key === "track") return pathname.startsWith("/track");
+    if (key === "vault") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
     return false;
   };
 
@@ -131,10 +130,7 @@ export default function MobileBottomNav() {
                     }`}
                   >
                     <IconComponent size={21} className="stroke-[2.3]" />
-                    <Sparkles
-                      size={11}
-                      className="absolute top-1 right-2 text-amber-300 animate-pulse"
-                    />
+                    
                   </div>
                   <span
                     className={`text-xs leading-tight mt-1 transition-colors whitespace-nowrap truncate max-w-full px-0.5 ${

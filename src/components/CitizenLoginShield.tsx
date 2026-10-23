@@ -271,7 +271,7 @@ export default function CitizenLoginShield({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide">
-                    🔐 ૬ આંકડાનો OTP દાખલ કરો
+                    ૬ આંકડાનો સુરક્ષિત OTP દાખલ કરો
                   </label>
                   <div className="flex items-center gap-1.5 text-[10.5px] font-semibold">
                     <span className="text-orange-600 flex items-center gap-0.5">
