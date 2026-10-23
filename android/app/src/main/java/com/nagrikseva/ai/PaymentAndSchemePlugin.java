@@ -1,6 +1,7 @@
 package com.nagrikseva.ai;
 
 import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -53,6 +54,7 @@ public class PaymentAndSchemePlugin extends Plugin {
         if (scheme == null) return null;
         scheme = scheme.toLowerCase();
         String urlStr = url.toString();
+        Context ctx = getActivity() != null ? getActivity() : getContext();
 
         // 1. UPI Payment Protocols (Google Pay, PhonePe, Paytm, BHIM, CRED, Navi, etc.)
         if (scheme.equals("upi") || scheme.equals("paytmmp") ||
@@ -62,16 +64,27 @@ public class PaymentAndSchemePlugin extends Plugin {
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, url);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getContext().startActivity(intent);
+                ctx.startActivity(intent);
                 return Boolean.TRUE;
             } catch (ActivityNotFoundException e) {
+                // If vendor-specific scheme failed, fallback to generic upi://
+                if (!scheme.equals("upi")) {
+                    try {
+                        String genericUpi = "upi" + urlStr.substring(scheme.length());
+                        Intent fallbackIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(genericUpi));
+                        fallbackIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        ctx.startActivity(fallbackIntent);
+                        return Boolean.TRUE;
+                    } catch (Exception ignored) {}
+                }
+
                 try {
-                    Intent chooser = Intent.createChooser(new Intent(Intent.ACTION_VIEW, url), "UPI એપ પસંદ કરો");
+                    Intent chooser = Intent.createChooser(new Intent(Intent.ACTION_VIEW, url), "UPI એપ્લિકેશન પસંદ કરો");
                     chooser.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    getContext().startActivity(chooser);
+                    ctx.startActivity(chooser);
                     return Boolean.TRUE;
                 } catch (Exception ex) {
-                    Toast.makeText(getContext(), "તમારા ફોનમાં કોઈ UPI એપ (Google Pay / PhonePe / Paytm) મળેલ નથી.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(ctx, "તમારા ફોનમાં કોઈ UPI એપ (Google Pay / PhonePe / Paytm) મળેલ નથી.", Toast.LENGTH_LONG).show();
                     return Boolean.TRUE;
                 }
             }
@@ -82,10 +95,10 @@ public class PaymentAndSchemePlugin extends Plugin {
             try {
                 Intent intent = Intent.parseUri(urlStr, Intent.URI_INTENT_SCHEME);
                 if (intent != null) {
-                    PackageManager pm = getContext().getPackageManager();
+                    PackageManager pm = ctx.getPackageManager();
                     if (intent.resolveActivity(pm) != null) {
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        getContext().startActivity(intent);
+                        ctx.startActivity(intent);
                         return Boolean.TRUE;
                     }
                     String fallbackUrl = intent.getStringExtra("browser_fallback_url");
@@ -107,7 +120,7 @@ public class PaymentAndSchemePlugin extends Plugin {
             try {
                 Intent intent = new Intent(Intent.ACTION_VIEW, url);
                 intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                getContext().startActivity(intent);
+                ctx.startActivity(intent);
                 return Boolean.TRUE;
             } catch (Exception e) {
                 return Boolean.TRUE;
