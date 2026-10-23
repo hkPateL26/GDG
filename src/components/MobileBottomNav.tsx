@@ -6,8 +6,9 @@ import { useState, useEffect, useCallback } from "react";
 import {
   Home,
   LayoutGrid,
-  FileText,
-  Search,
+  Bot,
+  MapPin,
+  User,
   ShieldCheck,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptic";
@@ -44,7 +45,7 @@ export default function MobileBottomNav() {
   const isEn = currentLang === "en";
   const isHi = currentLang === "hi";
 
-  const navItems = [
+    const navItems = [
     {
       key: "home",
       href: "/",
@@ -58,27 +59,27 @@ export default function MobileBottomNav() {
       icon: LayoutGrid,
     },
     {
-      key: "documents",
-      href: "/documents",
-      label: isEn ? "Services" : isHi ? "सेवाएं" : "અરજીઓ",
-      icon: FileText,
+      key: "chat",
+      href: "/chat",
+      label: isEn ? "AI Chat" : isHi ? "AI सहायक" : "AI સહાયક",
+      icon: Bot,
       highlight: true,
     },
     {
-      key: "track",
-      href: "/track",
-      label: isEn ? "Track" : isHi ? "ट्रैक" : "ટ્રેકિંગ",
-      icon: Search,
+      key: "locator",
+      href: "/locator",
+      label: isEn ? "Offices" : isHi ? "कार्यालय" : "કચેરી",
+      icon: MapPin,
     },
     {
-      key: "vault",
+      key: "login",
       href: "/portal",
       label: citizenSession
         ? isEn ? "Vault" : isHi ? "वॉल्ट" : "વોલ્ટ"
         : officerSession
         ? isEn ? "Desk" : isHi ? "डेस्क" : "ડેસ્ક"
-        : isEn ? "Login" : isHi ? "लॉगिन" : "લૉગિન",
-      icon: ShieldCheck,
+        : isEn ? "Login" : isHi ? "લૉગિન" : "લૉગિન",
+      icon: citizenSession ? ShieldCheck : User,
       badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "અધિકારી" : "કચેરી") : undefined,
     },
   ];
@@ -86,9 +87,9 @@ export default function MobileBottomNav() {
   const isItemActive = (key: string) => {
     if (key === "home") return pathname === "/";
     if (key === "schemes") return pathname.startsWith("/schemes");
-    if (key === "documents") return pathname.startsWith("/documents");
-    if (key === "track") return pathname.startsWith("/track");
-    if (key === "vault") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
+    if (key === "chat") return pathname.startsWith("/chat");
+    if (key === "locator") return pathname.startsWith("/locator");
+    if (key === "login") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
     return false;
   };
 
