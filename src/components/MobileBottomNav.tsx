@@ -78,9 +78,9 @@ export default function MobileBottomNav() {
         ? isEn ? "Vault" : isHi ? "वॉल्ट" : "વોલ્ટ"
         : officerSession
         ? isEn ? "Desk" : isHi ? "डेस्क" : "ડેસ્ક"
-        : isEn ? "Login" : isHi ? "લૉગિન" : "લૉગિન",
+        : isEn ? "Login" : isHi ? "लॉगिन" : "લૉગિન",
       icon: citizenSession ? ShieldCheck : User,
-      badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "અધિકારી" : "કચેરી") : undefined,
+      badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "अधिकारी" : "કચેરી") : undefined,
     },
   ];
 

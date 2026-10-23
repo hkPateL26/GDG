@@ -60,8 +60,9 @@ export default function LanguageSelector({
             return (
               <button
                 key={lang.code}
+                data-lang-code={lang.code}
                 onClick={() => handleSelectLanguage(lang.code)}
-                className={`text-center py-1.5 px-1 rounded-xl text-xs font-semibold transition ${
+                className={`notranslate text-center py-1.5 px-1 rounded-xl text-xs font-semibold transition ${
                   isSelected
                     ? "bg-orange-600 text-white shadow-xs font-bold ring-2 ring-orange-300"
                     : "bg-white text-gray-700 hover:bg-orange-100/60 border border-gray-200"
@@ -134,7 +135,7 @@ export default function LanguageSelector({
       >
         <div
           ref={modalRef}
-          className="bg-white text-gray-900 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 overflow-hidden relative flex flex-col max-h-[85vh] sm:max-h-[88vh] animate-bottom-sheet pb-[env(safe-area-inset-bottom,0px)]"
+          className="notranslate bg-white text-gray-900 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 overflow-hidden relative flex flex-col max-h-[85vh] sm:max-h-[88vh] animate-bottom-sheet pb-[env(safe-area-inset-bottom,0px)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Native Mobile Bottom Sheet Drag Handle */}
@@ -204,8 +205,9 @@ export default function LanguageSelector({
                 return (
                   <button
                     key={lang.code}
+                    data-lang-code={lang.code}
                     onClick={() => handleSelectLanguage(lang.code)}
-                    className={`flex items-center justify-between p-3 rounded-2xl border text-left transition cursor-pointer active:scale-96 ${
+                    className={`notranslate flex items-center justify-between p-3 rounded-2xl border text-left transition cursor-pointer active:scale-96 ${
                       isSelected
                         ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-500 ring-2 ring-orange-400/60 shadow-xs"
                         : "bg-white hover:bg-gray-50/80 border-gray-200 hover:border-orange-200 shadow-2xs"

@@ -25,15 +25,12 @@ export function getStoredLanguage(): string {
 export function setGoogleTranslateCookies(targetLang: string) {
   if (typeof window === "undefined") return;
 
-  const cookieGu = `/gu/${targetLang}`;
-  const cookieAuto = `/auto/${targetLang}`;
+  const cookieVal = `/gu/${targetLang}`;
 
-  // Standard root cookies
-  document.cookie = `googtrans=${cookieGu}; path=/; SameSite=Lax;`;
-  document.cookie = `googtrans=${cookieAuto}; path=/; SameSite=Lax;`;
+  // 1. Root path cookie (primary)
+  document.cookie = `googtrans=${cookieVal}; path=/;`;
 
-  // Only set domain if on a legitimate multi-part hostname (e.g. atmiya.gov.in)
-  // NEVER on localhost, 127.0.0.1, or single hostnames
+  // 2. Domain cookie if valid hostname
   const hostname = window.location.hostname;
   if (
     hostname &&
@@ -41,8 +38,7 @@ export function setGoogleTranslateCookies(targetLang: string) {
     !hostname.endsWith("localhost") &&
     !/^\d+\.\d+\.\d+\.\d+$/.test(hostname)
   ) {
-    document.cookie = `googtrans=${cookieGu}; path=/; domain=.${hostname}; SameSite=Lax;`;
-    document.cookie = `googtrans=${cookieAuto}; path=/; domain=.${hostname}; SameSite=Lax;`;
+    document.cookie = `googtrans=${cookieVal}; path=/; domain=${hostname};`;
   }
 }
 
@@ -52,18 +48,13 @@ export function setGoogleTranslateCookies(targetLang: string) {
 export function clearGoogleTranslateCookies() {
   if (typeof window === "undefined") return;
 
-  const expired = "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; SameSite=Lax;";
+  const expired = "=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
   document.cookie = `googtrans${expired}`;
 
   const hostname = window.location.hostname;
-  if (
-    hostname &&
-    hostname.includes(".") &&
-    !hostname.endsWith("localhost") &&
-    !/^\d+\.\d+\.\d+\.\d+$/.test(hostname)
-  ) {
-    document.cookie = `googtrans${expired} domain=.${hostname};`;
+  if (hostname) {
     document.cookie = `googtrans${expired} domain=${hostname};`;
+    document.cookie = `googtrans${expired} domain=.${hostname};`;
   }
 }
 
@@ -93,7 +84,6 @@ export function applyLanguage(targetLang: string) {
 
     const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
     if (combo) {
-      // In Google Translate, empty value ("") means "Restore Original"
       combo.value = "";
       combo.dispatchEvent(new Event("change", { bubbles: true }));
     }
@@ -101,35 +91,25 @@ export function applyLanguage(targetLang: string) {
     // Quick reload ensures all DOM text nodes return to authentic Gujarati without Google artifacts
     setTimeout(() => {
       window.location.reload();
-    }, 150);
+    }, 120);
     return;
   }
 
   // Case 2: Switching to another language (e.g. Hindi, English, Marathi)
   setGoogleTranslateCookies(targetLang);
 
-  const triggerCombo = (combo: HTMLSelectElement) => {
+  const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
+  // If the Google Translate combo is already loaded with options, trigger it immediately
+  if (combo && combo.options && combo.options.length > 1) {
     combo.value = targetLang;
     combo.dispatchEvent(new Event("change", { bubbles: true }));
-  };
-
-  const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
-  if (combo) {
-    triggerCombo(combo);
+    if (typeof combo.onchange === "function") {
+      combo.onchange(new Event("change"));
+    }
   } else {
-    // Script might still be loading or mounting: poll every 50ms for up to 2500ms
-    let attempts = 0;
-    const interval = setInterval(() => {
-      attempts++;
-      const lateCombo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
-      if (lateCombo) {
-        clearInterval(interval);
-        triggerCombo(lateCombo);
-      } else if (attempts >= 50) {
-        clearInterval(interval);
-        // Fallback: reload with googtrans cookie already set in document.cookie
-        window.location.reload();
-      }
-    }, 50);
+    // Clean reload ensures Google Translate loads on boot with the googtrans cookie
+    setTimeout(() => {
+      window.location.reload();
+    }, 120);
   }
 }
