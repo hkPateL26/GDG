@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.5";
-export const APP_BUILD_NAME = "National DPI Release v2.9.5 - Official Citizen WhatsApp Dispatch & Gujarat Samvaad Share Gateway";
+export const APP_VERSION = "v2.9.6";
+export const APP_BUILD_NAME = "National DPI Release v2.9.6 - Automated Statutory SLA Escalation & GRTPSA 2013 Show-Cause Notice Engine";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
