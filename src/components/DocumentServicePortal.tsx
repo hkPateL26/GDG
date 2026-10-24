@@ -1223,11 +1223,6 @@ export default function DocumentServicePortal({
       }
 
       // 2. Open Official Razorpay Checkout Modal
-      const callbackUrl =
-        typeof window !== "undefined"
-          ? `${window.location.origin}/api/payment/callback?applicationId=${encodeURIComponent(activeChallanNo)}`
-          : undefined;
-
       let pollTimer: NodeJS.Timeout | null = null;
       let isCompleted = false;
 
@@ -1275,8 +1270,6 @@ export default function DocumentServicePortal({
         description: `${service.nameGu} - સરકારી અરજી ફી`,
         image: "/icon.svg",
         order_id: orderData.orderId.startsWith("order_test_") ? undefined : orderData.orderId,
-        callback_url: callbackUrl,
-        redirect: true,
         prefill: {
           name: applicantName || citizenSession?.citizenName || "Hari Patel",
           email: emailAddress || "citizen@gujarat.gov.in",
@@ -1302,7 +1295,12 @@ export default function DocumentServicePortal({
         },
         modal: {
           ondismiss: function () {
-            if (pollTimer) clearInterval(pollTimer);
+            // Grace period in case user switched to external UPI app
+            setTimeout(() => {
+              if (!isCompleted && pollTimer) {
+                clearInterval(pollTimer);
+              }
+            }, 15000);
             setIsProcessingPayment(false);
           },
         },
