@@ -368,7 +368,6 @@ export default function DocumentServicePortal({
     const handlePopState = () => {
       if (typeof window !== "undefined" && !window.location.pathname.startsWith("/payment")) {
         setShowPaymentModal(false);
-        setSubmittedApp(null);
       }
     };
     window.addEventListener("popstate", handlePopState);
@@ -1223,6 +1222,11 @@ export default function DocumentServicePortal({
       }
 
       // 2. Open Official Razorpay Checkout Modal
+      const callbackUrl =
+        typeof window !== "undefined"
+          ? `${window.location.origin}/api/payment/callback?applicationId=${encodeURIComponent(activeChallanNo)}`
+          : undefined;
+
       let pollTimer: NodeJS.Timeout | null = null;
       let isCompleted = false;
 
@@ -1270,6 +1274,8 @@ export default function DocumentServicePortal({
         description: `${service.nameGu} - સરકારી અરજી ફી`,
         image: "/icon.svg",
         order_id: orderData.orderId.startsWith("order_test_") ? undefined : orderData.orderId,
+        callback_url: callbackUrl,
+        redirect: true,
         prefill: {
           name: applicantName || citizenSession?.citizenName || "Hari Patel",
           email: emailAddress || "citizen@gujarat.gov.in",

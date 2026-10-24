@@ -14,6 +14,7 @@ function ReceiptContent() {
   const paymentId = searchParams.get("paymentId") || "";
   const orderId = searchParams.get("orderId") || "";
   const grn = searchParams.get("grn") || id;
+  const amount = searchParams.get("amount") || "50.00";
   const error = searchParams.get("error");
 
   const [dateStr, setDateStr] = useState("");
@@ -108,7 +109,7 @@ function ReceiptContent() {
             </div>
           </div>
           <span className="text-xs font-mono font-black text-emerald-300 px-2.5 py-1 rounded-lg bg-emerald-900/60 border border-emerald-400/40">
-            ₹ 20.00
+            ₹ {amount.includes(".") ? amount : `${amount}.00`}
           </span>
         </div>
 

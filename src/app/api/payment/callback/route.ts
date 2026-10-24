@@ -4,12 +4,126 @@
 // =========================================================================
 
 import { NextRequest, NextResponse } from "next/server";
-import crypto from "crypto";
 import { confirmApplicationPayment } from "@/lib/large-datasets";
 import { db } from "@/lib/firebase";
 import { doc, setDoc } from "firebase/firestore";
 
 export const dynamic = "force-dynamic";
+
+function buildHtmlRedirect(receiptUrl: string, titleGu: string, messageGu: string, isError = false) {
+  const icon = isError ? "✕" : "✅";
+  const iconColor = isError ? "#ef4444" : "#10b981";
+  const titleColor = isError ? "#f87171" : "#34d399";
+  const btnGradient = isError
+    ? "linear-gradient(135deg, #ef4444, #dc2626)"
+    : "linear-gradient(135deg, #10b981, #059669)";
+
+  return `<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${titleGu} • NagrikSeva AI</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      background: #020617;
+      color: #ffffff;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .card {
+      background: #0f172a;
+      border: 1px solid ${isError ? "#ef4444" : "#10b981"};
+      border-radius: 24px;
+      padding: 36px 24px;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    }
+    .icon {
+      font-size: 50px;
+      line-height: 1;
+      margin-bottom: 16px;
+      color: ${iconColor};
+    }
+    h2 {
+      font-size: 20px;
+      margin: 0 0 10px;
+      color: ${titleColor};
+      font-weight: 800;
+    }
+    p {
+      font-size: 14px;
+      color: #94a3b8;
+      margin: 0 0 24px;
+      line-height: 1.5;
+    }
+    .btn {
+      display: inline-block;
+      background: ${btnGradient};
+      color: white;
+      text-decoration: none;
+      padding: 14px 32px;
+      border-radius: 14px;
+      font-weight: bold;
+      font-size: 14px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+      cursor: pointer;
+    }
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(255,255,255,0.2);
+      border-top-color: #ffffff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 16px auto 0;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">${icon}</div>
+    <h2>${titleGu}</h2>
+    <p>${messageGu}</p>
+    <a href="${receiptUrl}" class="btn" id="directLink">અહીં ક્લિક કરો</a>
+    <div class="spinner"></div>
+  </div>
+  <script>
+    (function() {
+      var target = "${receiptUrl}";
+      try {
+        if (window.top && window.top !== window) {
+          window.top.location.href = target;
+        } else {
+          window.location.replace(target);
+        }
+      } catch (e) {
+        window.location.href = target;
+      }
+      // Safety fallback in case immediate navigation was queued
+      setTimeout(function() {
+        try {
+          if (window.top) window.top.location.href = target;
+          else window.location.href = target;
+        } catch(e) {
+          window.location.href = target;
+        }
+      }, 300);
+    })();
+  </script>
+</body>
+</html>`;
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -41,16 +155,38 @@ export async function POST(req: NextRequest) {
 
     const targetAppId = (queryAppId || bodyAppId || "").trim().toUpperCase();
 
+    // 1. Handle error descriptions from Razorpay callback
     if (errorDesc && !paymentId) {
       console.warn("Razorpay callback returned error:", errorDesc);
-      return NextResponse.redirect(
-        new URL(`/payment/receipt?error=${encodeURIComponent(errorDesc)}&id=${encodeURIComponent(targetAppId)}`, req.url),
-        303
+      const errReceiptUrl = `/payment/receipt?error=${encodeURIComponent(errorDesc)}&id=${encodeURIComponent(targetAppId)}`;
+      const html = buildHtmlRedirect(
+        errReceiptUrl,
+        "પેમેન્ટ પ્રક્રિયા પૂર્ણ થઈ શકી નથી",
+        decodeURIComponent(errorDesc),
+        true
       );
+      return new NextResponse(html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Security-Policy": "frame-ancestors *",
+          "X-Frame-Options": "ALLOWALL",
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+        },
+      });
     }
 
     if (!paymentId) {
-      return NextResponse.redirect(new URL("/documents", req.url), 303);
+      const fallbackUrl = `/documents`;
+      const html = buildHtmlRedirect(fallbackUrl, "અરજી પોર્ટલ પર પાછા ફરી રહ્યા છીએ", "પેમેન્ટ ID મળેલ નથી.", true);
+      return new NextResponse(html, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/html; charset=utf-8",
+          "Content-Security-Policy": "frame-ancestors *",
+          "X-Frame-Options": "ALLOWALL",
+        },
+      });
     }
 
     const keyId =
@@ -61,7 +197,7 @@ export async function POST(req: NextRequest) {
       process.env.RAZORPAY_KEY_SECRET ||
       "vZzX2lR01orHItU0C3ORL5Sq";
 
-    // Explicit Capture Check: Ensure payment is captured on Razorpay
+    // 2. Explicit Capture Check: Ensure payment is captured on Razorpay
     if (keyId && keySecret) {
       try {
         const basicAuth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
@@ -87,7 +223,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Update Application Record in database & memory
+    // 3. Update Application Record in memory & Firestore
     if (targetAppId) {
       confirmApplicationPayment(targetAppId);
       if (db) {
@@ -112,16 +248,34 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Redirect user directly to the official digital receipt page
-    const redirectUrl = new URL(
-      `/payment/receipt?id=${encodeURIComponent(targetAppId)}&paymentId=${encodeURIComponent(paymentId)}&orderId=${encodeURIComponent(orderId)}&verified=true`,
-      req.url
+    // 4. Return HTML redirect designed to break out of Razorpay iframe cleanly
+    const receiptUrl = `/payment/receipt?id=${encodeURIComponent(targetAppId)}&paymentId=${encodeURIComponent(paymentId)}&orderId=${encodeURIComponent(orderId)}&verified=true`;
+    const html = buildHtmlRedirect(
+      receiptUrl,
+      "પેમેન્ટ સફળતાપૂર્વક પૂર્ણ થયું!",
+      "સાયબર ટ્રેઝરીમાં ફી જમા થઈ ગઈ છે. સત્તાવાર ડિજિટલ પહોંચ ખુલી રહી છે..."
     );
 
-    return NextResponse.redirect(redirectUrl, 303);
+    return new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Security-Policy": "frame-ancestors *",
+        "X-Frame-Options": "ALLOWALL",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
+    });
   } catch (err: unknown) {
     console.error("Razorpay callback error:", err);
-    return NextResponse.redirect(new URL("/documents", req.url), 303);
+    const html = buildHtmlRedirect("/documents", "અરજી પોર્ટલ", "પુનઃપ્રયાસ કરો.", true);
+    return new NextResponse(html, {
+      status: 200,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Content-Security-Policy": "frame-ancestors *",
+        "X-Frame-Options": "ALLOWALL",
+      },
+    });
   }
 }
 
@@ -135,10 +289,20 @@ export async function GET(req: NextRequest) {
     confirmApplicationPayment(targetAppId);
   }
 
-  const redirectUrl = new URL(
-    `/payment/receipt?id=${encodeURIComponent(targetAppId)}&paymentId=${encodeURIComponent(paymentId)}&orderId=${encodeURIComponent(orderId)}&verified=true`,
-    req.url
+  const receiptUrl = `/payment/receipt?id=${encodeURIComponent(targetAppId)}&paymentId=${encodeURIComponent(paymentId)}&orderId=${encodeURIComponent(orderId)}&verified=true`;
+  const html = buildHtmlRedirect(
+    receiptUrl,
+    "પેમેન્ટ સફળતાપૂર્વક પૂર્ણ થયું!",
+    "સાયબર ટ્રેઝરીમાં ફી જમા થઈ ગઈ છે. સત્તાવાર ડિજિટલ પહોંચ ખુલી રહી છે..."
   );
 
-  return NextResponse.redirect(redirectUrl, 303);
+  return new NextResponse(html, {
+    status: 200,
+    headers: {
+      "Content-Type": "text/html; charset=utf-8",
+      "Content-Security-Policy": "frame-ancestors *",
+      "X-Frame-Options": "ALLOWALL",
+      "Cache-Control": "no-store, no-cache, must-revalidate",
+    },
+  });
 }
