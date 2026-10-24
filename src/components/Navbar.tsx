@@ -29,12 +29,10 @@ import { DEFAULT_LANGUAGE } from "@/lib/translation";
 import LanguageSelector from "./LanguageSelector";
 import EnterpriseSystemHealthBar from "./EnterpriseSystemHealthBar";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
-import { useSaralMode } from "@/lib/useSaralMode";
 
 const InstallAppModal = dynamic(() => import("./InstallAppModal"), { ssr: false });
 
 export default function Navbar() {
-  const { isSaralMode, toggleSaralMode } = useSaralMode();
   const { isInstalled, isStandalone } = useIsPwaInstalled();
   const { currentLang, t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
@@ -116,7 +114,6 @@ export default function Navbar() {
     { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
     { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
-    { href: "/verify",             label: currentLang === "en" ? "Verify" : currentLang === "hi" ? "सत्यापन" : "ખરાઈ (Verify)", Icon: ShieldCheck },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },
   ];
 
@@ -183,21 +180,6 @@ export default function Navbar() {
             <div className="ml-1 shrink-0">
               <LanguageSelector variant="desktop" />
             </div>
-
-            {/* 👵 Desktop Saral Mode Toggle */}
-            <button
-              type="button"
-              onClick={toggleSaralMode}
-              className={`ml-1 flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition border shadow-2xs active:scale-95 cursor-pointer ${
-                isSaralMode
-                  ? "bg-amber-500 hover:bg-amber-600 text-white border-amber-600 shadow-sm"
-                  : "bg-amber-50 hover:bg-amber-100 text-amber-900 border-amber-200/90"
-              }`}
-              title="સરળ મોડ (Ultra-Simple View)"
-            >
-              <span className="text-sm">👵</span>
-              <span>{isSaralMode ? "વિગતવાર મોડ" : "સરળ મોડ"}</span>
-            </button>
 
             {/* 🔐 Single Unified Entry (Login / Dashboard / Officer Desk) */}
             <div className="flex items-center gap-1.5 shrink-0">
@@ -325,21 +307,6 @@ export default function Navbar() {
 
           {/* ── Mobile & Tablet Toggle ── */}
           <div className="xl:hidden flex items-center gap-1.5 shrink-0">
-            {/* 👵 Mobile Saral Mode Toggle */}
-            <button
-              type="button"
-              onClick={toggleSaralMode}
-              className={`flex items-center gap-1 px-2 py-1.5 rounded-full text-xs font-bold whitespace-nowrap shrink-0 transition border active:scale-95 cursor-pointer ${
-                isSaralMode
-                  ? "bg-amber-500 text-white border-amber-600 shadow-xs"
-                  : "bg-amber-50 text-amber-900 border-amber-200"
-              }`}
-              title="સરળ મોડ (Simple View)"
-            >
-              <Eye size={13} className="shrink-0 text-amber-900" />
-              <span className="text-[11px] font-extrabold">{isSaralMode ? "પૂર્ણ" : "સરળ"}</span>
-            </button>
-
             {/* 🌐 Mobile Language Switcher */}
             <LanguageSelector variant="mobile-bar" />
 
@@ -560,13 +527,6 @@ export default function Navbar() {
                     sub: currentLang === "en" ? "1-Min AI Check" : currentLang === "hi" ? "१ मिनट में जांचें" : "૧ મિનિટમાં ચેક",
                     Icon: ClipboardCheck,
                     bg: "bg-orange-50 border-orange-200/80 text-orange-700",
-                  },
-                  {
-                    href: "/verify",
-                    label: currentLang === "en" ? "Verify Certificate" : currentLang === "hi" ? "प्रमाणपत्र सत्यापन" : "પ્રમાણપત્ર ખરાઈ",
-                    sub: currentLang === "en" ? "Live QR Scanner" : currentLang === "hi" ? "लाइव QR स्कैनर" : "લાઈવ QR સ્કેનર",
-                    Icon: ShieldCheck,
-                    bg: "bg-amber-50 border-amber-200/80 text-amber-700",
                   },
                   {
                     href: "/locator",

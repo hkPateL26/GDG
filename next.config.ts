@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
     RAZORPAY_KEY_SECRET: process.env.RAZORPAY_KEY_SECRET || "vZzX2lR01orHItU0C3ORL5Sq",
     PAYMENT_WEBHOOK_SECRET: process.env.PAYMENT_WEBHOOK_SECRET || "vZzX2lR01orHItU0C3ORL5Sq",
   },
+  async redirects() {
+    return [
+      {
+        source: "/verify",
+        destination: "/track",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -53,11 +53,6 @@ export const APP_CHANGELOG = [
     descGu: "દસ્તાવેજ (આધાર/રેશન કાર્ડ) અપલોડ કરતાં જ Gemini Vision તમામ વિગતો (નામ, જન્મ તારીખ, સરનામું, ગામ) આપોઆપ વાંચીને ૧-ક્લિકમાં આખું ફોર્મ ભરી આપે છે.",
   },
   {
-    titleGu: "સરળ મોડ (Saral Mode - Accessible View)",
-    titleEn: "Saral Citizen Mode (WCAG 2.1 AAA Accessible View)",
-    descGu: "વડીલો અને ગ્રામીણ નાગરિકો માટે સરળ ૩-કાર્ડ વોઈસ ઇન્ટરફેસ (WCAG AAA) ઉમેરવામાં આવી.",
-  },
-  {
     titleGu: "સત્તાવાર સાયબર ટ્રેઝરી યુનિફાઇડ પેમેન્ટ & /payment URL",
     titleEn: "Unified Cyber Treasury Payment & Official /payment URL",
     descGu: "વધારાના બટનો હટાવીને સત્તાવાર સાયબર ટ્રેઝરી Razorpay બટન સેટ કર્યું અને પેમેન્ટ સમયે બ્રાઉઝર એડ્રેસ બારમાં /payment URL લાઈવ સિંક કર્યું.",

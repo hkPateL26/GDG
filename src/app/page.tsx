@@ -5,8 +5,6 @@ import ChatBot from "@/components/ChatBot";
 import MobileGreetingCard from "@/components/MobileGreetingCard";
 import Link from "next/link";
 import DynamicFeaturedSchemes from "@/components/DynamicFeaturedSchemes";
-import SaralCitizenMode from "@/components/SaralCitizenMode";
-import { useSaralMode } from "@/lib/useSaralMode";
 import {
   LayoutGrid,
   Bot,
@@ -66,15 +64,10 @@ const STATS = [
 ];
 
 export default function Home() {
-  const { isSaralMode } = useSaralMode();
-
   return (
     <>
       <Navbar />
-      {isSaralMode ? (
-        <SaralCitizenMode />
-      ) : (
-        <main className="min-h-screen bg-slate-50">
+      <main className="min-h-screen bg-slate-50">
 
         {/* ══════════════════════════════════════════════════════════════════
             📱 MOBILE NATIVE SUPER-APP HOME (DigiLocker + UMANG + PhonePe UI)
@@ -274,7 +267,6 @@ export default function Home() {
           </div>
         </div>
       </main>
-      )}
     </>
   );
 }
