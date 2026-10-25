@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test test/officer-auth-config.test.mjs test/demo-credentials-isolation.test.mjs test/digital-notary.test.mjs test/offline-sync.test.mjs test/whatsapp-dispatch.test.mjs test/statutory-sla.test.mjs test/entitlement-passbook.test.mjs"
+    "test": "node --test test/officer-auth-config.test.mjs test/demo-credentials-isolation.test.mjs test/digital-notary.test.mjs test/offline-sync.test.mjs test/whatsapp-dispatch.test.mjs test/statutory-sla.test.mjs test/entitlement-passbook.test.mjs test/voice-hotline.test.mjs"
   },
   "dependencies": {
     "@capacitor/android": "^6.2.2",

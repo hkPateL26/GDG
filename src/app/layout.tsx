@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
+import FloatingVoiceHotlineButton from "@/components/FloatingVoiceHotlineButton";
 import AndroidNativeBridge from "@/components/AndroidNativeBridge";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import HapticFeedbackProvider from "@/components/HapticFeedbackProvider";
@@ -59,6 +60,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           {children}
           <Footer />
           <MobileBottomNav />
+          <FloatingVoiceHotlineButton />
           <FloatingInstallBanner />
           <GoogleTranslateScript />
         </LanguageProvider>

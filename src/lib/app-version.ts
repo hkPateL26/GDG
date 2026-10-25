@@ -1,5 +1,5 @@
-export const APP_VERSION = "v2.9.7";
-export const APP_BUILD_NAME = "National DPI Release v2.9.7 - Citizen Welfare Entitlement Passbook & Statutory Proactive Renewal Ledger";
+export const APP_VERSION = "v2.9.8";
+export const APP_BUILD_NAME = "National DPI Release v2.9.8 - Interactive Gujarati Voice Hotline & Rural Civic Voice Gateway";
 export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "17 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
@@ -27,6 +27,16 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "ઇન્ટરેક્ટિવ ગુજરાતી જન-સંવાદ વૉઇસ હેલ્પલાઇન (/hotline) (v2.9.8)",
+    titleEn: "Interactive Gujarati Voice Hotline & Rural Civic Voice Gateway",
+    descGu: "ગ્રામીણ અને વડીલ નાગરિકો માટે ૧-ટેપ લાઈવ માઈક્રોફોન ટુ-વે વૉઇસ સંવાદ. નાગરિક ગુજરાતીમાં બોલીને પ્રશ્ન પૂછે છે અને AI શુદ્ધ ગુજરાતી ઑડિયોમાં યોજના, સહાય અને દસ્તાવેજો બોલીને સમજાવે છે.",
+  },
+  {
+    titleGu: "નાગરિક કલ્યાણ અધિકાર પાસબુક & સામાજિક સુરક્ષા લેજર (/passbook) (v2.9.7)",
+    titleEn: "Citizen Welfare Entitlement Passbook & Proactive Renewal Ledger",
+    descGu: "સરકાર તરફથી કુટુંબને મળેલા આજીવન નાણાકીય લાભો (DBT, આયુષ્માન કવર, સોલાર સહાય, NFSA) નું એકીકૃત ગોલ્ડન પાસબુક લેજર, આગામી કાનૂની KYC રીન્યુઅલ એલર્ટ અને છાપવા યોગ્ય A4 સ્ટેટમેન્ટ.",
+  },
   {
     titleGu: "સત્તાવાર વોટ્સએપ નાગરિક સૂચના & ગુજરાત સંવાદ ગેટવે (v2.9.5)",
     titleEn: "Official Citizen WhatsApp Notification & Gujarat Samvaad Share Gateway",

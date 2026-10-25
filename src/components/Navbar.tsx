@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Eye,
   BookOpen,
+  Headphones,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
@@ -113,7 +114,14 @@ export default function Navbar() {
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
     { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
-    { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
+    { href: "/hotline",
+                    label: currentLang === "en" ? "Voice Hotline" : currentLang === "hi" ? "वॉइस हेल्पलाइन" : "જન-સંવાદ હેલ્પલાઇન",
+                    sub: currentLang === "en" ? "Two-Way Voice" : currentLang === "hi" ? "टू-वे वॉइस संवाद" : "ટુ-વે વૉઇસ સંવાદ",
+                    Icon: Headphones,
+                    bg: "bg-teal-50 border-teal-200/80 text-teal-700",
+                  },
+                  {
+                    href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },
   ];
@@ -168,6 +176,19 @@ export default function Navbar() {
               );
             })}
 
+            <button
+              type="button"
+              onClick={() => {
+                if (typeof window !== "undefined") {
+                  window.dispatchEvent(new CustomEvent("open-voice-hotline"));
+                }
+              }}
+              className="ml-1 flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs active:scale-95 cursor-pointer"
+              title="જન-સંવાદ વૉઇસ હેલ્પલાઇન"
+            >
+              <Headphones size={13} className="shrink-0 animate-pulse text-yellow-300" />
+              <span>જન-સંવાદ</span>
+            </button>
             <a
               href="tel:14567"
               className="ml-1 flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs"

@@ -18,6 +18,7 @@ import {
   Languages,
   Mic,
   ShieldCheck,
+  Headphones,
 } from "lucide-react";
 
 const QUICK_SERVICES = [
@@ -172,6 +173,12 @@ export default function Home() {
                 className="flex items-center gap-1.5 bg-orange-700/80 hover:bg-orange-800 text-white px-3.5 py-2.5 rounded-xl font-medium text-xs sm:text-sm transition border border-white/20 active:scale-95"
               >
                 <MapPin size={15} /> કચેરી લોકેટર
+              </Link>
+              <Link
+                href="/hotline"
+                className="flex items-center gap-1.5 bg-teal-900 hover:bg-teal-950 text-yellow-300 px-3.5 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition border border-teal-400/40 shadow active:scale-95"
+              >
+                <Headphones size={15} /> જન-સંવાદ વૉઇસ
               </Link>
             </div>
           </div>
