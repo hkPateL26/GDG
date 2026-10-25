@@ -7,13 +7,14 @@ import OfficerLoginShield, { OfficerProfile } from "@/components/OfficerLoginShi
 import CitizenPortalHeader from "@/components/CitizenPortalHeader";
 import TrackVaultView from "@/components/TrackVaultView";
 import DocumentServicePortal from "@/components/DocumentServicePortal";
+import CitizenEntitlementPassbook from "@/components/CitizenEntitlementPassbook";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
 import AdminHierarchyDesk from "@/components/AdminHierarchyDesk";
 import { User, Building2, X, ExternalLink, ArrowLeftRight } from "lucide-react";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
-export type PortalTabType = "track" | "documents" | "eligibility";
+export type PortalTabType = "track" | "documents" | "eligibility" | "passbook";
 
 interface UnifiedCitizenPortalProps {
   initialTab?: PortalTabType;
@@ -346,6 +347,10 @@ export default function UnifiedCitizenPortal({
               citizen={citizenSession}
               onNavigateToDocuments={() => handleTabChange("documents")}
             />
+          )}
+
+          {activeTab === "passbook" && (
+            <CitizenEntitlementPassbook citizen={citizenSession ?? undefined} />
           )}
         </div>
       </main>

@@ -21,6 +21,7 @@ import {
   ClipboardCheck,
   ShieldCheck,
   Eye,
+  BookOpen,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
