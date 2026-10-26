@@ -203,9 +203,9 @@ export default function Navbar() {
               <LanguageSelector variant="desktop" />
             </div>
 
-            {/* 🔐 Single Unified Entry (Login / Dashboard / Officer Desk) */}
+            {/* 🔐 Single Unified Entry (Officer OR Citizen OR Login) */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {officerSession && (
+              {officerSession ? (
                 <Link
                   href="/portal?mode=officer"
                   className="ml-1.5 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border-2 border-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
@@ -226,9 +226,7 @@ export default function Navbar() {
                     )
                   </span>
                 </Link>
-              )}
-
-              {citizenSession ? (
+              ) : citizenSession ? (
                 <Link
                   href="/portal?mode=citizen"
                   className="ml-1 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
@@ -239,9 +237,7 @@ export default function Navbar() {
                     {citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)
                   </span>
                 </Link>
-              ) : null}
-
-              {!officerSession && !citizenSession && (
+              ) : (
                 <div
                   className="relative"
                   onMouseEnter={() => setShowLoginDropdown(true)}
@@ -306,6 +302,39 @@ export default function Navbar() {
                           </p>
                         </div>
                       </Link>
+
+                      <div className="border-t border-gray-100 my-1" />
+
+                      {/* Option 3: Demo & Presentation Mode */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowLoginDropdown(false);
+                          if (typeof window !== "undefined") {
+                            sessionStorage.setItem("nagrik_demo_active", "true");
+                            fetch("/api/auth/otp", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({ action: "unlock_demo_gate", passcode: "GUJ-DEMO-2026" }),
+                            }).catch(() => {});
+                            window.location.href = "/portal?demo=true";
+                          }
+                        }}
+                        className="w-full flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-amber-50 text-left transition group/item cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
+                          <Sparkles size={16} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-amber-900 text-xs">ડેમો & પ્રેઝન્ટેશન મોડ</span>
+                            <span className="text-[9.5px] bg-amber-200 text-amber-900 font-bold px-1.5 py-0.2 rounded-full">Sandbox</span>
+                          </div>
+                          <p className="text-[10.5px] text-gray-500 leading-snug mt-0.5">
+                            જ્યુરી/ટેસ્ટિંગ માટે તમામ ૬ ભૂમિકાઓ (નાગરિક & કચેરી)
+                          </p>
+                        </div>
+                      </button>
                     </div>
                   </div>
                 )}
@@ -511,6 +540,39 @@ export default function Navbar() {
                       </p>
                     </div>
                   </Link>
+                </div>
+
+                {/* Mobile Demo Presentation Gateway */}
+                <div className="pt-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      if (typeof window !== "undefined") {
+                        sessionStorage.setItem("nagrik_demo_active", "true");
+                        fetch("/api/auth/otp", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({ action: "unlock_demo_gate", passcode: "GUJ-DEMO-2026" }),
+                        }).catch(() => {});
+                        window.location.href = "/portal?demo=true";
+                      }
+                    }}
+                    className="w-full flex items-center justify-between p-2.5 rounded-2xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 transition cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <div className="w-7 h-7 rounded-lg bg-amber-200 text-amber-900 flex items-center justify-center font-bold text-xs">
+                        🧪
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-black">ડેમો & પ્રેઝન્ટેશન મોડ</p>
+                        <p className="text-[10px] text-amber-800">જ્યુરી સમક્ષ ૬ ભૂમિકાઓનું લાઈવ ટેસ્ટિંગ</p>
+                      </div>
+                    </div>
+                    <span className="text-xs font-bold text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-full">
+                      શરૂ કરો →
+                    </span>
+                  </button>
                 </div>
               </div>
             )}

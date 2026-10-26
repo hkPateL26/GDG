@@ -11,6 +11,7 @@ import CitizenEntitlementPassbook from "@/components/CitizenEntitlementPassbook"
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
 import AdminHierarchyDesk from "@/components/AdminHierarchyDesk";
+import DemoPresentationBar from "@/components/DemoPresentationBar";
 import { User, Building2, X, ExternalLink, ArrowLeftRight } from "lucide-react";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
@@ -74,15 +75,13 @@ export default function UnifiedCitizenPortal({
         }
         setOfficerSession(parsedOfficer);
 
-        // Strict URL Precedence: If URL explicitly dictates mode, NEVER override it!
+        // Strict URL Precedence & Deterministic Role Restoration
         if (modeParam === "officer" || modeParam === "admin") {
           setAuthMode("officer");
         } else if (modeParam === "citizen") {
           setAuthMode("citizen");
         } else if (initialMode === "officer") {
           setAuthMode("officer");
-        } else if (initialMode === "citizen") {
-          setAuthMode("citizen");
         } else if (parsedOfficer && !parsedCitizen) {
           setAuthMode("officer");
         } else {
@@ -176,6 +175,7 @@ export default function UnifiedCitizenPortal({
     if (officerSession) {
       return (
         <main className="min-h-screen bg-slate-100 text-slate-900 pb-24 sm:pb-16 overflow-x-hidden">
+          <DemoPresentationBar />
           {/* Official Officer Top Bar */}
           <div className="bg-slate-950 border-b border-amber-400/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
             <div className="flex items-center gap-2">
@@ -209,6 +209,7 @@ export default function UnifiedCitizenPortal({
     // Officer Not Logged In
     return (
       <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 sm:pb-16 overflow-x-hidden">
+        <DemoPresentationBar />
         <div className="max-w-xl mx-auto px-2 sm:px-6 py-1.5 sm:py-8 animate-in fade-in duration-300 space-y-2">
           {/* Top Segmented Mode Switcher */}
           <div className="bg-slate-200/80 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl flex items-center gap-1 shadow-inner border border-slate-300">
@@ -245,6 +246,7 @@ export default function UnifiedCitizenPortal({
   if (citizenSession) {
     return (
       <main className="min-h-screen bg-slate-50 text-slate-900 pb-16 overflow-x-hidden">
+        <DemoPresentationBar />
         {/* Dual-Tab Live Simulation Top Bar */}
         <div className="bg-emerald-950 border-b border-emerald-500/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
           <div className="flex items-center gap-2">
@@ -257,16 +259,6 @@ export default function UnifiedCitizenPortal({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <a
-              href="/portal?mode=officer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
-              title="બીજી ટેબમાં કચેરી ડેસ્ક ખોલો અને લાઈવ અરજી ચકાસો (Open Officer Tab)"
-            >
-              <span>🏛️ નવી ટેબમાં કચેરી ડેસ્ક ખોલો (Live Officer Desk)</span>
-              <ExternalLink size={13} />
-            </a>
             {officerSession && (
               <button
                 type="button"
@@ -360,6 +352,7 @@ export default function UnifiedCitizenPortal({
   // Citizen Not Logged In
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900 pb-20 sm:pb-16 overflow-x-hidden">
+      <DemoPresentationBar />
       <div className="max-w-xl mx-auto px-2 sm:px-6 py-1.5 sm:py-8 animate-in fade-in duration-300 space-y-2">
         <div className="bg-slate-200/80 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl flex items-center gap-1 shadow-inner border border-slate-300">
           <button
