@@ -1,7 +1,7 @@
-export const APP_VERSION = "v2.9.8";
-export const APP_BUILD_NAME = "National DPI Release v2.9.8 - Interactive Gujarati Voice Hotline & Rural Civic Voice Gateway";
-export const APP_RELEASE_DATE = "૧૭ ઓક્ટોબર ૨૦૨૬";
-export const APP_RELEASE_DATE_EN = "17 October 2026";
+export const APP_VERSION = "v2.9.9";
+export const APP_BUILD_NAME = "National DPI Release v2.9.9 - Seamless Android Razorpay & Play Store In-App Updates";
+export const APP_RELEASE_DATE = "૨૭ ઓક્ટોબર ૨૦૨૬";
+export const APP_RELEASE_DATE_EN = "27 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
 
 export interface LeadDeveloper {
@@ -27,6 +27,11 @@ export const LEAD_DEVELOPERS: LeadDeveloper[] = [
 ];
 
 export const APP_CHANGELOG = [
+  {
+    titleGu: "એન્ડ્રોઇડ Razorpay પેમેન્ટ સુધારો & Play Store ઓટો-અપડેટ નોટિફિકેશન (v2.9.9)",
+    titleEn: "Android Native Razorpay Resilient Payment & Play Store Auto-Update System",
+    descGu: "Android WebView માં સત્તાવાર સાયબર ટ્રેઝરી Razorpay (UPI, GPay, PhonePe, Paytm, RuPay) પેમેન્ટ માટે અદ્યતન ફુલ-સ્ક્રીન ડાયલોગ અને એપ-રીઝ્યુમ બેકગ્રાઉન્ડ સિંક. સાથે સાથે Google Play Store જેવી ઇન-એપ ઓટો-અપડેટ નોટિફિકેશન સિસ્ટમ.",
+  },
   {
     titleGu: "ઇન્ટરેક્ટિવ ગુજરાતી જન-સંવાદ વૉઇસ હેલ્પલાઇન (/hotline) (v2.9.8)",
     titleEn: "Interactive Gujarati Voice Hotline & Rural Civic Voice Gateway",

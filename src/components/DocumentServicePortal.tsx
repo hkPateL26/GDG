@@ -371,6 +371,33 @@ export default function DocumentServicePortal({
       }
     };
     window.addEventListener("popstate", handlePopState);
+
+    // Auto-recover any pending payment if app was killed and restored
+    if (typeof window !== "undefined") {
+      try {
+        const pendingStr = sessionStorage.getItem("nagrik_pending_pay_order") || localStorage.getItem("nagrik_pending_pay_order");
+        if (pendingStr) {
+          const pending = JSON.parse(pendingStr);
+          if (pending?.orderId && Date.now() - pending.timestamp < 300000) {
+            fetch(`/api/payment/status?orderId=${encodeURIComponent(pending.orderId)}&applicationId=${encodeURIComponent(pending.applicationId || "")}`)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success && data.paid && data.paymentId) {
+                  sessionStorage.removeItem("nagrik_pending_pay_order");
+                  localStorage.removeItem("nagrik_pending_pay_order");
+                  handleFinalPaymentSubmit(
+                    data.paymentId,
+                    { razorpay_payment_id: data.paymentId, razorpay_order_id: pending.orderId },
+                    pending.orderId
+                  );
+                }
+              })
+              .catch(() => {});
+          }
+        }
+      } catch {}
+    }
+
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
@@ -1225,6 +1252,19 @@ export default function DocumentServicePortal({
       let pollTimer: NodeJS.Timeout | null = null;
       let isCompleted = false;
 
+      // Persist pending order so Android Activity pause/resume or low-memory kill can recover seamlessly
+      const pendingOrderInfo = {
+        orderId: orderData.orderId,
+        applicationId: activeChallanNo,
+        timestamp: Date.now(),
+      };
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("nagrik_pending_pay_order", JSON.stringify(pendingOrderInfo));
+          localStorage.setItem("nagrik_pending_pay_order", JSON.stringify(pendingOrderInfo));
+        } catch {}
+      }
+
       const finishPaymentOnce = async (
         paymentId: string,
         rzpResp?: { razorpay_payment_id: string; razorpay_order_id?: string; razorpay_signature?: string },
@@ -1233,32 +1273,49 @@ export default function DocumentServicePortal({
         if (isCompleted) return;
         isCompleted = true;
         if (pollTimer) clearInterval(pollTimer);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.removeItem("nagrik_pending_pay_order");
+            localStorage.removeItem("nagrik_pending_pay_order");
+            window.removeEventListener("focus", handleCheckStatus);
+            document.removeEventListener("visibilitychange", handleCheckStatus);
+          } catch {}
+        }
         setIsProcessingPayment(false);
         await handleFinalPaymentSubmit(paymentId, rzpResp, orderId);
       };
 
+      const handleCheckStatus = async () => {
+        if (isCompleted) return;
+        if (!orderData.orderId || orderData.orderId.startsWith("order_test_")) return;
+        try {
+          const sRes = await fetch(
+            `/api/payment/status?orderId=${encodeURIComponent(orderData.orderId)}&applicationId=${encodeURIComponent(activeChallanNo)}`
+          );
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            if (sData.success && sData.paid && sData.paymentId) {
+              await finishPaymentOnce(
+                sData.paymentId,
+                { razorpay_payment_id: sData.paymentId, razorpay_order_id: orderData.orderId },
+                orderData.orderId
+              );
+            }
+          }
+        } catch (pollErr) {
+          console.warn("Polling status warning:", pollErr);
+        }
+      };
+
       // Real-time 2-second background status polling: Catches UPI app returns & background authorizations instantly!
       if (orderData.orderId && !orderData.orderId.startsWith("order_test_")) {
-        pollTimer = setInterval(async () => {
-          if (isCompleted) return;
-          try {
-            const sRes = await fetch(
-              `/api/payment/status?orderId=${encodeURIComponent(orderData.orderId)}&applicationId=${encodeURIComponent(activeChallanNo)}`
-            );
-            if (sRes.ok) {
-              const sData = await sRes.json();
-              if (sData.success && sData.paid && sData.paymentId) {
-                await finishPaymentOnce(
-                  sData.paymentId,
-                  { razorpay_payment_id: sData.paymentId, razorpay_order_id: orderData.orderId },
-                  orderData.orderId
-                );
-              }
-            }
-          } catch (pollErr) {
-            console.warn("Polling status warning:", pollErr);
-          }
-        }, 2000);
+        pollTimer = setInterval(handleCheckStatus, 2000);
+      }
+
+      // App-Resume listener: Catches immediate return from PhonePe / Google Pay / Paytm
+      if (typeof window !== "undefined") {
+        window.addEventListener("focus", handleCheckStatus);
+        document.addEventListener("visibilitychange", handleCheckStatus);
       }
 
       const options = {
@@ -1294,13 +1351,13 @@ export default function DocumentServicePortal({
         },
         modal: {
           ondismiss: function () {
-            // Grace period in case user switched to external UPI app
+            // Keep polling active for 90 seconds in case citizen switched to UPI app
             setTimeout(() => {
               if (!isCompleted && pollTimer) {
                 clearInterval(pollTimer);
               }
-            }, 15000);
-            setIsProcessingPayment(false);
+              setIsProcessingPayment(false);
+            }, 90000);
           },
         },
       };

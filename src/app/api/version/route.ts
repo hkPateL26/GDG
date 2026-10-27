@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { APP_VERSION, APP_BUILD_NAME, APP_RELEASE_DATE } from "@/lib/app-version";
+import { APP_VERSION, APP_BUILD_NAME, APP_RELEASE_DATE, APP_CHANGELOG } from "@/lib/app-version";
 import fs from "fs";
 import path from "path";
 
@@ -51,6 +51,10 @@ export async function GET() {
       buildHash,
       buildName: APP_BUILD_NAME,
       releaseDate: APP_RELEASE_DATE,
+      apkDownloadUrl: "/download/nagrik-seva-ai.apk",
+      apkSize: "94 MB",
+      latestChangelog: APP_CHANGELOG[0] || null,
+      isMandatory: false,
     },
     {
       headers: {
