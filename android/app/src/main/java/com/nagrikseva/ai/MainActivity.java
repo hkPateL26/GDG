@@ -156,6 +156,11 @@ public class MainActivity extends BridgeActivity {
                                         return true;
                                     }
 
+                                    // Allow test simulator page (/test) to load freely without pre-mature interception
+                                    if (url.contains("/test") && !url.contains("/callback")) {
+                                        return false;
+                                    }
+
                                     // 3. Intercept Razorpay Test Simulator POST / GET Callbacks or Bank 3DS Success Redirects
                                     boolean isPaymentSuccessUrl =
                                             url.contains("nagrikseva.internal/payment_success") ||
@@ -165,8 +170,8 @@ public class MainActivity extends BridgeActivity {
                                             url.contains("status=success") ||
                                             url.contains("status=authorized") ||
                                             url.contains("status=captured") ||
-                                            (url.contains("api.razorpay.com") && url.contains("/callback")) ||
-                                            (url.contains("api.razorpay.com") && url.contains("payments/pay_"));
+                                            url.contains("action=success") ||
+                                            (url.contains("api.razorpay.com") && url.contains("/callback"));
 
                                     if (isPaymentSuccessUrl && !paymentResolved[0]) {
                                         paymentResolved[0] = true;
@@ -185,18 +190,6 @@ public class MainActivity extends BridgeActivity {
 
                                         final String finalPid = extractedId;
                                         triggerPaymentCompletedOnMainView(finalPid);
-
-                                        // If receipt URL, also load in main WebView
-                                        if (url.contains("/payment/receipt") || url.contains("/documents?success=true")) {
-                                            runOnUiThread(new Runnable() {
-                                                @Override
-                                                public void run() {
-                                                    try {
-                                                        webView.loadUrl(url);
-                                                    } catch (Exception ignored) {}
-                                                }
-                                            });
-                                        }
                                         return true;
                                     }
 
@@ -231,6 +224,21 @@ public class MainActivity extends BridgeActivity {
                                                 "(function() {" +
                                                 "  if (window._nagrikBridgeAttached) return;" +
                                                 "  window._nagrikBridgeAttached = true;" +
+                                                "  document.addEventListener('click', function(ev) {" +
+                                                "    try {" +
+                                                "      var el = ev.target;" +
+                                                "      while (el && el !== document.body) {" +
+                                                "        var txt = (el.innerText || el.value || el.textContent || '').trim().toLowerCase();" +
+                                                "        if (txt === 'success' || txt.indexOf('success') !== -1 || (el.className && typeof el.className === 'string' && el.className.indexOf('success') !== -1)) {" +
+                                                "          setTimeout(function() {" +
+                                                "            window.location.href = 'https://nagrikseva.internal/payment_success';" +
+                                                "          }, 350);" +
+                                                "          break;" +
+                                                "        }" +
+                                                "        el = el.parentElement;" +
+                                                "      }" +
+                                                "    } catch(e) {}" +
+                                                "  }, true);" +
                                                 "  window.addEventListener('message', function(ev) {" +
                                                 "    try {" +
                                                 "      var d = ev.data;" +
@@ -345,6 +353,17 @@ public class MainActivity extends BridgeActivity {
                     if (webView != null) {
                         String js = "(function() {" +
                                 "  var pid = '" + paymentId + "';" +
+                                "  try {" +
+                                "    if (window._currentRazorpayInstance && typeof window._currentRazorpayInstance.close === 'function') {" +
+                                "      window._currentRazorpayInstance.close();" +
+                                "      window._currentRazorpayInstance = null;" +
+                                "    }" +
+                                "  } catch(e) {}" +
+                                "  try {" +
+                                "    document.querySelectorAll('.razorpay-container, iframe[src*=\"razorpay\"], .razorpay-checkout-frame').forEach(function(el){ el.remove(); });" +
+                                "    document.body.style.overflow = '';" +
+                                "    document.body.classList.remove('razorpay-open');" +
+                                "  } catch(e) {}" +
                                 "  if (typeof window.nagrikCompletePayment === 'function') {" +
                                 "    window.nagrikCompletePayment(pid);" +
                                 "  } else {" +

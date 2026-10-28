@@ -1217,7 +1217,25 @@ export default function DocumentServicePortal({
             localStorage.removeItem("nagrik_pending_pay_order");
             window.removeEventListener("focus", handleCheckStatus);
             document.removeEventListener("visibilitychange", handleCheckStatus);
-            // Dismiss native popup dialog if running inside Android Capacitor app
+            // 1. Close Razorpay instance
+            try {
+              // @ts-expect-error global hook
+              if (window._currentRazorpayInstance && typeof window._currentRazorpayInstance.close === 'function') {
+                // @ts-expect-error global hook
+                window._currentRazorpayInstance.close();
+                // @ts-expect-error global hook
+                window._currentRazorpayInstance = null;
+              }
+            } catch (e) {}
+
+            // 2. Force remove all Razorpay iframe modals and backdrops from DOM
+            try {
+              document.querySelectorAll('.razorpay-container, iframe[src*="razorpay"], .razorpay-checkout-frame').forEach((el) => el.remove());
+              document.body.style.overflow = '';
+              document.body.classList.remove('razorpay-open');
+            } catch (e) {}
+
+            // 3. Dismiss native popup dialog if running inside Android Capacitor app
             // @ts-expect-error NagrikNativeBridge dynamic definition
             if (window.NagrikNativeBridge?.dismissPaymentDialog) {
               // @ts-expect-error NagrikNativeBridge dynamic definition
@@ -1265,7 +1283,7 @@ export default function DocumentServicePortal({
 
       // Real-time 1.5-second background status polling: Catches UPI app returns & background authorizations instantly!
       if (orderData.orderId && !orderData.orderId.startsWith("order_test_")) {
-        pollTimer = setInterval(handleCheckStatus, 1500);
+        pollTimer = setInterval(handleCheckStatus, 1000);
       }
 
       // App-Resume listener: Catches immediate return from PhonePe / Google Pay / Paytm
@@ -1321,6 +1339,8 @@ export default function DocumentServicePortal({
 
       // @ts-expect-error Window Razorpay dynamic definition
       const rzpInstance = new window.Razorpay(options);
+      // @ts-expect-error global reference
+      window._currentRazorpayInstance = rzpInstance;
       rzpInstance.on("payment.failed", function (resp: unknown) {
         console.warn("Razorpay payment failed or cancelled:", resp);
         if (pollTimer) clearInterval(pollTimer);
@@ -1499,6 +1519,7 @@ export default function DocumentServicePortal({
     // 2. IMMEDIATE ZERO-LATENCY UI UPDATE (< 15ms)
     setShowPaymentModal(false);
     setSubmittedApp(instantApp);
+    setShowSlipModal(true);
     setNotificationPayload(instantNotifications);
     setIsProcessingPayment(false);
     setSubmitting(false);
@@ -1965,33 +1986,13 @@ export default function DocumentServicePortal({
                   રદ કરો
                 </button>
 
-                {/* Instant 1-Click Fast Sandbox Test Payment Button */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsProcessingPayment(true);
-                    const mockPid = `pay_test_dpi_${Date.now().toString().slice(-6)}`;
-                    handleFinalPaymentSubmit(
-                      mockPid,
-                      { razorpay_payment_id: mockPid, razorpay_order_id: `order_test_${Date.now()}` },
-                      `order_test_${Date.now()}`
-                    );
-                  }}
-                  disabled={isProcessingPayment}
-                  className="px-4 py-2.5 bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition flex items-center justify-center gap-1.5 whitespace-nowrap cursor-pointer border border-emerald-400/60"
-                  title="ડેમો અને હેકાથોન જ્યુરી માટે ૧-ક્લિક ત્વરિત સફળ ચુકવણી"
-                >
-                  <CheckCircle2 size={16} className="text-emerald-200 shrink-0" />
-                  <span>🧪 ૧-ક્લિક ટેસ્ટ પેમેન્ટ (Instant ₹{service.fee})</span>
-                </button>
-
                 {/* Online Payment (UPI / Card) triggers official Razorpay, Cash Challan generates offline challan */}
                 {paymentMethod !== "challan" ? (
                   <button
                     type="button"
                     onClick={handleRazorpayLiveCheckout}
                     disabled={isProcessingPayment}
-                    className="px-6 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
+                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
                   >
                     <Landmark size={18} className="text-amber-300 shrink-0" />
                     <span>સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee})</span>
@@ -2002,7 +2003,7 @@ export default function DocumentServicePortal({
                     type="button"
                     onClick={() => handleFinalPaymentSubmit()}
                     disabled={isProcessingPayment}
-                    className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
                   >
                     <Landmark size={18} />
                     <span>ઓફલાઇન રોકડ ચલણ જનરેટ કરો & સબમિટ</span>

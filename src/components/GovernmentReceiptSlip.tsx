@@ -165,23 +165,10 @@ export default function GovernmentReceiptSlip({
           : ""
       }`}
     >
-      {/* ── Fixed Floating Close Button (Always visible on mobile & desktop) ── */}
-      {showModalControls && onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 flex items-center justify-center transition cursor-pointer active:scale-90 print:hidden"
-          title="બંધ કરો (Esc)"
-          aria-label="બંધ કરો"
-        >
-          <X size={22} className="stroke-[2.5]" />
-        </button>
-      )}
-
       {/* ── On-screen Modal Action Bar (Sticky, High-Visibility, Mobile-Responsive) ── */}
       {showModalControls && (
         <div className="sticky top-0 z-30 bg-slate-950 text-white p-3 sm:p-4 rounded-2xl shadow-xl border border-slate-800 mb-3 sm:mb-4 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 print:hidden">
-          <div className="flex items-center gap-2.5 min-w-0 pr-10 sm:pr-0">
+          <div className="flex items-center gap-2.5 min-w-0">
             <span
               className={`w-9 h-9 rounded-xl flex items-center justify-center text-lg shrink-0 ${
                 isChallanPending
@@ -241,7 +228,7 @@ export default function GovernmentReceiptSlip({
         {/* Main A4 Document Outer Border - Fills Full Page Gracefully */}
         <div
           id="official-receipt-print-area"
-          className="min-w-[620px] sm:min-w-0 border-2 border-slate-900 p-3.5 sm:p-5 bg-white relative box-border flex flex-col justify-between h-full min-h-0 text-slate-900 overflow-hidden"
+          className="w-full max-w-full border-2 border-slate-900 p-2.5 sm:p-5 bg-white relative box-border flex flex-col justify-between h-full min-h-0 text-slate-900"
         >
         {/* Subtle Security Watermark */}
         <div className="absolute inset-0 flex items-center justify-center pointer-events-none opacity-[0.03] select-none overflow-hidden">
@@ -363,7 +350,7 @@ export default function GovernmentReceiptSlip({
             <div className="bg-slate-800 text-white px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase">
               ૧. અરજદાર અને રહેઠાણની વિગતો (Applicant Particulars)
             </div>
-            <div className="p-2 sm:p-2.5 grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs bg-white">
+            <div className="p-2 sm:p-2.5 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs bg-white">
               <div>
                 <span className="text-slate-500 text-[9px] block">અરજદારનું પૂરું નામ:</span>
                 <p className="font-bold text-slate-900 leading-tight">{app.citizenNameGu}</p>
@@ -461,7 +448,7 @@ export default function GovernmentReceiptSlip({
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5 font-mono text-[9px]">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-1.5 font-mono text-[9px]">
                   <div>
                     <span className="text-slate-500 font-sans block text-[8px]">ટ્રેઝરી GRN / ચલણ ક્રમાંક:</span>
                     <strong className="text-slate-900 font-bold">{app.challanNo || `GRN-2026-${app.aadhaarLast4 === "NEW" ? "4829" : app.aadhaarLast4 || "4829"}`}</strong>
@@ -521,7 +508,7 @@ export default function GovernmentReceiptSlip({
             <div className="bg-slate-800 text-white px-2.5 py-1 text-[10px] font-bold tracking-wide uppercase">
               ૩. સરકારી પ્રક્રિયા અને ઓડિટ સ્ટેટસ (Verification Stages)
             </div>
-            <table className="w-full text-[10px] text-left border-collapse">
+            <div className="w-full overflow-x-auto"><table className="w-full text-[9px] sm:text-[10px] text-left border-collapse min-w-[320px] sm:min-w-0">
               <thead>
                 <tr className="bg-slate-100 border-b border-slate-300 text-slate-700">
                   <th className="p-1.5 font-bold">તબક્કો (Stage)</th>
@@ -568,15 +555,15 @@ export default function GovernmentReceiptSlip({
                   </td>
                 </tr>
               </tbody>
-            </table>
+            </table></div>
           </div>
         </div>
 
         {/* BOTTOM SECTION: Authentic Rubber Stamp & Digital Signature (FULL SIZE, CLEAR & PROPORTIONAL) */}
         <div className="pt-2 border-t-2 border-slate-900 mt-2">
-          <div className="grid grid-cols-3 gap-2 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-2 items-center text-center sm:text-left">
             {/* Left: Verification QR Code */}
-            <div className="flex items-center gap-2">
+            <div className="flex items-center justify-center sm:justify-start gap-2">
               <a
                 href={verifyUrl}
                 target="_blank"
@@ -648,7 +635,7 @@ export default function GovernmentReceiptSlip({
             </div>
 
             {/* Right: Digital Signature (સહી) */}
-            <div className="text-right space-y-0.5">
+            <div className="text-center sm:text-right space-y-0.5">
               <div
                 className={`inline-flex items-center gap-1 text-[9px] px-2 py-0.5 rounded font-bold border ${
                   isChallanPending
