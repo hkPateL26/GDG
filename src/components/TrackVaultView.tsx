@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   GUJARAT_DISTRICTS,
   CitizenApplication,
@@ -158,6 +158,21 @@ export default function TrackVaultView({
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
   const [showTimelineModal, setShowTimelineModal] = useState<boolean>(false);
+  const hasAutoOpenedModalRef = useRef<boolean>(false);
+
+  const handleCloseTimelineModal = useCallback(() => {
+    setShowTimelineModal(false);
+    hasAutoOpenedModalRef.current = true;
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("id")) {
+          url.searchParams.delete("id");
+          window.history.replaceState({}, "", url.pathname + (url.search ? `?${url.searchParams.toString()}` : ""));
+        }
+      } catch {}
+    }
+  }, []);
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -179,7 +194,7 @@ export default function TrackVaultView({
         } else if (showCertificateModal) {
           setShowCertificateModal(false);
         } else if (showTimelineModal) {
-          setShowTimelineModal(false);
+          handleCloseTimelineModal();
         }
       }
     };
@@ -188,8 +203,8 @@ export default function TrackVaultView({
   }, [showPrintModal, showCertificateModal, showTimelineModal]);
 
   // Load Citizen Vault on Mount or Citizen Prop change
-  const loadCitizenVault = useCallback(async (mobile: string, aadhaarLast4?: string, targetId?: string) => {
-    setLoading(true);
+  const loadCitizenVault = useCallback(async (mobile: string, aadhaarLast4?: string, targetId?: string, isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/auth/otp", {
@@ -259,13 +274,14 @@ export default function TrackVaultView({
         }
 
         const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "");
-        if (activeTargetId) {
+        if (activeTargetId && !hasAutoOpenedModalRef.current) {
           const found = uniqueApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
           if (found) {
             setSelectedApp(found);
             setShowTimelineModal(true);
+            hasAutoOpenedModalRef.current = true;
           }
-        } else if (uniqueApps.length > 0) {
+        } else if (uniqueApps.length > 0 && !selectedApp) {
           setSelectedApp(uniqueApps[0]);
         }
       } else {
@@ -275,7 +291,7 @@ export default function TrackVaultView({
       console.error("Failed to load citizen vault:", err);
       setError("સર્વર ક્ષતિ આવી.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, []);
 
@@ -304,7 +320,7 @@ export default function TrackVaultView({
 
       // Live Polling every 3.5 seconds for pure real-time dynamic sync
       pollTimer = setInterval(() => {
-        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4);
+        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, undefined, true);
       }, 3500);
     } else if (authMode === "citizen") {
       // Public Citizen Direct Tracking via ID and Tracking Secret
@@ -966,7 +982,7 @@ export default function TrackVaultView({
               aria-labelledby="timeline-modal-title"
               className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
               onClick={(e) => {
-                if (e.target === e.currentTarget) setShowTimelineModal(false);
+                if (e.target === e.currentTarget) handleCloseTimelineModal();
               }}
             >
               <div
@@ -999,7 +1015,7 @@ export default function TrackVaultView({
 
                   <button
                     type="button"
-                    onClick={() => setShowTimelineModal(false)}
+                    onClick={handleCloseTimelineModal}
                     className="w-8 h-8 sm:w-9 sm:h-9 bg-black/20 hover:bg-black/40 active:scale-95 text-white rounded-full flex items-center justify-center transition shrink-0 cursor-pointer"
                     title="બંધ કરો (Esc)"
                   >
@@ -1127,7 +1143,7 @@ export default function TrackVaultView({
                         <button
                           type="button"
                           onClick={() => {
-                            setShowTimelineModal(false);
+                            handleCloseTimelineModal();
                             handleReApply(selectedApp);
                           }}
                           className="px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-95 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
@@ -1377,7 +1393,7 @@ export default function TrackVaultView({
 
                   <button
                     type="button"
-                    onClick={() => setShowTimelineModal(false)}
+                    onClick={handleCloseTimelineModal}
                     className="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-black rounded-xl text-xs transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
                   >
                     <X size={13} />
