@@ -604,8 +604,25 @@ export default function TrackVaultView({
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyUp={handleSearchSubmit}
                   placeholder="અરજી નંબર કે નામથી શોધો..."
-                  className="w-full pl-8 pr-3 py-2 sm:py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
+                  className="w-full pl-8 pr-8 py-2 sm:py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("id");
+                        window.history.replaceState({}, "", url.pathname);
+                      }
+                    }}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold transition cursor-pointer"
+                    title="સર્ચ ક્લિયર કરો"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -626,6 +643,12 @@ export default function TrackVaultView({
                   onClick={() => {
                     setCitizenStatusFilter(tab.id as any);
                     setShowAllCitizenRecords(false);
+                    setSearchQuery("");
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("id");
+                      window.history.replaceState({}, "", url.pathname);
+                    }
                   }}
                   className={`px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer shrink-0 border ${
                     isActive
@@ -641,6 +664,33 @@ export default function TrackVaultView({
 
           {/* Citizen's Application Cards Grid */}
           {filteredCitizenRecords.length === 0 ? (
+            records.length > 0 ? (
+              <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-3">
+                <div className="text-4xl">🔍</div>
+                <h4 className="font-bold text-slate-800 text-base">
+                  {searchQuery ? `"${searchQuery}" માટે કોઈ અરજી મળી નથી` : "આ ફિલ્ટરમાં કોઈ અરજી નથી"}
+                </h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  તમારી પ્રોફાઇલમાં કુલ {records.length} અરજીઓ ઉપલબ્ધ છે.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setCitizenStatusFilter("all");
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("id");
+                      window.history.replaceState({}, "", url.pathname);
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition cursor-pointer"
+                >
+                  <RotateCw size={13} />
+                  <span>બધી {records.length} અરજીઓ બતાવો (Show All {records.length})</span>
+                </button>
+              </div>
+            ) : (
             <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-3">
               <div className="text-4xl">📄</div>
               <h4 className="font-bold text-slate-800 text-base">કોઈ અરજી મળી નથી</h4>
@@ -666,6 +716,7 @@ export default function TrackVaultView({
                 </Link>
               )}
             </div>
+            )
           ) : (
             <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-3.5">
