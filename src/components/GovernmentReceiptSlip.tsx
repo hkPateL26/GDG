@@ -2,7 +2,9 @@
 
 import { useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { CheckCircle2, Download, Clock, X } from "lucide-react";
+import { CheckCircle2, Download, Clock, X, MessageSquare } from "lucide-react";
+import { getWhatsAppShareUrl } from "@/lib/whatsapp-dispatch";
+import { generateCertificateSeal } from "@/lib/digital-notary";
 
 interface GovernmentReceiptSlipProps {
   app: CitizenApplication;
@@ -20,8 +22,9 @@ export default function GovernmentReceiptSlip({
     ? `GJ-CHALLAN-2026-${app.challanNo || app.id}`
     : `GJ-DPI-2026-${app.id}`;
   const origin = typeof window !== "undefined" ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
+  const certSeal = generateCertificateSeal(app);
   const secretParam = app.trackingSecret ? `&secret=${encodeURIComponent(app.trackingSecret)}` : "";
-  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}${secretParam}`;
+  const verifyUrl = `${origin}/verify?id=${encodeURIComponent(app.id)}&seal=${encodeURIComponent(certSeal)}${secretParam}`;
 
   // Automatically treat as modal if onClose is provided or isModalPreview is true
   const showModalControls = isModalPreview || Boolean(onClose);
@@ -208,6 +211,37 @@ export default function GovernmentReceiptSlip({
               </span>
             </button>
 
+            <button
+              type="button"
+              onClick={() => {
+                const url = getWhatsAppShareUrl({
+                  id: app.id,
+                  citizenName: app.citizenName,
+                  citizenNameGu: app.citizenNameGu,
+                  schemeName: app.schemeName,
+                  schemeNameGu: app.schemeNameGu,
+                  feeAmount: app.feeAmount,
+                  paymentStatus: app.paymentStatus,
+                  challanNo: app.challanNo,
+                  txnId: app.txnId,
+                  mobile: app.mobile,
+                  trackingSecret: app.trackingSecret,
+                  taluka: app.taluka,
+                  district: app.district,
+                  districtGu: app.districtGu,
+                });
+                if (typeof window !== "undefined") {
+                  window.open(url, "_blank", "noopener,noreferrer");
+                }
+              }}
+              className="px-3.5 py-2 bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black transition flex items-center justify-center gap-1.5 shadow-md shrink-0 cursor-pointer border border-emerald-500/30"
+              title="વોટ્સએપ પર મેળવો (Share to WhatsApp)"
+            >
+              <MessageSquare size={16} className="fill-white" />
+              <span className="hidden sm:inline">વોટ્સએપ પર મેળવો</span>
+              <span className="sm:hidden">વોટ્સએપ</span>
+            </button>
+
             {onClose && (
               <button
                 type="button"
@@ -294,7 +328,7 @@ export default function GovernmentReceiptSlip({
                   </>
                 )}
               </div>
-              <p className="text-[8px] text-slate-500 mt-0.5 font-mono">DPI Portal: nagrik-seva.gov.in</p>
+              <p className="text-[8px] text-slate-500 mt-0.5 font-mono">DPI Portal: nagrikseva-ai-one.vercel.app</p>
               {/* Simulated Barcode */}
               <div className="font-mono text-[10px] tracking-widest text-slate-800 font-black mt-0.5">
                 ||| | ||||| || |||||| | ||
@@ -341,7 +375,9 @@ export default function GovernmentReceiptSlip({
             </div>
             <div>
               <span className="text-slate-500 block text-[8px] uppercase font-bold">આધાર e-KYC ખરાઈ:</span>
-              <strong className="text-emerald-700 text-[10px]">✓ UIDAI બાયોમેટ્રિક પ્રમાણિત</strong>
+              <strong className={app.digilockerVerified ? "text-emerald-700 text-[10px]" : "text-amber-700 text-[10px]"}>
+                {app.digilockerVerified ? "✓ DigiLocker e-KYC પ્રમાણિત" : "સ્વયં-ઘોષણા / ખરાઈ હેઠળ"}
+              </strong>
             </div>
           </div>
 
@@ -581,6 +617,9 @@ export default function GovernmentReceiptSlip({
               <div className="text-[8.5px] text-slate-600 leading-tight">
                 <p className="font-bold text-slate-900">QR કોડ સ્કેન કરો</p>
                 <p>મોબાઈલ દ્વારા પહોંચની સત્યતા તપાસો.</p>
+                <p className="font-mono text-[7.5px] font-bold text-emerald-800">
+                  સીલ: {certSeal}
+                </p>
                 <a
                   href={verifyUrl}
                   target="_blank"
@@ -649,7 +688,7 @@ export default function GovernmentReceiptSlip({
               <div>
                 {/* Simulated Cursive Official Signature */}
                 <p className="font-serif italic text-base sm:text-lg text-slate-800 leading-none select-none font-bold">
-                  K. R. Vaghela
+                  {app.approvedBy || app.officerName || (isChallanPending ? "Jan Seva Kendra" : "Mamlatdar & Executive Magistrate")}
                 </p>
                 <div className="border-t border-slate-400 mt-1 pt-0.5">
                   <p className="text-[9.5px] font-black text-slate-900">

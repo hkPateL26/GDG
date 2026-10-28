@@ -598,8 +598,13 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // If still not found and the client passed the application payload (e.g. created in client session)
-    if (!targetApp && body.application && typeof body.application === "object" && body.application.id) {
+    // In demo or test mode, if application was created in client sandbox session
+    const isDemoPermitted =
+      verifyDemoGateCookie(req) ||
+      process.env.NODE_ENV !== "production" ||
+      process.env.ALLOW_DEMO_CREDENTIALS === "true";
+
+    if (!targetApp && isDemoPermitted && body.application && typeof body.application === "object" && body.application.id) {
       const clientApp = body.application as CitizenApplication;
       if (clientApp.id.trim().toUpperCase() === cleanId) {
         targetApp = clientApp;

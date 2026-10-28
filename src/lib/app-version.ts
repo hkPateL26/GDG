@@ -33,6 +33,41 @@ export const APP_CHANGELOG = [
     descGu: "Android WebView માં સત્તાવાર સાયબર ટ્રેઝરી Razorpay (UPI, GPay, PhonePe, Paytm, RuPay) પેમેન્ટ માટે અદ્યતન ફુલ-સ્ક્રીન ડાયલોગ અને એપ-રીઝ્યુમ બેકગ્રાઉન્ડ સિંક. સાથે સાથે Google Play Store જેવી ઇન-એપ ઓટો-અપડેટ નોટિફિકેશન સિસ્ટમ.",
   },
   {
+    titleGu: "ઇન્ટરેક્ટિવ ગુજરાતી જન-સંવાદ વૉઇસ હેલ્પલાઇન (/hotline) (v2.9.8)",
+    titleEn: "Interactive Gujarati Voice Hotline & Rural Civic Voice Gateway",
+    descGu: "ગ્રામીણ અને વડીલ નાગરિકો માટે ૧-ટેપ લાઈવ માઈક્રોફોન ટુ-વે વૉઇસ સંવાદ. નાગરિક ગુજરાતીમાં બોલીને પ્રશ્ન પૂછે છે અને AI શુદ્ધ ગુજરાતી ઑડિયોમાં યોજના, સહાય અને દસ્તાવેજો બોલીને સમજાવે છે.",
+  },
+  {
+    titleGu: "નાગરિક કલ્યાણ અધિકાર પાસબુક & સામાજિક સુરક્ષા લેજર (/passbook) (v2.9.7)",
+    titleEn: "Citizen Welfare Entitlement Passbook & Proactive Renewal Ledger",
+    descGu: "સરકાર તરફથી કુટુંબને મળેલા આજીવન નાણાકીય લાભો (DBT, આયુષ્માન કવર, સોલાર સહાય, NFSA) નું એકીકૃત ગોલ્ડન પાસબુક લેજર, આગામી કાનૂની KYC રીન્યુઅલ એલર્ટ અને છાપવા યોગ્ય A4 સ્ટેટમેન્ટ.",
+  },
+  {
+    titleGu: "સત્તાવાર વોટ્સએપ નાગરિક સૂચના & ગુજરાત સંવાદ ગેટવે (v2.9.5)",
+    titleEn: "Official Citizen WhatsApp Notification & Gujarat Samvaad Share Gateway",
+    descGu: "અરજી જમા થતાં જ નાગરિકને લાઈવ ટ્રેકિંગ અને ડિજિટલ નોટરી ખરાઈ લિંક સાથેનો સત્તાવાર ગુજરાતી વોટ્સએપ મેસેજ ૧-ક્લિકમાં શેર અને મોકલવાની સુવિધા. સરકારી પહોંચ પરથી પણ સીધો વોટ્સએપ પર મેળવી શકાય છે.",
+  },
+  {
+    titleGu: "લાઈવ કેમેરા QR સ્કેનર & ડિજિટલ ખરાઈ ગેટવે (v2.9.4)",
+    titleEn: "Live Camera QR Code Scanner & Instant Verification Gateway",
+    descGu: "કોઈપણ સરકારી પ્રમાણપત્ર કે પહોંચ પર છપાયેલ QR કોડને ફોન કેમેરાથી લાઈવ સ્કેન કરીને અથવા ફોટો અપલોડ કરીને ક્ષણવારમાં કાનૂની અસલિયત (IT Act ૨૦૦૦) ચકાસી શકાય છે.",
+  },
+  {
+    titleGu: "ગ્રામીણ ઑફલાઇન PWA & બેકગ્રાઉન્ડ સિંક એન્જિન (v2.9.3)",
+    titleEn: "Rural Offline PWA & Background Sync Resilience Engine",
+    descGu: "ઇન્ટરનેટ ડાઉન હોય કે 2G નેટવર્ક હોય ત્યારે પણ તમામ સરકારી રસીદો, પ્રમાણપત્રો અને ડેટા ઑફલાઇન સુરક્ષિત રહે છે. અરજી ઑફલાઇન સબમિટ થઈને નેટવર્ક આવતાં જ આપોઆપ ક્લાઉડ સર્વર સાથે સિંક થાય છે.",
+  },
+  {
+    titleGu: "ક્રિપ્ટોગ્રાફિક SHA-256 ડિજિટલ નોટરી & સાર્વજનિક ચકાસણી પોર્ટલ (/verify)",
+    titleEn: "Cryptographic SHA-256 Digital Notary & Public Verification Gateway",
+    descGu: "દરેક સરકારી પ્રમાણપત્ર અને રસીદ પર ગણતરીબદ્ધ SHA-256 સીલ અને QR કોડ જનરેટ થાય છે, જે /verify પોર્ટલ પર સ્કેન કરીને કોઈપણ સરકારી અધિકારી કે નાગરિક દ્વારા ક્ષણવારમાં પ્રમાણિત કરી શકાય છે (IT Act ૨૦૦૦).",
+  },
+  {
+    titleGu: "૧-ક્લિક AI ઓટો-ફિલ (Zero-Typing Application)",
+    titleEn: "1-Click AI Auto-Fill via Gemini Vision",
+    descGu: "દસ્તાવેજ (આધાર/રેશન કાર્ડ) અપલોડ કરતાં જ Gemini Vision તમામ વિગતો (નામ, જન્મ તારીખ, સરનામું, ગામ) આપોઆપ વાંચીને ૧-ક્લિકમાં આખું ફોર્મ ભરી આપે છે.",
+  },
+  {
     titleGu: "સત્તાવાર સાયબર ટ્રેઝરી યુનિફાઇડ પેમેન્ટ & /payment URL",
     titleEn: "Unified Cyber Treasury Payment & Official /payment URL",
     descGu: "વધારાના બટનો હટાવીને સત્તાવાર સાયબર ટ્રેઝરી Razorpay બટન સેટ કર્યું અને પેમેન્ટ સમયે બ્રાઉઝર એડ્રેસ બારમાં /payment URL લાઈવ સિંક કર્યું.",

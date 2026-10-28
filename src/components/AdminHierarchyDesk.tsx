@@ -29,11 +29,13 @@ import {
   FileCheck,
   Receipt,
   RefreshCw,
+  Scale,
   Brain,
 } from "lucide-react";
 import AiBottleneckMonitor from "@/components/AiBottleneckMonitor";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import StatutoryShowCauseNoticeModal from "@/components/StatutoryShowCauseNoticeModal";
 import {
   SkeletonAdminTable,
 } from "@/components/Skeleton";
@@ -427,8 +429,9 @@ export default function AdminHierarchyDesk({
   const [certificateModalApp, setCertificateModalApp] = useState<CitizenApplication | null>(null);
   const [receiptModalApp, setReceiptModalApp] = useState<CitizenApplication | null>(null);
   const [zoomDocImage, setZoomDocImage] = useState<{ src: string; title: string; ocrData?: Record<string, string> } | null>(null);
+  const [noticeModalApp, setNoticeModalApp] = useState<CitizenApplication | null>(null);
 
-  const isAnyModalOpen = Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage);
+  const isAnyModalOpen = Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage || noticeModalApp);
   const modalOpenRef = useRef<boolean>(isAnyModalOpen);
 
   useEffect(() => {
@@ -674,6 +677,26 @@ export default function AdminHierarchyDesk({
     } finally {
       setIsProcessingAction(false);
     }
+  };
+
+  // Statutory GRTPSA 2013 Escalation to District Collector Desk
+  const handleEscalateFromNotice = (appId: string, targetOfficer: string) => {
+    setApplications((prev) =>
+      prev.map((a) => {
+        if (a.id === appId) {
+          return {
+            ...a,
+            escalated: true,
+            escalatedTo: targetOfficer,
+            deskGu: "જિલ્લા કલેક્ટર કચેરી, રાજકોટ (અપીલ સત્તામંડળ)",
+          };
+        }
+        return a;
+      })
+    );
+    setActionSuccessMsg(
+      `અરજી ${appId} સફળતાપૂર્વક જિલ્લા કલેક્ટર (${targetOfficer}) ના ડેસ્ક પર એસ્કેલેટ કરવામાં આવી છે.`
+    );
   };
 
   // Advance Stage / Mamlatdar Digital e-Sign Approval
@@ -1407,6 +1430,22 @@ export default function AdminHierarchyDesk({
                               <span className="text-[10.5px] text-slate-600 block leading-snug whitespace-normal break-words">
                                 {sla.currentDeskGu}
                               </span>
+                              {sla.isBreached && (
+                                <div className="pt-1 flex items-center gap-1.5 flex-wrap">
+                                  <span className="inline-flex items-center gap-1 text-[9px] bg-rose-600 text-white font-black px-2 py-0.5 rounded-full animate-pulse shadow-2xs">
+                                    <AlertTriangle size={9} /> SLA EXCEEDED
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setNoticeModalApp(app)}
+                                    className="text-[9.5px] bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold px-2 py-0.5 rounded-md border border-rose-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                                    title="કારણ દર્શક નોટિસ (GRTPSA ૨૦૧૩ કલમ ૮)"
+                                  >
+                                    <Scale size={10} className="text-rose-600" />
+                                    <span>કલમ ૮ નોટિસ</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </td>
 
@@ -1953,6 +1992,26 @@ export default function AdminHierarchyDesk({
                     </button>
                   )}
                 </div>
+
+                {/* Gate 3: Statutory GRTPSA 2013 Show-Cause Notice */}
+                <div className="bg-white p-3 rounded-xl border border-rose-200 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 block">
+                      ૩. કાનૂની SLA & કારણ દર્શક નોટિસ
+                    </span>
+                    <span className="text-[10px] bg-rose-100 text-rose-800 font-black px-2 py-0.5 rounded-full border border-rose-300">
+                      GRTPSA ૨૦૧૩ કલમ ૮
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNoticeModalApp(selectedApp)}
+                    className="w-full py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs rounded-xl transition cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    <Scale size={14} />
+                    <span>⚖️ સત્તાવાર કારણ દર્શક નોટિસ (Show-Cause Notice)</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2094,6 +2153,20 @@ export default function AdminHierarchyDesk({
             onClose={() => setReceiptModalApp(null)}
           />
         </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          OFFICIAL STATUTORY SHOW-CAUSE NOTICE MODAL (GRTPSA 2013)
+          ══════════════════════════════════════════════════════════════ */}
+      {noticeModalApp && (
+        <StatutoryShowCauseNoticeModal
+          app={noticeModalApp}
+          onClose={() => setNoticeModalApp(null)}
+          onEscalate={(appId, targetOfficer) => {
+            handleEscalateFromNotice(appId, targetOfficer);
+            setNoticeModalApp(null);
+          }}
+        />
       )}
     </div>
   );

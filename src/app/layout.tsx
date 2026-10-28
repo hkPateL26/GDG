@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 
 import FloatingInstallBanner from "@/components/FloatingInstallBanner";
+import FloatingVoiceHotlineButton from "@/components/FloatingVoiceHotlineButton";
 import AndroidNativeBridge from "@/components/AndroidNativeBridge";
 import MobileBottomNav from "@/components/MobileBottomNav";
 import HapticFeedbackProvider from "@/components/HapticFeedbackProvider";
@@ -12,6 +13,7 @@ import GoogleTranslateScript from "@/components/GoogleTranslateScript";
 import GlobalModalScrollLocker from "@/components/GlobalModalScrollLocker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import OfficialGovernmentUpdateModal from "@/components/OfficialGovernmentUpdateModal";
+import NetworkStatusBanner from "@/components/NetworkStatusBanner";
 import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/context/LanguageContext";
 
@@ -51,12 +53,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <OfficialGovernmentUpdateModal />
           <ScrollRestoration />
           <ServiceWorkerRegister />
+          <NetworkStatusBanner />
           <HapticFeedbackProvider />
           <GlobalModalScrollLocker />
           <AndroidNativeBridge />
           {children}
           <Footer />
           <MobileBottomNav />
+          <FloatingVoiceHotlineButton />
           <FloatingInstallBanner />
           <GoogleTranslateScript />
         </LanguageProvider>

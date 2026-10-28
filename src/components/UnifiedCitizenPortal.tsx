@@ -7,13 +7,14 @@ import OfficerLoginShield, { OfficerProfile } from "@/components/OfficerLoginShi
 import CitizenPortalHeader from "@/components/CitizenPortalHeader";
 import TrackVaultView from "@/components/TrackVaultView";
 import DocumentServicePortal from "@/components/DocumentServicePortal";
+import CitizenEntitlementPassbook from "@/components/CitizenEntitlementPassbook";
 import EligibilityLedgerView from "@/components/EligibilityLedgerView";
 import SmartKacheriLocatorBanner from "@/components/SmartKacheriLocatorBanner";
 import AdminHierarchyDesk from "@/components/AdminHierarchyDesk";
 import { User, Building2, X, ExternalLink, ArrowLeftRight } from "lucide-react";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
-export type PortalTabType = "track" | "documents" | "eligibility";
+export type PortalTabType = "track" | "documents" | "eligibility" | "passbook";
 
 interface UnifiedCitizenPortalProps {
   initialTab?: PortalTabType;
@@ -73,15 +74,13 @@ export default function UnifiedCitizenPortal({
         }
         setOfficerSession(parsedOfficer);
 
-        // Strict URL Precedence: If URL explicitly dictates mode, NEVER override it!
+        // Strict URL Precedence & Deterministic Role Restoration
         if (modeParam === "officer" || modeParam === "admin") {
           setAuthMode("officer");
         } else if (modeParam === "citizen") {
           setAuthMode("citizen");
         } else if (initialMode === "officer") {
           setAuthMode("officer");
-        } else if (initialMode === "citizen") {
-          setAuthMode("citizen");
         } else if (parsedOfficer && !parsedCitizen) {
           setAuthMode("officer");
         } else {
@@ -256,16 +255,6 @@ export default function UnifiedCitizenPortal({
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <a
-              href="/portal?mode=officer"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer"
-              title="બીજી ટેબમાં કચેરી ડેસ્ક ખોલો અને લાઈવ અરજી ચકાસો (Open Officer Tab)"
-            >
-              <span>🏛️ નવી ટેબમાં કચેરી ડેસ્ક ખોલો (Live Officer Desk)</span>
-              <ExternalLink size={13} />
-            </a>
             {officerSession && (
               <button
                 type="button"
@@ -346,6 +335,10 @@ export default function UnifiedCitizenPortal({
               citizen={citizenSession}
               onNavigateToDocuments={() => handleTabChange("documents")}
             />
+          )}
+
+          {activeTab === "passbook" && (
+            <CitizenEntitlementPassbook citizen={citizenSession ?? undefined} />
           )}
         </div>
       </main>

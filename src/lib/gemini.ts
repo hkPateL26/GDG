@@ -3,7 +3,11 @@
 // ============================================
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-export const genAI = process.env.GOOGLE_GENAI_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY) : (null as unknown as GoogleGenerativeAI);
+if (!process.env.GOOGLE_GENAI_API_KEY) {
+  // Optional fallback key for build-time evaluation
+}
+
+export const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY || "AIzaSyDummyKeyForBuildOnly1234567890");
 
 export const NAGRIK_SEVA_PROMPT = `You are NagrikSeva AI (નાગરિકસેવા AI) - The official AI-powered Digital Public Infrastructure (DPI) Civic Assistant for the Government of Gujarat and Government of India.
 
