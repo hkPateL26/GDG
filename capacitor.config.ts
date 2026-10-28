@@ -8,7 +8,6 @@ const config: CapacitorConfig = {
     url: process.env.CAPACITOR_SERVER_URL || 'https://nagrikseva-ai-one.vercel.app',
     cleartext: true,
     androidScheme: 'https',
-    appendUserAgent: 'NagrikSevaNativeAndroid',
     allowNavigation: [
       '*',
       '*.razorpay.com',

@@ -33,7 +33,7 @@ import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 
 interface FamilyMemberManagerBarProps {
   citizen: CitizenPrimaryInfo;
-  activeTab?: "track" | "documents" | "eligibility";
+  activeTab?: "track" | "documents" | "eligibility" | "passbook";
   onSelectForDocument?: (member: FamilyMemberProfile) => void;
 }
 

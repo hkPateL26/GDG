@@ -688,7 +688,7 @@ export default function GovernmentReceiptSlip({
               <div>
                 {/* Simulated Cursive Official Signature */}
                 <p className="font-serif italic text-base sm:text-lg text-slate-800 leading-none select-none font-bold">
-                  {app.approvedBy || app.officerName || (isChallanPending ? "Jan Seva Kendra" : "Mamlatdar & Executive Magistrate")}
+                  {(app as any).approvedBy || (app as any).officerName || (isChallanPending ? "Jan Seva Kendra" : "Mamlatdar & Executive Magistrate")}
                 </p>
                 <div className="border-t border-slate-400 mt-1 pt-0.5">
                   <p className="text-[9.5px] font-black text-slate-900">
