@@ -122,11 +122,11 @@ export function resolveLocationFromCoordinates(
     closestOffice?.id === "gomta-gram-panchayat" ||
     (talName === "Gondal" && minDistance < 15);
 
+  const village = isGomta ? "Gomta" : closestOffice?.city || "Gomta";
+  const villageGu = isGomta ? "ગોમટા" : "ગોમટા";
+
   const districtGu = DISTRICT_NAMES_GU[distName] || distName;
   const talukaGu = TALUKA_NAMES_GU[talName] || talName;
-
-  const village = isGomta ? "Gomta" : closestOffice?.city || closestOffice?.taluka || "Gondal";
-  const villageGu = isGomta ? "ગોમટા" : closestOffice?.nameGu?.split(" ")[0] || talukaGu;
 
   return {
     village,

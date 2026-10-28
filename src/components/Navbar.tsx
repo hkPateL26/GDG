@@ -21,7 +21,6 @@ import {
   ClipboardCheck,
   ShieldCheck,
   Eye,
-  BookOpen,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
@@ -113,9 +112,7 @@ export default function Navbar() {
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
     { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
-
-                  {
-                    href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
+    { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },
   ];
@@ -170,7 +167,6 @@ export default function Navbar() {
               );
             })}
 
-
             <a
               href="tel:14567"
               className="ml-1 flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs"
@@ -185,9 +181,9 @@ export default function Navbar() {
               <LanguageSelector variant="desktop" />
             </div>
 
-            {/* 🔐 Single Unified Entry (Officer OR Citizen OR Login) */}
+            {/* 🔐 Single Unified Entry (Login / Dashboard / Officer Desk) */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {officerSession ? (
+              {officerSession && (
                 <Link
                   href="/portal?mode=officer"
                   className="ml-1.5 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border-2 border-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
@@ -208,7 +204,9 @@ export default function Navbar() {
                     )
                   </span>
                 </Link>
-              ) : citizenSession ? (
+              )}
+
+              {citizenSession ? (
                 <Link
                   href="/portal?mode=citizen"
                   className="ml-1 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
@@ -219,7 +217,9 @@ export default function Navbar() {
                     {citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ"} (વોલ્ટ)
                   </span>
                 </Link>
-              ) : (
+              ) : null}
+
+              {!officerSession && !citizenSession && (
                 <div
                   className="relative"
                   onMouseEnter={() => setShowLoginDropdown(true)}
@@ -284,8 +284,6 @@ export default function Navbar() {
                           </p>
                         </div>
                       </Link>
-
-
                     </div>
                   </div>
                 )}
@@ -492,8 +490,6 @@ export default function Navbar() {
                     </div>
                   </Link>
                 </div>
-
-
               </div>
             )}
 

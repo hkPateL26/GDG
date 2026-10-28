@@ -1,9 +1,7 @@
-// NagrikSeva AI Service Worker (Enables 1-Click Native PWA Install & Offline Resilience)
-const CACHE_NAME = 'nagrikseva-v2.9.2';
+// NagrikSeva AI Service Worker (Enables 1-Click Native PWA Install on Chrome/Android/Desktop)
+const CACHE_NAME = 'nagrikseva-v2.5.1';
 const STATIC_ASSETS = [
-  '/',
   '/manifest.json',
-  '/offline.html',
   '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
@@ -72,8 +70,6 @@ self.addEventListener('fetch', (event) => {
         const cachedResponse = await caches.match(event.request);
         if (cachedResponse) return cachedResponse;
         if (event.request.mode === 'navigate') {
-          const offlineMatch = await caches.match('/offline.html');
-          if (offlineMatch) return offlineMatch;
           const rootMatch = await caches.match('/');
           if (rootMatch) return rootMatch;
         }

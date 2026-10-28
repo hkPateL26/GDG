@@ -6,10 +6,7 @@ import path from "path";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
-let cachedMtime: number | null = null;
-
 function getLatestSrcMtime(dirPath: string): number {
-  if (cachedMtime !== null) return cachedMtime;
   let latest = 0;
   try {
     const entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -31,7 +28,6 @@ function getLatestSrcMtime(dirPath: string): number {
   } catch {
     // Ignore fs errors in serverless environments where src may not be readable
   }
-  cachedMtime = latest;
   return latest;
 }
 

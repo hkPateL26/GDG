@@ -1,10 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-if (!process.env.GOOGLE_GENAI_API_KEY) {
-  // Optional key in build env
-}
-
 const genAI = process.env.GOOGLE_GENAI_API_KEY ? new GoogleGenerativeAI(process.env.GOOGLE_GENAI_API_KEY) : null;
 
 const STRICT_VERIFICATION_PROMPT = `You are the STRICT Chief Document Verification Officer for NagrikSeva AI (Government of Gujarat).
@@ -193,39 +189,12 @@ Under Gujarat State Citizen Charter & Departmental Statutory Regulations (Revenu
     "documentNumberMasked": string | null,
     "yearOrDate": string | null
   },
-  "autoFillProfile": {
-    "nameEn": string | null,
-    "nameGu": string | null,
-    "dob": string | null,
-    "gender": "male" | "female" | null,
-    "fatherOrHusbandName": string | null,
-    "address": string | null,
-    "village": string | null,
-    "taluka": string | null,
-    "district": string | null,
-    "pincode": string | null,
-    "idNumberMasked": string | null
-  },
   "verificationPoints": [
     { "point": string, "status": "pass" | "fail", "note": string }
   ]
 }
 
 DO NOT include any markdown quotes or code blocks outside the JSON. Return only parseable JSON.`;
-
-export interface AutoFillProfile {
-  nameEn?: string | null;
-  nameGu?: string | null;
-  dob?: string | null;
-  gender?: "male" | "female" | null;
-  fatherOrHusbandName?: string | null;
-  address?: string | null;
-  village?: string | null;
-  taluka?: string | null;
-  district?: string | null;
-  pincode?: string | null;
-  idNumberMasked?: string | null;
-}
 
 interface DocumentAnalysisResult {
   documentType: string;
@@ -246,7 +215,6 @@ interface DocumentAnalysisResult {
     documentNumberMasked: string | null;
     yearOrDate: string | null;
   };
-  autoFillProfile?: AutoFillProfile;
   feedbackGu: string;
   verificationPoints: { point: string; status: "pass" | "fail" | "warning"; note: string }[];
 }
@@ -306,7 +274,7 @@ export async function POST(req: NextRequest) {
     let parsedData: DocumentAnalysisResult | null = null;
 
     if (genAI) {
-      for (const modelName of visionModels) {
+    for (const modelName of visionModels) {
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
@@ -367,8 +335,7 @@ export async function POST(req: NextRequest) {
         console.warn(`Vision model ${modelName} failed:`, msg);
       }
     }
-
-  }
+    }
 
     // Fallback if vision models fail or encounter temporary 503 spike
     if (!parsedData) {
@@ -654,23 +621,6 @@ export async function POST(req: NextRequest) {
           ],
         };
       }
-    }
-
-    if (parsedData && parsedData.isValidForGovt && !parsedData.autoFillProfile) {
-      const detected = parsedData.extractedInfo?.detectedName || applicantName || "નાગરિક અરજદાર";
-      parsedData.autoFillProfile = {
-        nameEn: applicantName || (detected !== "નાગરિક અરજદાર" ? detected : "Haribhai Patel"),
-        nameGu: applicantNameGu || (detected.includes("પટેલ") || detected.includes("ભાઈ") ? detected : "હરીભાઈ વિનોદરાય પટેલ"),
-        dob: dob || "1985-06-15",
-        gender: applicantGender === "female" ? "female" : "male",
-        fatherOrHusbandName: fatherOrHusbandName || "વિનોદરાય કાંતિલાલ પટેલ",
-        address: "પટેલ વાસ, ગ્રામ પંચાયત પાસે",
-        village: "ગોમટા (Gomta)",
-        taluka: "ગોંડલ (Gondal)",
-        district: "રાજકોટ (Rajkot)",
-        pincode: "360311",
-        idNumberMasked: "•••• •••• 4429",
-      };
     }
 
     return NextResponse.json({

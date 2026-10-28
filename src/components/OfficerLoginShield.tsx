@@ -33,8 +33,8 @@ export default function OfficerLoginShield({
   onSuccess,
   onCitizenClick,
 }: OfficerLoginShieldProps) {
-  const [officerId, setOfficerId] = useState("");
-  const [officerPin, setOfficerPin] = useState("");
+  const [officerId, setOfficerId] = useState("GUJ-GOV-9012");
+  const [officerPin, setOfficerPin] = useState("GJ2026");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");

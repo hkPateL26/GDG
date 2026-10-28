@@ -2,8 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { Printer, X, ShieldCheck, Award, CreditCard, FileText, Lock } from "lucide-react";
-import { generateCertificateSeal } from "@/lib/digital-notary";
+import { Printer, X, ShieldCheck, Award, CreditCard, FileText } from "lucide-react";
 
 interface OfficialGovernmentCertificateProps {
   app: CitizenApplication;
@@ -133,8 +132,7 @@ export default function OfficialGovernmentCertificate({
       ? window.location.origin
       : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
 
-  const certSeal = generateCertificateSeal(app);
-  const verifyUrl = `${origin}/verify?id=${encodeURIComponent(app.id)}&seal=${encodeURIComponent(certSeal)}`;
+  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}`;
   const certNumber = `GJ-CERT-2026-${app.id.replace("APP-GUJ-", "")}`;
   const issueDate = app.lastUpdated || "2026-09-28";
   const validUntilDate = "2029-03-31";
@@ -1128,10 +1126,7 @@ export default function OfficialGovernmentCertificate({
                     <span className="font-black text-emerald-800 flex items-center gap-1">
                       <ShieldCheck size={13} /> અધિકૃત QR
                     </span>
-                    <span className="text-[9px] text-slate-600 font-mono font-bold block">
-                      સીલ: {certSeal}
-                    </span>
-                    <span className="text-[8.5px] text-slate-500">ઓનલાઇન ખરાઈ માટે સ્કેન કરો</span>
+                    <span className="text-[10px] text-slate-500">ઓનલાઇન ખરાઈ માટે</span>
                   </div>
                 </div>
 

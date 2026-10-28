@@ -1,6 +1,6 @@
 // =========================================================================
 // POST /api/payment/verify
-// Cryptographic Razorpay Payment Signature Verification API & Auto-Capture Engine
+// Cryptographic Razorpay Payment Signature Verification API
 // =========================================================================
 
 import { NextRequest, NextResponse } from "next/server";
@@ -43,34 +43,18 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const isDemoAllowed =
-      process.env.NODE_ENV !== "production" ||
-      process.env.ALLOW_DEMO_CREDENTIALS === "true" ||
-      process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS === "true";
-
-    const keyId =
-      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
-      process.env.RAZORPAY_KEY_ID ||
-      "rzp_test_ToAhkTKBIwxENQ";
-    const keySecret =
-      process.env.RAZORPAY_KEY_SECRET ||
-      "vZzX2lR01orHItU0C3ORL5Sq";
+    const keySecret = process.env.RAZORPAY_KEY_SECRET || "vZzX2lR01orHItU0C3ORL5Sq";
 
     // 1. In demo/sandbox test mode with synthetic orders
     const isSyntheticOrder =
       razorpay_order_id.startsWith("order_test_") ||
-      razorpay_order_id.startsWith("order_sim_") ||
       razorpay_payment_id.startsWith("pay_sim_") ||
-      razorpay_payment_id.startsWith("pay_demo_") ||
-      razorpay_payment_id.startsWith("pay_test_");
+      razorpay_payment_id.startsWith("pay_demo_");
 
     let isSignatureValid = false;
 
     if (razorpay_signature && !isSyntheticOrder) {
       try {
-        if (!keySecret) {
-          throw new Error("Missing RAZORPAY_KEY_SECRET in server environment");
-        }
         const textToSign = `${razorpay_order_id}|${razorpay_payment_id}`;
         const expectedSignature = crypto
           .createHmac("sha256", keySecret)
@@ -87,7 +71,7 @@ export async function POST(req: NextRequest) {
         console.warn("Signature calculation warning:", sigErr);
         isSignatureValid = false;
       }
-    } else if (isSyntheticOrder && isDemoAllowed) {
+    } else if (isSyntheticOrder) {
       // In sandbox simulation, allow verified test payment
       isSignatureValid = true;
     }
@@ -103,33 +87,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // 2. Explicit Capture Fallback: Ensure payment is captured on Razorpay
-    if (razorpay_payment_id && !isSyntheticOrder && keyId && keySecret) {
-      try {
-        const basicAuth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
-        const payCheck = await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}`, {
-          headers: { Authorization: `Basic ${basicAuth}` },
-        });
-        if (payCheck.ok) {
-          const payData = await payCheck.json();
-          if (payData.status === "authorized") {
-            await fetch(`https://api.razorpay.com/v1/payments/${razorpay_payment_id}/capture`, {
-              method: "POST",
-              headers: {
-                Authorization: `Basic ${basicAuth}`,
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ amount: payData.amount, currency: payData.currency || "INR" }),
-            });
-            console.log(`Explicitly captured payment ${razorpay_payment_id}`);
-          }
-        }
-      } catch (capErr) {
-        console.warn("Razorpay explicit capture check:", capErr);
-      }
-    }
-
-    // 3. Confirmed Payment! Update Ledger and Firestore (Non-blocking async sync)
+    // 2. Confirmed Payment! Update Ledger and Firestore (Non-blocking async sync)
     const cleanId = (applicationId || "").trim().toUpperCase();
     if (cleanId) {
       confirmApplicationPayment(cleanId);

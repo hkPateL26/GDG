@@ -6,7 +6,6 @@ import {
   FileText,
   Sparkles,
   IndianRupee,
-  BookOpen,
   LogOut,
   CheckCircle2,
   Navigation,
@@ -24,8 +23,8 @@ interface CitizenPortalHeaderProps {
     taluka?: string;
     village?: string;
   };
-  activeTab?: "track" | "documents" | "eligibility" | "passbook";
-  onTabChange?: (tab: "track" | "documents" | "eligibility" | "passbook") => void;
+  activeTab?: "track" | "documents" | "eligibility";
+  onTabChange?: (tab: "track" | "documents" | "eligibility") => void;
   onLogout: () => void;
   onOpenLocator?: () => void;
 }
@@ -66,15 +65,6 @@ export default function CitizenPortalHeader({
       subGu: "મળેલ સહાય & નવી યોજનાઓ",
       icon: IndianRupee,
       active: activeTab ? activeTab === "eligibility" : pathname === "/eligibility",
-    },
-    {
-      href: "/passbook",
-      id: "passbook" as const,
-      shortGu: "૪. અધિકાર પાસબુક",
-      titleGu: "૪. નાગરિક અધિકાર પાસબુક",
-      subGu: "કુલ સરકારી સહાય & KYC એલર્ટ",
-      icon: BookOpen,
-      active: activeTab ? activeTab === "passbook" : pathname === "/passbook",
     },
   ];
 
@@ -145,7 +135,7 @@ export default function CitizenPortalHeader({
       <FamilyMemberManagerBar citizen={citizen} activeTab={activeTab} />
 
       {/* ── Unified Smart 3-Tab Navigator (Side-by-Side 3 Columns on Mobile & Desktop!) ── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 sm:gap-2 bg-white p-1.5 sm:p-2 rounded-2xl shadow-xs border border-slate-200">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2 bg-white p-1.5 sm:p-2 rounded-2xl shadow-xs border border-slate-200">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           const commonClasses = `flex flex-col sm:flex-row items-center justify-center sm:justify-start gap-1 sm:gap-3 px-2 py-2 sm:p-3 rounded-xl transition text-center sm:text-left cursor-pointer w-full select-none ${

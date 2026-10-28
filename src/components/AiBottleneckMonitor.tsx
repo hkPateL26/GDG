@@ -3,7 +3,6 @@
 import { useState } from "react";
 import {
   AlertTriangle,
-  Scale,
   Clock,
   Sparkles,
   CheckCircle2,
@@ -13,7 +12,6 @@ import {
 } from "lucide-react";
 import { CitizenApplication } from "@/lib/large-datasets";
 import { analyzeApplicationSla } from "@/lib/admin-hierarchy-data";
-import StatutoryShowCauseNoticeModal from "@/components/StatutoryShowCauseNoticeModal";
 
 interface AiBottleneckMonitorProps {
   applications: CitizenApplication[];
@@ -29,7 +27,6 @@ export default function AiBottleneckMonitor({
   const [activeFilter, setActiveFilter] = useState<"all" | "breached" | "warning">("breached");
   const [escalatedAppIds, setEscalatedAppIds] = useState<Record<string, string>>({});
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [noticeModalApp, setNoticeModalApp] = useState<CitizenApplication | null>(null);
 
   // Analyze all active applications
   const seenIds = new Set<string>();
@@ -308,17 +305,6 @@ export default function AiBottleneckMonitor({
                           <Send size={12} />
                           <span>તાત્કાલિક એસ્કેલેટ કરો</span>
                         </button>
-
-                        <button
-                          type="button"
-                          onClick={() => setNoticeModalApp(app)}
-                          className="px-2.5 py-2 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs rounded-xl transition shadow-xs flex items-center justify-center gap-1 cursor-pointer active:scale-95 min-h-[40px]"
-                          title="કારણ દર્શક નોટિસ (GRTPSA ૨૦૧૩ કલમ ૮)"
-                        >
-                          <Scale size={13} />
-                          <span className="hidden sm:inline">કલમ ૮ નોટિસ</span>
-                          <span className="sm:hidden">નોટિસ</span>
-                        </button>
                         {onSelectApplication && (
                           <button
                             type="button"
@@ -336,18 +322,6 @@ export default function AiBottleneckMonitor({
             );
           })}
         </div>
-      )}
-
-      {/* Official Statutory Show-Cause Notice Modal (GRTPSA 2013) */}
-      {noticeModalApp && (
-        <StatutoryShowCauseNoticeModal
-          app={noticeModalApp}
-          onClose={() => setNoticeModalApp(null)}
-          onEscalate={(appId, targetOfficer) => {
-            handleEscalateAction(appId, targetOfficer);
-            setNoticeModalApp(null);
-          }}
-        />
       )}
     </div>
   );

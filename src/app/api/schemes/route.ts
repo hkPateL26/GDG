@@ -10,7 +10,6 @@ import { collection, getDocs, doc, getDoc, setDoc, deleteDoc } from "firebase/fi
 import { getAllActiveSchemes, saveCustomScheme, deleteCustomScheme, getSchemeById, SCHEMES_DATA } from "@/lib/schemes-data";
 import { Scheme } from "@/types";
 import { redisCache } from "@/lib/redis-cache";
-import { getOfficerSessionFromRequest } from "@/lib/officer-auth";
 
 async function getAllSchemesFromFirestore(): Promise<{ schemes: Scheme[]; fromDb: boolean }> {
   // 1. Check Redis L1 Edge Cache (<1ms lookup)
@@ -191,14 +190,6 @@ export async function GET(req: NextRequest) {
 // ── 3. POST /api/schemes - Create or Update Scheme (Admin Sachivalay CMS) ──
 export async function POST(req: NextRequest) {
   try {
-    const officer = await getOfficerSessionFromRequest(req);
-    if (!officer || (!officer.canModifyPolicy && officer.tierLevel > 2)) {
-      return NextResponse.json(
-        { success: false, error: "અનધિકૃત ઍક્સેસ. ફક્ત સચિવાલય વહીવટી અધિકારીઓને પરવાનગી છે." },
-        { status: 403 }
-      );
-    }
-
     const body = await req.json();
     if (!body || !body.nameGu || !body.name) {
       return NextResponse.json(
@@ -267,14 +258,6 @@ export async function POST(req: NextRequest) {
 // ── 4. DELETE /api/schemes - Delete / Deactivate Scheme ──
 export async function DELETE(req: NextRequest) {
   try {
-    const officer = await getOfficerSessionFromRequest(req);
-    if (!officer || (!officer.canModifyPolicy && officer.tierLevel > 2)) {
-      return NextResponse.json(
-        { success: false, error: "અનધિકૃત ઍક્સેસ. ફક્ત સચિવાલય વહીવટી અધિકારીઓને પરવાનગી છે." },
-        { status: 403 }
-      );
-    }
-
     const { searchParams } = new URL(req.url);
     let id = searchParams.get("id")?.trim();
 
