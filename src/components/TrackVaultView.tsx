@@ -216,16 +216,47 @@ export default function TrackVaultView({
           }
         }
 
-        const combined = [...localApps, ...myApps];
+        // Priority Merge: Server status ALWAYS wins so approvals and e-Sign seals show immediately!
+        const serverMap = new Map<string, CitizenApplication>();
+        myApps.forEach((a) => {
+          if (a && a.id) serverMap.set(a.id.toUpperCase(), a);
+        });
+
         const seen = new Set<string>();
         const uniqueApps: CitizenApplication[] = [];
-        for (const a of combined) {
-          if (a && a.id && !seen.has(a.id)) {
-            seen.add(a.id);
-            uniqueApps.push(a);
+
+        // 1. Add server records first (fresh from officer actions)
+        for (const s of myApps) {
+          if (s && s.id && !seen.has(s.id.toUpperCase())) {
+            seen.add(s.id.toUpperCase());
+            uniqueApps.push(s);
           }
         }
+
+        // 2. Merge local records, updating with server data if present
+        for (const l of localApps) {
+          if (!l || !l.id) continue;
+          const cleanId = l.id.toUpperCase();
+          if (serverMap.has(cleanId)) {
+            const serverVersion = serverMap.get(cleanId)!;
+            const idx = uniqueApps.findIndex((a) => a.id.toUpperCase() === cleanId);
+            if (idx >= 0) {
+              uniqueApps[idx] = { ...l, ...serverVersion };
+            }
+          } else if (!seen.has(cleanId)) {
+            seen.add(cleanId);
+            uniqueApps.push(l);
+          }
+        }
+
         setRecords(uniqueApps);
+
+        // Update localStorage with fresh merged data so entire browser has latest state
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("nagrik_user_applications", JSON.stringify(uniqueApps));
+          } catch {}
+        }
 
         const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "");
         if (activeTargetId) {
@@ -249,36 +280,67 @@ export default function TrackVaultView({
   }, []);
 
   useEffect(() => {
+    // 1. Listen for real-time live application updates from background sync engine
+    const handleAppUpdated = (e: Event) => {
+      const custom = e as CustomEvent<{ application: CitizenApplication }>;
+      if (custom.detail?.application) {
+        const freshApp = custom.detail.application;
+        setRecords((prev) =>
+          prev.map((a) => (a.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...a, ...freshApp } : a))
+        );
+        setSelectedApp((prev) =>
+          prev && prev.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...prev, ...freshApp } : prev
+        );
+      }
+    };
+    window.addEventListener("nagrik_application_updated", handleAppUpdated);
+
+    let pollTimer: NodeJS.Timeout | undefined;
+
     if (citizen && citizen.mobile) {
       const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
       const idParam = urlParams ? urlParams.get("id") || undefined : undefined;
-      const timer = setTimeout(() => {
-        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam);
-      }, 0);
-      return () => clearTimeout(timer);
+      loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam);
+
+      // Live Polling every 3.5 seconds for pure real-time dynamic sync
+      pollTimer = setInterval(() => {
+        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4);
+      }, 3500);
     } else if (authMode === "citizen") {
-      // Public Citizen Direct Tracking via ID and Tracking Secret (e.g. from receipt or QR code)
+      // Public Citizen Direct Tracking via ID and Tracking Secret
       const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
       const idParam = urlParams?.get("id")?.trim();
       const secretParam = urlParams?.get("secret")?.trim();
-      if (idParam) {
+
+      const fetchSingleApp = () => {
+        if (!idParam) return;
         const fetchUrl = `/api/track?id=${encodeURIComponent(idParam)}${secretParam ? `&secret=${encodeURIComponent(secretParam)}` : ""}`;
-        fetch(fetchUrl)
+        fetch(fetchUrl, { cache: "no-store" })
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.application) {
-              setSelectedApp(data.application);
-              setRecords([data.application]);
-              setShowTimelineModal(true);
-            } else if (data.error) {
-              setError(data.error);
+              setSelectedApp((prev) => (prev ? { ...prev, ...data.application } : data.application));
+              setRecords((prev) => {
+                const exists = prev.some((a) => a.id.toUpperCase() === data.application.id.toUpperCase());
+                return exists
+                  ? prev.map((a) => (a.id.toUpperCase() === data.application.id.toUpperCase() ? { ...a, ...data.application } : a))
+                  : [data.application, ...prev];
+              });
             }
           })
-          .catch(() => {
-            setError("અરજી ટ્રેક કરવામાં ક્ષતિ આવી.");
-          });
+          .catch(() => {});
+      };
+
+      if (idParam) {
+        fetchSingleApp();
+        pollTimer = setInterval(fetchSingleApp, 3500);
       }
     }
+
+    return () => {
+      window.removeEventListener("nagrik_application_updated", handleAppUpdated);
+      if (pollTimer) clearInterval(pollTimer);
+    };
   }, [citizen, authMode, loadCitizenVault]);
 
   // Load Master Registry (For Officer Mode)

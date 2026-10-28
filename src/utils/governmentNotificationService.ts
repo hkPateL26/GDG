@@ -188,67 +188,162 @@ export function triggerOfficialGovNotification(payload: Omit<GovNotificationPayl
   return fullPayload;
 }
 
-// 5. Watcher for Citizen Application Status Changes (e.g., when officer approves or rejects)
-export function scanAndNotifyCitizenApplicationTransitions(): void {
-  if (typeof window === "undefined") return;
+// 5. Real-Time Dynamic Live Sync Engine: Polls server to catch officer approvals / rejections across devices
+let isSyncing = false;
+
+export async function scanAndNotifyCitizenApplicationTransitions(): Promise<void> {
+  if (typeof window === "undefined" || isSyncing) return;
+  isSyncing = true;
 
   try {
     const rawApps = localStorage.getItem("nagrik_user_applications");
-    if (!rawApps) return;
+    let apps: any[] = rawApps ? JSON.parse(rawApps) : [];
+    if (!Array.isArray(apps)) apps = [];
 
-    const apps = JSON.parse(rawApps);
-    if (!Array.isArray(apps)) return;
+    // Also check active applications in citizen session
+    const rawSession = localStorage.getItem("nagrik_citizen_session");
+    if (rawSession) {
+      try {
+        const session = JSON.parse(rawSession);
+        if (Array.isArray(session.activeApplications)) {
+          for (const sa of session.activeApplications) {
+            if (sa && sa.id && !apps.some((a) => a.id === sa.id)) {
+              apps.push(sa);
+            }
+          }
+        }
+      } catch {}
+    }
+
+    if (apps.length === 0) {
+      isSyncing = false;
+      return;
+    }
 
     const notifiedRaw = localStorage.getItem("nagrik_notified_app_statuses");
     const notifiedMap: Record<string, string> = notifiedRaw ? JSON.parse(notifiedRaw) : {};
+    let hasUpdatedApps = false;
     let hasNewNotification = false;
 
-    for (const app of apps) {
-      if (!app.id || !app.status) continue;
-      const previousRecordedStatus = notifiedMap[app.id];
+    // Active cross-device server polling for each application
+    for (let i = 0; i < apps.length; i++) {
+      const app = apps[i];
+      if (!app || !app.id) continue;
 
-      // Check if newly approved
-      if (app.status === "approved" && previousRecordedStatus !== "approved") {
-        notifiedMap[app.id] = "approved";
-        hasNewNotification = true;
-
-        triggerOfficialGovNotification({
-          appId: app.id,
-          serviceNameGu: app.schemeNameGu || "સરકારી સેવા",
-          status: "approved",
-          title: "🏛️ ગુજરાત સરકાર • ઈ-નગર પોર્ટલ",
-          headerGu: "અરજી મંજૂર (e-Sign પૂર્ણ)",
-          message: `અભિનંદન! તમારી ${app.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${app.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
-          officerName: app.officerName || "તાલુકા મામલતદારશ્રી",
+      try {
+        const secretParam = app.trackingSecret ? `&secret=${encodeURIComponent(app.trackingSecret)}` : "";
+        const res = await fetch(`/api/track?id=${encodeURIComponent(app.id)}${secretParam}`, {
+          cache: "no-store",
+          headers: { "Cache-Control": "no-cache" },
         });
+
+        if (!res.ok) continue;
+        const data = await res.json();
+
+        if (data && data.success && data.application) {
+          const serverApp = data.application;
+          const oldStatus = app.status;
+          const newStatus = serverApp.status;
+          const oldStage = app.workflowStage ?? 1;
+          const newStage = serverApp.workflowStage ?? (newStatus === "approved" ? 3 : 1);
+
+          // Check if status or stage changed on server!
+          const statusChanged = (newStatus && newStatus !== oldStatus) || (newStage !== oldStage);
+
+          if (statusChanged || (serverApp.remarksGu && serverApp.remarksGu !== app.remarksGu)) {
+            hasUpdatedApps = true;
+            // Merge server attributes into local app
+            apps[i] = {
+              ...app,
+              ...serverApp,
+              status: newStatus,
+              workflowStage: newStage,
+              remarksGu: serverApp.remarksGu || app.remarksGu,
+              remarksEn: serverApp.remarksEn || app.remarksEn,
+              officerDesignation: serverApp.officerDesignation || app.officerDesignation,
+              lastUpdated: serverApp.lastUpdated || new Date().toISOString().split("T")[0],
+            };
+
+            // Dispatch granular update event for any active view (e.g. TrackVaultView)
+            window.dispatchEvent(
+              new CustomEvent("nagrik_application_updated", {
+                detail: { application: apps[i], previousStatus: oldStatus },
+              })
+            );
+          }
+
+          const currentRecordedNotif = notifiedMap[app.id];
+
+          // 1. Newly Approved with e-Sign!
+          if (newStatus === "approved" && currentRecordedNotif !== "approved") {
+            notifiedMap[app.id] = "approved";
+            hasNewNotification = true;
+
+            triggerOfficialGovNotification({
+              appId: app.id,
+              serviceNameGu: serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સરકારી સેવા",
+              status: "approved",
+              title: "🏛️ ગુજરાત સરકાર • ઈ-નગર પોર્ટલ",
+              headerGu: "અરજી મંજૂર (Mamlatdar e-Sign પૂર્ણ)",
+              message: `અભિનંદન! તમારી ${serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${app.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
+              officerName: serverApp.officerDesignation || app.officerName || "તાલુકા મામલતદારશ્રી",
+              remarksGu: serverApp.remarksGu,
+            });
+          }
+
+          // 2. Newly Rejected or Returned for Correction
+          if (newStatus === "rejected" && currentRecordedNotif !== "rejected") {
+            notifiedMap[app.id] = "rejected";
+            hasNewNotification = true;
+
+            const explanation =
+              serverApp.remarksGu ||
+              app.remarksGu ||
+              "કચેરી દ્વારા અરજીમાં સુધારણા માટે પૂરક પુરાવા માંગવામાં આવ્યા છે.";
+
+            triggerOfficialGovNotification({
+              appId: app.id,
+              serviceNameGu: serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સરકારી સેવા",
+              status: "rejected",
+              title: "⚠️ ગુજરાત સરકાર • કચેરી ચકાસણી સૂચના",
+              headerGu: "પૂરક પુરાવા / સુધારણા જરૂરી",
+              message: `તમારી ${serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${app.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${explanation}`,
+              remarksGu: explanation,
+              officerName: serverApp.officerDesignation || app.officerName || "ચકાસણી અધિકારીશ્રી",
+            });
+          }
+        }
+      } catch (appSyncErr) {
+        // Individual app sync error should not abort other apps
+      }
+    }
+
+    if (hasUpdatedApps) {
+      localStorage.setItem("nagrik_user_applications", JSON.stringify(apps));
+
+      // Also update citizen session activeApplications if present
+      if (rawSession) {
+        try {
+          const session = JSON.parse(rawSession);
+          if (Array.isArray(session.activeApplications)) {
+            session.activeApplications = session.activeApplications.map((sa: any) => {
+              const matched = apps.find((a) => a.id === sa.id);
+              return matched ? { ...sa, ...matched } : sa;
+            });
+            localStorage.setItem("nagrik_citizen_session", JSON.stringify(session));
+          }
+        } catch {}
       }
 
-      // Check if newly rejected / sent for correction
-      if (app.status === "rejected" && previousRecordedStatus !== "rejected") {
-        notifiedMap[app.id] = "rejected";
-        hasNewNotification = true;
-
-        const explanation =
-          app.remarksGu ||
-          "કચેરી દ્વારા અરજીમાં સુધારણા માટે પૂરક પુરાવા માંગવામાં આવ્યા છે.";
-
-        triggerOfficialGovNotification({
-          appId: app.id,
-          serviceNameGu: app.schemeNameGu || "સરકારી સેવા",
-          status: "rejected",
-          title: "⚠️ ગુજરાત સરકાર • કચેરી ચકાસણી સૂચના",
-          headerGu: "પૂરક પુરાવા / સુધારણા જરૂરી",
-          message: `તમારી ${app.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${app.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${explanation}`,
-          remarksGu: explanation,
-          officerName: app.officerName || "ચકાસણી અધિકારીશ્રી",
-        });
-      }
+      window.dispatchEvent(new Event("storage"));
     }
 
     if (hasNewNotification) {
       localStorage.setItem("nagrik_notified_app_statuses", JSON.stringify(notifiedMap));
     }
   } catch (scanErr) {
-    console.warn("[GovNotification] Status scan error:", scanErr);
+    console.warn("[GovNotification] Live server sync error:", scanErr);
+  } finally {
+    isSyncing = false;
   }
 }

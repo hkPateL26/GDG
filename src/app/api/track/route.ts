@@ -216,7 +216,12 @@ export async function GET(req: NextRequest) {
               id: targetApp.id,
               scheme: targetApp.schemeName,
               schemeGu: targetApp.schemeNameGu,
+              schemeName: targetApp.schemeName,
+              schemeNameGu: targetApp.schemeNameGu,
               schemeEmoji: targetApp.schemeEmoji,
+              citizenName: targetApp.citizenName,
+              citizenNameGu: targetApp.citizenNameGu || targetApp.citizenName,
+              officerDesignation: targetApp.officerDesignation,
               status: targetApp.status,
               workflowStage:
                 targetApp.workflowStage !== undefined
@@ -263,7 +268,12 @@ export async function GET(req: NextRequest) {
             id: targetApp.id,
             scheme: targetApp.schemeName,
             schemeGu: targetApp.schemeNameGu,
+            schemeName: targetApp.schemeName,
+            schemeNameGu: targetApp.schemeNameGu,
             schemeEmoji: targetApp.schemeEmoji,
+            citizenNameGu: targetApp.citizenNameGu || targetApp.citizenName,
+            officerDesignation: targetApp.officerDesignation,
+            remarksGu: targetApp.remarksGu,
             status: targetApp.status,
             workflowStage:
               targetApp.workflowStage !== undefined

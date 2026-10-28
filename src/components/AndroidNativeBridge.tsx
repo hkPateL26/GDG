@@ -33,7 +33,7 @@ export default function AndroidNativeBridge() {
 
     const intervalTimer = setInterval(() => {
       scanAndNotifyCitizenApplicationTransitions();
-    }, 15000);
+    }, 3000);
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
@@ -42,6 +42,7 @@ export default function AndroidNativeBridge() {
     };
     document.addEventListener("visibilitychange", onVisibilityChange);
     window.addEventListener("focus", onVisibilityChange);
+    window.addEventListener("online", onVisibilityChange);
 
     let cleanupBackButton: (() => void) | undefined;
 
@@ -112,6 +113,7 @@ export default function AndroidNativeBridge() {
       clearInterval(intervalTimer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
       window.removeEventListener("focus", onVisibilityChange);
+      window.removeEventListener("online", onVisibilityChange);
       if (cleanupBackButton) cleanupBackButton();
     };
   }, [pathname, router]);
