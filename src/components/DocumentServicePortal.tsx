@@ -286,6 +286,14 @@ export default function DocumentServicePortal({
   // Category and Search filter for the 69 services selector
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState<string>("all");
   const [serviceSearchQuery, setServiceSearchQuery] = useState<string>("");
+  const [formStep, setFormStep] = useState<1 | 2 | 3 | 4>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("step") === "payment" || Boolean(initialPaymentOpen)) return 4;
+      if (params.get("reapply")) return 2;
+    }
+    return 1;
+  });
 
   // 5. Document Uploads & AI Inspections
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocState>>({});
@@ -2393,7 +2401,102 @@ export default function DocumentServicePortal({
       )}
 
 
-      {/* ── Step 1: Select Document Service ── */}
+      {/* ── Main Step-by-Step Guided Application Wizard (૧-૨-૩-૪ સરળ પગલાં) ── */}
+      <form onSubmit={handleOpenPaymentGateway} className="space-y-4 sm:space-y-6">
+        {/* Visual Step Progress Tracker (૧-૨-૩-૪ સરળ પગલાં) */}
+        <div className="bg-white rounded-2xl p-2.5 sm:p-4 border border-slate-200 shadow-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { step: 1, num: "૧", title: "સેવા પસંદ કરો", sub: service.nameGu.slice(0, 14) + "..." },
+              { step: 2, num: "૨", title: "અરજદાર વિગતો", sub: (applicantNameGu || applicantName || "વિગતો ભરો").slice(0, 14) },
+              { step: 3, num: "૩", title: "જરૂરી પુરાવા", sub: `${requiredDocs.length} દસ્તાવેજો` },
+              { step: 4, num: "૪", title: "ચકાસણી & ફી", sub: `₹ ${service.fee} (સાયબર ટ્રેઝરી)` },
+            ].map((s) => {
+              const isActive = formStep === s.step;
+              const isCompleted = formStep > s.step;
+              return (
+                <button
+                  key={s.step}
+                  type="button"
+                  onClick={() => {
+                    setFormStep(s.step as 1 | 2 | 3 | 4);
+                    window.scrollTo({ top: 0, behavior: "smooth" });
+                  }}
+                  className={`p-2.5 sm:p-3 rounded-xl border text-left transition flex items-center gap-2 sm:gap-2.5 cursor-pointer ${
+                    isActive
+                      ? "bg-orange-50 border-orange-500 ring-2 ring-orange-200 shadow-xs"
+                      : isCompleted
+                      ? "bg-emerald-50/70 border-emerald-300 text-slate-800"
+                      : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                  }`}
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
+                    isActive
+                      ? "bg-orange-600 text-white shadow-sm"
+                      : isCompleted
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {isCompleted ? "✓" : s.num}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className={`block text-xs font-black truncate ${isActive ? "text-orange-950 font-black" : isCompleted ? "text-emerald-950 font-bold" : "text-slate-700 font-semibold"}`}>
+                      {s.title}
+                    </span>
+                    <span className="block text-[10px] text-slate-500 truncate">
+                      {s.sub}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── STEP 1: સેવા પસંદગી ── */}
+        {formStep === 1 && (
+          <div className="space-y-4">
+            {/* Featured Popular Services */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-3">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles size={13} className="text-amber-500" />
+                <span>વારંવાર વપરાતી મુખ્ય સરકારી સેવાઓ:</span>
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { id: "income", name: "આવકનું પ્રમાણપત્ર", sub: "૩ વર્ષ માન્ય", emoji: "📜", fee: 20 },
+                  { id: "land_records", name: "જમીન ૭/૧૨ & ૮-અ", sub: "ડિજિટલ ઉતારા", emoji: "🌾", fee: 20 },
+                  { id: "varasai_entry", name: "વારસાઈ આંબલીયો", sub: "પેઢીનામું નોંધણી", emoji: "🌳", fee: 20 },
+                  { id: "khedut_kharekhar", name: "ખેડૂત ખરાઈ દાખલો", sub: "સાચો ખેડૂત પ્રમાણપત્ર", emoji: "🚜", fee: 20 },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedServiceId(item.id);
+                      setFetchedProfile(null);
+                      setUploadedDocs({});
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                      selectedServiceId === item.id
+                        ? "border-orange-500 bg-orange-50/80 ring-2 ring-orange-400/30 shadow-xs"
+                        : "border-slate-200 hover:border-orange-300 bg-slate-50/60 hover:bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl">{item.emoji}</span>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
+                        ₹{item.fee}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-slate-900 leading-tight">{item.name}</p>
+                      <p className="text-[10px] text-slate-500">{item.sub}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">
         <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500">
           ૧. સરકારી દસ્તાવેજ / સેવા પસંદ કરો (SELECT DOCUMENT SERVICE):
@@ -2953,11 +3056,60 @@ export default function DocumentServicePortal({
         </div>
       )}
 
-      {/* ── Step 2: Main Application Form (Official Kacheri Layout) ── */}
-      <form onSubmit={handleOpenPaymentGateway} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Official Kacheri Application Particulars (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
+              {/* Step 1 Bottom Action Bar */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-2xl shrink-0">{service.emoji}</span>
+            <div className="min-w-0">
+              <span className="text-[10px] text-slate-500 block uppercase font-bold">પસંદ કરેલ સેવા:</span>
+              <p className="text-slate-900 font-black text-xs sm:text-sm truncate">{service.nameGu}</p>
+              <span className="text-[10px] bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded-full inline-block mt-0.5">
+                {service.fee === 0 ? "સરકારી ફી: નિઃશુલ્ક" : `સરકારી ફી: ₹${service.fee}`}
+              </span>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              setFormStep(2);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>આગળ વધો: અરજદારની વિગતો ભરો (પગલું ૨)</span>
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+      )}
+
+      {/* ── STEP 2: અરજદારની સત્તાવાર વિગતો (Kacheri Form) ── */}
+      {formStep === 2 && (
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
+          {/* Selected Service Header Reminder */}
+          <div className="bg-orange-50 border border-orange-200 p-3 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0">{service.emoji}</span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-orange-700 font-bold block uppercase">પગલું ૨ / ૪ • અરજદારની સત્તાવાર વિગતો</span>
+                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  સેવા: {service.nameGu} ({serviceMode === "new" ? "નવી અરજી" : "સુધારો"})
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFormStep(1);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="text-xs text-orange-800 hover:text-orange-950 font-bold underline shrink-0 cursor-pointer"
+            >
+              🔄 સેવા બદલો
+            </button>
+          </div>
+        <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">
               <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
                 <div>
@@ -3591,10 +3743,67 @@ export default function DocumentServicePortal({
                 </div>
               </div>
             </div>
+            {/* Step 2 Bottom Navigation */}
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormStep(1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft size={16} />
+                <span>← પાછળ (સેવા પસંદગી)</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  if (!applicantName.trim() && !applicantNameGu.trim()) {
+                    alert("કૃપા કરીને અરજદારનું પૂરું નામ દાખલ કરો.");
+                    return;
+                  }
+                  setFormStep(3);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <span>આગળ વધો: પુરાવા આપો (પગલું ૩)</span>
+                <ArrowRight size={16} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 3: જરૂરી દસ્તાવેજો & AI સ્માર્ટ ચેકિંગ ── */}
+      {formStep === 3 && (
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
+          {/* Selected Service Header Reminder */}
+          <div className="bg-orange-50 border border-orange-200 p-3 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0">{service.emoji}</span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-orange-700 font-bold block uppercase">પગલું ૩ / ૪ • જરૂરી દસ્તાવેજો & AI સ્માર્ટ ચેકિંગ</span>
+                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  અરજદાર: {applicantNameGu || applicantName || "નાગરિક"} • કુલ જરૂરી: {requiredDocs.length} દસ્તાવેજો
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFormStep(2);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="text-xs text-orange-800 hover:text-orange-950 font-bold underline shrink-0 cursor-pointer"
+            >
+              ← વિગતો બદલો
+            </button>
           </div>
 
-          {/* Right Column: Required Documents Checklist & AI Pre-Inspection (7 cols) */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
               <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -4068,23 +4277,199 @@ export default function DocumentServicePortal({
                     <p className="text-[11px] text-slate-500">સાયબર ટ્રેઝરી ચલણ અને GST મુક્ત</p>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={submitting || requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid")}
-                    className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-sm font-extrabold shadow-md transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <CreditCard size={16} />
-                    <span>આગળ વધો & સરકારી ફી ચૂકવો (Proceed to Pay)</span>
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setFormStep(2);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <ArrowLeft size={16} />
+                      <span>← પાછળ (વિગતો)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const hasInvalid = requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid");
+                        if (hasInvalid) {
+                          alert("ધ્યાન આપો: એક અથવા વધુ દસ્તાવેજ અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.");
+                          return;
+                        }
+                        setFormStep(4);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>આગળ વધો: ચકાસણી & ફી (પગલું ૪)</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
                 </div>
-
-                <p className="text-center text-[11px] text-slate-400">
-                  🔒 તમારી માહિતી UIDAI અને ગુજરાત સરકારના ડેટા સુરક્ષા ધારા હેઠળ ૧૦૦% એન્ક્રિપ્ટેડ છે.
-                </p>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── STEP 4: આખરી ચકાસણી અને સરકારી ફી ચુકવણી ── */}
+      {formStep === 4 && (
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
+          {/* Selected Service Header Reminder */}
+          <div className="bg-orange-50 border border-orange-200 p-3 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0">🏛️</span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-orange-700 font-bold block uppercase">પગલું ૪ / ૪ • આખરી ચકાસણી અને સરકારી ફી ચુકવણી</span>
+                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  સાયબર ટ્રેઝરી ચુકવણી સારાંશ (Cyber Treasury Review)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Authentic Government Summary Slip */}
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-slate-900 p-4 sm:p-6 space-y-4">
+            <div className="border-b-2 border-slate-900 pb-3 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 block">
+                  GUJARAT DIGITAL PUBLIC INFRASTRUCTURE (DPI)
+                </span>
+                <h3 className="font-black text-base sm:text-lg text-slate-900">
+                  અરજી ચકાસણી સારાંશ અને સાયબર ટ્રેઝરી ચલણ
+                </h3>
+              </div>
+              <span className="text-xs bg-slate-900 text-amber-300 font-mono font-bold px-3 py-1 rounded-lg">
+                FORM-DPI-2026
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-500 text-[10px] block">પસંદ કરેલ સેવા:</span>
+                <strong className="text-slate-900 font-bold text-sm">{service.nameGu}</strong>
+                <span className="text-[10px] text-slate-600 block">{serviceMode === "new" ? "🆕 નવી અરજી" : "🔄 સુધારો / ફેરફાર"}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">અરજદારનું નામ:</span>
+                <strong className="text-slate-900 font-bold">{applicantNameGu || applicantName || "હરી વિનોદરાઈ પટેલ"}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">સંપર્ક / મોબાઈલ:</span>
+                <strong className="text-slate-900 font-mono font-bold">{mobileNumber || "9974442291"}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">ગામ / કચેરી:</span>
+                <strong className="text-slate-900 font-bold">{village || "ગોમટા"}, તા. {taluka}, જિ. {district}</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">સંલગ્ન પુરાવા:</span>
+                <strong className="text-emerald-700 font-bold">✓ {requiredDocs.length} દસ્તાવેજો ચકાસાયેલ</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">સરકારી ફી:</span>
+                <strong className="text-orange-700 font-black text-sm">₹ {service.fee} (GST મુક્ત)</strong>
+              </div>
+            </div>
+
+            {/* Phygital Signature Selection */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-slate-800 block">નાગરિક પ્રમાણીકરણ (Verification & Signature):</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${signatureType === "aadhaar-esign" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="signatureTypeFinal"
+                    checked={signatureType === "aadhaar-esign"}
+                    onChange={() => setSignatureType("aadhaar-esign")}
+                    className="accent-orange-600"
+                  />
+                  <span>🔐 આધાર OTP ડિજિટલ સહી - eSign (IT Act 2000)</span>
+                </label>
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${signatureType === "physical-declaration" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="signatureTypeFinal"
+                    checked={signatureType === "physical-declaration"}
+                    onChange={() => setSignatureType("physical-declaration")}
+                    className="accent-orange-600"
+                  />
+                  <span>✍️ સ્વ-ઘોષણા પત્ર સાથે ભૌતિક સહી</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Payment Method Selector */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-slate-800 block">ચુકવણી માધ્યમ (Payment Gateway):</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${paymentMethod !== "challan" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethodFinal"
+                    checked={paymentMethod !== "challan"}
+                    onChange={() => setPaymentMethod("upi")}
+                    className="accent-orange-600"
+                  />
+                  <span>🏛️ ઓનલાઇન સાયબર ટ્રેઝરી (UPI / NetBanking / Cards / QR)</span>
+                </label>
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${paymentMethod === "challan" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethodFinal"
+                    checked={paymentMethod === "challan"}
+                    onChange={() => setPaymentMethod("challan")}
+                    className="accent-orange-600"
+                  />
+                  <span>🧾 ઓફલાઇન સરકારી ચલણ (જન સેવા કેન્દ્ર પર રોકડ)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Official Submit & Pay Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormStep(3);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft size={16} />
+                <span>← પાછળ (પુરાવા બદલો)</span>
+              </button>
+
+              {paymentMethod !== "challan" ? (
+                <button
+                  type="button"
+                  onClick={handleRazorpayLiveCheckout}
+                  disabled={isProcessingPayment}
+                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
+                >
+                  <Landmark size={18} className="text-amber-300 shrink-0" />
+                  <span>🏛️ સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee}) 🔒</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleFinalPaymentSubmit()}
+                  disabled={isProcessingPayment}
+                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+                >
+                  <Landmark size={18} />
+                  <span>ઓફલાઇન રોકડ ચલણ જનરેટ કરો & સબમિટ</span>
+                </button>
+              )}
+            </div>
+
+            <p className="text-center text-[11px] text-slate-400 pt-1">
+              🔒 તમારી માહિતી UIDAI અને ગુજરાત સરકારના ડેટા સુરક્ષા ધારા હેઠળ ૧૦૦% એન્ક્રિપ્ટેડ છે.
+            </p>
+          </div>
+        </div>
+      )}
       </form>
 
       {/* ── Official MeriPehchaan & DigiLocker Gateway Modal ── */}
