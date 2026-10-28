@@ -295,6 +295,10 @@ export default function TrackVaultView({
     }
   }, []);
 
+  const isInitialLoadRef = useRef<boolean>(true);
+  const citizenMobile = citizen?.mobile;
+  const citizenAadhaar = citizen?.aadhaarLast4;
+
   useEffect(() => {
     // 1. Listen for real-time live application updates from background sync engine
     const handleAppUpdated = (e: Event) => {
@@ -313,15 +317,20 @@ export default function TrackVaultView({
 
     let pollTimer: NodeJS.Timeout | undefined;
 
-    if (citizen && citizen.mobile) {
+    if (citizenMobile) {
       const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
       const idParam = urlParams ? urlParams.get("id") || undefined : undefined;
-      loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam);
 
-      // Live Polling every 3.5 seconds for pure real-time dynamic sync
+      const isFirst = isInitialLoadRef.current;
+      isInitialLoadRef.current = false;
+
+      // Only first load shows loading spinner; all subsequent runs are 100% silent
+      loadCitizenVault(citizenMobile, citizenAadhaar, idParam, !isFirst);
+
+      // Silent background poll every 4.5 seconds
       pollTimer = setInterval(() => {
-        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, undefined, true);
-      }, 3500);
+        loadCitizenVault(citizenMobile, citizenAadhaar, undefined, true);
+      }, 4500);
     } else if (authMode === "citizen") {
       // Public Citizen Direct Tracking via ID and Tracking Secret
       const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
@@ -357,7 +366,7 @@ export default function TrackVaultView({
       window.removeEventListener("nagrik_application_updated", handleAppUpdated);
       if (pollTimer) clearInterval(pollTimer);
     };
-  }, [citizen, authMode, loadCitizenVault]);
+  }, [citizenMobile, citizenAadhaar, authMode, loadCitizenVault]);
 
   // Load Master Registry (For Officer Mode)
   const loadOfficerData = useCallback(async () => {
@@ -635,7 +644,7 @@ export default function TrackVaultView({
           <button type="button" onClick={() => setStageUpdateAlert(null)} className="text-blue-700 hover:text-blue-900 px-2 font-black">✕</button>
         </div>
       )}
-      {loading && (
+      {loading && records.length === 0 && (
         <div className="flex items-center justify-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 font-bold">
           <Loader2 size={14} className="animate-spin text-orange-600" />
           <span>કચેરી ડેટા લોડ થઈ રહ્યો છે...</span>

@@ -57,7 +57,21 @@ export default function UnifiedCitizenPortal({
             parsedCitizen = null;
           }
         }
-        setCitizenSession(parsedCitizen);
+        setCitizenSession((prev) => {
+          if (!prev && !parsedCitizen) return null;
+          if (!prev && parsedCitizen) return parsedCitizen;
+          if (prev && !parsedCitizen) return null;
+          if (
+            prev &&
+            parsedCitizen &&
+            prev.mobile === parsedCitizen.mobile &&
+            prev.citizenName === parsedCitizen.citizenName &&
+            (prev.activeApplications?.length || 0) === (parsedCitizen.activeApplications?.length || 0)
+          ) {
+            return prev;
+          }
+          return parsedCitizen;
+        });
 
         // 2. Officer Session (sessionStorage)
         const savedOfficer = sessionStorage.getItem("nagrik_officer_session");

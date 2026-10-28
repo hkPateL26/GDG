@@ -33,7 +33,7 @@ export default function AndroidNativeBridge() {
 
     const intervalTimer = setInterval(() => {
       scanAndNotifyCitizenApplicationTransitions();
-    }, 3000);
+    }, 4500);
 
     const onVisibilityChange = () => {
       if (document.visibilityState === "visible") {
