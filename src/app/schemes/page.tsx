@@ -179,7 +179,7 @@ export default function SchemesPage() {
           </div>
 
           {/* Results + Pagination top row */}
-          <div className="flex items-center justify-between mb-4 px-1">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4 px-1">
             <p className="text-xs font-semibold text-gray-700">
               {isLoading ? (
                 <span className="flex items-center gap-1 text-orange-600">
@@ -193,7 +193,7 @@ export default function SchemesPage() {
               )}
             </p>
             {!isLoading && totalPages > 1 && (
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 shrink-0">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
@@ -207,8 +207,8 @@ export default function SchemesPage() {
                     onClick={() => setPage(p)}
                     className={`w-7 h-7 rounded-lg text-xs font-bold transition ${
                       p === page
-                        ? "bg-orange-600 text-white shadow-sm"
-                        : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-300"
+                        ? "bg-orange-600 text-white shadow-sm inline-flex items-center justify-center"
+                        : "bg-white border border-gray-200 text-gray-600 hover:bg-orange-50 hover:border-orange-300 hidden sm:inline-flex items-center justify-center"
                     }`}
                   >
                     {p}

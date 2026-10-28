@@ -341,7 +341,7 @@ export default function OfficerLoginShield({
                 setOfficerPin("GJ2026");
                 setError("");
               }}
-              className={`p-1 sm:p-1.5 rounded-lg border text-left truncate transition cursor-pointer ${
+              className={`col-span-2 sm:col-span-1 p-1 sm:p-1.5 rounded-lg border text-left truncate transition cursor-pointer ${
                 officerId === "GUJ-TAL-7089"
                   ? "bg-amber-400 text-slate-950 border-amber-500 font-black shadow-xs"
                   : "bg-white text-slate-700 border-slate-200 hover:bg-slate-100"

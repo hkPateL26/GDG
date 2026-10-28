@@ -192,7 +192,7 @@ export default function UnifiedCitizenPortal({
           <div className="bg-slate-950 border-b border-amber-400/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-              <span className="font-black text-amber-300 text-xs sm:text-sm">
+              <span className="font-black text-amber-300 text-xs sm:text-sm truncate max-w-[220px] sm:max-w-none">
                 🏛️ કચેરી એડમિન ડેસ્ક ({officerSession.name})
               </span>
               <span className="hidden sm:inline-block text-[10px] bg-amber-400/20 text-amber-300 border border-amber-400/30 px-2 py-0.5 rounded-full font-mono font-bold">
@@ -261,7 +261,7 @@ export default function UnifiedCitizenPortal({
         <div className="bg-emerald-950 border-b border-emerald-500/40 px-3 py-2 text-white flex flex-wrap items-center justify-between gap-2 shadow-sm">
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-            <span className="font-black text-emerald-200 text-xs sm:text-sm">
+            <span className="font-black text-emerald-200 text-xs sm:text-sm truncate max-w-[210px] sm:max-w-none">
               👤 નાગરિક પોર્ટલ & ડિજિટલ વોલ્ટ ({citizenSession.citizenNameGu || citizenSession.citizenName})
             </span>
             <span className="hidden md:inline-block text-[10px] bg-emerald-400/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-mono font-bold">
@@ -269,6 +269,17 @@ export default function UnifiedCitizenPortal({
             </span>
           </div>
           <div className="flex items-center gap-2">
+            <a
+              href="/portal?mode=officer"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shadow-sm cursor-pointer whitespace-nowrap"
+              title="બીજી ટેબમાં કચેરી ડેસ્ક ખોલો અને લાઈવ અરજી ચકાસો (Open Officer Tab)"
+            >
+              <span className="hidden sm:inline">🏛️ નવી ટેબમાં કચેરી ડેસ્ક ખોલો (Live Officer Desk)</span>
+              <span className="sm:hidden">🏛️ કચેરી ડેસ્ક (Live Desk)</span>
+              <ExternalLink size={13} className="shrink-0" />
+            </a>
             {officerSession && (
               <button
                 type="button"

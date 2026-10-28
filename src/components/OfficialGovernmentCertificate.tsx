@@ -830,12 +830,12 @@ export default function OfficialGovernmentCertificate({
         }
       `}</style>
 
-      {/* ── Fixed Floating Close Button (Always visible on mobile & desktop) ── */}
+      {/* ── Fixed Floating Close Button (Desktop & Tablet) ── */}
       {isModalPreview && onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 flex items-center justify-center transition cursor-pointer active:scale-90 cert-no-print"
+          className="hidden sm:flex fixed top-5 right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 items-center justify-center transition cursor-pointer active:scale-90 cert-no-print"
           title="બંધ કરો (Esc)"
           aria-label="બંધ કરો"
         >

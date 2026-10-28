@@ -44,9 +44,23 @@ html {
   text-size-adjust: 100%;
 }
 
-@media screen and (max-width: 640px) {
+@media screen and (max-width: 374px) {
   html {
-    font-size: 15.5px;
+    font-size: 14px;
+  }
+
+  body {
+    line-height: 1.45;
+  }
+
+  .app-touch-card {
+    touch-action: manipulation;
+  }
+}
+
+@media screen and (min-width: 375px) and (max-width: 640px) {
+  html {
+    font-size: 15px;
   }
 
   body {

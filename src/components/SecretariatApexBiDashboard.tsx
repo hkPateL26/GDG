@@ -128,8 +128,8 @@ export default function SecretariatApexBiDashboard() {
           </span>
         </div>
 
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+        <div className="overflow-x-auto no-scrollbar scrollbar-thin">
+          <table className="w-full min-w-[580px] text-left text-xs">
             <thead>
               <tr className="bg-slate-50 text-slate-600 font-black border-y border-slate-200 text-[11px] uppercase tracking-wider">
                 <th className="py-2.5 px-3">માસ / સમયગાળો</th>

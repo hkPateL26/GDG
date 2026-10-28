@@ -321,7 +321,7 @@ export default function Navbar() {
               >
                 <Smartphone size={13} className="shrink-0" />
                 <span className="hidden sm:inline" suppressHydrationWarning>{t.nav.installApp}</span>
-                <span className="sm:hidden text-[10.5px]" suppressHydrationWarning>ઇન્સ્ટોલ</span>
+                <span className="hidden min-[370px]:inline sm:hidden text-[10.5px]" suppressHydrationWarning>ઇન્સ્ટોલ</span>
               </button>
             )}
             <button
@@ -539,8 +539,9 @@ export default function Navbar() {
                     Icon: MapPin,
                     bg: "bg-teal-50 border-teal-200/80 text-teal-700",
                   },
-                ].map(({ href, label, sub, Icon, bg }) => {
+                ].map(({ href, label, sub, Icon, bg }, idx) => {
                   const active = pathname === href;
+                  const isLastOdd = idx === 4;
                   return (
                     <Link
                       key={href}
@@ -550,6 +551,8 @@ export default function Navbar() {
                         handleNavClick(e, href);
                       }}
                       className={`app-touch-card flex items-center gap-2.5 p-2.5 rounded-2xl border transition ${
+                        isLastOdd ? "col-span-2" : ""
+                      } ${
                         active
                           ? "bg-orange-600 text-white border-orange-600 shadow-sm"
                           : "bg-slate-50/90 hover:bg-slate-100 border-slate-200/80 text-slate-800"

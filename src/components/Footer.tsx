@@ -245,18 +245,18 @@ export default function Footer() {
 
         {/* ── Official Government Developer & Architecture Credit Block (Strict Hard Responsive) ── */}
         <div className="border-t border-slate-800/90 pt-6 mt-6">
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-center justify-between gap-4">
             
             {/* Lead Developers Attribution - Clean 'હરિ પટેલ (Hari Patel)' */}
-            <div className="space-y-1.5 text-center md:text-left w-full md:w-auto">
-              <div className="flex items-center justify-center md:justify-start gap-2">
+            <div className="space-y-1.5 text-center lg:text-left w-full lg:w-auto">
+              <div className="flex items-center justify-center lg:justify-start gap-2">
                 <Award size={16} className="text-amber-400 shrink-0" />
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   {t.architectsTitle}
                 </span>
               </div>
               
-              <div className="flex flex-col sm:flex-row items-center justify-center md:justify-start gap-1.5 sm:gap-3 text-xs sm:text-sm">
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-1.5 sm:gap-3 text-xs sm:text-sm">
                 <span className="font-bold text-white">
                   <span className="text-orange-400 font-black">
                     {isEn ? "Hari Patel" : isHi ? "हरि पटेल (Hari Patel)" : "હરિ પટેલ (Hari Patel)"}
@@ -278,7 +278,7 @@ export default function Footer() {
             </div>
 
             {/* Official Release Badge */}
-            <div className="shrink-0 flex flex-col items-center md:items-end w-full md:w-auto pt-2 md:pt-0 border-t md:border-t-0 border-slate-800/60">
+            <div className="shrink-0 flex flex-col items-center lg:items-end w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-800/60">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
                 <span className="text-xs font-mono font-bold text-slate-200">

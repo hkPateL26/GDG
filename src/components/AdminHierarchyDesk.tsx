@@ -1368,9 +1368,9 @@ export default function AdminHierarchyDesk({
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-              {/* Desktop Table View (Max Height Capped for Clean Viewport) */}
-              <div className="hidden md:block max-h-[580px] overflow-y-auto">
-                <table className="w-full text-left text-xs table-fixed">
+              {/* Desktop Table View (Max Height Capped for Clean Viewport, Smooth Horizontal Pan on Tablet) */}
+              <div className="hidden md:block max-h-[580px] overflow-y-auto overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left text-xs table-fixed">
                   <colgroup>
                     <col className="w-[20%]" />
                     <col className="w-[23%]" />

@@ -165,13 +165,13 @@ export default function EligibilityLedgerView({
       </div>
 
       {/* ── Tabs ── */}
-      <div className="grid grid-cols-3 gap-2 bg-slate-100 p-1.5 rounded-2xl">
+      <div className="grid grid-cols-3 gap-1.5 sm:gap-2 bg-slate-100 p-1.5 rounded-2xl">
         {tabs.map((t) => (
           <button
             key={t.id}
             type="button"
             onClick={() => { setActiveTab(t.id); setExpandedId(null); }}
-            className={`py-2 px-2 rounded-xl text-xs font-extrabold transition cursor-pointer ${
+            className={`py-2 px-1 sm:px-2 rounded-xl text-[11px] sm:text-xs font-extrabold transition cursor-pointer text-center truncate ${
               activeTab === t.id
                 ? "bg-white shadow-sm text-slate-900 ring-1 ring-slate-200"
                 : "text-slate-500 hover:text-slate-700"
@@ -370,14 +370,14 @@ export default function EligibilityLedgerView({
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+            <div className="grid grid-cols-3 gap-1.5 sm:gap-2 pt-2 border-t border-slate-100">
               {[
                 { checked: hasLand, set: setHasLand, label: "🌾 7/12 જમીન" },
                 { checked: hasBPL, set: setHasBPL, label: "📋 BPL કાર્ડ" },
                 { checked: hasGirlChild, set: setHasGirlChild, label: "👧 10વ.↓ દીકરી" },
               ].map(({ checked, set, label }, i) => (
                 <label key={i}
-                  className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border-2 cursor-pointer transition text-center ${
+                  className={`flex flex-col items-center justify-center gap-1 p-1.5 sm:p-2.5 rounded-xl border-2 cursor-pointer transition text-center ${
                     checked ? "border-orange-400 bg-orange-50" : "border-slate-100 bg-slate-50 hover:border-slate-200"
                   }`}>
                   <input type="checkbox" checked={checked} onChange={(e) => set(e.target.checked)} className="sr-only" />

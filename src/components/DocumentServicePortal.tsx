@@ -3478,7 +3478,7 @@ export default function DocumentServicePortal({
                 {service.id === "ration" && (
                   <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-amber-900 block">🛒 રેશનકાર્ડ કચેરી વિગત:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-amber-800 block">કેટેગરી</span>
                         <input
@@ -3504,7 +3504,7 @@ export default function DocumentServicePortal({
                 {service.id === "income" && (
                   <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-blue-900 block">📜 આવક દાખલા પરિશિષ્ટ-૧:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-blue-800 block">કુટુંબની વાર્ષિક આવક (₹)</span>
                         <input
@@ -3530,7 +3530,7 @@ export default function DocumentServicePortal({
                 {service.id === "caste" && (
                   <div className="bg-purple-50/60 border border-purple-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-purple-900 block">⚖️ જાતિ / નોન-ક્રીમીલેયર વિગતો:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-purple-800 block">પેટા જાતિ (Sub-Caste)</span>
                         <input
@@ -3556,7 +3556,7 @@ export default function DocumentServicePortal({
                 {service.id === "land_records" && (
                   <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-emerald-900 block">🌾 જમીન મહેસૂલી વિગતો (e-Dhara RoR 7/12):</span>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <span className="text-[10px] text-emerald-800 block">ખાતા નંબર *</span>
                         <input
@@ -3591,7 +3591,7 @@ export default function DocumentServicePortal({
                 {service.id === "birth_cert" && (
                   <div className="bg-sky-50/60 border border-sky-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-sky-900 block">👶 જન્મ નોંધણી વિગત (Civil Registration System):</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-sky-800 block">બાળકનું નામ (Child Name)</span>
                         <input
@@ -3617,7 +3617,7 @@ export default function DocumentServicePortal({
                 {service.id === "death_cert" && (
                   <div className="bg-slate-100 border border-slate-300 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-slate-800 block">🕊️ મરણ નોંધણી વિગત:</span>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <span className="text-[10px] text-slate-600 block">મૃતકનું પૂરું નામ *</span>
                         <input
@@ -3652,7 +3652,7 @@ export default function DocumentServicePortal({
                 {service.id === "ews_cert" && (
                   <div className="bg-indigo-50/60 border border-indigo-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-indigo-900 block">🏛️ EWS મિલકત માપદંડ વિગતો:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-indigo-800 block">મકાન કાર્પેટ એરિયા</span>
                         <input
@@ -3675,7 +3675,7 @@ export default function DocumentServicePortal({
                 {service.id === "domicile_cert" && (
                   <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-amber-900 block">🏠 ડોમિસાઇલ વસવાટ ખરાઈ:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-amber-800 block">ગુજરાતમાં સતત વસવાટ વર્ષો</span>
                         <input
@@ -3698,7 +3698,7 @@ export default function DocumentServicePortal({
                 {service.id === "senior_citizen" && (
                   <div className="bg-rose-50/60 border border-rose-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-rose-900 block">👴 વરિષ્ઠ નાગરિક આરોગ્ય & ઇમરજન્સી:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-rose-800 block">બ્લડ ગ્રુપ (Blood Group)</span>
                         <select
@@ -3732,7 +3732,7 @@ export default function DocumentServicePortal({
                 {service.id === "driving_licence" && (
                   <div className="bg-teal-50/60 border border-teal-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-teal-900 block">🚗 વાહન વર્ગ & RTO વિગત (SARATHI):</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-teal-800 block">વાહન વર્ગ (Vehicle Class)</span>
                         <select
@@ -3762,7 +3762,7 @@ export default function DocumentServicePortal({
                 {service.id === "marriage_cert" && (
                   <div className="bg-pink-50/60 border border-pink-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-pink-900 block">💍 લગ્ન નોંધણી વિગતો:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-pink-800 block">લગ્ન તારીખ *</span>
                         <input
