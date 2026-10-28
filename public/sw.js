@@ -81,3 +81,24 @@ self.addEventListener('fetch', (event) => {
       })
   );
 });
+
+// Official Government Notification Shutter / Banner Click Handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = (event.notification.data && event.notification.data.url) || '/track';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url && client.url.includes('/track') && 'focus' in client) {
+          if ('navigate' in client && urlToOpen) {
+            client.navigate(urlToOpen);
+          }
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});

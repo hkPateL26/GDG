@@ -42,6 +42,7 @@ import {
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import AdminPortalCmsManager from "@/components/AdminPortalCmsManager";
 import SecretariatApexBiDashboard from "@/components/SecretariatApexBiDashboard";
+import { triggerOfficialGovNotification } from "@/utils/governmentNotificationService";
 
 const GUJARATI_NAME_MAP: Record<string, string> = {
   "rameshbhai kantilal patel": "રમેશભાઈ કાંતિલાલ પટેલ",
@@ -760,6 +761,17 @@ export default function AdminHierarchyDesk({
         "તાલુકા મામલતદાર ડિજિટલ સહી (e-Sign) સફળ! સત્તાવાર પ્રમાણપત્ર જનરેટ થઈ ગયું છે."
       );
 
+      // Trigger official mobile push and status bar notification
+      triggerOfficialGovNotification({
+        appId: approvedApp.id,
+        serviceNameGu: approvedApp.schemeNameGu || "સરકારી સેવા",
+        status: "approved",
+        title: "🏛️ ગુજરાત સરકાર • ઈ-નગર પોર્ટલ",
+        headerGu: "અરજી મંજૂર (Mamlatdar e-Sign પૂર્ણ)",
+        message: `અભિનંદન! તમારી ${approvedApp.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${approvedApp.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
+        officerName: currentOfficer.name,
+      });
+
       // Automatically open the official certificate modal for instant viewing & printing!
       setCertificateModalApp(approvedApp);
     } catch {
@@ -802,6 +814,46 @@ export default function AdminHierarchyDesk({
 
       setApplications((prev) => prev.map((a) => (a.id === app.id ? rejectedApp : a)));
       setSelectedApp(rejectedApp);
+
+      // Sync rejection to localStorage
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("nagrik_user_applications");
+          if (raw) {
+            const localApps: CitizenApplication[] = JSON.parse(raw);
+            const updated = localApps.map((a) =>
+              a.id === rejectedApp.id ? rejectedApp : a
+            );
+            localStorage.setItem("nagrik_user_applications", JSON.stringify(updated));
+          }
+          const savedSessionStr = localStorage.getItem("nagrik_citizen_session");
+          if (savedSessionStr) {
+            const session = JSON.parse(savedSessionStr);
+            if (session.activeApplications) {
+              session.activeApplications = session.activeApplications.map((a: { id?: string }) =>
+                a.id === rejectedApp.id ? rejectedApp : a
+              );
+              localStorage.setItem("nagrik_citizen_session", JSON.stringify(session));
+            }
+          }
+          window.dispatchEvent(new Event("storage"));
+        } catch (storageErr) {
+          console.warn("Storage sync error:", storageErr);
+        }
+      }
+
+      // Trigger official rejection / correction push notification
+      triggerOfficialGovNotification({
+        appId: rejectedApp.id,
+        serviceNameGu: rejectedApp.schemeNameGu || "સરકારી સેવા",
+        status: "rejected",
+        title: "⚠️ ગુજરાત સરકાર • કચેરી ચકાસણી સૂચના",
+        headerGu: "પૂરક પુરાવા / સુધારણા જરૂરી",
+        message: `તમારી ${rejectedApp.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${rejectedApp.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${translatedRejection.gujaratiExplanation}. વિગતો ચકાસી સુધારો કરવા ક્લિક કરો.`,
+        remarksGu: translatedRejection.gujaratiExplanation,
+        officerName: currentOfficer.name,
+      });
+
       setActionSuccessMsg(
         "અરજીમાં સુધારણા માટે નાગરિકને AI ગુજરાતી સૂચના સફળતાપૂર્વક મોકલાઈ ગઈ છે."
       );

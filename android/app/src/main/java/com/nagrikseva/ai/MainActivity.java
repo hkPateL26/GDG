@@ -19,12 +19,25 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.FrameLayout;
 import android.widget.TextView;
+import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.os.Build;
+import androidx.core.app.ActivityCompat;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
+import androidx.core.content.ContextCompat;
 import com.getcapacitor.BridgeActivity;
 import com.getcapacitor.BridgeWebChromeClient;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MainActivity extends BridgeActivity {
+
+    public static final String NOTIF_CHANNEL_ID = "nagrik_gov_alerts";
 
     private Dialog activePaymentDialog = null;
 
@@ -33,6 +46,18 @@ public class MainActivity extends BridgeActivity {
         // Register native UPI payment and custom scheme handler plugin before Bridge initialization
         registerPlugin(PaymentAndSchemePlugin.class);
         super.onCreate(savedInstanceState);
+
+        createNotificationChannel();
+
+        // Request notification permission on Android 13+ (API 33+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    != PackageManager.PERMISSION_GRANTED) {
+                ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.POST_NOTIFICATIONS}, 101);
+            }
+        }
+
+        handleNotificationIntent(getIntent());
 
         try {
             final WebView webView = getBridge().getWebView();
@@ -61,6 +86,16 @@ public class MainActivity extends BridgeActivity {
                                         activePaymentDialog.dismiss();
                                     }
                                 } catch (Exception ignored) {}
+                            }
+                        });
+                    }
+
+                    @JavascriptInterface
+                    public void triggerGovNotification(final String title, final String message, final String appId, final String status) {
+                        runOnUiThread(new Runnable() {
+                            @Override
+                            public void run() {
+                                postGovNotification(title, message, appId, status);
                             }
                         });
                     }
@@ -376,5 +411,97 @@ public class MainActivity extends BridgeActivity {
                 } catch (Exception ignored) {}
             }
         });
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        super.onNewIntent(intent);
+        handleNotificationIntent(intent);
+    }
+
+    private void handleNotificationIntent(Intent intent) {
+        if (intent != null && intent.hasExtra("navigate_to")) {
+            final String path = intent.getStringExtra("navigate_to");
+            if (path != null && !path.isEmpty()) {
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            WebView webView = getBridge().getWebView();
+                            if (webView != null) {
+                                webView.evaluateJavascript("window.location.href = '" + path + "';", null);
+                            }
+                        } catch (Exception ignored) {}
+                    }
+                });
+            }
+        }
+    }
+
+    private void createNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel channel = new NotificationChannel(
+                    NOTIF_CHANNEL_ID,
+                    "ગુજરાત સરકાર સત્તાવાર સૂચનાઓ (Gov Notifications)",
+                    NotificationManager.IMPORTANCE_HIGH
+            );
+            channel.setDescription("અરજી મંજૂરી, e-Sign પ્રમાણપત્ર અને કચેરી ચકાસણી સ્ટેટસ");
+            channel.enableLights(true);
+            channel.setLightColor(0xFFFF9900);
+            channel.enableVibration(true);
+            channel.setVibrationPattern(new long[]{0, 300, 150, 300});
+            channel.setShowBadge(true);
+
+            NotificationManager manager = getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    public void postGovNotification(String title, String message, String appId, String status) {
+        try {
+            createNotificationChannel();
+
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setAction(Intent.ACTION_VIEW);
+            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            intent.putExtra("navigate_to", "/track?id=" + (appId != null ? appId : ""));
+
+            int flags = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                flags |= PendingIntent.FLAG_IMMUTABLE;
+            }
+
+            PendingIntent pendingIntent = PendingIntent.getActivity(
+                    this,
+                    (int) System.currentTimeMillis(),
+                    intent,
+                    flags
+            );
+
+            int iconRes = getApplicationInfo().icon;
+            if (iconRes == 0) {
+                iconRes = android.R.drawable.ic_dialog_info;
+            }
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(this, NOTIF_CHANNEL_ID)
+                    .setSmallIcon(iconRes)
+                    .setContentTitle(title)
+                    .setContentText(message)
+                    .setStyle(new NotificationCompat.BigTextStyle().bigText(message))
+                    .setPriority(NotificationCompat.PRIORITY_HIGH)
+                    .setCategory(NotificationCompat.CATEGORY_STATUS)
+                    .setAutoCancel(true)
+                    .setContentIntent(pendingIntent)
+                    .setColor(0xFFFF6600)
+                    .setDefaults(NotificationCompat.DEFAULT_ALL);
+
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(this);
+            int notifId = (int) (System.currentTimeMillis() % 100000);
+            notificationManager.notify(notifId, builder.build());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 }

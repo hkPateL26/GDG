@@ -2,6 +2,10 @@
 
 import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
+import {
+  requestWebNotificationPermission,
+  scanAndNotifyCitizenApplicationTransitions,
+} from "@/utils/governmentNotificationService";
 
 export default function AndroidNativeBridge() {
   const router = useRouter();
@@ -21,6 +25,24 @@ export default function AndroidNativeBridge() {
       document.body.classList.add("is-native-android", "is-capacitor");
     }
 
+    // 1. Request official notification permission gracefully
+    requestWebNotificationPermission();
+
+    // 2. Scan for citizen application status changes (approvals, e-Sign, rejections)
+    scanAndNotifyCitizenApplicationTransitions();
+
+    const intervalTimer = setInterval(() => {
+      scanAndNotifyCitizenApplicationTransitions();
+    }, 15000);
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        scanAndNotifyCitizenApplicationTransitions();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", onVisibilityChange);
+
     let cleanupBackButton: (() => void) | undefined;
 
     async function initCapacitor() {
@@ -28,7 +50,7 @@ export default function AndroidNativeBridge() {
         const { Capacitor } = await import("@capacitor/core");
         if (!Capacitor.isNativePlatform() && !ua.includes("NagrikSevaNativeAndroid")) return;
 
-        // 1. Status Bar styling
+        // Status Bar styling
         try {
           const { StatusBar, Style } = await import("@capacitor/status-bar");
           await StatusBar.setStyle({ style: Style.Dark });
@@ -37,7 +59,7 @@ export default function AndroidNativeBridge() {
           console.warn("StatusBar plugin error:", e);
         }
 
-        // 2. Hide Splash Screen after hydration
+        // Hide Splash Screen after hydration
         try {
           const { SplashScreen } = await import("@capacitor/splash-screen");
           await SplashScreen.hide();
@@ -45,7 +67,7 @@ export default function AndroidNativeBridge() {
           console.warn("SplashScreen plugin error:", e);
         }
 
-        // 3. Hardware Back Button Handling
+        // Hardware Back Button Handling
         try {
           const { App: CapApp } = await import("@capacitor/app");
           const listener = await CapApp.addListener("backButton", ({ canGoBack }) => {
@@ -87,6 +109,9 @@ export default function AndroidNativeBridge() {
     initCapacitor();
 
     return () => {
+      clearInterval(intervalTimer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.removeEventListener("focus", onVisibilityChange);
       if (cleanupBackButton) cleanupBackButton();
     };
   }, [pathname, router]);

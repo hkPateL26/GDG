@@ -14,6 +14,7 @@ import GlobalModalScrollLocker from "@/components/GlobalModalScrollLocker";
 import AppSplashScreen from "@/components/AppSplashScreen";
 import OfficialGovernmentUpdateModal from "@/components/OfficialGovernmentUpdateModal";
 import NetworkStatusBanner from "@/components/NetworkStatusBanner";
+import OfficialGovNotificationBanner from "@/components/OfficialGovNotificationBanner";
 import Footer from "@/components/Footer";
 import { LanguageProvider } from "@/context/LanguageContext";
 
@@ -54,6 +55,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <ScrollRestoration />
           <ServiceWorkerRegister />
           <NetworkStatusBanner />
+          <OfficialGovNotificationBanner />
           <HapticFeedbackProvider />
           <GlobalModalScrollLocker />
           <AndroidNativeBridge />

@@ -1137,6 +1137,120 @@ export default function DocumentServicePortal({
     }
   };
 
+  // ── Strict Progressive Step-by-Step Validation & Security Gate ──
+  const validateStepData = (stepNumber: 1 | 2 | 3): { valid: boolean; reason: string } => {
+    if (stepNumber === 1) {
+      if (!service || !service.id) {
+        return { valid: false, reason: "કૃપા કરીને પહેલાં કોઈ એક સત્તાવાર સરકારી સેવા પસંદ કરો." };
+      }
+      return { valid: true, reason: "" };
+    }
+
+    if (stepNumber === 2) {
+      const hasName = Boolean(
+        (applicantName && applicantName.trim().length > 0) ||
+        (applicantNameGu && applicantNameGu.trim().length > 0)
+      );
+      if (!hasName) {
+        return {
+          valid: false,
+          reason: "કૃપા કરીને પહેલાં પગલું ૨ માં અરજદારનું પૂરું નામ (અંગ્રેજી અથવા ગુજરાતી) દાખલ કરો.",
+        };
+      }
+      return { valid: true, reason: "" };
+    }
+
+    if (stepNumber === 3) {
+      const s2 = validateStepData(2);
+      if (!s2.valid) return s2;
+
+      const hasInvalid = requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid");
+      if (hasInvalid) {
+        return {
+          valid: false,
+          reason: "ધ્યાન આપો: એક અથવા વધુ દસ્તાવેજ અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.",
+        };
+      }
+      return { valid: true, reason: "" };
+    }
+
+    return { valid: true, reason: "" };
+  };
+
+  const canNavigateToStep = (targetStep: 1 | 2 | 3 | 4): { allowed: boolean; reason: string } => {
+    if (targetStep === 1) {
+      return { allowed: true, reason: "" };
+    }
+
+    if (targetStep === 2) {
+      const s1 = validateStepData(1);
+      if (!s1.valid) return { allowed: false, reason: s1.reason };
+      return { allowed: true, reason: "" };
+    }
+
+    if (targetStep === 3) {
+      const s1 = validateStepData(1);
+      if (!s1.valid) return { allowed: false, reason: s1.reason };
+      const s2 = validateStepData(2);
+      if (!s2.valid) {
+        return {
+          allowed: false,
+          reason: "પગલું ૩ (જરૂરી પુરાવા) પર જવા માટે પહેલાં અરજદારનું નામ અને વિગતો ભરો (પગલું ૨ પૂર્ણ કરો).",
+        };
+      }
+      return { allowed: true, reason: "" };
+    }
+
+    if (targetStep === 4) {
+      // Strictly prevent jumping straight to Step 4 from Step 1 or 2
+      const s1 = validateStepData(1);
+      if (!s1.valid) return { allowed: false, reason: s1.reason };
+
+      const s2 = validateStepData(2);
+      if (!s2.valid) {
+        return {
+          allowed: false,
+          reason: "પગલું ૪ (ચકાસણી & ફી) પર સીધા જઈ શકાતું નથી. કૃપા કરીને પહેલાં પગલું ૨ માં અરજદારની વિગતો ભરો.",
+        };
+      }
+
+      if (formStep === 1) {
+        return {
+          allowed: false,
+          reason: "પગલું ૪ (ચકાસણી & ફી) પર સીધા જઈ શકાતું નથી. કૃપા કરીને ક્રમશઃ પગલું ૨ અને ૩ પૂર્ણ કરો.",
+        };
+      }
+
+      const s3 = validateStepData(3);
+      if (!s3.valid) return { allowed: false, reason: s3.reason };
+
+      return { allowed: true, reason: "" };
+    }
+
+    return { allowed: true, reason: "" };
+  };
+
+  const handleStepClick = (targetStep: 1 | 2 | 3 | 4) => {
+    if (targetStep === formStep) return;
+
+    // Moving backward is always permitted so citizens can review/edit anytime
+    if (targetStep < formStep) {
+      setFormStep(targetStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // Moving forward requires step prerequisites to be fulfilled
+    const check = canNavigateToStep(targetStep);
+    if (!check.allowed) {
+      alert(check.reason);
+      return;
+    }
+
+    setFormStep(targetStep);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   // Step 1: Pre-Submission Validation & Open Government Cyber Treasury Payment Gateway
   const handleOpenPaymentGateway = (e: React.FormEvent) => {
     e.preventDefault();
@@ -2417,20 +2531,23 @@ export default function DocumentServicePortal({
             ].map((s) => {
               const isActive = formStep === s.step;
               const isCompleted = formStep > s.step;
+              const navCheck = canNavigateToStep(s.step as 1 | 2 | 3 | 4);
+              const isLocked = !isActive && !isCompleted && !navCheck.allowed;
+
               return (
                 <button
                   key={s.step}
                   type="button"
-                  onClick={() => {
-                    setFormStep(s.step as 1 | 2 | 3 | 4);
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  }}
-                  className={`p-2.5 sm:p-3 rounded-xl border text-left transition flex items-center gap-2 sm:gap-2.5 cursor-pointer ${
+                  onClick={() => handleStepClick(s.step as 1 | 2 | 3 | 4)}
+                  title={isLocked ? navCheck.reason : s.title}
+                  className={`p-2.5 sm:p-3 rounded-xl border text-left transition flex items-center gap-2 sm:gap-2.5 ${
                     isActive
-                      ? "bg-orange-50 border-orange-500 ring-2 ring-orange-200 shadow-xs"
+                      ? "bg-orange-50 border-orange-500 ring-2 ring-orange-200 shadow-xs cursor-default"
                       : isCompleted
-                      ? "bg-emerald-50/70 border-emerald-300 text-slate-800"
-                      : "bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100"
+                      ? "bg-emerald-50/70 border-emerald-300 text-slate-800 hover:bg-emerald-50 cursor-pointer"
+                      : isLocked
+                      ? "bg-slate-100/90 border-slate-200 text-slate-400 opacity-75 cursor-not-allowed hover:bg-slate-100"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer"
                   }`}
                 >
                   <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
@@ -2438,16 +2555,26 @@ export default function DocumentServicePortal({
                       ? "bg-orange-600 text-white shadow-sm"
                       : isCompleted
                       ? "bg-emerald-600 text-white"
+                      : isLocked
+                      ? "bg-slate-300 text-slate-500"
                       : "bg-slate-200 text-slate-600"
                   }`}>
-                    {isCompleted ? "✓" : s.num}
+                    {isCompleted ? "✓" : isLocked ? <Lock size={12} /> : s.num}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <span className={`block text-xs font-black truncate ${isActive ? "text-orange-950 font-black" : isCompleted ? "text-emerald-950 font-bold" : "text-slate-700 font-semibold"}`}>
+                    <span className={`block text-xs font-black truncate ${
+                      isActive
+                        ? "text-orange-950 font-black"
+                        : isCompleted
+                        ? "text-emerald-950 font-bold"
+                        : isLocked
+                        ? "text-slate-400 font-medium"
+                        : "text-slate-700 font-semibold"
+                    }`}>
                       {s.title}
                     </span>
                     <span className="block text-[10px] text-slate-500 truncate">
-                      {s.sub}
+                      {isLocked ? "🔒 અગાઉનું પગલું ભરો" : s.sub}
                     </span>
                   </div>
                 </button>
@@ -3074,10 +3201,7 @@ export default function DocumentServicePortal({
 
           <button
             type="button"
-            onClick={() => {
-              setFormStep(2);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
+            onClick={() => handleStepClick(2)}
             className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>આગળ વધો: અરજદારની વિગતો ભરો (પગલું ૨)</span>
@@ -3767,8 +3891,7 @@ export default function DocumentServicePortal({
                     alert("કૃપા કરીને અરજદારનું પૂરું નામ દાખલ કરો.");
                     return;
                   }
-                  setFormStep(3);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
+                  handleStepClick(3);
                 }}
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
               >
@@ -4300,8 +4423,7 @@ export default function DocumentServicePortal({
                           alert("ધ્યાન આપો: એક અથવા વધુ દસ્તાવેજ અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.");
                           return;
                         }
-                        setFormStep(4);
-                        window.scrollTo({ top: 0, behavior: "smooth" });
+                        handleStepClick(4);
                       }}
                       className="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
                     >
@@ -4434,10 +4556,7 @@ export default function DocumentServicePortal({
             <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
               <button
                 type="button"
-                onClick={() => {
-                  setFormStep(3);
-                  window.scrollTo({ top: 0, behavior: "smooth" });
-                }}
+                onClick={() => handleStepClick(3)}
                 className="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <ArrowLeft size={16} />
