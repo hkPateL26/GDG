@@ -33,11 +33,13 @@ export default function MobileBottomNav() {
     const timer = setTimeout(syncState, 0);
     window.addEventListener("storage", syncState);
     window.addEventListener("nagrik_auth_change", syncState);
+    window.addEventListener("nagrik_route_change", syncState);
     window.addEventListener("popstate", syncState);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("storage", syncState);
       window.removeEventListener("nagrik_auth_change", syncState);
+      window.removeEventListener("nagrik_route_change", syncState);
       window.removeEventListener("popstate", syncState);
     };
   }, [syncState, pathname]);
@@ -45,7 +47,7 @@ export default function MobileBottomNav() {
   const isEn = currentLang === "en";
   const isHi = currentLang === "hi";
 
-    const navItems = [
+  const navItems = [
     {
       key: "home",
       href: "/",
@@ -73,7 +75,7 @@ export default function MobileBottomNav() {
     },
     {
       key: "login",
-      href: "/portal",
+      href: officerSession && !citizenSession ? "/portal?mode=officer" : citizenSession ? "/portal?mode=citizen" : "/portal",
       label: citizenSession
         ? isEn ? "Vault" : isHi ? "वॉल्ट" : "વોલ્ટ"
         : officerSession
@@ -89,7 +91,16 @@ export default function MobileBottomNav() {
     if (key === "schemes") return pathname.startsWith("/schemes");
     if (key === "chat") return pathname.startsWith("/chat");
     if (key === "locator") return pathname.startsWith("/locator");
-    if (key === "login") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
+    if (key === "login") {
+      return (
+        pathname.startsWith("/portal") ||
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/track") ||
+        pathname.startsWith("/documents") ||
+        pathname.startsWith("/passbook") ||
+        pathname.startsWith("/eligibility")
+      );
+    }
     return false;
   };
 
@@ -117,6 +128,8 @@ export default function MobileBottomNav() {
               <div key={item.key} className="flex justify-center">
                 <Link
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-label={`${item.label} ${isActive ? "(Active)" : ""}`}
                   onClick={() => {
                     triggerHaptic("medium");
                   }}
@@ -149,11 +162,13 @@ export default function MobileBottomNav() {
             <div key={item.key} className="flex justify-center min-w-0">
               <Link
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={`${item.label} ${isActive ? "(Active)" : ""}`}
                 onClick={() => {
                   triggerHaptic("selection");
                 }}
                 className={`w-full flex flex-col items-center justify-center py-0.5 rounded-2xl transition-all duration-150 active:scale-92 cursor-pointer relative text-center min-w-0 ${
-                  isActive ? "text-orange-700" : "text-slate-500 hover:text-slate-800"
+                  isActive ? "text-orange-700" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {/* WhatsApp / Material 3 Active Pill Indicator */}
@@ -161,7 +176,7 @@ export default function MobileBottomNav() {
                   className={`relative flex items-center justify-center w-15 h-8.5 rounded-full transition-all duration-200 ${
                     isActive
                       ? "bg-orange-100/95 text-orange-600 shadow-2xs"
-                      : "bg-transparent text-slate-500"
+                      : "bg-transparent text-slate-600"
                   }`}
                 >
                   <IconComponent
@@ -178,7 +193,7 @@ export default function MobileBottomNav() {
                 </div>
                 <span
                   className={`text-xs leading-tight tracking-tight mt-1 transition-all whitespace-nowrap truncate max-w-full px-0.5 ${
-                    isActive ? "font-black text-orange-700" : "font-semibold text-slate-600"
+                    isActive ? "font-black text-orange-700" : "font-bold text-slate-700"
                   }`}
                 >
                   {item.label}

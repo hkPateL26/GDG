@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 import { CitizenLedgerProfile } from "@/lib/large-datasets";
 import CitizenLoginShield from "@/components/CitizenLoginShield";
 import OfficerLoginShield, { OfficerProfile } from "@/components/OfficerLoginShield";
@@ -27,7 +28,21 @@ export default function UnifiedCitizenPortal({
   initialMode = "citizen",
   initialPaymentOpen = false,
 }: UnifiedCitizenPortalProps) {
-  const [activeTab, setActiveTab] = useState<PortalTabType>(initialTab);
+  const pathname = usePathname();
+  const [activeTab, setActiveTab] = useState<PortalTabType>(() => {
+    if (typeof window !== "undefined") {
+      const path = window.location.pathname.replace(/^\//, "");
+      if (path === "track" || path === "documents" || path === "eligibility" || path === "passbook") {
+        return path as PortalTabType;
+      }
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get("tab");
+      if (tabParam === "track" || tabParam === "documents" || tabParam === "eligibility" || tabParam === "passbook") {
+        return tabParam as PortalTabType;
+      }
+    }
+    return initialTab;
+  });
   const [authMode, setAuthMode] = useState<"citizen" | "officer">(initialMode);
   const [citizenSession, setCitizenSession] = useState<CitizenLedgerProfile | null>(null);
   const [officerSession, setOfficerSession] = useState<OfficerProfile | null>(null);
@@ -37,12 +52,42 @@ export default function UnifiedCitizenPortal({
   // Freeze background scrolling when locator modal is open
   useBodyScrollLock(isLocatorModalOpen);
 
+  // Close locator modal on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && isLocatorModalOpen) {
+        setIsLocatorModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isLocatorModalOpen]);
+
+  // Synchronize activeTab and authMode with Next.js pathname changes
+  useEffect(() => {
+    if (pathname === "/track" || pathname === "/documents" || pathname === "/eligibility" || pathname === "/passbook") {
+      const tab = pathname.replace(/^\//, "") as PortalTabType;
+      setActiveTab(tab);
+    } else if (pathname === "/admin") {
+      setAuthMode("officer");
+    } else if (pathname === "/portal") {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const tabParam = params.get("tab");
+        if (tabParam === "track" || tabParam === "documents" || tabParam === "eligibility" || tabParam === "passbook") {
+          setActiveTab(tabParam as PortalTabType);
+        }
+      }
+    }
+  }, [pathname]);
+
   // Restore and sync session from storage
   useEffect(() => {
     const syncSession = () => {
       if (typeof window !== "undefined") {
         const urlParams = new URLSearchParams(window.location.search);
         const modeParam = urlParams.get("mode");
+        const tabParam = urlParams.get("tab");
 
         // 1. Citizen Session (localStorage)
         const savedCitizen = localStorage.getItem("nagrik_citizen_session");
@@ -89,7 +134,7 @@ export default function UnifiedCitizenPortal({
         setOfficerSession(parsedOfficer);
 
         // Strict URL Precedence & Deterministic Role Restoration
-        if (modeParam === "officer" || modeParam === "admin") {
+        if (modeParam === "officer" || modeParam === "admin" || window.location.pathname === "/admin") {
           setAuthMode("officer");
         } else if (modeParam === "citizen") {
           setAuthMode("citizen");
@@ -101,6 +146,10 @@ export default function UnifiedCitizenPortal({
           setAuthMode("citizen");
         }
 
+        if (tabParam === "track" || tabParam === "documents" || tabParam === "eligibility" || tabParam === "passbook") {
+          setActiveTab(tabParam as PortalTabType);
+        }
+
         setIsRestoring(false);
       }
     };
@@ -108,23 +157,34 @@ export default function UnifiedCitizenPortal({
     syncSession();
     window.addEventListener("storage", syncSession);
     window.addEventListener("nagrik_auth_change", syncSession);
+    window.addEventListener("nagrik_route_change", syncSession);
     return () => {
       window.removeEventListener("storage", syncSession);
       window.removeEventListener("nagrik_auth_change", syncSession);
+      window.removeEventListener("nagrik_route_change", syncSession);
     };
   }, [initialMode]);
 
-  // Listen to browser Back/Forward navigation (BUG-012)
+  // Listen to browser Back/Forward navigation
   useEffect(() => {
     const handlePopState = () => {
       if (typeof window !== "undefined") {
         const path = window.location.pathname.replace(/^\//, "");
-        if (path === "track" || path === "documents" || path === "eligibility") {
-          setActiveTab(path as PortalTabType);
-        }
         const urlParams = new URLSearchParams(window.location.search);
+
+        if (path === "track" || path === "documents" || path === "eligibility" || path === "passbook") {
+          setActiveTab(path as PortalTabType);
+        } else if (path === "portal") {
+          const tabParam = urlParams.get("tab");
+          if (tabParam === "track" || tabParam === "documents" || tabParam === "eligibility" || tabParam === "passbook") {
+            setActiveTab(tabParam as PortalTabType);
+          } else {
+            setActiveTab(initialTab);
+          }
+        }
+
         const modeParam = urlParams.get("mode");
-        if (modeParam === "officer" || modeParam === "admin") {
+        if (path === "admin" || modeParam === "officer" || modeParam === "admin") {
           setAuthMode("officer");
         } else if (modeParam === "citizen") {
           setAuthMode("citizen");
@@ -133,12 +193,38 @@ export default function UnifiedCitizenPortal({
     };
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
-  }, []);
+  }, [initialTab]);
 
   const handleTabChange = (tab: PortalTabType) => {
+    if (tab === activeTab) return;
     setActiveTab(tab);
     if (typeof window !== "undefined") {
-      window.history.pushState({ tab }, "", "/" + tab);
+      try {
+        const url = new URL(window.location.href);
+        url.pathname = "/" + tab;
+        url.searchParams.delete("tab");
+
+        // Never leak track-specific IDs or secrets into unrelated tabs
+        if (tab !== "track") {
+          url.searchParams.delete("id");
+          url.searchParams.delete("appId");
+          url.searchParams.delete("targetId");
+          url.searchParams.delete("secret");
+          url.searchParams.delete("trackingSecret");
+        }
+
+        // Never leak document-specific form parameters into unrelated tabs
+        if (tab !== "documents") {
+          url.searchParams.delete("step");
+          url.searchParams.delete("service");
+          url.searchParams.delete("type");
+        }
+
+        window.history.pushState({ tab }, "", url.pathname + (url.search ? url.search : ""));
+        window.dispatchEvent(new Event("nagrik_route_change"));
+      } catch {
+        window.history.pushState({ tab }, "", "/" + tab);
+      }
     }
   };
 
@@ -149,6 +235,7 @@ export default function UnifiedCitizenPortal({
       url.searchParams.set("mode", mode);
       window.history.replaceState({}, "", url.toString());
       window.dispatchEvent(new Event("nagrik_auth_change"));
+      window.dispatchEvent(new Event("nagrik_route_change"));
     }
   };
 
@@ -306,6 +393,9 @@ export default function UnifiedCitizenPortal({
           {/* AI Kacheri Locator Modal - ONLY appears when user explicitly clicks! */}
           {isLocatorModalOpen && (
             <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="kacheri-locator-modal-title"
               className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-950/70 backdrop-blur-sm animate-in fade-in duration-200"
               onClick={() => setIsLocatorModalOpen(false)}
             >
@@ -317,15 +407,16 @@ export default function UnifiedCitizenPortal({
                 <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-md px-5 py-3 border-b border-slate-200 flex items-center justify-between rounded-t-3xl shadow-2xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2.5 h-2.5 rounded-full bg-orange-600 animate-pulse" />
-                    <h3 className="font-black text-sm text-slate-900">
+                    <h3 id="kacheri-locator-modal-title" className="font-black text-sm text-slate-900">
                       🏛️ AI કચેરી નેવિગેટર (તમારા સ્થાનથી સૌથી નજીકની કચેરી & GPS રસ્તો)
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setIsLocatorModalOpen(false)}
-                    className="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer text-xs font-bold flex items-center gap-1.5"
+                    className="min-h-[44px] min-w-[44px] px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl transition cursor-pointer text-xs font-bold flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-orange-600 focus-visible:outline-hidden"
                     title="બંધ કરો"
+                    aria-label="કચેરી નેવિગેટર બંધ કરો (Close Office Locator)"
                   >
                     <span>બંધ કરો</span>
                     <X size={15} />

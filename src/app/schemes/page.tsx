@@ -27,8 +27,19 @@ interface DbClusterMeta {
 
 export default function SchemesPage() {
   const [schemes, setSchemes] = useState<Scheme[]>([]);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [search, setSearch] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      const cat = new URLSearchParams(window.location.search).get("category");
+      if (cat && (cat === "all" || CATEGORIES.includes(cat))) return cat;
+    }
+    return "all";
+  });
+  const [search, setSearch] = useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return new URLSearchParams(window.location.search).get("search") || "";
+    }
+    return "";
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [clusterMeta, setClusterMeta] = useState<DbClusterMeta>({
@@ -42,13 +53,51 @@ export default function SchemesPage() {
   const handleSearchChange = (val: string) => {
     setSearch(val);
     setPage(1);
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        if (val.trim()) {
+          url.searchParams.set("search", val.trim());
+        } else {
+          url.searchParams.delete("search");
+        }
+        window.history.replaceState({}, "", url.toString());
+      } catch {}
+    }
   };
 
   const handleCategoryChange = (cat: string) => {
     setIsLoading(true);
     setSelectedCategory(cat);
     setPage(1);
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        if (cat !== "all") {
+          url.searchParams.set("category", cat);
+        } else {
+          url.searchParams.delete("category");
+        }
+        window.history.replaceState({}, "", url.toString());
+      } catch {}
+    }
   };
+
+  // Sync state on browser Back/Forward navigation
+  useEffect(() => {
+    const handlePopState = () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const cat = params.get("category");
+        const s = params.get("search");
+        setSelectedCategory(cat && (cat === "all" || CATEGORIES.includes(cat)) ? cat : "all");
+        setSearch(s || "");
+        setPage(1);
+      }
+    };
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, []);
 
   const [refreshKey, setRefreshKey] = useState(0);
 
@@ -125,16 +174,20 @@ export default function SchemesPage() {
             <div className="relative max-w-xl mx-auto">
               <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-base">🔍</span>
               <input
+                id="scheme-search-input"
                 type="text"
                 value={search}
                 onChange={(e) => handleSearchChange(e.target.value)}
                 placeholder="PM Kisan, આયુષ્માન, MYSY, સૂર્ય ઘર, આવાસ..."
+                aria-label="સરકારી યોજનાઓ શોધો (Search government schemes)"
                 className="w-full pl-11 pr-10 py-3 rounded-2xl text-gray-900 text-sm bg-white shadow-xl focus:outline-none focus:ring-3 focus:ring-orange-300 font-medium placeholder-gray-400"
               />
               {search && (
                 <button
+                  type="button"
                   onClick={() => handleSearchChange("")}
-                  className="absolute right-3.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-lg w-6 h-6 flex items-center justify-center rounded-full hover:bg-gray-100"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-lg min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-gray-100 transition cursor-pointer"
+                  aria-label="શોધ સાફ કરો (Clear search)"
                 >
                   ×
                 </button>

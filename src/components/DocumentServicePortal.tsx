@@ -96,6 +96,15 @@ export default function DocumentServicePortal({
         const params = new URLSearchParams(window.location.search);
         const srv = params.get("service");
         if (srv) return srv;
+        const typeParam = params.get("type");
+        if (typeParam) {
+          if (typeParam === "health" || typeParam === "ayushman") return "ayushman";
+          if (typeParam === "ration") return "ration";
+          if (typeParam === "aadhaar") return "aadhaar";
+          if (typeParam === "pan") return "pan";
+          if (typeParam === "driving") return "driving";
+          return typeParam;
+        }
         const saved = sessionStorage.getItem("nagrik_reapply_context");
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -376,9 +385,23 @@ export default function DocumentServicePortal({
   };
 
   useEffect(() => {
-    const handlePopState = () => {
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/payment")) {
-        setShowPaymentModal(false);
+    const handlePopState = (e: PopStateEvent) => {
+      if (typeof window !== "undefined") {
+        if (!window.location.pathname.startsWith("/payment")) {
+          setShowPaymentModal(false);
+        }
+        if (e.state && typeof e.state.docFormStep === "number") {
+          setFormStep(e.state.docFormStep as 1 | 2 | 3 | 4);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          const params = new URLSearchParams(window.location.search);
+          const stepVal = parseInt(params.get("step") || "", 10);
+          if (stepVal >= 1 && stepVal <= 4) {
+            setFormStep(stepVal as 1 | 2 | 3 | 4);
+          } else {
+            setFormStep(1);
+          }
+        }
       }
     };
     window.addEventListener("popstate", handlePopState);
@@ -418,6 +441,22 @@ export default function DocumentServicePortal({
 
   // Freeze background scrolling when any payment or receipt modal is open
   useBodyScrollLock(Boolean(showPaymentModal || submittedApp || showSlipModal));
+
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    const isAnyModalActive = Boolean(showPaymentModal || submittedApp || showSlipModal || previewDocModal);
+    if (!isAnyModalActive) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (previewDocModal) setPreviewDocModal(null);
+        else if (showSlipModal) setShowSlipModal(false);
+        else if (showPaymentModal) handleClosePaymentModal();
+        else if (submittedApp) handleCloseReceiptModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showPaymentModal, submittedApp, showSlipModal, previewDocModal]);
   const [notificationPayload, setNotificationPayload] = useState<{
     sms?: { sentTo: string; message: string; timestamp: string };
     email?: { sentTo: string; subject: string; timestamp: string };
@@ -1237,6 +1276,13 @@ export default function DocumentServicePortal({
     if (targetStep < formStep) {
       setFormStep(targetStep);
       window.scrollTo({ top: 0, behavior: "smooth" });
+      if (typeof window !== "undefined") {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set("step", String(targetStep));
+          window.history.pushState({ docFormStep: targetStep }, "", url.toString());
+        } catch {}
+      }
       return;
     }
 
@@ -1249,6 +1295,13 @@ export default function DocumentServicePortal({
 
     setFormStep(targetStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("step", String(targetStep));
+        window.history.pushState({ docFormStep: targetStep }, "", url.toString());
+      } catch {}
+    }
   };
 
   // Step 1: Pre-Submission Validation & Open Government Cyber Treasury Payment Gateway
@@ -1965,7 +2018,12 @@ export default function DocumentServicePortal({
     <div className="space-y-6">
       {/* ── Official Cyber Treasury Payment Gateway Modal ── */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cyber-treasury-modal-title"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+        >
           <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-4 shadow-2xl border-t-2 sm:border-2 border-orange-500 relative max-h-[92vh] overflow-y-auto animate-bottom-sheet sm:animate-none">
             {/* Mobile Native Pull Handle */}
             <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden shrink-0" />
@@ -1977,7 +2035,7 @@ export default function DocumentServicePortal({
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-xl bg-[#002B49] text-amber-400 flex items-center justify-center shrink-0 shadow-sm border border-amber-400/30"><Landmark size={20} /></div>
                   <div>
-                    <h3 className="font-black text-slate-900 text-sm sm:text-base leading-tight">
+                    <h3 id="cyber-treasury-modal-title" className="font-black text-slate-900 text-sm sm:text-base leading-tight">
                       ગુજરાત સાયબર ટ્રેઝરી પોર્ટલ (Cyber Treasury e-Grass)
                     </h3>
                     <p className="text-[11px] text-slate-500 font-medium">
@@ -1989,7 +2047,8 @@ export default function DocumentServicePortal({
               <button
                 type="button"
                 onClick={handleClosePaymentModal}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="પેમેન્ટ વિન્ડો બંધ કરો (Close payment modal)"
               >
                 ✕
               </button>
@@ -2209,7 +2268,12 @@ export default function DocumentServicePortal({
 
       {/* ── Submission Success & Real-Time Alert Modal ── */}
       {submittedApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="submission-success-modal-title"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-300"
+        >
           <div className={`bg-white rounded-t-[28px] rounded-b-none sm:rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-4 shadow-2xl border-t-2 sm:border-2 relative max-h-[92vh] overflow-y-auto animate-bottom-sheet sm:animate-none ${
             submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
           }`}>
@@ -2219,8 +2283,9 @@ export default function DocumentServicePortal({
             <button
               type="button"
               onClick={handleCloseReceiptModal}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="બંધ કરો"
+              aria-label="રસીદ વિન્ડો બંધ કરો (Close receipt modal)"
             >
               <X size={20} />
             </button>
@@ -2243,7 +2308,7 @@ export default function DocumentServicePortal({
                   ? "સત્તાવાર રોકડ ચલણ જનરેટ થયું • Cash Challan Issued"
                   : "સત્તાવાર અરજી નોંધણી સફળ • Govt Registered"}
               </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+              <h2 id="submission-success-modal-title" className="text-xl sm:text-2xl font-black text-slate-900">
                 {submittedApp.paymentStatus === "pending_challan"
                   ? "ઓફલાઇન રોકડ ચલણ પાવતી સફળતાપૂર્વક જનરેટ થઈ!"
                   : "અરજી સફળતાપૂર્વક સ્વીકારાઈ ગઈ છે!"}
@@ -2417,6 +2482,9 @@ export default function DocumentServicePortal({
       {/* ── Official A4 Government Receipt Slip Modal (PDF Download / Print) ── */}
       {showSlipModal && submittedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર સરકારી પહોંચ રસીદ (Official Government Receipt Slip)"
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowSlipModal(false);
@@ -4615,6 +4683,9 @@ export default function DocumentServicePortal({
       {/* ── Document Preview Popup Modal (PDF or Image) ── */}
       {previewDocModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="doc-preview-modal-title"
           className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 overscroll-contain"
           onClick={() => setPreviewDocModal(null)}
           onWheel={(e) => e.stopPropagation()}
@@ -4629,7 +4700,7 @@ export default function DocumentServicePortal({
               <div className="flex items-center gap-2 truncate">
                 <span className="text-xl">📄</span>
                 <div>
-                  <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate">
+                  <h4 id="doc-preview-modal-title" className="font-black text-xs sm:text-sm text-slate-900 truncate">
                     {previewDocModal.title}
                   </h4>
                   <span className="text-[10px] text-slate-500">
@@ -4640,8 +4711,9 @@ export default function DocumentServicePortal({
               <button
                 type="button"
                 onClick={() => setPreviewDocModal(null)}
-                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer"
+                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                 title="બંધ કરો"
+                aria-label="દસ્તાવેજ દર્શક બંધ કરો (Close document viewer)"
               >
                 <X size={18} />
               </button>

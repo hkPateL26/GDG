@@ -353,7 +353,43 @@ export default function AdminHierarchyDesk({
   );
 
   // Active Desk Tab
-  const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy" | "sachivalay_bi">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy" | "sachivalay_bi">(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab") || params.get("deskTab");
+      if (tab === "queue" || tab === "sla" || tab === "policy" || tab === "sachivalay_bi") {
+        return tab;
+      }
+    }
+    return "queue";
+  });
+
+  const handleDeskTabChange = (tab: "queue" | "sla" | "policy" | "sachivalay_bi") => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", tab);
+        window.history.replaceState({ deskTab: tab }, "", url.toString());
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    const handlePop = () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab") || params.get("deskTab");
+        if (tab === "queue" || tab === "sla" || tab === "policy" || tab === "sachivalay_bi") {
+          setActiveTab(tab);
+        } else {
+          setActiveTab("queue");
+        }
+      }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
 
   // Cascading Filters scoped by Officer Jurisdiction
   const [selectedDistrict, setSelectedDistrict] = useState<string>(() => {
@@ -445,6 +481,28 @@ export default function AdminHierarchyDesk({
 
   // Freeze background scrolling when any administrative modal is open
   useBodyScrollLock(isAnyModalOpen);
+
+  // Keyboard Escape key handler to close administrative modals (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isAnyModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (zoomDocImage) {
+          setZoomDocImage(null);
+        } else if (reviewModalOpen) {
+          setReviewModalOpen(false);
+        } else if (certificateModalApp) {
+          setCertificateModalApp(null);
+        } else if (receiptModalApp) {
+          setReceiptModalApp(null);
+        } else if (noticeModalApp) {
+          setNoticeModalApp(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAnyModalOpen, zoomDocImage, reviewModalOpen, certificateModalApp, receiptModalApp, noticeModalApp]);
 
   // Review Modal Actions State
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
@@ -1034,7 +1092,7 @@ export default function AdminHierarchyDesk({
 
         {/* ── Supervisor Inspection Alert Banner (When a Higher Authority is inspecting a subordinate desk) ── */}
         {currentOfficer.id !== authenticatedOfficer.id && (
-          <div className="bg-amber-500/15 border border-amber-400/60 p-2.5 rounded-xl text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-200 shadow-inner">
+          <div className="bg-amber-500/15 border border-amber-400/60 p-2.5 rounded-xl text-xs text-amber-100 font-medium flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-200 shadow-inner">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-base shrink-0">👁️</span>
               <p className="leading-snug text-[11.5px]">
@@ -1132,7 +1190,7 @@ export default function AdminHierarchyDesk({
       }`}>
         <button
           type="button"
-          onClick={() => setActiveTab("queue")}
+          onClick={() => handleDeskTabChange("queue")}
           className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
             activeTab === "queue"
               ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
@@ -1148,7 +1206,7 @@ export default function AdminHierarchyDesk({
 
         <button
           type="button"
-          onClick={() => setActiveTab("sla")}
+          onClick={() => handleDeskTabChange("sla")}
           className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
             activeTab === "sla"
               ? "bg-rose-600 text-white shadow-sm ring-1 ring-rose-500"
@@ -1162,7 +1220,7 @@ export default function AdminHierarchyDesk({
         {currentOfficer.canModifyPolicy && (
           <button
             type="button"
-            onClick={() => setActiveTab("policy")}
+            onClick={() => handleDeskTabChange("policy")}
             className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
               activeTab === "policy"
                 ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
@@ -1177,7 +1235,7 @@ export default function AdminHierarchyDesk({
         {currentOfficer.role === "state_admin" && (
           <button
             type="button"
-            onClick={() => setActiveTab("sachivalay_bi")}
+            onClick={() => handleDeskTabChange("sachivalay_bi")}
             className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
               activeTab === "sachivalay_bi"
                 ? "bg-indigo-950 text-white shadow-sm ring-1 ring-indigo-800"
@@ -1719,6 +1777,9 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {reviewModalOpen && selectedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="app-review-modal-title"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
           onClick={() => setReviewModalOpen(false)}
         >
@@ -1733,14 +1794,15 @@ export default function AdminHierarchyDesk({
             <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                <h3 className="font-black text-sm sm:text-base text-slate-900 truncate">
+                <h3 id="app-review-modal-title" className="font-black text-sm sm:text-base text-slate-900 truncate">
                   અરજી વિગત & અધિકારી સ્ક્રુટિની ડેસ્ક &bull; {selectedApp.id}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setReviewModalOpen(false)}
-                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="અરજી સ્ક્રુટિની વિન્ડો બંધ કરો (Close review modal)"
               >
                 <X size={18} />
               </button>
@@ -2130,6 +2192,9 @@ export default function AdminHierarchyDesk({
       {/* ── DOCUMENT ZOOM LIGHTBOX MODAL ── */}
       {zoomDocImage && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="zoom-doc-modal-title"
           className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
           onClick={() => setZoomDocImage(null)}
         >
@@ -2138,11 +2203,12 @@ export default function AdminHierarchyDesk({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <h4 className="font-bold text-sm text-slate-900">{zoomDocImage.title}</h4>
+              <h4 id="zoom-doc-modal-title" className="font-bold text-sm text-slate-900">{zoomDocImage.title}</h4>
               <button
                 type="button"
                 onClick={() => setZoomDocImage(null)}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 cursor-pointer"
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="દસ્તાવેજ બંધ કરો (Close document viewer)"
               >
                 <X size={18} />
               </button>
@@ -2176,6 +2242,9 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {certificateModalApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પ્રમાણપત્ર પૂર્વાવલોકન (Official Certificate Preview)"
           className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setCertificateModalApp(null);
@@ -2194,6 +2263,9 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {receiptModalApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પહોંચ પૂર્વાવલોકન (Official Receipt Preview)"
           className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setReceiptModalApp(null);

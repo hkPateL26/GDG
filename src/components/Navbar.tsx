@@ -103,6 +103,18 @@ export default function Navbar() {
     };
   }, []);
 
+  // Keyboard Escape key handler to close mobile drawer (WCAG 2.2 AA SC 2.1.1)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (currentLang !== DEFAULT_LANGUAGE) {
       e.preventDefault();
@@ -246,7 +258,13 @@ export default function Navbar() {
                       {/* Option 1: Citizen Login */}
                       <Link
                         href="/portal?mode=citizen"
-                        onClick={() => setShowLoginDropdown(false)}
+                        onClick={() => {
+                          setShowLoginDropdown(false);
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("nagrik_auth_change"));
+                            window.dispatchEvent(new Event("nagrik_route_change"));
+                          }
+                        }}
                         className="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-orange-50 transition group/item"
                       >
                         <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
@@ -268,7 +286,13 @@ export default function Navbar() {
                       {/* Option 2: Officer / Admin Login */}
                       <Link
                         href="/portal?mode=officer"
-                        onClick={() => setShowLoginDropdown(false)}
+                        onClick={() => {
+                          setShowLoginDropdown(false);
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("nagrik_auth_change"));
+                            window.dispatchEvent(new Event("nagrik_route_change"));
+                          }
+                        }}
                         className="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-slate-100 transition group/item"
                       >
                         <div className="w-8 h-8 rounded-lg bg-slate-900 text-amber-300 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
@@ -326,8 +350,10 @@ export default function Navbar() {
             )}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:scale-92 transition shrink-0 cursor-pointer"
-              aria-label="Toggle menu"
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:scale-92 transition shrink-0 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={isOpen ? "મેનૂ બંધ કરો (Close menu)" : "મેનૂ ખોલો (Open menu)"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation-drawer"
             >
               {isOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
@@ -341,8 +367,10 @@ export default function Navbar() {
       {/* ── Mobile & Tablet Native Bottom Sheet Drawer (GPay / DigiLocker Style) ── */}
       {isOpen && (
         <div
+          id="mobile-navigation-drawer"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="mobile-nav-title"
           className="xl:hidden fixed inset-0 z-[9990] bg-slate-950/60 backdrop-blur-xs flex items-end justify-center animate-in fade-in duration-150"
           onClick={() => setIsOpen(false)}
         >
@@ -356,13 +384,13 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <p className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <p id="mobile-nav-title" className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                 ☰ {currentLang === "en" ? "Navigation & Citizen Menu" : currentLang === "hi" ? "मुख्य मेनू और नागरिक सेवाएं" : "મુખ્ય મેનૂ & નાગરિક સેવાઓ"}
               </p>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                aria-label="Close drawer"
+                className="p-2 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                aria-label="મેનૂ બંધ કરો (Close navigation drawer)"
               >
                 <X size={18} />
               </button>
@@ -453,6 +481,10 @@ export default function Navbar() {
                     onClick={(e) => {
                       setIsOpen(false);
                       handleNavClick(e, "/portal?mode=citizen");
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new Event("nagrik_auth_change"));
+                        window.dispatchEvent(new Event("nagrik_route_change"));
+                      }
                     }}
                     className="app-touch-card flex items-center gap-2 p-2.5 rounded-2xl border bg-emerald-50/90 hover:bg-emerald-100 border-emerald-300 text-emerald-950 transition"
                   >
@@ -476,6 +508,10 @@ export default function Navbar() {
                     onClick={(e) => {
                       setIsOpen(false);
                       handleNavClick(e, "/portal?mode=officer");
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new Event("nagrik_auth_change"));
+                        window.dispatchEvent(new Event("nagrik_route_change"));
+                      }
                     }}
                     className="app-touch-card flex items-center gap-2 p-2.5 rounded-2xl border bg-slate-900 hover:bg-slate-800 border-slate-700 text-white transition"
                   >
