@@ -103,6 +103,19 @@ export default function BenefitCalculatorPage() {
     return () => clearTimeout(timer);
   }, []);
 
+  // Keyboard Escape key handler to close mobile modals (WCAG 2.2 AA SC 2.1.1)
+  useEffect(() => {
+    if (!showMembersModal && !showAddressModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (showMembersModal) setShowMembersModal(false);
+        if (showAddressModal) setShowAddressModal(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showMembersModal, showAddressModal]);
+
   // Dynamic calculations strictly tied to real-time verification and selected checkboxes
   const familyCount = familyMembersList.length || 0;
   const pmKisanBenefit = isKycVerified && isFarmer ? 6000 : 0;
@@ -564,7 +577,7 @@ export default function BenefitCalculatorPage() {
                 <div className="space-y-2.5">
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-gray-700 flex items-center gap-1.5">
+                      <label htmlFor="calc-aadhaar-input" className="text-[11px] font-semibold text-gray-700 flex items-center gap-1.5">
                         ૧૨ અંકનો આધાર કાર્ડ નંબર
                         {isKycVerified && (
                           <span className="text-[9px] bg-green-100 text-green-800 font-bold px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
@@ -578,6 +591,7 @@ export default function BenefitCalculatorPage() {
                     </div>
                     <div className="relative">
                       <input
+                        id="calc-aadhaar-input"
                         type="text"
                         inputMode="numeric"
                         maxLength={14}
@@ -588,6 +602,7 @@ export default function BenefitCalculatorPage() {
                         }
                         onChange={(e) => handleAadhaarInput(e.target.value)}
                         placeholder="XXXX XXXX XXXX"
+                        aria-label="૧૨ અંકનો આધાર કાર્ડ નંબર"
                         disabled={isKycVerified}
                         className={`w-full border rounded-xl px-3 py-2 pr-9 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 transition ${
                           isKycVerified
@@ -601,6 +616,7 @@ export default function BenefitCalculatorPage() {
                           onClick={() => setMaskValues(!maskValues)}
                           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 rounded-md transition"
                           title={maskValues ? "નંબર દર્શાવો" : "નંબર છુપાવો"}
+                          aria-label={maskValues ? "આધાર નંબર દર્શાવો (Show Aadhaar)" : "આધાર નંબર છુપાવો (Hide Aadhaar)"}
                         >
                           {maskValues ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
@@ -610,7 +626,7 @@ export default function BenefitCalculatorPage() {
 
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-[11px] font-semibold text-gray-700 flex items-center gap-1.5">
+                      <label htmlFor="calc-mobile-input" className="text-[11px] font-semibold text-gray-700 flex items-center gap-1.5">
                         આધાર લિંક્ડ મોબાઈલ નંબર
                         {isKycVerified && (
                           <span className="text-[9px] bg-green-100 text-green-800 font-bold px-1.5 py-0.2 rounded-full flex items-center gap-0.5">
@@ -624,6 +640,7 @@ export default function BenefitCalculatorPage() {
                     </div>
                     <div className="relative">
                       <input
+                        id="calc-mobile-input"
                         type="text"
                         inputMode="numeric"
                         maxLength={11}
@@ -634,6 +651,7 @@ export default function BenefitCalculatorPage() {
                         }
                         onChange={(e) => handleMobileInput(e.target.value)}
                         placeholder="XXXXX XXXXX"
+                        aria-label="આધાર લિંક્ડ મોબાઈલ નંબર"
                         disabled={isKycVerified}
                         className={`w-full border rounded-xl px-3 py-2 pr-9 text-sm font-mono tracking-wider focus:outline-none focus:ring-2 focus:ring-orange-400 transition ${
                           isKycVerified
@@ -647,6 +665,7 @@ export default function BenefitCalculatorPage() {
                           onClick={() => setMaskValues(!maskValues)}
                           className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 p-1 rounded-md transition"
                           title={maskValues ? "નંબર દર્શાવો" : "નંબર છુપાવો"}
+                          aria-label={maskValues ? "મોબાઈલ નંબર દર્શાવો (Show Mobile)" : "મોબાઈલ નંબર છુપાવો (Hide Mobile)"}
                         >
                           {maskValues ? <EyeOff size={15} /> : <Eye size={15} />}
                         </button>
@@ -671,12 +690,14 @@ export default function BenefitCalculatorPage() {
                           </p>
                           <div className="flex gap-2">
                             <input
+                              id="calc-otp-input"
                               type="text"
                               inputMode="numeric"
                               maxLength={6}
                               value={enteredOtp}
                               onChange={(e) => handleOtpInput(e.target.value)}
                               placeholder="123456"
+                              aria-label="૬ આંકડાનો આધાર OTP (Aadhaar OTP)"
                               className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm font-mono text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-green-400"
                             />
                             <button
@@ -1031,15 +1052,17 @@ export default function BenefitCalculatorPage() {
                               onClick={() => scrollMembers("left")}
                               className="p-1 text-orange-800 hover:bg-orange-100 rounded transition active:scale-90"
                               title="અગાઉના સભ્ય જુઓ"
+                              aria-label="અગાઉના સભ્ય જુઓ (Previous family member)"
                             >
                               <ChevronLeft size={16} />
                             </button>
-                            <span className="text-[10px] text-gray-300 font-mono px-0.5 select-none">|</span>
+                            <span className="text-[10px] text-gray-400 font-mono px-0.5 select-none">|</span>
                             <button
                               type="button"
                               onClick={() => scrollMembers("right")}
                               className="p-1 text-orange-800 hover:bg-orange-100 rounded transition active:scale-90"
                               title="વધુ સભ્યો જુઓ"
+                              aria-label="વધુ સભ્યો જુઓ (Next family member)"
                             >
                               <ChevronRight size={16} />
                             </button>
@@ -1124,6 +1147,9 @@ export default function BenefitCalculatorPage() {
                   {/* 📱 Mobile Modals for Family Members & Address */}
                   {isKycVerified && showMembersModal && (
                     <div
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="calc-members-modal-title"
                       className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
                       onClick={() => setShowMembersModal(false)}
                     >
@@ -1132,13 +1158,14 @@ export default function BenefitCalculatorPage() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-between pb-2 border-b border-gray-700 text-sm">
-                          <span className="font-bold text-orange-400 flex items-center gap-1.5">
+                          <span id="calc-members-modal-title" className="font-bold text-orange-400 flex items-center gap-1.5">
                             👨‍👩‍👧‍👦 રેશનકાર્ડ સભ્યો
                           </span>
                           <button
                             type="button"
                             onClick={() => setShowMembersModal(false)}
-                            className="text-gray-400 hover:text-white p-1 rounded-lg bg-white/10 text-xs flex items-center gap-1 px-2 transition"
+                            className="text-gray-400 hover:text-white p-2 rounded-lg bg-white/10 text-xs flex items-center gap-1 px-2.5 transition min-h-[44px] cursor-pointer"
+                            aria-label="રેશનકાર્ડ સભ્યો વિન્ડો બંધ કરો (Close members modal)"
                           >
                             <X size={14} /> બંધ કરો
                           </button>
@@ -1170,6 +1197,9 @@ export default function BenefitCalculatorPage() {
 
                   {isKycVerified && showAddressModal && (
                     <div
+                      role="dialog"
+                      aria-modal="true"
+                      aria-labelledby="calc-address-modal-title"
                       className="sm:hidden fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
                       onClick={() => setShowAddressModal(false)}
                     >
@@ -1178,13 +1208,14 @@ export default function BenefitCalculatorPage() {
                         onClick={(e) => e.stopPropagation()}
                       >
                         <div className="flex items-center justify-between pb-2 border-b border-gray-700 text-sm">
-                          <span className="font-bold text-blue-400 flex items-center gap-1.5">
+                          <span id="calc-address-modal-title" className="font-bold text-blue-400 flex items-center gap-1.5">
                             📍 પૂર્ણ સરનામું
                           </span>
                           <button
                             type="button"
                             onClick={() => setShowAddressModal(false)}
-                            className="text-gray-400 hover:text-white p-1 rounded-lg bg-white/10 text-xs flex items-center gap-1 px-2 transition"
+                            className="text-gray-400 hover:text-white p-2 rounded-lg bg-white/10 text-xs flex items-center gap-1 px-2.5 transition min-h-[44px] cursor-pointer"
+                            aria-label="સરનામું વિન્ડો બંધ કરો (Close address modal)"
                           >
                             <X size={14} /> બંધ કરો
                           </button>

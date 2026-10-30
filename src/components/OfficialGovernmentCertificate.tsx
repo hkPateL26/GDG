@@ -899,7 +899,7 @@ export default function OfficialGovernmentCertificate({
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
                     viewMode === "letter"
                       ? "bg-amber-400 text-slate-950 shadow-xs"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-200 hover:text-white"
                   }`}
                 >
                   <FileText size={13} />
@@ -911,7 +911,7 @@ export default function OfficialGovernmentCertificate({
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
                     viewMode === "pvc"
                       ? "bg-amber-400 text-slate-950 shadow-xs"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-200 hover:text-white"
                   }`}
                 >
                   <CreditCard size={13} />

@@ -60,7 +60,16 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <HapticFeedbackProvider />
           <GlobalModalScrollLocker />
           <AndroidNativeBridge />
-          {children}
+          {/* ── Accessible Skip to Main Content Link (WCAG 2.2 AA SC 2.4.1 Bypass Blocks) ── */}
+          <a
+            href="#main-content"
+            className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[99999] focus:px-4 focus:py-2.5 focus:bg-orange-600 focus:text-white focus:font-black focus:text-sm focus:rounded-xl focus:shadow-2xl focus:ring-4 focus:ring-orange-300 focus:outline-none transition-all duration-150"
+          >
+            મુખ્ય સામગ્રી પર જાઓ (Skip to main content)
+          </a>
+          <div id="main-content">
+            {children}
+          </div>
           <Footer />
           <MobileBottomNav />
           <FloatingVoiceHotlineButton />

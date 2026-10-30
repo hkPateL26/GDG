@@ -133,7 +133,7 @@ export default function OfficialGovNotificationBanner() {
                 <BellRing size={12} className="animate-bounce" />
                 <span>{activeNotification.title}</span>
               </span>
-              <p className="text-[10px] text-slate-300 font-medium truncate">
+              <p className="text-[10px] text-slate-200 font-medium truncate">
                 {activeNotification.headerGu}
               </p>
             </div>
@@ -146,8 +146,8 @@ export default function OfficialGovNotificationBanner() {
             <button
               type="button"
               onClick={handleClose}
-              className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-white/10 transition cursor-pointer"
-              aria-label="બંધ કરો"
+              className="text-slate-300 hover:text-white p-2 rounded-xl hover:bg-white/10 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label="સૂચના બંધ કરો (Dismiss notification)"
             >
               <X size={16} />
             </button>
@@ -171,7 +171,7 @@ export default function OfficialGovNotificationBanner() {
               <button
                 type="button"
                 onClick={handleClose}
-                className="px-3 py-1.5 text-xs text-slate-300 hover:text-white hover:bg-white/10 rounded-xl transition cursor-pointer"
+                className="px-3 py-1.5 text-xs text-slate-200 hover:text-white hover:bg-white/10 rounded-xl transition cursor-pointer font-medium"
               >
                 પછી જુઓ
               </button>

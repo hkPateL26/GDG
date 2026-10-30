@@ -57,7 +57,7 @@ function ReceiptContent() {
             ✕
           </div>
           <h1 className="text-xl font-black text-red-400">પેમેન્ટ પ્રક્રિયા પૂર્ણ થઈ શકી નથી</h1>
-          <p className="text-sm text-slate-300">{decodeURIComponent(error)}</p>
+          <p className="text-sm text-slate-200 font-medium">{decodeURIComponent(error)}</p>
           <div className="pt-4 flex flex-col sm:flex-row gap-2">
             <button
               onClick={() => router.push("/documents")}
@@ -130,7 +130,7 @@ function ReceiptContent() {
           {orderId && (
             <div className="flex items-center justify-between py-2 border-b border-slate-800/80">
               <span className="text-slate-400">ઓર્ડર ID:</span>
-              <span className="font-mono text-slate-300">{orderId}</span>
+              <span className="font-mono text-slate-200">{orderId}</span>
             </div>
           )}
 
@@ -141,7 +141,7 @@ function ReceiptContent() {
 
           <div className="flex items-center justify-between py-2 border-b border-slate-800/80">
             <span className="text-slate-400">તારીખ અને સમય:</span>
-            <span className="text-slate-300">{dateStr || "લાઈવ વેરિફાઈડ"}</span>
+            <span className="text-slate-200">{dateStr || "લાઈવ વેરિફાઈડ"}</span>
           </div>
 
           <div className="flex items-center justify-between py-2">

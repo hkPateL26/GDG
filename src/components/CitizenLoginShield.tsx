@@ -199,7 +199,7 @@ export default function CitizenLoginShield({
         {/* Login Form */}
         <form onSubmit={otpSent ? handleVerifyOtp : handleRequestOtp} className="space-y-2 sm:space-y-3.5">
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
+            <label htmlFor="citizen-login-mobile" className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
               📱 રજિસ્ટર્ડ ૧૦ આંકડાનો મોબાઈલ નંબર
             </label>
             <div className="relative">
@@ -207,6 +207,7 @@ export default function CitizenLoginShield({
                 +91
               </span>
               <input
+                id="citizen-login-mobile"
                 type="tel"
                 maxLength={10}
                 value={loginMobile}
@@ -219,7 +220,7 @@ export default function CitizenLoginShield({
           </div>
 
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
+            <label htmlFor="citizen-login-aadhaar" className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
               🪪 આધાર કાર્ડના છેલ્લા ૪ આંકડા (Two-Factor Binding)
             </label>
             <div className="relative">
@@ -227,6 +228,7 @@ export default function CitizenLoginShield({
                 XXXX - XXXX -
               </span>
               <input
+                id="citizen-login-aadhaar"
                 type="text"
                 maxLength={4}
                 value={loginAadhaar}
@@ -270,7 +272,7 @@ export default function CitizenLoginShield({
 
               <div>
                 <div className="flex items-center justify-between mb-1">
-                  <label className="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide">
+                  <label htmlFor="citizen-login-otp" className="text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide">
                     ૬ આંકડાનો સુરક્ષિત OTP દાખલ કરો
                   </label>
                   <div className="flex items-center gap-1.5 text-[10.5px] font-semibold">
@@ -282,6 +284,7 @@ export default function CitizenLoginShield({
                 </div>
 
                 <input
+                  id="citizen-login-otp"
                   type="text"
                   maxLength={6}
                   value={loginOtp}
@@ -296,14 +299,14 @@ export default function CitizenLoginShield({
 
           {/* Feedback Alerts */}
           {authError && (
-            <div className="p-2 sm:p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-1.5">
+            <div role="alert" aria-live="assertive" className="p-2 sm:p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-1.5">
               <AlertTriangle size={14} className="shrink-0" />
               <span>{authError}</span>
             </div>
           )}
 
           {authSuccessMsg && !authError && (
-            <div className="p-2 sm:p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-1.5">
+            <div role="status" aria-live="polite" className="p-2 sm:p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-1.5">
               <CheckCircle2 size={14} className="shrink-0" />
               <span>{authSuccessMsg}</span>
             </div>

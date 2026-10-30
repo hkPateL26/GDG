@@ -163,16 +163,30 @@ body.modal-open {
   animation: shimmer 1.5s infinite;
 }
 
-/* ── Focus visible ── */
-:focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+/* ── Focus visible (WCAG 2.2 AA SC 2.4.7 & SC 2.4.11) ── */
+:focus-visible {
+  outline: 2px solid #ea580c !important;
+  outline-offset: 2px !important;
+}
+
+/* Ensure interactive elements have crisp visible focus indicators */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #ea580c;
+  outline-offset: 2px;
+}
 
 /* ── Tap highlight remove (mobile) ── */
 * { -webkit-tap-highlight-color: transparent; }
 
-/* ── Safe Word break for Gujarati/Hindi/English text (No Character Clipping) ── */
+/* ── Safe Word break & Font Legibility for Gujarati/Hindi/English text (No Character or Matra Clipping) ── */
 p, h1, h2, h3, h4, h5, h6, span, li, button, a, label, strong {
   overflow-wrap: break-word;
   word-break: normal;
+  text-rendering: optimizeLegibility;
 }
 
 /* ── Authentic Government Certificate Print Rules (STRICT SINGLE A4 PAGE) ── */

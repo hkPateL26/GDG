@@ -37,7 +37,7 @@ export default function SchemeCard({ scheme, compact = false }: SchemeCardProps)
             </p>
             <p className="text-xs text-gray-500 truncate mt-0.5">{scheme.benefits[0]}</p>
           </div>
-          <span className="text-gray-300 group-hover:text-orange-400 flex-shrink-0">›</span>
+          <span className="text-gray-400 group-hover:text-orange-500 flex-shrink-0 text-base font-bold">›</span>
         </div>
       </Link>
     );

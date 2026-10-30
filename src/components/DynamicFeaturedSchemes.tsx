@@ -142,7 +142,7 @@ export default function DynamicFeaturedSchemes({ variant }: DynamicFeaturedSchem
                 {scheme.benefits?.[0] || scheme.description}
               </p>
             </div>
-            <ChevronRight size={14} className="text-gray-300 group-hover:text-orange-400 flex-shrink-0" />
+            <ChevronRight size={14} className="text-gray-400 group-hover:text-orange-500 flex-shrink-0" />
           </Link>
         ))}
       </div>

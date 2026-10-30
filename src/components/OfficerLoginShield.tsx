@@ -276,6 +276,7 @@ export default function OfficerLoginShield({
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] font-bold">
             <button
               type="button"
+              aria-pressed={officerId === "GUJ-STATE-001"}
               onClick={() => {
                 setOfficerId("GUJ-STATE-001");
                 setOfficerPin("GJ2026");
@@ -291,6 +292,7 @@ export default function OfficerLoginShield({
             </button>
             <button
               type="button"
+              aria-pressed={officerId === "GUJ-COL-3001"}
               onClick={() => {
                 setOfficerId("GUJ-COL-3001");
                 setOfficerPin("GJ2026");
@@ -306,6 +308,7 @@ export default function OfficerLoginShield({
             </button>
             <button
               type="button"
+              aria-pressed={officerId === "GUJ-SDM-5002"}
               onClick={() => {
                 setOfficerId("GUJ-SDM-5002");
                 setOfficerPin("GJ2026");
@@ -321,6 +324,7 @@ export default function OfficerLoginShield({
             </button>
             <button
               type="button"
+              aria-pressed={officerId === "GUJ-GOV-9012"}
               onClick={() => {
                 setOfficerId("GUJ-GOV-9012");
                 setOfficerPin("GJ2026");
@@ -336,6 +340,7 @@ export default function OfficerLoginShield({
             </button>
             <button
               type="button"
+              aria-pressed={officerId === "GUJ-TAL-7089"}
               onClick={() => {
                 setOfficerId("GUJ-TAL-7089");
                 setOfficerPin("GJ2026");
@@ -355,11 +360,12 @@ export default function OfficerLoginShield({
         <form onSubmit={handleLogin} className="space-y-2.5 sm:space-y-4">
           {/* Officer ID Input */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
+            <label htmlFor="officer-id-input" className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
               🏛️ સરકારી કર્મચારી ID (Officer ID)
             </label>
             <div className="relative">
               <input
+                id="officer-id-input"
                 type="text"
                 value={officerId}
                 onChange={(e) => {
@@ -377,11 +383,12 @@ export default function OfficerLoginShield({
 
           {/* Security PIN Input */}
           <div>
-            <label className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
+            <label htmlFor="officer-pin-input" className="block text-[11px] sm:text-xs font-bold text-slate-700 uppercase tracking-wide mb-1">
               🔑 કચેરી સિક્યોરિટી PIN (Govt Security PIN)
             </label>
             <div className="relative">
               <input
+                id="officer-pin-input"
                 type="password"
                 value={officerPin}
                 onChange={(e) => {
@@ -408,14 +415,14 @@ export default function OfficerLoginShield({
 
           {/* Error & Success Alerts */}
           {error && (
-            <div className="p-2 sm:p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-1.5">
+            <div role="alert" aria-live="assertive" className="p-2 sm:p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs flex items-center gap-1.5">
               <AlertTriangle size={14} className="shrink-0" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="p-2 sm:p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-1.5">
+            <div role="status" aria-live="polite" className="p-2 sm:p-3 bg-emerald-50 border border-emerald-200 text-emerald-800 rounded-xl text-xs flex items-center gap-1.5">
               <CheckCircle2 size={14} className="shrink-0" />
               <span>{successMsg}</span>
             </div>
@@ -458,7 +465,12 @@ export default function OfficerLoginShield({
 
       {/* ── Demo Gate Passcode Modal ── */}
       {showGateModal && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="demo-gate-modal-title"
+          className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
           <div className="bg-white rounded-2xl max-w-sm w-full p-5 shadow-2xl border-2 border-slate-900 space-y-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
@@ -466,7 +478,7 @@ export default function OfficerLoginShield({
                   <KeyRound size={18} />
                 </div>
                 <div>
-                  <h3 className="text-sm font-black text-slate-900">
+                  <h3 id="demo-gate-modal-title" className="text-sm font-black text-slate-900">
                     અધિકૃત ડેમો ગેટ
                   </h3>
                   <p className="text-[10px] text-slate-500">
@@ -477,7 +489,8 @@ export default function OfficerLoginShield({
               <button
                 type="button"
                 onClick={() => setShowGateModal(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-2 rounded-xl min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                aria-label="ડેમો ગેટ બંધ કરો (Close demo gate)"
               >
                 <X size={18} />
               </button>
@@ -492,10 +505,11 @@ export default function OfficerLoginShield({
 
             <form onSubmit={handleUnlockDemoGate} className="space-y-3">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1">
+                <label htmlFor="demo-passcode-input" className="block text-[11px] font-bold text-slate-700 uppercase tracking-wide mb-1">
                   ડેમો પાસકોડ (Demo Passcode)
                 </label>
                 <input
+                  id="demo-passcode-input"
                   type="text"
                   value={gatePasscode}
                   onChange={(e) => {

@@ -163,6 +163,18 @@ export default function DigiLockerGatewayModal({
     return () => clearInterval(timer);
   }, [step, otpCountdown]);
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   // Sync vault documents from local storage + Cloud Firestore
   useEffect(() => {
     setIssuedDocs(getIssuedDocuments());
@@ -494,6 +506,9 @@ export default function DigiLockerGatewayModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="digilocker-modal-title"
       className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in duration-200"
       onClick={onClose}
       onWheel={(e) => e.stopPropagation()}
@@ -526,7 +541,7 @@ export default function DigiLockerGatewayModal({
                   MeitY Govt of India
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-extrabold text-white leading-tight flex items-center gap-1.5">
+              <h3 id="digilocker-modal-title" className="text-sm sm:text-base font-extrabold text-white leading-tight flex items-center gap-1.5">
                 <span>DigiLocker સત્તાવાર દસ્તાવેજ ગેટવે</span>
                 <span className="text-xs">🔒</span>
               </h3>
@@ -536,8 +551,9 @@ export default function DigiLockerGatewayModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
             title="બંધ કરો (Close)"
+            aria-label="ડિજીલોકર વિન્ડો બંધ કરો (Close DigiLocker)"
           >
             <X size={18} />
           </button>

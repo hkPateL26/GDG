@@ -172,6 +172,18 @@ export default function OfficialGovernmentUpdateModal() {
     }
   };
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        handleDismiss();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const t = {
     playBadge: isEn ? "Google Play • In-App Update" : isHi ? "Google Play • इन-ऐप अपडेट" : "Google Play • ઇન-એપ અપડેટ",
     verified: isEn ? "Verified by Play Protect • 100% Official" : isHi ? "Play Protect द्वारा सत्यापित • १००% सुरक्षित" : "Play Protect દ્વારા ચકાસાયેલ • ૧૦૦% સુરક્ષિત",
@@ -255,8 +267,9 @@ export default function OfficialGovernmentUpdateModal() {
               <button
                 type="button"
                 onClick={handleDismiss}
-                className="absolute top-3 right-3 sm:top-4 sm:right-4 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition cursor-pointer"
+                className="absolute top-3 right-3 sm:top-4 sm:right-4 w-11 h-11 rounded-full bg-black/20 hover:bg-black/40 text-white flex items-center justify-center transition cursor-pointer"
                 title="બંધ કરો (Close)"
+                aria-label="અપડેટ વિન્ડો બંધ કરો (Close update modal)"
               >
                 <X size={16} />
               </button>

@@ -195,12 +195,14 @@ export default function TrackVaultView({
           setShowCertificateModal(false);
         } else if (showTimelineModal) {
           handleCloseTimelineModal();
+        } else if (showOfficerModal) {
+          setShowOfficerModal(false);
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showPrintModal, showCertificateModal, showTimelineModal]);
+  }, [showPrintModal, showCertificateModal, showTimelineModal, showOfficerModal, handleCloseTimelineModal]);
 
   // Load Citizen Vault on Mount or Citizen Prop change
   const loadCitizenVault = useCallback(async (mobile: string, aadhaarLast4?: string, targetId?: string, isSilent = false) => {
@@ -686,11 +688,13 @@ export default function TrackVaultView({
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
+                  id="vault-search-input"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyUp={handleSearchSubmit}
                   placeholder="અરજી નંબર કે નામથી શોધો..."
+                  aria-label="અરજી નંબર અથવા નામથી શોધો (Search applications by ID or name)"
                   className="w-full pl-8 pr-8 py-2 sm:py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
                 />
                 {searchQuery && (
@@ -704,8 +708,9 @@ export default function TrackVaultView({
                         window.history.replaceState({}, "", url.pathname);
                       }
                     }}
-                    className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold transition cursor-pointer"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold transition cursor-pointer"
                     title="સર્ચ ક્લિયર કરો"
+                    aria-label="શોધ સાફ કરો (Clear search)"
                   >
                     ✕
                   </button>
@@ -1645,13 +1650,18 @@ export default function TrackVaultView({
 
       {/* ── Officer Login Modal ── */}
       {showOfficerModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vault-officer-modal-title"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
           <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border-2 border-slate-900">
             <div className="text-center space-y-1">
               <div className="w-12 h-12 bg-slate-900 text-amber-300 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
                 🏛️
               </div>
-              <h3 className="text-lg font-black text-slate-900">કચેરી સત્તાવાર એડમિન લૉગિન</h3>
+              <h3 id="vault-officer-modal-title" className="text-lg font-black text-slate-900">કચેરી સત્તાવાર એડમિન લૉગિન</h3>
               <p className="text-xs text-slate-500">
                 તાલુકા મામલતદાર / વિસ્તરણ અધિકારી અધિકૃત પ્રવેશ
               </p>
@@ -1663,8 +1673,9 @@ export default function TrackVaultView({
 
             <form onSubmit={handleOfficerLogin} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-700 font-bold mb-1">કર્મચારી ID (Officer ID)</label>
+                <label htmlFor="vault-officer-id" className="block text-slate-700 font-bold mb-1">કર્મચારી ID (Officer ID)</label>
                 <input
+                  id="vault-officer-id"
                   type="text"
                   value={officerIdInput}
                   onChange={(e) => setOfficerIdInput(e.target.value)}
@@ -1673,8 +1684,9 @@ export default function TrackVaultView({
                 />
               </div>
               <div>
-                <label className="block text-slate-700 font-bold mb-1">સુરક્ષા PIN (Security PIN)</label>
+                <label htmlFor="vault-officer-pin" className="block text-slate-700 font-bold mb-1">સુરક્ષા PIN (Security PIN)</label>
                 <input
+                  id="vault-officer-pin"
                   type="password"
                   value={officerPinInput}
                   onChange={(e) => setOfficerPinInput(e.target.value)}
@@ -1684,7 +1696,7 @@ export default function TrackVaultView({
               </div>
 
               {officerError && (
-                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">
+                <div role="alert" aria-live="assertive" className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">
                   {officerError}
                 </div>
               )}
@@ -1693,14 +1705,15 @@ export default function TrackVaultView({
                 <button
                   type="button"
                   onClick={() => setShowOfficerModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold min-h-[44px] flex items-center justify-center cursor-pointer"
+                  aria-label="રદ કરો (Cancel)"
                 >
                   રદ કરો
                 </button>
                 <button
                   type="submit"
                   disabled={officerLoading}
-                  className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-amber-300 rounded-xl font-black shadow-md flex items-center justify-center gap-1"
+                  className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-amber-300 rounded-xl font-black shadow-md flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
                 >
                   {officerLoading ? <Loader2 size={13} className="animate-spin" /> : <Lock size={13} />}
                   <span>લૉગિન કરો</span>
@@ -1714,6 +1727,9 @@ export default function TrackVaultView({
       {/* ── Official Receipt Slip Modal (PDF Download / Print) ── */}
       {showPrintModal && selectedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પહોંચ પૂર્વાવલોકન (Official Receipt Slip Modal)"
           className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowPrintModal(false);
@@ -1730,6 +1746,9 @@ export default function TrackVaultView({
       {/* ── Official Government Certificate Modal (PDF Download / Print) ── */}
       {showCertificateModal && selectedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પ્રમાણપત્ર પૂર્વાવલોકન (Official Government Certificate Modal)"
           className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowCertificateModal(false);

@@ -310,6 +310,20 @@ export default function GujaratiVoiceHotlineModal({
     };
   }, [isOpen, initialQuery, processQuery, stopAllAudio, stopListening]);
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        stopAllAudio();
+        stopListening();
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose, stopAllAudio, stopListening]);
+
   if (!isOpen) return null;
 
   return (
@@ -347,8 +361,8 @@ export default function GujaratiVoiceHotlineModal({
               stopListening();
               onClose();
             }}
-            aria-label="હેલ્પલાઇન બંધ કરો"
-            className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition text-white"
+            aria-label="હેલ્પલાઇન બંધ કરો (Close hotline)"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 flex items-center justify-center transition text-white cursor-pointer shrink-0"
           >
             <X size={20} />
           </button>

@@ -150,7 +150,7 @@ export default function Home() {
             <p className="text-orange-100 text-base sm:text-lg mb-1">
               AI-Powered Digital Public Infrastructure Assistant
             </p>
-            <p className="text-orange-200 text-xs sm:text-sm mb-7">
+            <p className="text-orange-100 font-medium text-xs sm:text-sm mb-7">
               સરકારી યોજનાઓ, દસ્તાવેજ સહાય, પાત્રતા ચકાસણી અને સ્થિતિ ટ્રેકિંગ — બધું એક જ જગ્યાએ
             </p>
 
@@ -242,7 +242,7 @@ export default function Home() {
                     <span className="text-xs font-medium text-gray-700 group-hover:text-blue-600 flex-1 truncate">
                       {label}
                     </span>
-                    <ChevronRight size={13} className="text-gray-300 group-hover:text-blue-400 flex-shrink-0" />
+                    <ChevronRight size={13} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
                   </Link>
                 ))}
               </div>

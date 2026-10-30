@@ -73,6 +73,16 @@ export default function InstallAppModal({
     }
   }, [onClose]);
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleInstallClick = async () => {
     const outcome = await executeNativePwaInstall();
     if (outcome === "installed" || outcome === "dismissed") {
@@ -112,6 +122,7 @@ export default function InstallAppModal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby="install-modal-title"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9995] flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
@@ -125,8 +136,8 @@ export default function InstallAppModal({
         {/* Modal Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition"
-          aria-label="Close"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+          aria-label="ઇન્સ્ટોલ વિન્ડો બંધ કરો (Close install modal)"
         >
           <X size={20} />
         </button>
@@ -148,7 +159,7 @@ export default function InstallAppModal({
             <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full mb-1">
               <Sparkles size={11} className="text-orange-600" /> Digital Public Infrastructure
             </span>
-            <h3 className="text-xl font-black text-gray-900">
+            <h3 id="install-modal-title" className="text-xl font-black text-gray-900">
               નાગરિકસેવા AI મોબાઈલ એપ
             </h3>
             <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
