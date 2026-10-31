@@ -167,19 +167,19 @@ export default function OfficialGovernmentCertificate({
     "/demo-docs/aadhaar_photo_hq.png";
 
   // Safe Citizen Benchmark Details
-  const citizenNameGu = app.citizenNameGu || "હરી વિનોદરાઈ પટેલ";
-  const citizenNameEn = app.citizenName || "Hari Vinodrai Patel";
-  const fatherNameGu = "વિનોદરાઈ નારણભાઈ પટેલ";
-  const fatherNameEn = "Vinodrai Naranbhai Patel";
-  const dobStr = "15/06/1985";
+  const citizenNameGu = app.citizenNameGu || app.citizenName || "અરજદાર";
+  const citizenNameEn = app.citizenName || app.citizenNameGu || "Citizen";
+  const fatherNameGu = (typeof app.kacheriDetails?.fatherOrHusbandName === "string" ? app.kacheriDetails.fatherOrHusbandName : "") || "વિનોદરાઈ નારણભાઈ પટેલ";
+  const fatherNameEn = (typeof app.kacheriDetails?.fatherOrHusbandName === "string" ? app.kacheriDetails.fatherOrHusbandName : "") || "Vinodrai Naranbhai Patel";
+  const dobStr = (typeof app.kacheriDetails?.dob === "string" ? app.kacheriDetails.dob : "") || "15/06/1985";
   const genderStrGu = app.gender === "female" ? "સ્ત્રી" : "પુરુષ";
   const genderStrEn = app.gender === "female" ? "FEMALE" : "MALE";
   const villageStr = app.village || "ઓમ નગર (Omnagar)";
   const talukaStr = app.taluka || "Rajkot Urban";
   const districtStr = app.districtGu || app.district || "રાજકોટ";
   const districtEn = app.district || "Rajkot";
-  const pincodeStr = "360004";
-  const mobileStr = app.mobile || "9974442291";
+  const pincodeStr = (typeof app.kacheriDetails?.pincode === "string" ? app.kacheriDetails.pincode : "") || "360004";
+  const mobileStr = app.mobile || "";
   const formattedAadhaar = `5429 8912 ${app.aadhaarLast4 && app.aadhaarLast4 !== "NEW" ? app.aadhaarLast4 : "1413"}`;
   const eidStr = `4048/93054/00490`;
   const vidStr = `9110 5041 8009 0808`;

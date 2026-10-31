@@ -199,10 +199,10 @@ export default function DocumentServicePortal({
   const [applicantName, setApplicantName] = useState<string>("");
   const [applicantNameGu, setApplicantNameGu] = useState<string>("");
   const [fatherOrHusbandName, setFatherOrHusbandName] = useState<string>("");
-  const [motherName] = useState<string>("");
-  const [dob, setDob] = useState<string>("1985-06-15");
+  const [motherName, setMotherName] = useState<string>("");
+  const [dob, setDob] = useState<string>("");
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [maritalStatus] = useState<string>("વિવાહિત (Married)");
+  const [maritalStatus, setMaritalStatus] = useState<string>("વિવાહિત (Married)");
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [emailAddress, setEmailAddress] = useState<string>("");
   const [aadhaarNumber, setAadhaarNumber] = useState<string>("");
@@ -213,7 +213,7 @@ export default function DocumentServicePortal({
   const [village, setVillage] = useState<string>("");
   const [houseNo, setHouseNo] = useState<string>("");
   const [streetSociety, setStreetSociety] = useState<string>("");
-  const [pincode, setPincode] = useState<string>("360311");
+  const [pincode, setPincode] = useState<string>("");
   const [userUploadedPhoto, setUserUploadedPhoto] = useState<string>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -226,33 +226,39 @@ export default function DocumentServicePortal({
   });
 
   // Service Specific Kacheri Fields
-  const [rationCategory, setRationCategory] = useState<string>("NFSA - APL-1");
-  const [fpsShopNo, setFpsShopNo] = useState<string>("FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)");
-  const [gasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
-  const [bankAccountNo] = useState<string>("•••• •••• 4912");
-  const [bankIfsc] = useState<string>("SBIN0001249");
-  const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("180000");
-  const [occupation, setOccupation] = useState<string>("ખેતી / વ્યવસાય (Farmer)");
-  const [subCaste, setSubCaste] = useState<string>("કડવા પાટીદાર (પટેલ)");
-  const [religion, setReligion] = useState<string>("હિન્દુ (Hindu)");
+  const [rationCategory, setRationCategory] = useState<string>("");
+  const [fpsShopNo, setFpsShopNo] = useState<string>("");
+  const [gasConnectionStatus, setGasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
+  const [bankAccountNo, setBankAccountNo] = useState<string>("");
+  const [bankIfsc, setBankIfsc] = useState<string>("");
+  const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("");
+  const [occupation, setOccupation] = useState<string>("");
+  const [subCaste, setSubCaste] = useState<string>("");
+  const [religion, setReligion] = useState<string>("");
 
   // Extended Government Services Form States
-  const [surveyNumber, setSurveyNumber] = useState<string>("241/1 પૈકી");
-  const [khataNumber, setKhataNumber] = useState<string>("412");
-  const [landArea, setLandArea] = useState<string>("1.42 હેક્ટર");
-  const [childName, setChildName] = useState<string>("હરી");
-  const [birthPlace, setBirthPlace] = useState<string>("સિવિલ હોસ્પિટલ, રાજકોટ");
-  const [deceasedName, setDeceasedName] = useState<string>("નારણભાઈ પટેલ");
-  const [deathDate, setDeathDate] = useState<string>("2023-11-04");
-  const [deathPlace, setDeathPlace] = useState<string>("રાજકોટ (ઘરે)");
-  const [ewsPropertyType, setEwsPropertyType] = useState<string>("રહેણાંક મકાન (< ૧૦૦૦ ચો.ફૂટ)");
-  const [domicileYears, setDomicileYears] = useState<string>("૨૦ વર્ષ (જન્મથી ગુજરાત)");
-  const [seniorBloodGroup, setSeniorBloodGroup] = useState<string>("B+");
-  const [seniorEmergencyPhone, setSeniorEmergencyPhone] = useState<string>("9974442291");
-  const [drivingClass, setDrivingClass] = useState<string>("MCWG (મોટરસાયકલ) & LMV (કાર)");
-  const [rtoOfficeName, setRtoOfficeName] = useState<string>("GJ-03 RTO કચેરી, રાજકોટ");
-  const [marriageDate, setMarriageDate] = useState<string>("2025-02-14");
-  const [spouseName, setSpouseName] = useState<string>("પ્રિયાબેન");
+  const [surveyNumber, setSurveyNumber] = useState<string>("");
+  const [khataNumber, setKhataNumber] = useState<string>("");
+  const [landArea, setLandArea] = useState<string>("");
+  const [childName, setChildName] = useState<string>("");
+  const [birthPlace, setBirthPlace] = useState<string>("");
+  const [deceasedName, setDeceasedName] = useState<string>("");
+  const [deathDate, setDeathDate] = useState<string>("");
+  const [deathPlace, setDeathPlace] = useState<string>("");
+  const [ewsPropertyType, setEwsPropertyType] = useState<string>("");
+  const [domicileYears, setDomicileYears] = useState<string>("");
+  const [seniorBloodGroup, setSeniorBloodGroup] = useState<string>("");
+  const [seniorEmergencyPhone, setSeniorEmergencyPhone] = useState<string>("");
+  const [drivingClass, setDrivingClass] = useState<string>("MCWG & LMV");
+  const [rtoOfficeName, setRtoOfficeName] = useState<string>("");
+  const [marriageDate, setMarriageDate] = useState<string>("");
+  const [spouseName, setSpouseName] = useState<string>("");
+
+  // Form Usability, Validation & Feedback States
+  const [formValidationError, setFormValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showDemoLoadedToast, setShowDemoLoadedToast] = useState<boolean>(false);
+  const [showResetToast, setShowResetToast] = useState<boolean>(false);
 
   // ── 1-Click AI Auto-Fill States ──
   const [autoFillSuggestion, setAutoFillSuggestion] = useState<{
@@ -484,15 +490,32 @@ export default function DocumentServicePortal({
             if (parsed) {
               const cit = parsed.citizen || parsed;
               setCitizenSession(cit);
-              const activeMember = getActiveFamilyMember(cit);
-              setApplicantName(activeMember.nameEn || activeMember.nameGu || cit.citizenName || "Hari Vinodrai Patel");
-              setApplicantNameGu(activeMember.nameGu || cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
-              setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu || "વિનોદરાઈ કરશનભાઈ પટેલ");
-              setDob(activeMember.dob || "1998-05-15");
-              setGender(activeMember.gender || "male");
-              setMobileNumber(activeMember.mobile || cit.mobile || "9974442291");
-              setAadhaarNumber(activeMember.aadhaarMasked || `XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
-              setLookupNumber(activeMember.aadhaarLast4 || cit.aadhaarLast4 || "4829");
+              const activeMemberId = typeof window !== "undefined" ? localStorage.getItem("nagrik_active_family_member_id") : null;
+              const hasExplicitFamilyMember = activeMemberId && activeMemberId !== "member-self";
+              const activeMember = hasExplicitFamilyMember ? getActiveFamilyMember(cit) : null;
+
+              if (activeMember?.nameEn || cit.citizenName) {
+                setApplicantName(activeMember?.nameEn || cit.citizenName || "");
+              }
+              if (activeMember?.nameGu || cit.citizenNameGu) {
+                setApplicantNameGu(activeMember?.nameGu || cit.citizenNameGu || "");
+              }
+              if (activeMember?.fatherOrHusbandNameGu) {
+                setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu);
+              }
+              if (activeMember?.dob) {
+                setDob(activeMember.dob);
+              }
+              if (activeMember?.gender) {
+                setGender(activeMember.gender);
+              }
+              if (activeMember?.mobile || cit.mobile) {
+                setMobileNumber(activeMember?.mobile || cit.mobile || "");
+              }
+              if (activeMember?.aadhaarMasked || cit.aadhaarLast4) {
+                setAadhaarNumber(activeMember?.aadhaarMasked || (cit.aadhaarLast4 ? `XXXX-XXXX-${cit.aadhaarLast4}` : ""));
+                setLookupNumber(activeMember?.aadhaarLast4 || cit.aadhaarLast4 || "");
+              }
               if (cit.district) setDistrict(cit.district);
               if (cit.taluka) setTaluka(cit.taluka);
               if (cit.village) setVillage(cit.village);
@@ -663,7 +686,8 @@ export default function DocumentServicePortal({
   const handleFileUpload = async (docId: string, file: File) => {
     // 1. Client-side File Size Validation (BUG-023: Max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("❌ દસ્તાવેજ ફાઇલ સાઇઝ ૫ MB થી ઓછી હોવી જોઈએ. કૃપા કરીને નાની ફાઇલ પસંદ કરો.");
+      setFormValidationError("❌ દસ્તાવેજ ફાઇલ સાઇઝ ૫ MB થી ઓછી હોવી જોઈએ. કૃપા કરીને ૫ MB કરતાં નાની JPG, PNG અથવા PDF ફાઇલ પસંદ કરો. (Maximum file size is 5MB)");
+      window.scrollTo({ top: 120, behavior: "smooth" });
       return;
     }
 
@@ -918,26 +942,147 @@ export default function DocumentServicePortal({
 
   // 1-Click Fast Demo Data Button (Judge Presentation)
   const handleAutoFillDemo = () => {
+    // 1. Applicant Personal Info
+    setApplicantName("Hari Vinodrai Patel");
+    setApplicantNameGu("હરી વિનોદરાઈ પટેલ");
+    setFatherOrHusbandName("વિનોદરાઈ કરશનભાઈ પટેલ");
+    setMotherName("ભાવનાબેન વિનોદરાઈ પટેલ");
+    setDob("1985-06-15");
+    setGender("male");
+    setMobileNumber("9974442291");
+    setEmailAddress("haripatel@gujarat.gov.in");
+    setAadhaarNumber("4829");
     setLookupNumber("982548291045");
-    handleFetchExistingRecord();
-    setSelectedCorrections(["address", "mobile"]);
 
-    // Auto mark all docs as AI Verified
+    // 2. Address Details
+    setDistrict("Rajkot");
+    setTaluka("Gondal");
+    setVillage("ગોમટા (Gomta)");
+    setHouseNo("૧૨");
+    setStreetSociety("શિવ દર્શન રેસિડેન્સી, કાલાવડ રોડ");
+    setPincode("360311");
+
+    // 3. Service Specific Sample Data
+    setRationCategory("NFSA - APL-1");
+    setFpsShopNo("FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)");
+    setBankAccountNo("•••• •••• 4912");
+    setBankIfsc("SBIN0001249");
+    setAnnualIncomeVal("180000");
+    setOccupation("ખેતી / વ્યવસાય (Farmer)");
+    setSubCaste("કડવા પાટીદાર (પટેલ)");
+    setReligion("હિન્દુ (Hindu)");
+    setSurveyNumber("241/1 પૈકી");
+    setKhataNumber("412");
+    setLandArea("1.42 હેક્ટર");
+    setChildName("આરવ");
+    setBirthPlace("સિવિલ હોસ્પિટલ, રાજકોટ");
+    setDeceasedName("નારણભાઈ પટેલ");
+    setDeathDate("2023-11-04");
+    setDeathPlace("રાજકોટ (ઘરે)");
+    setEwsPropertyType("રહેણાંક મકાન (< ૧૦૦૦ ચો.ફૂટ)");
+    setDomicileYears("૨૦ વર્ષ (જન્મથી ગુજરાત)");
+    setSeniorBloodGroup("B+");
+    setSeniorEmergencyPhone("9974442291");
+    setDrivingClass("MCWG (મોટરસાયકલ) & LMV (કાર)");
+    setRtoOfficeName("GJ-03 RTO કચેરી, રાજકોટ");
+    setMarriageDate("2025-02-14");
+    setSpouseName("પ્રિયાબેન");
+
+    // 4. Update Mode Lookup
+    setSelectedCorrections(["address", "mobile"]);
+    if (serviceMode === "update") {
+      try {
+        const profile = lookupCitizenExistingRecord(service.id, "1413");
+        setFetchedProfile(profile);
+      } catch {}
+    }
+
+    // 5. Auto mark all docs as AI Verified (covers all slots across new & update modes)
     const demoDocs: Record<string, UploadedDocState> = {};
-    requiredDocs.forEach((d) => {
+    const allPossibleDocs = [
+      ...(service.requiredDocsNew || []),
+      ...(service.requiredDocsUpdate || []),
+      ...getDynamicRequiredDocs(),
+      { id: "applicant_photo", nameEn: "Passport Photo", nameGu: "પાસપોર્ટ ફોટો" },
+      { id: "current_aadhaar", nameEn: "Current Aadhaar Card", nameGu: "હાલના આધાર કાર્ડની નકલ" },
+      { id: "update_proof", nameEn: "Supporting Update Document", nameGu: "સુધારા માટેનો પુરાવો" },
+      { id: "address_proof", nameEn: "Address Proof", nameGu: "રહેઠાણ પુરાવો" },
+      { id: "address_proof_new", nameEn: "Proof of New Address", nameGu: "નવા સરનામાનો અધિકૃત પુરાવો" },
+      { id: "name_dob_proof", nameEn: "Name and DOB Proof", nameGu: "નામ અને જન્મ પુરાવો" },
+      { id: "member_proof", nameEn: "Member Proof", nameGu: "સભ્ય પુરાવો" },
+      { id: "identity_proof", nameEn: "Identity Proof", nameGu: "ઓળખ પુરાવો" },
+      { id: "electricity_bill", nameEn: "Electricity Bill", nameGu: "વીજળી બિલ" },
+    ];
+    allPossibleDocs.forEach((d) => {
+      if (!d || !d.id) return;
+      const docName = String(d.nameEn || d.nameGu || d.id);
+      const prefix = (docName.split(" ")[0] || "doc").toLowerCase().replace(/[^a-z0-9]/g, "");
       demoDocs[d.id] = {
         file: null,
-        fileName: `${d.nameEn.split(" ")[0].toLowerCase()}_verified.pdf`,
+        fileName: `${prefix || "document"}_verified.pdf`,
         fileType: "application/pdf",
         base64: "",
         status: "valid",
         qualityScore: 96,
-        adviceGu: `${d.nameGu} - AI દ્વારા ૧૦૦% પ્રમાણિત. સરકારી પોર્ટલ માટે યોગ્ય.`,
+        adviceGu: `${d.nameGu || "દસ્તાવેજ"} - AI દ્વારા ૧૦૦% પ્રમાણિત. સરકારી પોર્ટલ માટે યોગ્ય.`,
         needsUpdate: false,
         needsNewDocument: false,
       };
     });
     setUploadedDocs(demoDocs);
+    setFormValidationError(null);
+    setFieldErrors({});
+    setShowResetToast(false);
+    setShowDemoLoadedToast(true);
+    setTimeout(() => setShowDemoLoadedToast(false), 4000);
+  };
+
+  // One-Click Form Reset / Clear
+  const handleResetForm = () => {
+    setApplicantName("");
+    setApplicantNameGu("");
+    setFatherOrHusbandName("");
+    setMotherName("");
+    setDob("");
+    setGender("male");
+    setMobileNumber("");
+    setEmailAddress("");
+    setAadhaarNumber("");
+    setLookupNumber("");
+    setHouseNo("");
+    setStreetSociety("");
+    setPincode("");
+    setVillage("");
+    setRationCategory("");
+    setFpsShopNo("");
+    setBankAccountNo("");
+    setBankIfsc("");
+    setAnnualIncomeVal("");
+    setOccupation("");
+    setSubCaste("");
+    setReligion("");
+    setSurveyNumber("");
+    setKhataNumber("");
+    setLandArea("");
+    setChildName("");
+    setBirthPlace("");
+    setDeceasedName("");
+    setDeathDate("");
+    setDeathPlace("");
+    setEwsPropertyType("");
+    setDomicileYears("");
+    setSeniorBloodGroup("");
+    setSeniorEmergencyPhone("");
+    setRtoOfficeName("");
+    setMarriageDate("");
+    setSpouseName("");
+    setUploadedDocs({});
+    setSelectedCorrections([]);
+    setFormValidationError(null);
+    setFieldErrors({});
+    setShowDemoLoadedToast(false);
+    setShowResetToast(true);
+    setTimeout(() => setShowResetToast(false), 3500);
   };
 
   // 1-Click Official DigiLocker Gateway Response Handler
@@ -1074,7 +1219,8 @@ export default function DocumentServicePortal({
       const compat = validateDocSlotCompatibility(targetSlot, targetSlotNameGu, doc.id, doc.nameGu, isDocPdf);
 
       if (!compat.isCompatible || compat.isStrictMismatch) {
-        alert(compat.warningMessageGu || "આ દસ્તાવેજ પસંદ કરેલા સ્લોટ માટે અમાન્ય છે!");
+        setFormValidationError(compat.warningMessageGu || "આ દસ્તાવેજ પસંદ કરેલા સ્લોટ માટે અમાન્ય છે! કૃપા કરીને યોગ્ય પુરાવો પસંદ કરો.");
+        window.scrollTo({ top: 120, behavior: "smooth" });
         return;
       }
 
@@ -1176,6 +1322,115 @@ export default function DocumentServicePortal({
     }
   };
 
+  // ── Step 2 Field-by-Field Validation ──
+  const validateStep2Form = (): { valid: boolean; errors: Record<string, string>; message: string } => {
+    const errors: Record<string, string> = {};
+    const messages: string[] = [];
+
+    const hasName = Boolean(
+      (applicantName && applicantName.trim().length > 0) ||
+      (applicantNameGu && applicantNameGu.trim().length > 0)
+    );
+    if (!hasName) {
+      errors.name = "અરજદારનું નામ દાખલ કરવું ફરજિયાત છે (Name is required)";
+      messages.push("• અરજદારનું પૂરું નામ (ગુજરાતી અથવા અંગ્રેજી)");
+    }
+
+    const cleanMobile = mobileNumber.replace(/\D/g, "");
+    if (!cleanMobile) {
+      errors.mobile = "મોબાઈલ નંબર દાખલ કરવો ફરજિયાત છે (Mobile is required)";
+      messages.push("• ૧૦ આંકડાનો મોબાઈલ નંબર");
+    } else if (cleanMobile.length !== 10) {
+      errors.mobile = "માન્ય ૧૦ આંકડાનો મોબાઈલ નંબર દાખલ કરો (Must be 10 digits)";
+      messages.push("• માન્ય ૧૦-આંકડાનો મોબાઈલ નંબર");
+    }
+
+    if (!village.trim()) {
+      errors.village = "ગામ અથવા શહેર પસંદ કરવું ફરજિયાત છે (Village/City is required)";
+      messages.push("• ગામ / શહેરની પસંદગી");
+    }
+
+    if (!dob.trim()) {
+      errors.dob = "જન્મ તારીખ દાખલ કરવી ફરજિયાત છે (Date of Birth is required)";
+      messages.push("• જન્મ તારીખ (DOB)");
+    }
+
+    if (service.id === "land_records") {
+      if (!khataNumber.trim()) {
+        errors.khataNumber = "ખાતા નંબર ફરજિયાત છે";
+        messages.push("• જમીન ખાતા નંબર");
+      }
+      if (!surveyNumber.trim()) {
+        errors.surveyNumber = "સર્વે નંબર ફરજિયાત છે";
+        messages.push("• જમીન સર્વે / બ્લોક નંબર");
+      }
+    } else if (service.id === "death_cert") {
+      if (!deceasedName.trim()) {
+        errors.deceasedName = "મૃતકનું નામ ફરજિયાત છે";
+        messages.push("• મૃતકનું પૂરું નામ");
+      }
+      if (!deathDate.trim()) {
+        errors.deathDate = "મરણ તારીખ ફરજિયાત છે";
+        messages.push("• મરણ તારીખ");
+      }
+    } else if (service.id === "marriage_cert") {
+      if (!marriageDate.trim()) {
+        errors.marriageDate = "લગ્ન તારીખ ફરજિયાત છે";
+        messages.push("• લગ્ન તારીખ");
+      }
+      if (!spouseName.trim()) {
+        errors.spouseName = "પત્નીનું નામ ફરજિયાત છે";
+        messages.push("• પત્નીનું પૂરું નામ");
+      }
+    }
+
+    if (messages.length > 0) {
+      return {
+        valid: false,
+        errors,
+        message: "કૃપા કરીને આગળ વધતા પહેલા નીચેની ફરજિયાત વિગતો પૂર્ણ કરો:\n" + messages.join("\n"),
+      };
+    }
+
+    if (!applicantName.trim() && applicantNameGu.trim()) {
+      setApplicantName(applicantNameGu.trim());
+    } else if (applicantName.trim() && !applicantNameGu.trim()) {
+      setApplicantNameGu(applicantName.trim());
+    }
+
+    return { valid: true, errors: {}, message: "" };
+  };
+
+  // ── Step 3 Document Validation ──
+  const validateStep3Documents = (): { valid: boolean; message: string } => {
+    const invalidDocs = requiredDocs.filter((d) => uploadedDocs[d.id]?.status === "invalid");
+    if (invalidDocs.length > 0) {
+      const firstInvalid = invalidDocs[0];
+      const firstState = uploadedDocs[firstInvalid.id];
+      let msg = `❌ દસ્તાવેજ અસ્વીકાર્ય છે: '${firstInvalid.nameGu}' સરકારી નિયમો અનુસાર માન્ય નથી.`;
+      if (firstState?.nameMatchStatus === "mismatch") {
+        msg = `❌ દસ્તાવેજમાં નામ મિસમેચ: અપલોડ કરેલ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName}' ના નામે ભરેલું છે.`;
+      } else if (firstState?.matchesExpected === false) {
+        msg = `❌ ખોટો દસ્તાવેજ: '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ થયેલ છે.`;
+      } else if (firstState?.serviceRuleAdviceGu) {
+        msg = `❌ સરકારી સેવા નિયમ ભંગ: ${firstState.serviceRuleAdviceGu}`;
+      }
+      return { valid: false, message: msg };
+    }
+
+    const missingDocs = requiredDocs.filter((d) => d.mandatory && !uploadedDocs[d.id]);
+    if (missingDocs.length > 0) {
+      return {
+        valid: false,
+        message:
+          "⚠️ કૃપા કરીને નીચેના તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n" +
+          missingDocs.map((d) => `• ${d.nameGu} (${d.nameEn})`).join("\n"),
+      };
+    }
+
+    return { valid: true, message: "" };
+  };
+
   // ── Strict Progressive Step-by-Step Validation & Security Gate ──
   const validateStepData = (stepNumber: 1 | 2 | 3): { valid: boolean; reason: string } => {
     if (stepNumber === 1) {
@@ -1241,7 +1496,6 @@ export default function DocumentServicePortal({
     }
 
     if (targetStep === 4) {
-      // Strictly prevent jumping straight to Step 4 from Step 1 or 2
       const s1 = validateStepData(1);
       if (!s1.valid) return { allowed: false, reason: s1.reason };
 
@@ -1274,6 +1528,7 @@ export default function DocumentServicePortal({
 
     // Moving backward is always permitted so citizens can review/edit anytime
     if (targetStep < formStep) {
+      setFormValidationError(null);
       setFormStep(targetStep);
       window.scrollTo({ top: 0, behavior: "smooth" });
       if (typeof window !== "undefined") {
@@ -1289,10 +1544,11 @@ export default function DocumentServicePortal({
     // Moving forward requires step prerequisites to be fulfilled
     const check = canNavigateToStep(targetStep);
     if (!check.allowed) {
-      alert(check.reason);
+      setFormValidationError(check.reason);
       return;
     }
 
+    setFormValidationError(null);
     setFormStep(targetStep);
     window.scrollTo({ top: 0, behavior: "smooth" });
     if (typeof window !== "undefined") {
@@ -1308,8 +1564,13 @@ export default function DocumentServicePortal({
   const handleOpenPaymentGateway = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!applicantName.trim()) {
-      alert("કૃપા કરીને અરજદારનું નામ ભરો.");
+    const validName = Boolean(
+      (applicantName && applicantName.trim().length > 0) ||
+      (applicantNameGu && applicantNameGu.trim().length > 0)
+    );
+    if (!validName) {
+      setFormValidationError("⚠️ કૃપા કરીને અરજદારનું પૂરું નામ દાખલ કરો.");
+      setFormStep(2);
       return;
     }
 
@@ -1322,38 +1583,34 @@ export default function DocumentServicePortal({
     if (invalidDocs.length > 0) {
       const firstInvalid = invalidDocs[0];
       const firstState = uploadedDocs[firstInvalid.id];
+      let msg = `❌ અરજી સબમિટ થઈ શકશે નહીં: અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`;
       if (firstState?.nameMatchStatus === "mismatch") {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (અન્ય વ્યક્તિનો દસ્તાવેજ):\n\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName || "અરજદાર"}' ના નામે ભરેલું છે.\n\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે. કૃપા કરીને સાચો દસ્તાવેજ અપલોડ કરો.`
-        );
+        msg = `❌ અરજી સબમિટ થઈ શકશે નહીં (અન્ય વ્યક્તિનો દસ્તાવેજ):\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName}' ના નામે ભરેલું છે.\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે.`;
       } else if (firstState?.matchesExpected === false) {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (ખોટો દસ્તાવેજ):\n\nતમે '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ કરી છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ, બોનાફાઈડ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
-        );
+        msg = `❌ અરજી સબમિટ થઈ શકશે નહીં (ખોટો દસ્તાવેજ):\nતમે '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ કરી છે.\nકૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`;
       } else if (firstState?.serviceRuleMatch === false) {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (સરકારી સેવા નિયમ ભંગ):\n\n${firstState.serviceRuleAdviceGu || "અપલોડ કરેલ દસ્તાવેજ આ સેવાના કાયદાકીય નિયમો પૂર્ણ કરતો નથી."}\n\nકૃપા કરીને સરકારી ધારાધોરણો મુજબ પાત્ર દસ્તાવેજ અપલોડ કરો.`
-        );
-      } else {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
-        );
+        msg = `❌ અરજી સબમિટ થઈ શકશે નહીં (સરકારી સેવા નિયમ ભંગ):\n${firstState.serviceRuleAdviceGu || "અપલોડ કરેલ દસ્તાવેજ આ સેવાના કાયદાકીય નિયમો પૂર્ણ કરતો નથી."}`;
       }
+      setFormValidationError(msg);
+      setFormStep(3);
       return;
     }
 
     // Check mandatory documents
     const missingDocs = requiredDocs.filter((d) => d.mandatory && !uploadedDocs[d.id]);
     if (missingDocs.length > 0) {
-      alert(
-        `⚠️ કૃપા કરીને તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n- ${missingDocs.map((d) => d.nameGu).join("\n- ")}`
+      setFormValidationError(
+        `⚠️ કૃપા કરીને તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n` +
+        missingDocs.map((d) => `• ${d.nameGu} (${d.nameEn})`).join("\n")
       );
+      setFormStep(3);
       return;
     }
 
     // If update mode, ensure at least one correction is selected
     if (serviceMode === "update" && selectedCorrections.length === 0) {
-      alert("⚠️ કૃપા કરીને ઓછામાં ઓછો ૧ સુધારો (Checkbox) પસંદ કરો.");
+      setFormValidationError("⚠️ કૃપા કરીને ઓછામાં ઓછો ૧ સુધારો (Checkbox) પસંદ કરો.");
+      setFormStep(1);
       return;
     }
 
@@ -1401,7 +1658,8 @@ export default function DocumentServicePortal({
       const isLoaded = await loadRazorpayScript();
       // @ts-expect-error Window Razorpay dynamic definition
       if (!isLoaded || !window.Razorpay) {
-        alert("Razorpay ગેટવે લોડ થવામાં ક્ષતિ આવી. કૃપા કરીને UPI અથવા ચલણ મોડનો ઉપયોગ કરો.");
+        setFormValidationError("Razorpay ગેટવે લોડ થવામાં ક્ષતિ આવી. કૃપા કરીને UPI અથવા ચલણ મોડનો ઉપયોગ કરો.");
+        window.scrollTo({ top: 120, behavior: "smooth" });
         setIsProcessingPayment(false);
         return;
       }
@@ -1414,14 +1672,15 @@ export default function DocumentServicePortal({
           amount: service.fee,
           applicationId: activeChallanNo,
           serviceName: `${service.nameGu} અરજી ફી`,
-          citizenName: applicantName || citizenSession?.citizenName || "Hari Patel",
-          citizenMobile: mobileNumber || citizenSession?.mobile || "9974442291",
+          citizenName: applicantName || applicantNameGu || citizenSession?.citizenName || "Citizen",
+          citizenMobile: mobileNumber || citizenSession?.mobile || "",
         }),
       });
 
       const orderData = await res.json();
       if (!orderData.success) {
-        alert(orderData.error || "ઓર્ડર જનરેટ કરવામાં ક્ષતિ આવી.");
+        setFormValidationError(orderData.error || "ઓર્ડર જનરેટ કરવામાં ક્ષતિ આવી.");
+        window.scrollTo({ top: 120, behavior: "smooth" });
         setIsProcessingPayment(false);
         return;
       }
@@ -1542,9 +1801,9 @@ export default function DocumentServicePortal({
         order_id: orderData.orderId.startsWith("order_test_") ? undefined : orderData.orderId,
         callback_url: typeof window !== "undefined" ? `${window.location.origin}/api/payment/callback?applicationId=${encodeURIComponent(activeChallanNo)}` : undefined,
         prefill: {
-          name: applicantName || citizenSession?.citizenName || "Hari Patel",
+          name: applicantName || applicantNameGu || citizenSession?.citizenName || "",
           email: emailAddress || "citizen@gujarat.gov.in",
-          contact: mobileNumber || citizenSession?.mobile || "9974442291",
+          contact: mobileNumber || citizenSession?.mobile || "",
         },
         notes: {
           applicationId: activeChallanNo,
@@ -1680,14 +1939,14 @@ export default function DocumentServicePortal({
       appointmentCenter: isBiometricNeeded ? `જન સેવા કેન્દ્ર (Jan Seva Kendra), ${taluka}` : undefined,
       appointmentToken: fallbackToken,
       signatureType,
-      mobile: mobileNumber || "9974442291",
+      mobile: mobileNumber || citizenSession?.mobile || "",
       email: emailAddress || "citizen@gujarat.gov.in",
       aadhaarLast4:
         service.id === "aadhaar" && serviceMode === "new"
           ? "NEW"
           : aadhaarNumber
           ? aadhaarNumber.slice(-4)
-          : "4829",
+          : citizenSession?.aadhaarLast4 || "XXXX",
       status: "processing",
       appliedDate: today,
       lastUpdated: today,
@@ -1745,7 +2004,7 @@ export default function DocumentServicePortal({
 
     const instantNotifications = {
       sms: {
-        sentTo: instantApp.mobile || "9974442291",
+        sentTo: instantApp.mobile || mobileNumber || citizenSession?.mobile || "",
         message: `Govt of Gujarat: નમસ્તે ${instantApp.citizenNameGu}, તમારી ${instantApp.schemeNameGu} માટેની અરજી (${instantApp.id}) સફળતાપૂર્વક સ્વીકારાઈ છે.`,
         timestamp: new Date().toLocaleTimeString(),
       },
@@ -2000,10 +2259,10 @@ export default function DocumentServicePortal({
           serviceTitle="નાગરિક દસ્તાવેજ સેવા & સુધારો પોર્ટલ"
           onSuccess={(cit) => {
             setCitizenSession(cit);
-            setApplicantName(cit.citizenName || "Hari Vinodrai Patel");
-            setApplicantNameGu(cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
-            setMobileNumber(cit.mobile || "9974442291");
-            setAadhaarNumber(`XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
+            setApplicantName(cit.citizenName || "");
+            setApplicantNameGu(cit.citizenNameGu || "");
+            setMobileNumber(cit.mobile || "");
+            setAadhaarNumber(cit.aadhaarLast4 ? `XXXX-XXXX-${cit.aadhaarLast4}` : "");
             if (cit.district) setDistrict(cit.district);
             if (cit.taluka) setTaluka(cit.taluka);
             if (cit.village) setVillage(cit.village);
@@ -2510,15 +2769,94 @@ export default function DocumentServicePortal({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAutoFillDemo}
-          className="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
-        >
-          <Sparkles size={14} />
-          <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <button
+            id="btnClearForm"
+            type="button"
+            onClick={handleResetForm}
+            className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+            title="ફોર્મ ખાલી કરો / સાફ કરો (Clear form)"
+          >
+            <RotateCw size={13} />
+            <span>ફોર્મ સાફ કરો (Clear)</span>
+          </button>
+
+          <button
+            id="btnFastDemo"
+            type="button"
+            onClick={handleAutoFillDemo}
+            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            title="ડેમો મૂલ્યાંકન માટે સેમ્પલ ડેટા ભરો"
+          >
+            <Sparkles size={14} />
+            <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
+          </button>
+        </div>
       </div>
+
+      {showDemoLoadedToast && (
+        <div
+          role="status"
+          className="bg-emerald-50 border border-emerald-300 text-emerald-950 p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-in fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+            <span>✨ ડેમો સેમ્પલ ડેટા સફળતાપૂર્વક ભરાયો છે (Sample Data Loaded for Demonstration).</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDemoLoadedToast(false)}
+            className="text-emerald-700 hover:text-emerald-900 p-0.5"
+            aria-label="સૂચના બંધ કરો"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {showResetToast && (
+        <div
+          role="status"
+          className="bg-slate-100 border border-slate-300 text-slate-900 p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-in fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-slate-600 shrink-0" />
+            <span>🔄 ફોર્મ સંપૂર્ણ સાફ કરવામાં આવ્યું છે (Form Cleared to Blank).</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowResetToast(false)}
+            className="text-slate-700 hover:text-slate-900 p-0.5"
+            aria-label="સૂચના બંધ કરો"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Accessible Inline Validation Alert Banner */}
+      {formValidationError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="bg-rose-50 border-2 border-rose-300 text-rose-950 p-3.5 sm:p-4 rounded-2xl flex items-start justify-between gap-3 shadow-sm animate-in fade-in"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="text-rose-600 shrink-0 mt-0.5" size={18} />
+            <div className="text-xs sm:text-sm font-semibold whitespace-pre-line leading-relaxed">
+              {formValidationError}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFormValidationError(null)}
+            className="p-1 text-rose-700 hover:text-rose-900 rounded-lg hover:bg-rose-100 transition shrink-0 cursor-pointer"
+            aria-label="સંદેશ બંધ કરો (Dismiss error alert)"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ── Re-Apply Context Banner ── */}
       {reapplyContext && (
@@ -3268,6 +3606,7 @@ export default function DocumentServicePortal({
           </div>
 
           <button
+            id="btnStep1Next"
             type="button"
             onClick={() => handleStepClick(2)}
             className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
@@ -3354,54 +3693,122 @@ export default function DocumentServicePortal({
                 </div>
               )}
 
-              {/* Applicant Name Fields */}
+              {/* Applicant Name Fields (Bilingual) */}
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    અરજદારનું પૂરું નામ (ગુજરાતીમાં) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={applicantNameGu || applicantName}
-                    onChange={(e) => {
-                      setApplicantNameGu(e.target.value);
-                      if (!applicantName) setApplicantName(e.target.value);
-                    }}
-                    placeholder="દા.ત. રમેશભાઈ કાંતિલાલ પટેલ"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    પિતા / પતિનું પૂરું નામ (Father/Husband Name) *
-                  </label>
-                  <input
-                    type="text"
-                    value={fatherOrHusbandName}
-                    onChange={(e) => setFatherOrHusbandName(e.target.value)}
-                    placeholder="દા.ત. કાંતિલાલ લાલજીભાઈ પટેલ"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2.5">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      જન્મ તારીખ (DOB) *
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      અરજદારનું પૂરું નામ (ગુજરાતીમાં) <span className="text-rose-600 font-black">*</span>
                     </label>
                     <input
-                      type="date"
-                      value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-orange-500"
+                      id="applicantNameGu"
+                      name="applicantNameGu"
+                      type="text"
+                      value={applicantNameGu}
+                      onChange={(e) => {
+                        setApplicantNameGu(e.target.value);
+                        if (!applicantName) setApplicantName(e.target.value);
+                        if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+                      }}
+                      placeholder="દા.ત. રમેશભાઈ કાંતિલાલ પટેલ"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
+                        fieldErrors.name
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
+                    />
+                    {fieldErrors.name && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      અરજદારનું પૂરું નામ (English) <span className="text-rose-600 font-black">*</span>
+                    </label>
+                    <input
+                      id="applicantNameEn"
+                      name="applicantNameEn"
+                      type="text"
+                      value={applicantName}
+                      onChange={(e) => {
+                        setApplicantName(e.target.value);
+                        if (!applicantNameGu) setApplicantNameGu(e.target.value);
+                        if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+                      }}
+                      placeholder="e.g. Ramesh Kantilal Patel"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
+                        fieldErrors.name
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
+                    />
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">આધાર કાર્ડ મુજબનું સત્તાવાર અંગ્રેજી નામ</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      પિતા / પતિનું પૂરું નામ <span className="text-slate-400 font-normal">(Father/Husband Name)</span>
+                    </label>
+                    <input
+                      id="applicantFatherName"
+                      name="applicantFatherName"
+                      type="text"
+                      value={fatherOrHusbandName}
+                      onChange={(e) => setFatherOrHusbandName(e.target.value)}
+                      placeholder="દા.ત. કાંતિલાલ લાલજીભાઈ પટેલ"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">જાતિ (Gender) *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      માતાનું પૂરું નામ <span className="text-slate-400 font-normal">(Mother&apos;s Name - વૈકલ્પિક)</span>
+                    </label>
+                    <input
+                      id="applicantMotherName"
+                      name="applicantMotherName"
+                      type="text"
+                      value={motherName}
+                      onChange={(e) => setMotherName(e.target.value)}
+                      placeholder="દા.ત. શાંતાબેન પટેલ"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      જન્મ તારીખ (Date of Birth) <span className="text-rose-600 font-black">*</span>
+                    </label>
+                    <input
+                      id="applicantDob"
+                      name="applicantDob"
+                      type="date"
+                      value={dob}
+                      onChange={(e) => {
+                        setDob(e.target.value);
+                        if (fieldErrors.dob) setFieldErrors((prev) => ({ ...prev, dob: "" }));
+                      }}
+                      className={`w-full px-2.5 py-2 bg-slate-50 rounded-xl text-xs font-medium focus:ring-2 ${
+                        fieldErrors.dob
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
+                    />
+                    {fieldErrors.dob && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.dob}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">જાતિ (Gender) <span className="text-rose-600 font-black">*</span></label>
                     <select
+                      id="applicantGender"
+                      name="applicantGender"
                       value={gender}
                       onChange={(e) => setGender(e.target.value as "male" | "female")}
                       className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-orange-500"
@@ -3414,18 +3821,31 @@ export default function DocumentServicePortal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      મોબાઈલ નંબર (SMS એલર્ટ) *
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      મોબાઈલ નંબર (SMS એલર્ટ માટે) <span className="text-rose-600 font-black">*</span>
                     </label>
                     <input
+                      id="applicantMobile"
+                      name="applicantMobile"
                       type="tel"
                       required
                       maxLength={10}
                       value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
-                      placeholder="9974442291"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setMobileNumber(val);
+                        if (fieldErrors.mobile) setFieldErrors((prev) => ({ ...prev, mobile: "" }));
+                      }}
+                      placeholder="દા.ત. 9825012345"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 font-mono min-h-[42px] ${
+                        fieldErrors.mobile
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
                     />
+                    {fieldErrors.mobile && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.mobile}</p>
+                    )}
                   </div>
 
                   {service.id === "aadhaar" && serviceMode === "new" ? (
@@ -3445,15 +3865,15 @@ export default function DocumentServicePortal({
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">
                         {service.id === "aadhaar"
-                          ? "હાલના આધારના છેલ્લા ૪ આંકડા *"
-                          : "અરજદારના આધારના છેલ્લા ૪ આંકડા (e-KYC) *"}
+                          ? "હાલના આધારના છેલ્લા ૪ આંકડા"
+                          : "અરજદારના આધારના છેલ્લા ૪ આંકડા (e-KYC)"}
                       </label>
                       <input
                         type="text"
                         maxLength={4}
                         value={aadhaarNumber}
                         onChange={(e) => setAadhaarNumber(e.target.value)}
-                        placeholder="4829"
+                        placeholder="દા.ત. 4829"
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
                       />
                     </div>
@@ -3514,24 +3934,36 @@ export default function DocumentServicePortal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    ગામ / શહેર (Village / City) *
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    ગામ / શહેર (Village / City) <span className="text-rose-600 font-black">*</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select
-                      value={village}
-                      onChange={(e) => {
-                        setVillage(e.target.value);
-                      }}
-                      className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    >
-                      <option value="">-- ગામ / શહેર પસંદ કરો --</option>
-                      {getVillagesForTaluka(taluka).map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
+                    <div>
+                      <select
+                        id="applicantVillage"
+                        name="applicantVillage"
+                        value={village}
+                        onChange={(e) => {
+                          setVillage(e.target.value);
+                          if (fieldErrors.village) setFieldErrors((prev) => ({ ...prev, village: "" }));
+                        }}
+                        className={`w-full px-2.5 py-2 bg-slate-50 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 ${
+                          fieldErrors.village
+                            ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                            : "border border-slate-200 focus:ring-orange-500"
+                        }`}
+                      >
+                        <option value="">-- ગામ / શહેર પસંદ કરો --</option>
+                        {getVillagesForTaluka(taluka).map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                      {fieldErrors.village && (
+                        <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.village}</p>
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={streetSociety}
@@ -3941,6 +4373,7 @@ export default function DocumentServicePortal({
             {/* Step 2 Bottom Navigation */}
             <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200">
               <button
+                id="btnStep2Back"
                 type="button"
                 onClick={() => {
                   setFormStep(1);
@@ -3953,12 +4386,18 @@ export default function DocumentServicePortal({
               </button>
 
               <button
+                id="btnStep2Next"
                 type="button"
                 onClick={() => {
-                  if (!applicantName.trim() && !applicantNameGu.trim()) {
-                    alert("કૃપા કરીને અરજદારનું પૂરું નામ દાખલ કરો.");
+                  const check = validateStep2Form();
+                  if (!check.valid) {
+                    setFieldErrors(check.errors);
+                    setFormValidationError(check.message);
+                    window.scrollTo({ top: 120, behavior: "smooth" });
                     return;
                   }
+                  setFieldErrors({});
+                  setFormValidationError(null);
                   handleStepClick(3);
                 }}
                 className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
@@ -4375,7 +4814,9 @@ export default function DocumentServicePortal({
                               <div className="flex items-start gap-1.5">
                                 <span className="font-bold text-slate-500 shrink-0">📋 ફોર્મમાં અરજદાર:</span>
                                 <span className="font-extrabold text-slate-900 truncate">
-                                  {applicantNameGu || applicantName || "વિનોદરાઈ કરશનભાઈ પટેલ"}
+                                  {applicantNameGu || applicantName || (
+                                    <span className="text-slate-400 italic">નામ નોંધાયેલ નથી</span>
+                                  )}
                                 </span>
                               </div>
 
@@ -4473,6 +4914,7 @@ export default function DocumentServicePortal({
 
                   <div className="flex items-center gap-2 w-full sm:w-auto">
                     <button
+                      id="btnStep3Back"
                       type="button"
                       onClick={() => {
                         setFormStep(2);
@@ -4484,13 +4926,16 @@ export default function DocumentServicePortal({
                       <span>← પાછળ (વિગતો)</span>
                     </button>
                     <button
+                      id="btnStep3Next"
                       type="button"
                       onClick={() => {
-                        const hasInvalid = requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid");
-                        if (hasInvalid) {
-                          alert("ધ્યાન આપો: એક અથવા વધુ દસ્તાવેજ અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.");
+                        const check = validateStep3Documents();
+                        if (!check.valid) {
+                          setFormValidationError(check.message);
+                          window.scrollTo({ top: 120, behavior: "smooth" });
                           return;
                         }
+                        setFormValidationError(null);
                         handleStepClick(4);
                       }}
                       className="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
@@ -4546,15 +4991,41 @@ export default function DocumentServicePortal({
               </div>
               <div>
                 <span className="text-slate-500 text-[10px] block">અરજદારનું નામ:</span>
-                <strong className="text-slate-900 font-bold">{applicantNameGu || applicantName || "હરી વિનોદરાઈ પટેલ"}</strong>
+                <strong className="text-slate-900 font-bold">
+                  {applicantNameGu || applicantName || (
+                    <span className="text-rose-600 font-semibold italic">અરજદારનું નામ બાકી છે</span>
+                  )}
+                </strong>
               </div>
+              {fatherOrHusbandName && (
+                <div>
+                  <span className="text-slate-500 text-[10px] block">પિતા / પતિનું નામ:</span>
+                  <strong className="text-slate-900 font-bold">{fatherOrHusbandName}</strong>
+                </div>
+              )}
+              {motherName && (
+                <div>
+                  <span className="text-slate-500 text-[10px] block">માતાનું નામ:</span>
+                  <strong className="text-slate-900 font-bold">{motherName}</strong>
+                </div>
+              )}
               <div>
                 <span className="text-slate-500 text-[10px] block">સંપર્ક / મોબાઈલ:</span>
-                <strong className="text-slate-900 font-mono font-bold">{mobileNumber || "9974442291"}</strong>
+                <strong className="text-slate-900 font-mono font-bold">
+                  {mobileNumber || (
+                    <span className="text-rose-600 font-semibold italic">મોબાઈલ નંબર બાકી છે</span>
+                  )}
+                </strong>
               </div>
               <div>
                 <span className="text-slate-500 text-[10px] block">ગામ / કચેરી:</span>
-                <strong className="text-slate-900 font-bold">{village || "ગોમટા"}, તા. {taluka}, જિ. {district}</strong>
+                <strong className="text-slate-900 font-bold">
+                  {village ? (
+                    `${village}, તા. ${taluka}, જિ. ${district}`
+                  ) : (
+                    <span className="text-rose-600 font-semibold italic">ગામ પસંદ કરેલ નથી</span>
+                  )}
+                </strong>
               </div>
               <div>
                 <span className="text-slate-500 text-[10px] block">સંલગ્ન પુરાવા:</span>
@@ -4673,10 +5144,10 @@ export default function DocumentServicePortal({
           (activeDigiLockerTarget === "applicant_photo" ? "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો" : "દસ્તાવેજ")
         }
         serviceTitle={service.nameGu}
-        citizenName={applicantName || citizenSession?.citizenName || "Hari Vinodrai Patel"}
-        citizenNameGu={applicantNameGu || citizenSession?.citizenNameGu || "હરી વિનોદરાઈ પટેલ"}
-        citizenMobile={mobileNumber || citizenSession?.mobile || "9974442291"}
-        citizenAadhaar={aadhaarNumber || `XXXX-XXXX-${citizenSession?.aadhaarLast4 || "1413"}`}
+        citizenName={applicantName || citizenSession?.citizenName || ""}
+        citizenNameGu={applicantNameGu || citizenSession?.citizenNameGu || ""}
+        citizenMobile={mobileNumber || citizenSession?.mobile || ""}
+        citizenAadhaar={aadhaarNumber || (citizenSession?.aadhaarLast4 ? `XXXX-XXXX-${citizenSession.aadhaarLast4}` : "")}
         onDocumentFetched={handleDigiLockerDocumentFetched}
       />
 

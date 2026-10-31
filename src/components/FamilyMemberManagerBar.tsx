@@ -38,7 +38,7 @@ interface FamilyMemberManagerBarProps {
 }
 
 function getAiPoRMetaForDocType(docType: string, headNameGu: string) {
-  const cleanHead = headNameGu.trim() || "હરી વિનોદરાઈ પટેલ";
+  const cleanHead = headNameGu.trim() || "કુટુંબના વડા (Head of Family)";
 
   if (docType.includes("જન્મ")) {
     return {
@@ -167,10 +167,10 @@ export default function FamilyMemberManagerBar({
   const [newNameEn, setNewNameEn] = useState<string>("");
   const [newRelationGu, setNewRelationGu] = useState<string>("પુત્ર (Son)");
   const [newFatherHusbandGu, setNewFatherHusbandGu] = useState<string>(
-    citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ"
+    citizen.citizenNameGu || citizen.citizenName || ""
   );
   const [newGender, setNewGender] = useState<"male" | "female">("male");
-  const [newDob, setNewDob] = useState<string>("2018-06-15");
+  const [newDob, setNewDob] = useState<string>("");
   const [newAadhaar, setNewAadhaar] = useState<string>("");
 
   // Real Government Proof of Relationship (PoR - UIDAI HoF / NFSA Ration Card) state
@@ -279,9 +279,9 @@ export default function FamilyMemberManagerBar({
     setNewNameGu("");
     setNewNameEn("");
     setNewRelationGu(defaultRel);
-    setNewFatherHusbandGu(citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
+    setNewFatherHusbandGu(citizen.citizenNameGu || citizen.citizenName || "");
     setNewGender("male");
-    setNewDob("2018-06-15");
+    setNewDob("");
     setNewAadhaar("");
     setPorDocType(proofMeta.defaultDocType);
     setPorDocNumber("");
@@ -301,7 +301,7 @@ export default function FamilyMemberManagerBar({
     const activeDoc = customDocType || porDocType;
     const meta = getAiPoRMetaForDocType(
       activeDoc,
-      newFatherHusbandGu || citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ"
+      newFatherHusbandGu || citizen.citizenNameGu || citizen.citizenName || ""
     );
 
     setIsPorVerified(false);
@@ -314,7 +314,7 @@ export default function FamilyMemberManagerBar({
         return `${meta.samplePrefix}${randomDigits}`;
       });
       if (!newFatherHusbandGu.trim()) {
-        setNewFatherHusbandGu(citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
+        setNewFatherHusbandGu(citizen.citizenNameGu || citizen.citizenName || "");
       }
       if (uploadedFile) {
         setPorUploadedFileName(uploadedFile);
@@ -333,7 +333,7 @@ export default function FamilyMemberManagerBar({
     const cleanAadhaarDigits = newAadhaar.replace(/\D/g, "");
     const activeAiMeta = getAiPoRMetaForDocType(
       porDocType,
-      newFatherHusbandGu || citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ"
+      newFatherHusbandGu || citizen.citizenNameGu || citizen.citizenName || ""
     );
 
     if (!cleanName) {
@@ -416,7 +416,7 @@ export default function FamilyMemberManagerBar({
       relationGu: newRelationGu,
       relationEn: newRelationGu,
       fatherOrHusbandNameGu:
-        newFatherHusbandGu.trim() || citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ",
+        newFatherHusbandGu.trim() || citizen.citizenNameGu || citizen.citizenName || "",
       gender: newGender,
       dob: newDob,
       age: calcAge,
@@ -448,7 +448,7 @@ export default function FamilyMemberManagerBar({
   const currentProofMeta = getRecommendedProofForRelation(newRelationGu);
   const aiPorMeta = getAiPoRMetaForDocType(
     porDocType,
-    newFatherHusbandGu || citizen.citizenNameGu || "હરી વિનોદરાઈ પટેલ"
+    newFatherHusbandGu || citizen.citizenNameGu || citizen.citizenName || ""
   );
 
   return (
