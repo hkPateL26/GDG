@@ -240,6 +240,9 @@ export default function UnifiedCitizenPortal({
   };
 
   const handleCitizenLogout = () => {
+    try {
+      localStorage.removeItem("nagrik_user_photo");
+    } catch {}
     localStorage.removeItem("nagrik_citizen_session");
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new Event("nagrik_auth_change"));

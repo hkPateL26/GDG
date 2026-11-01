@@ -520,12 +520,14 @@ export default function DocumentServicePortal({
               if (cit.taluka) setTaluka(cit.taluka);
               if (cit.village) setVillage(cit.village);
               if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
+              setUserUploadedPhoto(localStorage.getItem("nagrik_user_photo") || "");
             }
           } catch (e) {
             console.error("Failed to parse citizen session:", e);
           }
         } else {
           setCitizenSession(null);
+          setUserUploadedPhoto("");
         }
       };
 
@@ -544,6 +546,10 @@ export default function DocumentServicePortal({
   }, []);
 
   const handleDocLogout = () => {
+    try {
+      localStorage.removeItem("nagrik_user_photo");
+    } catch {}
+    setUserUploadedPhoto("");
     localStorage.removeItem("nagrik_citizen_session");
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new Event("nagrik_auth_change"));
