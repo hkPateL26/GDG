@@ -16,11 +16,6 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
-      {
-        source: "/verify",
-        destination: "/track",
-        permanent: false,
-      },
     ];
   },
   async headers() {
