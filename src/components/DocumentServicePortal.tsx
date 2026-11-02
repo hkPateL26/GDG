@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   DOCUMENT_SERVICES,
   GUJARAT_DISTRICTS,
@@ -46,8 +46,14 @@ import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
 import WhatsAppDispatchCard from "@/components/WhatsAppDispatchCard";
 import CitizenLoginShield from "@/components/CitizenLoginShield";
 import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
-import { getActiveFamilyMember } from "@/lib/family-ledger";
+import {
+  getActiveFamilyMember,
+  loadFamilyMembers,
+  setActiveFamilyMemberId,
+  FamilyMemberProfile,
+} from "@/lib/family-ledger";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import { triggerHaptic } from "@/lib/haptic";
 import { queueOfflineAction } from "@/lib/offline-sync";
 import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
 import {
@@ -468,7 +474,7 @@ export default function DocumentServicePortal({
     email?: { sentTo: string; subject: string; timestamp: string };
   } | null>(null);
 
-  const [citizenSession, setCitizenSession] = useState<{
+    const [citizenSession, setCitizenSession] = useState<{
     citizenName?: string;
     citizenNameGu?: string;
     mobile?: string;
@@ -479,46 +485,80 @@ export default function DocumentServicePortal({
     annualIncome?: number;
   } | null>(null);
 
+  const [familyMembers, setFamilyMembers] = useState<FamilyMemberProfile[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("member-self");
+  const [memberSelectedToast, setMemberSelectedToast] = useState<string | null>(null);
+
+  // Dedicated Family Member Auto-Fill Handler
+  const handleSelectFamilyMember = useCallback((member: FamilyMemberProfile) => {
+    setSelectedMemberId(member.id);
+    setActiveFamilyMemberId(member.id, member);
+    try {
+      localStorage.setItem("nagrik_active_family_member", member.id);
+      localStorage.setItem("nagrik_active_family_member_id", member.id);
+    } catch {}
+    triggerHaptic();
+
+    if (member.nameGu) setApplicantNameGu(member.nameGu);
+    if (member.nameEn) setApplicantName(member.nameEn);
+    else if (member.nameGu) setApplicantName(member.nameGu);
+
+    // Smart Father/Husband Name Detection
+    if (member.fatherOrHusbandNameGu) {
+      setFatherOrHusbandName(member.fatherOrHusbandNameGu);
+    } else if (member.relationGu?.includes("પત્ની") || member.relationEn?.toLowerCase().includes("wife")) {
+      const head = citizenSession?.citizenNameGu || citizenSession?.citizenName || "";
+      if (head) setFatherOrHusbandName(head);
+    } else if (member.relationGu?.includes("પોતે") || member.relationEn?.toLowerCase().includes("self")) {
+      const fatherMember = familyMembers.find((m) => m.id === "member-father" || m.relationGu?.includes("પિતા"));
+      if (fatherMember?.nameGu) {
+        setFatherOrHusbandName(fatherMember.nameGu);
+      }
+    }
+
+    if (member.dob) setDob(member.dob);
+    if (member.gender) setGender(member.gender);
+
+    if (member.mobile) {
+      setMobileNumber(member.mobile);
+    } else if (citizenSession?.mobile) {
+      setMobileNumber(citizenSession.mobile);
+    }
+
+    if (member.aadhaarMasked) {
+      setAadhaarNumber(member.aadhaarMasked);
+      setLookupNumber(member.aadhaarLast4 || "");
+    } else if (member.aadhaarLast4) {
+      setAadhaarNumber(`XXXX-XXXX-${member.aadhaarLast4}`);
+      setLookupNumber(member.aadhaarLast4);
+    }
+
+    if (citizenSession?.district) setDistrict(citizenSession.district);
+    if (citizenSession?.taluka) setTaluka(citizenSession.taluka);
+    if (citizenSession?.village) setVillage(citizenSession.village);
+
+    // Clear validation errors
+    setFieldErrors({});
+    setFormValidationError(null);
+
+    setMemberSelectedToast(`✅ ${member.nameGu} (${member.relationGu.split(" ")[0]}) ની વિગતો ફોર્મમાં ભરાઈ ગઈ છે.`);
+    setTimeout(() => {
+      setMemberSelectedToast(null);
+    }, 4500);
+  }, [citizenSession, familyMembers]);
+
   // Restore authenticated citizen session and auto-prefill fields for active family member
   useEffect(() => {
     if (typeof window !== "undefined") {
       const syncSession = () => {
         const saved = localStorage.getItem("nagrik_citizen_session");
+        let cit: any = null;
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
             if (parsed) {
-              const cit = parsed.citizen || parsed;
+              cit = parsed.citizen || parsed;
               setCitizenSession(cit);
-              const activeMemberId = typeof window !== "undefined" ? localStorage.getItem("nagrik_active_family_member_id") : null;
-              const hasExplicitFamilyMember = activeMemberId && activeMemberId !== "member-self";
-              const activeMember = hasExplicitFamilyMember ? getActiveFamilyMember(cit) : null;
-
-              if (activeMember?.nameEn || cit.citizenName) {
-                setApplicantName(activeMember?.nameEn || cit.citizenName || "");
-              }
-              if (activeMember?.nameGu || cit.citizenNameGu) {
-                setApplicantNameGu(activeMember?.nameGu || cit.citizenNameGu || "");
-              }
-              if (activeMember?.fatherOrHusbandNameGu) {
-                setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu);
-              }
-              if (activeMember?.dob) {
-                setDob(activeMember.dob);
-              }
-              if (activeMember?.gender) {
-                setGender(activeMember.gender);
-              }
-              if (activeMember?.mobile || cit.mobile) {
-                setMobileNumber(activeMember?.mobile || cit.mobile || "");
-              }
-              if (activeMember?.aadhaarMasked || cit.aadhaarLast4) {
-                setAadhaarNumber(activeMember?.aadhaarMasked || (cit.aadhaarLast4 ? `XXXX-XXXX-${cit.aadhaarLast4}` : ""));
-                setLookupNumber(activeMember?.aadhaarLast4 || cit.aadhaarLast4 || "");
-              }
-              if (cit.district) setDistrict(cit.district);
-              if (cit.taluka) setTaluka(cit.taluka);
-              if (cit.village) setVillage(cit.village);
               if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
               setUserUploadedPhoto(localStorage.getItem("nagrik_user_photo") || "");
             }
@@ -529,21 +569,73 @@ export default function DocumentServicePortal({
           setCitizenSession(null);
           setUserUploadedPhoto("");
         }
+
+        const members = loadFamilyMembers(cit || {});
+        setFamilyMembers(members);
+
+        const activeMemberId =
+          localStorage.getItem("nagrik_active_family_member") ||
+          localStorage.getItem("nagrik_active_family_member_id") ||
+          "member-self";
+        setSelectedMemberId(activeMemberId);
+
+        const activeMember = members.find((m) => m.id === activeMemberId) || members[0] || (cit ? getActiveFamilyMember(cit) : null);
+
+        if (activeMember) {
+          if (activeMember.nameEn || cit?.citizenName) {
+            setApplicantName(activeMember.nameEn || cit?.citizenName || "");
+          }
+          if (activeMember.nameGu || cit?.citizenNameGu) {
+            setApplicantNameGu(activeMember.nameGu || cit?.citizenNameGu || "");
+          }
+          if (activeMember.fatherOrHusbandNameGu) {
+            setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu);
+          }
+          if (activeMember.dob) {
+            setDob(activeMember.dob);
+          }
+          if (activeMember.gender) {
+            setGender(activeMember.gender);
+          }
+          if (activeMember.mobile || cit?.mobile) {
+            setMobileNumber(activeMember.mobile || cit?.mobile || "");
+          }
+          if (activeMember.aadhaarMasked || cit?.aadhaarLast4) {
+            setAadhaarNumber(activeMember.aadhaarMasked || (cit?.aadhaarLast4 ? `XXXX-XXXX-${cit.aadhaarLast4}` : ""));
+            setLookupNumber(activeMember.aadhaarLast4 || cit?.aadhaarLast4 || "");
+          }
+        }
+        if (cit?.district) setDistrict(cit.district);
+        if (cit?.taluka) setTaluka(cit.taluka);
+        if (cit?.village) setVillage(cit.village);
       };
 
       syncSession();
+
+      const handleFamilyMemberChange = (e: Event) => {
+        const customEvt = e as CustomEvent<{ memberId: string; member?: FamilyMemberProfile }>;
+        const memberId = customEvt.detail?.memberId;
+        const currentMembers = loadFamilyMembers(citizenSession || {});
+        const targetMember = customEvt.detail?.member || currentMembers.find((m) => m.id === memberId);
+        if (targetMember) {
+          handleSelectFamilyMember(targetMember);
+        } else {
+          syncSession();
+        }
+      };
+
       window.addEventListener("storage", syncSession);
       window.addEventListener("nagrik_auth_change", syncSession);
-      window.addEventListener("nagrik_family_member_change", syncSession);
+      window.addEventListener("nagrik_family_member_change", handleFamilyMemberChange);
       window.addEventListener("nagrik_family_updated", syncSession);
       return () => {
         window.removeEventListener("storage", syncSession);
         window.removeEventListener("nagrik_auth_change", syncSession);
-        window.removeEventListener("nagrik_family_member_change", syncSession);
+        window.removeEventListener("nagrik_family_member_change", handleFamilyMemberChange);
         window.removeEventListener("nagrik_family_updated", syncSession);
       };
     }
-  }, []);
+  }, [handleSelectFamilyMember, citizenSession]);
 
   const handleDocLogout = () => {
     try {
@@ -1342,6 +1434,11 @@ export default function DocumentServicePortal({
       messages.push("• અરજદારનું પૂરું નામ (ગુજરાતી અથવા અંગ્રેજી)");
     }
 
+    if (!fatherOrHusbandName || fatherOrHusbandName.trim().length === 0) {
+      errors.fatherName = "પિતા અથવા પતિનું નામ દાખલ કરવું ફરજિયાત છે";
+      messages.push("• પિતા / પતિનું પૂરું નામ");
+    }
+
     const cleanMobile = mobileNumber.replace(/\D/g, "");
     if (!cleanMobile) {
       errors.mobile = "મોબાઈલ નંબર દાખલ કરવો ફરજિયાત છે (Mobile is required)";
@@ -1351,14 +1448,29 @@ export default function DocumentServicePortal({
       messages.push("• માન્ય ૧૦-આંકડાનો મોબાઈલ નંબર");
     }
 
-    if (!village.trim()) {
-      errors.village = "ગામ અથવા શહેર પસંદ કરવું ફરજિયાત છે (Village/City is required)";
-      messages.push("• ગામ / શહેરની પસંદગી");
-    }
-
-    if (!dob.trim()) {
+    if (!dob || !dob.trim()) {
       errors.dob = "જન્મ તારીખ દાખલ કરવી ફરજિયાત છે (Date of Birth is required)";
       messages.push("• જન્મ તારીખ (DOB)");
+    }
+
+    if (!gender) {
+      errors.gender = "જાતિ પસંદ કરવી ફરજિયાત છે (Gender is required)";
+      messages.push("• જાતિ (Gender)");
+    }
+
+    if (!district || !district.trim()) {
+      errors.district = "જિલ્લો પસંદ કરવો ફરજિયાત છે";
+      messages.push("• જિલ્લો (District)");
+    }
+
+    if (!taluka || !taluka.trim()) {
+      errors.taluka = "તાલુકો પસંદ કરવો ફરજિયાત છે";
+      messages.push("• તાલુકો (Taluka)");
+    }
+
+    if (!village || !village.trim()) {
+      errors.village = "ગામ અથવા શહેર પસંદ કરવું ફરજિયાત છે (Village/City is required)";
+      messages.push("• ગામ / શહેરની પસંદગી");
     }
 
     if (service.id === "land_records") {
@@ -1407,6 +1519,18 @@ export default function DocumentServicePortal({
     return { valid: true, errors: {}, message: "" };
   };
 
+  // Helper boolean checking if Step 2 form has all required data
+  const isStep2Complete = Boolean(
+    (applicantNameGu.trim() || applicantName.trim()) &&
+    fatherOrHusbandName.trim() &&
+    dob.trim() &&
+    gender &&
+    mobileNumber.replace(/\D/g, "").length === 10 &&
+    district.trim() &&
+    taluka.trim() &&
+    village.trim()
+  );
+
   // ── Step 3 Document Validation ──
   const validateStep3Documents = (): { valid: boolean; message: string } => {
     const invalidDocs = requiredDocs.filter((d) => uploadedDocs[d.id]?.status === "invalid");
@@ -1447,14 +1571,11 @@ export default function DocumentServicePortal({
     }
 
     if (stepNumber === 2) {
-      const hasName = Boolean(
-        (applicantName && applicantName.trim().length > 0) ||
-        (applicantNameGu && applicantNameGu.trim().length > 0)
-      );
-      if (!hasName) {
+      const s2Check = validateStep2Form();
+      if (!s2Check.valid) {
         return {
           valid: false,
-          reason: "કૃપા કરીને પહેલાં પગલું ૨ માં અરજદારનું પૂરું નામ (અંગ્રેજી અથવા ગુજરાતી) દાખલ કરો.",
+          reason: "પગલું ૨ માં અરજદારની તમામ ફરજિયાત વિગતો ભરવી આવશ્યક છે. ખાલી ફોર્મ સાથે આગળ વધી શકાશે નહીં.",
         };
       }
       return { valid: true, reason: "" };
@@ -2925,7 +3046,7 @@ export default function DocumentServicePortal({
             </button>
           </div>
 
-          <FamilyMemberManagerBar citizen={citizenSession} activeTab="documents" />
+          <FamilyMemberManagerBar citizen={citizenSession} activeTab="documents" onSelectForDocument={handleSelectFamilyMember} />
         </div>
       )}
 
@@ -3666,6 +3787,86 @@ export default function DocumentServicePortal({
                 </span>
               </div>
 
+              {/* ── કુટુંબના સભ્ય પસંદગી (કોના માટે અરજી કરવી છે? ઓટો-ફિલ) ── */}
+              {familyMembers.length > 0 && (
+                <div className="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/40 border border-orange-200 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-orange-200/70 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👨‍👩‍👧‍👦</span>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                          <span>કોના માટે અરજી કરવી છે? (અરજદાર પસંદ કરો)</span>
+                          <span className="text-[10px] bg-orange-600 text-white font-bold px-2 py-0.5 rounded-full">ઓટો-ફિલ</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          પરિવારના કોઈપણ સભ્ય પર ક્લિક કરો — તેમની તમામ વિગતો નીચે ફોર્મમાં આપોઆપ ભરાઈ જશે.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-orange-900 bg-orange-100/90 font-bold px-2.5 py-0.5 rounded-full shrink-0">
+                      કુલ સભ્યો: {familyMembers.length}
+                    </span>
+                  </div>
+
+                  {/* Member Selection Buttons Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    {familyMembers.map((member) => {
+                      const isSelected = selectedMemberId === member.id;
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onClick={() => handleSelectFamilyMember(member)}
+                          className={`relative p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                            isSelected
+                              ? "bg-white border-orange-600 ring-2 ring-orange-500 shadow-md shadow-orange-500/15"
+                              : "bg-white/80 hover:bg-white border-slate-200 hover:border-orange-300 text-slate-700 shadow-2xs"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-base">{member.avatarEmoji || "👤"}</span>
+                            {isSelected ? (
+                              <span className="text-[9px] bg-orange-600 text-white font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                ✓ પસંદ કરેલ
+                              </span>
+                            ) : (
+                              <span className="text-[9px] text-slate-400 font-mono">
+                                {member.aadhaarLast4 ? `..${member.aadhaarLast4}` : ""}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-slate-900 truncate leading-snug">
+                              {member.nameGu}
+                            </p>
+                            <p className="text-[10px] text-slate-500 truncate font-semibold">
+                              {member.relationGu.split(" ")[0]} • {member.age ? `${member.age} વર્ષ` : ""}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Toast when member is chosen */}
+              {memberSelectedToast && (
+                <div className="bg-emerald-100 border border-emerald-400 text-emerald-950 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-in fade-in slide-in-from-top-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
+                    <span>{memberSelectedToast}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMemberSelectedToast(null)}
+                    className="text-emerald-800 hover:text-emerald-950 font-black text-xs px-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
               {/* ✨ 1-Click AI Auto-Fill Action Banner */}
               {autoFillSuggestion && (
                 <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-3.5 shadow-md border-2 border-emerald-300 animate-in fade-in slide-in-from-top-2 duration-300 space-y-2">
@@ -3756,17 +3957,27 @@ export default function DocumentServicePortal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      પિતા / પતિનું પૂરું નામ <span className="text-slate-400 font-normal">(Father/Husband Name)</span>
+                      પિતા / પતિનું પૂરું નામ <span className="text-rose-600 font-black">*</span>
                     </label>
                     <input
                       id="applicantFatherName"
                       name="applicantFatherName"
                       type="text"
                       value={fatherOrHusbandName}
-                      onChange={(e) => setFatherOrHusbandName(e.target.value)}
+                      onChange={(e) => {
+                        setFatherOrHusbandName(e.target.value);
+                        if (fieldErrors.fatherName) setFieldErrors((prev) => ({ ...prev, fatherName: "" }));
+                      }}
                       placeholder="દા.ત. કાંતિલાલ લાલજીભાઈ પટેલ"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
+                        fieldErrors.fatherName
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
                     />
+                    {fieldErrors.fatherName && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.fatherName}</p>
+                    )}
                   </div>
 
                   <div>
@@ -4391,6 +4602,20 @@ export default function DocumentServicePortal({
                 <span>← પાછળ (સેવા પસંદગી)</span>
               </button>
 
+              {!isStep2Complete && (
+                <div className="w-full bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 sm:p-3.5 rounded-2xl text-xs font-bold flex items-start gap-2.5 shadow-2xs animate-in fade-in">
+                  <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-black text-amber-900 block text-xs sm:text-sm">
+                      ⚠️ ફોર્મ ભરવું ફરજિયાત છે (ખાલી ફોર્મ સ્વીકાર્ય નથી):
+                    </span>
+                    <span className="text-[11px] sm:text-xs text-amber-800 font-medium">
+                      ઉપરથી પરિવારના કોઈ સભ્યને પસંદ કરો અથવા તમામ લાલ ફૂદડી (*) વાળા ખાના ભરો. જ્યાં સુધી વિગતો નહીં ભરાય ત્યાં સુધી પગલું ૩ લૉક રહેશે.
+                    </span>
+                  </div>
+                </div>
+              )}
+
               <button
                 id="btnStep2Next"
                 type="button"
@@ -4399,17 +4624,38 @@ export default function DocumentServicePortal({
                   if (!check.valid) {
                     setFieldErrors(check.errors);
                     setFormValidationError(check.message);
-                    window.scrollTo({ top: 120, behavior: "smooth" });
+                    const firstErr = Object.keys(check.errors)[0];
+                    let el: HTMLElement | null = null;
+                    if (firstErr === "name") el = document.getElementById("applicantNameGu");
+                    else if (firstErr === "fatherName") el = document.getElementById("applicantFatherName");
+                    else if (firstErr === "mobile") el = document.getElementById("applicantMobile");
+                    else if (firstErr === "dob") el = document.getElementById("applicantDob");
+                    else if (firstErr === "village") el = document.getElementById("applicantVillage");
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    else window.scrollTo({ top: 120, behavior: "smooth" });
                     return;
                   }
                   setFieldErrors({});
                   setFormValidationError(null);
                   handleStepClick(3);
                 }}
-                className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                className={`w-full sm:w-auto px-6 py-3 rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${
+                  isStep2Complete
+                    ? "bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white shadow-orange-600/20"
+                    : "bg-slate-200 hover:bg-slate-300 text-slate-600 border border-slate-300"
+                }`}
               >
-                <span>આગળ વધો: પુરાવા આપો (પગલું ૩)</span>
-                <ArrowRight size={16} />
+                {isStep2Complete ? (
+                  <>
+                    <span>આગળ વધો: પુરાવા આપો (પગલું ૩)</span>
+                    <ArrowRight size={16} />
+                  </>
+                ) : (
+                  <>
+                    <Lock size={16} className="text-slate-500" />
+                    <span>પગલું ૩ લૉક છે (વિગતો ભરો)</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
