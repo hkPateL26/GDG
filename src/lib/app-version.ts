@@ -4,6 +4,120 @@ export const APP_RELEASE_DATE = "૨૭ ઓક્ટોબર ૨૦૨૬";
 export const APP_RELEASE_DATE_EN = "27 October 2026";
 export const APP_GOV_DEPT = "ગુજરાત સરકાર - વિજ્ઞાન અને પ્રૌદ્યોગિકી વિભાગ (DST) & e-Governance";
 
+export interface TeamMember {
+  sr: number;
+  name: string;
+  nameGu: string;
+  designation: "LEADER" | "MEMBER";
+  role: string;
+  roleGu: string;
+  email: string;
+  mobile: string;
+  institute: string;
+  semester: string;
+  branch: string;
+}
+
+export const SFIC_TEAM_INFO = {
+  challenge: "Seva First Innovation Challenge (SFIC 2026-27)",
+  organizer: "SSIP Cell, Gujarat Knowledge Society & Education Dept., Govt. of Gujarat",
+  teamCode: "TM000826",
+  track: "COLLEGE TRACK",
+  problemId: "PS0001",
+  problemStatement: "NagrikSeva AI: Multimodal AI-Powered Digital Public Infrastructure for Zero-Queue Vernacular Citizen Welfare Delivery and Predictive Statutory SLA Governance under GRTPSA 2013",
+  institution: "Atmiya University, Rajkot",
+  facultyMentor: {
+    name: "Prof. Bhojani Aarati",
+    nameGu: "પ્રો. ભોજાણી આરતી",
+    email: "aarti.kaneriya@atmiyauni.ac.in",
+    mobile: "+91 9558880958",
+    designation: "Faculty Mentor / Guide",
+    department: "Department of Computer Science / MCA",
+    institute: "Atmiya University, Rajkot",
+  },
+};
+
+export const SFIC_INNOVATOR_ROSTER: TeamMember[] = [
+  {
+    sr: 1,
+    name: "Hari Patel",
+    nameGu: "હરિ પટેલ",
+    designation: "LEADER",
+    role: "Chief System Architect & DPI Lead",
+    roleGu: "મુખ્ય સિસ્ટમ આર્કિટેક્ટ & DPI લીડ",
+    email: "haripatel267998@gmail.com",
+    mobile: "9974442291",
+    institute: "Atmiya university",
+    semester: "sem-1/computer science",
+    branch: "computer science/MCA",
+  },
+  {
+    sr: 2,
+    name: "Jeet Jajal",
+    nameGu: "જીત જાજલ",
+    designation: "MEMBER",
+    role: "Full-Stack Engineer & Cyber Treasury Gateway",
+    roleGu: "ફુલ-સ્ટેક એન્જિનિયર & સાયબર ટ્રેઝરી ગેટવે",
+    email: "jajaljeet2005@gmail.com",
+    mobile: "7777921239",
+    institute: "Atmiya university",
+    semester: "sem-1/computer science",
+    branch: "computer science/MCA",
+  },
+  {
+    sr: 3,
+    name: "Trusha Somaiya",
+    nameGu: "તૃષા સોમૈયા",
+    designation: "MEMBER",
+    role: "Vernacular Gujarati Specialist & UI/UX Accessibility",
+    roleGu: "ગુજરાતી ભાષાકીય સ્પેશિયાલિસ્ટ & UI/UX એક્સેસિબિલિટી",
+    email: "trushasomaiya@gmail.com",
+    mobile: "8849708068",
+    institute: "Atmiya university",
+    semester: "sem-1/computer science",
+    branch: "computer science/MCA",
+  },
+  {
+    sr: 4,
+    name: "Dimple Parmar",
+    nameGu: "ડિમ્પલ પરમાર",
+    designation: "MEMBER",
+    role: "Frontend Form Usability & DigiLocker Vault Lead",
+    roleGu: "ફ્રન્ટએન્ડ ફોર્મ યુઝેબિલિટી & ડીજીલોકર વોલ્ટ લીડ",
+    email: "dimpleparmar1036@gmail.com",
+    mobile: "9081735335",
+    institute: "Atmiya university",
+    semester: "sem-1/computer science",
+    branch: "computer science/MCA",
+  },
+  {
+    sr: 5,
+    name: "Kruti Rabadiya",
+    nameGu: "કૃતિ રાબડિયા",
+    designation: "MEMBER",
+    role: "QA Lead & GRTPSA 2013 Statutory SLA Verification",
+    roleGu: "QA લીડ & GRTPSA ૨૦૧૩ કાનૂની SLA ખરાઈ",
+    email: "krutirabadiya79@gmail.com",
+    mobile: "9081230105",
+    institute: "Atmiya university",
+    semester: "sem-1/computer science",
+    branch: "computer science/MCA",
+  },
+  {
+    sr: 6,
+    name: "Chauhan Ayushi",
+    nameGu: "ચૌહાણ આયુષી",
+    designation: "MEMBER",
+    role: "AI Integration & Jan-Samvad Voice Hotline Specialist",
+    roleGu: "AI ઇન્ટિગ્રેશન & જન-સંવાદ વૉઇસ હોટલાઇન સ્પેશિયાલિસ્ટ",
+    email: "chauhanayushi0502@gmail.com",
+    mobile: "9979421983",
+    institute: "Atmiya university",
+    semester: "sem-1/computer science",
+    branch: "computer science/MCA",
+  },
+];
+
 export interface LeadDeveloper {
   name: string;
   nameGu: string;
