@@ -16,6 +16,36 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      {
+        source: "/docs",
+        destination: "/documents",
+        permanent: false,
+      },
+      {
+        source: "/doc",
+        destination: "/documents",
+        permanent: false,
+      },
+      {
+        source: "/application",
+        destination: "/portal",
+        permanent: false,
+      },
+      {
+        source: "/apply",
+        destination: "/portal",
+        permanent: false,
+      },
+      {
+        source: "/status",
+        destination: "/track",
+        permanent: false,
+      },
+      {
+        source: "/officer",
+        destination: "/admin",
+        permanent: false,
+      },
     ];
   },
   async headers() {
