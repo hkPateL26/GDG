@@ -5119,6 +5119,46 @@ export function getApplicationSLADetails(app: CitizenApplication) {
   };
 }
 
+export function parseAppDateTimestamp(app: CitizenApplication): number {
+  if (app.appliedDate) {
+    const d = new Date(app.appliedDate).getTime();
+    if (!isNaN(d) && d > 0) return d;
+  }
+  if (app.lastUpdated) {
+    const d = new Date(app.lastUpdated).getTime();
+    if (!isNaN(d) && d > 0) return d;
+  }
+  if (
+    typeof app.kacheriDetails?.submissionTimestamp === "string" ||
+    typeof app.kacheriDetails?.submissionTimestamp === "number"
+  ) {
+    const d = new Date(app.kacheriDetails.submissionTimestamp).getTime();
+    if (!isNaN(d) && d > 0) return d;
+  }
+  const numMatch = app.id?.match(/APP-GUJ-(\d{4})-(\d+)/i);
+  if (numMatch) {
+    const year = parseInt(numMatch[1], 10);
+    const num = parseInt(numMatch[2], 10);
+    return new Date(`${year}-01-01`).getTime() + num;
+  }
+  const simpleNum = app.id?.replace(/\D/g, "");
+  if (simpleNum) {
+    return parseInt(simpleNum, 10);
+  }
+  return 0;
+}
+
+export function sortApplicationsLatestFirst(apps: CitizenApplication[]): CitizenApplication[] {
+  return [...apps].sort((a, b) => {
+    const timeA = parseAppDateTimestamp(a);
+    const timeB = parseAppDateTimestamp(b);
+    if (timeB !== timeA) {
+      return timeB - timeA;
+    }
+    return (b.id || "").localeCompare(a.id || "", undefined, { numeric: true });
+  });
+}
+
 export function getCitizenBenefitProfile(mobile: string, aadhaarLast4?: string): CitizenLedgerProfile {
   const cleanMobile = mobile.replace(/\D/g, "").slice(-10) || "9825012345";
   const cleanAadhaar = (aadhaarLast4 || "").trim().slice(-4) || "4829";
@@ -5250,7 +5290,7 @@ export function getCitizenBenefitProfile(mobile: string, aadhaarLast4?: string):
     hasLand: true,
     hasBPL: false,
     availedBenefits: defaultAvailedBenefits,
-    activeApplications: citizenApps,
+    activeApplications: sortApplicationsLatestFirst(citizenApps),
   };
 }
 

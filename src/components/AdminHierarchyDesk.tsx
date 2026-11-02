@@ -11,6 +11,7 @@ import {
   GUJARAT_DISTRICTS,
   CitizenApplication,
   getVillagesForTaluka,
+  sortApplicationsLatestFirst,
 } from "@/lib/large-datasets";
 import {
   Shield,
@@ -592,7 +593,7 @@ export default function AdminHierarchyDesk({
           });
 
         if (hasChanged) {
-          setApplications(unique);
+          setApplications(sortApplicationsLatestFirst(unique));
         }
       }
     } catch (e) {

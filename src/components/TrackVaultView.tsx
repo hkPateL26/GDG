@@ -6,6 +6,7 @@ import {
   CitizenApplication,
   CitizenLedgerProfile,
   getApplicationSLADetails,
+  sortApplicationsLatestFirst,
 } from "@/lib/large-datasets";
 import {
   Search,
@@ -266,26 +267,36 @@ export default function TrackVaultView({
           }
         }
 
-        setRecords(uniqueApps);
+        // CRITICAL FIX 1: ALWAYS SORT LATEST APPLICATION FIRST (DESCENDING BY APPLIED DATE)
+        const sortedApps = sortApplicationsLatestFirst(uniqueApps);
+        setRecords(sortedApps);
 
         // Update localStorage with fresh merged data so entire browser has latest state
         if (typeof window !== "undefined") {
           try {
-            localStorage.setItem("nagrik_user_applications", JSON.stringify(uniqueApps));
+            localStorage.setItem("nagrik_user_applications", JSON.stringify(sortedApps));
           } catch {}
         }
 
         const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "");
         if (activeTargetId && !hasAutoOpenedModalRef.current) {
-          const found = uniqueApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
+          const found = sortedApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
           if (found) {
             setSelectedApp(found);
             setShowTimelineModal(true);
             hasAutoOpenedModalRef.current = true;
           }
-        } else if (uniqueApps.length > 0 && !selectedApp) {
-          setSelectedApp(uniqueApps[0]);
         }
+
+        // CRITICAL FIX 2: PRESERVE SELECTED APP ACROSS BACKGROUND POLLING!
+        // Never overwrite an already opened application with index 0 or another app!
+        setSelectedApp((currentSelected) => {
+          if (currentSelected) {
+            const match = sortedApps.find((a) => a.id.toUpperCase() === currentSelected.id.toUpperCase());
+            return match || currentSelected;
+          }
+          return sortedApps[0] || null;
+        });
       } else {
         setError(data.error || "તમારી અરજીઓ લોડ કરવામાં સમસ્યા આવી.");
       }
@@ -308,7 +319,7 @@ export default function TrackVaultView({
       if (custom.detail?.application) {
         const freshApp = custom.detail.application;
         setRecords((prev) =>
-          prev.map((a) => (a.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...a, ...freshApp } : a))
+          sortApplicationsLatestFirst(prev.map((a) => (a.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...a, ...freshApp } : a)))
         );
         setSelectedApp((prev) =>
           prev && prev.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...prev, ...freshApp } : prev
@@ -705,7 +716,8 @@ export default function TrackVaultView({
                       if (typeof window !== "undefined") {
                         const url = new URL(window.location.href);
                         url.searchParams.delete("id");
-                        window.history.replaceState({}, "", url.pathname);
+                        const searchStr = url.searchParams.toString();
+                        window.history.replaceState({}, "", url.pathname + (searchStr ? `?${searchStr}` : ""));
                       }
                     }}
                     className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold transition cursor-pointer"
@@ -739,7 +751,8 @@ export default function TrackVaultView({
                     if (typeof window !== "undefined") {
                       const url = new URL(window.location.href);
                       url.searchParams.delete("id");
-                      window.history.replaceState({}, "", url.pathname);
+                      const searchStr = url.searchParams.toString();
+                      window.history.replaceState({}, "", url.pathname + (searchStr ? `?${searchStr}` : ""));
                     }
                   }}
                   className={`px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer shrink-0 border ${
