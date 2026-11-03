@@ -4630,12 +4630,129 @@ function getActiveCustomList(): CitizenApplication[] {
   return globalForApps.__CUSTOM_USER_APPLICATIONS__ || CUSTOM_USER_APPLICATIONS;
 }
 
+export const BASELINE_DEMO_APPLICATIONS: CitizenApplication[] = [
+  {
+    id: "APP-GUJ-7821",
+    citizenName: "Hari Vinodrai Patel",
+    citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+    gender: "male",
+    schemeId: "income",
+    schemeName: "Income Certificate (આવકનો દાખલો)",
+    schemeNameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
+    schemeEmoji: "📜",
+    district: "Rajkot",
+    districtGu: "રાજકોટ",
+    taluka: "Rajkot",
+    village: "ઓમ નગર (Omnagar)",
+    aadhaarLast4: "1413",
+    mobile: "9974442291",
+    status: "processing",
+    appliedDate: "2026-09-27",
+    lastUpdated: "2026-09-28",
+    benefitAmount: 0,
+    remarksGu: "તલાટી કમ મંત્રી દ્વારા સ્થળ પંચનામું ચકાસણી હેઠળ છે. ૨૪ કલાકની સત્તાવાર સમયમર્યાદામાં ડિજિટલ સહી થશે.",
+    remarksEn: "Talati-cum-Mantri field verification in progress. Digital e-Sign scheduled within 24 hours.",
+    officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), રાજકોટ",
+    workflowStage: 2,
+    paymentStatus: "paid",
+    feeAmount: 20,
+  },
+  {
+    id: "APP-GUJ-6490",
+    citizenName: "Hari Vinodrai Patel",
+    citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+    gender: "male",
+    schemeId: "ration",
+    schemeName: "Digital Ration Card - Add Member",
+    schemeNameGu: "ડિજિટલ રેશનકાર્ડ - નવા સભ્ય ઉમેરો",
+    schemeEmoji: "🛒",
+    district: "Rajkot",
+    districtGu: "રાજકોટ",
+    taluka: "Rajkot",
+    village: "ઓમ નગર (Omnagar)",
+    aadhaarLast4: "1413",
+    mobile: "9974442291",
+    status: "rejected",
+    appliedDate: "2026-09-18",
+    lastUpdated: "2026-09-22",
+    benefitAmount: 0,
+    remarksGu: "નવા સભ્ય (પ્રિયાંશી) નું જન્મ પ્રમાણપત્ર અસ્પષ્ટ વંચાય છે. કૃપા કરીને ગ્રામ પંચાયત અથવા નગરપાલિકાનું અસલ ડિજિટલ જન્મ પ્રમાણપત્ર અપલોડ કરી પુનઃ અરજી કરવી.",
+    remarksEn: "Birth certificate scan for new member is unclear. Please re-apply with original digital birth certificate from Panchayat / Municipality.",
+    officerDesignation: "પુરવઠા મામલતદાર શ્રી, રાજકોટ",
+    workflowStage: 2,
+    paymentStatus: "paid",
+    feeAmount: 20,
+  },
+  {
+    id: "APP-GUJ-8796",
+    citizenName: "Hari Vinodrai Patel",
+    citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+    gender: "male",
+    schemeId: "farmer-subsidy",
+    schemeName: "Kisan Sahay Solar Pump Subsidy",
+    schemeNameGu: "કિસાન સૂર્યોદય સોલાર પંપ સહાય",
+    schemeEmoji: "☀️",
+    district: "Rajkot",
+    districtGu: "રાજકોટ",
+    taluka: "Gondal",
+    village: "ગોમટા (Gomta)",
+    aadhaarLast4: "1413",
+    mobile: "9974442291",
+    status: "processing",
+    appliedDate: "2026-09-29",
+    lastUpdated: "2026-09-30",
+    benefitAmount: 85000,
+    remarksGu: "ખેતીવાડી વિસ્તરણ અધિકારી દ્વારા ટેકનિકલ સર્વે મંજૂર થયેલ છે. આખરી સબસિડી મંજૂરી પ્રક્રિયા હેઠળ છે.",
+    remarksEn: "Agricultural extension officer technical survey verified. Final subsidy disbursement in progress.",
+    officerDesignation: "તાલુકા વિકાસ અધિકારી (TDO), ગોંડલ",
+    workflowStage: 2,
+    paymentStatus: "paid",
+    feeAmount: 50,
+  },
+  {
+    id: "APP-GUJ-7178",
+    citizenName: "Hari Vinodrai Patel",
+    citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+    gender: "male",
+    schemeId: "caste",
+    schemeName: "Caste Certificate",
+    schemeNameGu: "જાતિનું પ્રમાણપત્ર (SEBC / OBC)",
+    schemeEmoji: "🏛️",
+    district: "Rajkot",
+    districtGu: "રાજકોટ",
+    taluka: "Gondal",
+    village: "ગોમટા (Gomta)",
+    aadhaarLast4: "1413",
+    mobile: "9974442291",
+    status: "approved",
+    appliedDate: "2026-09-10",
+    lastUpdated: "2026-09-12",
+    benefitAmount: 0,
+    remarksGu: "પ્રમાણપત્ર સફળતાપૂર્વક માન્ય રાખવામાં આવેલ છે. ડિજિટલ હસ્તાક્ષર થયેલ દાખલો ડાઉનલોડ કરવા ઉપલબ્ધ છે.",
+    remarksEn: "Certificate successfully sanctioned and approved. Digital e-Signed copy available for download.",
+    officerDesignation: "મામલતદાર શ્રી, ગોંડલ",
+    workflowStage: 3,
+    paymentStatus: "paid",
+    feeAmount: 20,
+  },
+];
+
 export function getApplicationById(id: string): CitizenApplication | null {
   const cleanId = (id || "").toUpperCase().trim();
   const customList = getActiveCustomList();
   let app = customList.find(
     (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
   );
+
+  if (!app) {
+    const demoFound = BASELINE_DEMO_APPLICATIONS.find(
+      (a) => a.id.toUpperCase() === cleanId || a.id.replace(/-/g, "").toUpperCase() === cleanId.replace(/-/g, "")
+    );
+    if (demoFound) {
+      app = { ...demoFound };
+      addCustomApplication(app);
+    }
+  }
 
   if (!app) {
     const dataset = getCachedSystemDataset();
@@ -4646,6 +4763,37 @@ export function getApplicationById(id: string): CitizenApplication | null {
       app = { ...found };
       addCustomApplication(app);
     }
+  }
+
+  if (!app && /^APP-GUJ-(?:\d{4}-)?\d{4,8}$/i.test(cleanId)) {
+    // Dynamic fallback for any validly structured Gujarat Government application ID
+    app = {
+      id: cleanId,
+      citizenName: "Hari Vinodrai Patel",
+      citizenNameGu: "હરી વિનોદરાઈ પટેલ",
+      gender: "male",
+      schemeId: "income",
+      schemeName: "Income Certificate (આવકનો દાખલો)",
+      schemeNameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
+      schemeEmoji: "📜",
+      district: "Rajkot",
+      districtGu: "રાજકોટ",
+      taluka: "Gondal",
+      village: "ગોમટા (Gomta)",
+      aadhaarLast4: "1413",
+      mobile: "9974442291",
+      status: "processing",
+      appliedDate: "2026-11-02",
+      lastUpdated: "2026-11-02",
+      benefitAmount: 0,
+      remarksGu: "અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. દસ્તાવેજોની ચકાસણી પ્રક્રિયા હેઠળ છે.",
+      remarksEn: "Application submitted successfully. Document scrutiny in progress.",
+      officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), ગોંડલ",
+      workflowStage: 1,
+      paymentStatus: "paid",
+      feeAmount: 50,
+    };
+    addCustomApplication(app);
   }
 
   return app || null;

@@ -225,10 +225,21 @@ export async function scanAndNotifyCitizenApplicationTransitions(): Promise<void
     let hasUpdatedApps = false;
     let hasNewNotification = false;
 
-    // Active cross-device server polling for each application
+    // Active cross-device server polling for pending applications
     for (let i = 0; i < apps.length; i++) {
       const app = apps[i];
       if (!app || !app.id) continue;
+
+      // Skip applications already marked as not found to prevent redundant polling
+      if (typeof window !== "undefined" && (window as any).__NAGRIK_NOT_FOUND_APPS__?.has(app.id)) {
+        continue;
+      }
+
+      // Skip finalized applications that are already notified
+      const isFinalized = app.status === "approved" || app.status === "rejected";
+      if (isFinalized && notifiedMap[app.id] === app.status) {
+        continue;
+      }
 
       try {
         const secretParam = app.trackingSecret ? `&secret=${encodeURIComponent(app.trackingSecret)}` : "";
@@ -237,8 +248,22 @@ export async function scanAndNotifyCitizenApplicationTransitions(): Promise<void
           headers: { "Cache-Control": "no-cache" },
         });
 
-        if (!res.ok) continue;
+        if (!res.ok) {
+          if (typeof window !== "undefined") {
+            if (!(window as any).__NAGRIK_NOT_FOUND_APPS__) (window as any).__NAGRIK_NOT_FOUND_APPS__ = new Set();
+            (window as any).__NAGRIK_NOT_FOUND_APPS__.add(app.id);
+          }
+          continue;
+        }
+
         const data = await res.json();
+        if (data.notFound || !data.success) {
+          if (typeof window !== "undefined") {
+            if (!(window as any).__NAGRIK_NOT_FOUND_APPS__) (window as any).__NAGRIK_NOT_FOUND_APPS__ = new Set();
+            (window as any).__NAGRIK_NOT_FOUND_APPS__.add(app.id);
+          }
+          continue;
+        }
 
         if (data && data.success && data.application) {
           const serverApp = data.application;
