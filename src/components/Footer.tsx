@@ -7,8 +7,6 @@ import {
   APP_BUILD_NAME,
   APP_RELEASE_DATE,
   APP_RELEASE_DATE_EN,
-  SFIC_INNOVATOR_ROSTER,
-  SFIC_TEAM_INFO,
 } from "@/lib/app-version";
 import {
   ShieldCheck,
@@ -68,10 +66,7 @@ export default function Footer() {
     uptime: isEn ? "Uptime:" : isHi ? "अपटाइम:" : "અપટાઇમ:",
     uptimeVal: isEn ? "99.98% Active" : isHi ? "९९.९८% सक्रिय" : "૯૯.૯૮% સક્રિય",
     checkUpdate: isEn ? "Check Official Updates" : isHi ? "आधिकारिक अपडेट जांचें" : "સત્તાવાર અપડેટ તપાસો (Check)",
-    sficBadge: isEn ? "SSIP 2.0 • SFIC 2026-27 (Team TM000826)" : isHi ? "SSIP 2.0 • SFIC २०२६-२७ (टीम TM000826)" : "SSIP 2.0 • SFIC ૨૦૨૬-૨૭ (ટીમ TM000826)",
-    collegeTag: isEn ? "Atmiya University, Rajkot • College Track (PS0001)" : isHi ? "आत्मीय यूनिवर्सिटी, राजकोट • कॉलेज ट्रैक (PS0001)" : "આત્મીય યુનિવર્સિટી, રાજકોટ • કોલેજ ટ્રેક (PS0001)",
-    mentorLabel: isEn ? "Faculty Mentor:" : isHi ? "मार्गदर्शक प्राध्यापक:" : "માર્ગદર્શક ફેકલ્ટી:",
-    architectsTitle: isEn ? "INNOVATOR SQUAD & SYSTEM ARCHITECTURE (SFIC 2026-27):" : isHi ? "इनोवेटर दल एवं सिस्टम आर्किटेक्चर (SFIC २०२६-२७):" : "ઇનોવેટર સ્ક્વોડ અને સિસ્ટમ આર્કિટેક્ચર (SFIC ૨૦૨૬-૨૭):",
+    architectsTitle: isEn ? "SYSTEM ARCHITECTURE & LEAD ENGINEERING:" : isHi ? "सिस्टम आर्किटेक्चर एवं मुख्य इंजीनियरिंग:" : "સિસ્ટમ આર્કિટેક્ચર અને લીડ એન્જિનિયરિંગ:",
     hariRole: isEn ? "Chief System Architect" : isHi ? "मुख्य सिस्टम आर्किटेक्ट" : "Chief System Architect",
     jeetRole: isEn ? "Lead Full-Stack Engineer" : isHi ? "मुख्य फुल-स्टैक इंजीनियर" : "Lead Full-Stack Engineer",
     unitTag: isEn
@@ -248,72 +243,51 @@ export default function Footer() {
 
         </div>
 
-        {/* ── Official SFIC 2026-27 & Innovator Squad Credit Block ── */}
+        {/* ── Official Government Developer & Architecture Credit Block (Strict Hard Responsive) ── */}
         <div className="border-t border-slate-800/90 pt-6 mt-6">
-          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+          <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-center justify-between gap-4">
             
-            {/* Header: Title & SFIC Badges */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 border-b border-slate-800/60 pb-3">
-              <div className="flex items-center gap-2">
-                <Award size={18} className="text-amber-400 shrink-0" />
-                <span className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-200">
+            {/* Lead Developers Attribution - Clean 'હરિ પટેલ (Hari Patel)' */}
+            <div className="space-y-1.5 text-center lg:text-left w-full lg:w-auto">
+              <div className="flex items-center justify-center lg:justify-start gap-2">
+                <Award size={16} className="text-amber-400 shrink-0" />
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
                   {t.architectsTitle}
                 </span>
               </div>
-              <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2">
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-300 border border-amber-500/30">
-                  {t.sficBadge}
+              
+              <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-1.5 sm:gap-3 text-xs sm:text-sm">
+                <span className="font-bold text-white">
+                  <span className="text-orange-400 font-black">
+                    {isEn ? "Hari Patel" : isHi ? "हरि पटेल (Hari Patel)" : "હરિ પટેલ (Hari Patel)"}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-normal ml-1">— {t.hariRole}</span>
                 </span>
-                <span className="px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">
-                  {t.collegeTag}
+                <span className="text-slate-600 hidden sm:inline">•</span>
+                <span className="font-bold text-white">
+                  <span className="text-emerald-400 font-black">
+                    {isEn ? "Jeet Jajal" : isHi ? "जीत जाजल (Jeet Jajal)" : "જીત જાજલ (Jeet Jajal)"}
+                  </span>
+                  <span className="text-[11px] text-slate-400 font-normal ml-1">— {t.jeetRole}</span>
                 </span>
               </div>
+
+              <p className="text-[11px] text-slate-500 leading-snug">
+                {t.unitTag}
+              </p>
             </div>
 
-            {/* Team Roster: 6 Members Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5 text-xs">
-              {SFIC_INNOVATOR_ROSTER.map((m) => (
-                <div
-                  key={m.sr}
-                  className="bg-slate-950/70 border border-slate-800/80 rounded-xl p-2.5 flex items-center justify-between gap-2 hover:border-slate-700 transition-colors"
-                >
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <span className={`text-[9px] font-black px-1.5 py-0.5 rounded ${
-                        m.designation === "LEADER" 
-                          ? "bg-amber-500/20 text-amber-400 border border-amber-500/30" 
-                          : "bg-slate-800 text-slate-300"
-                      }`}>
-                        {m.designation === "LEADER" ? "LEADER" : `#0${m.sr}`}
-                      </span>
-                      <span className="font-bold text-white truncate">
-                        {isEn ? m.name : m.nameGu}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-slate-400 truncate mt-0.5">
-                      {isEn ? m.role : m.roleGu}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Faculty Mentor & Release Badge Row */}
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2 border-t border-slate-800/60 text-[11px] text-slate-400">
-              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-                <span className="text-slate-500">{t.mentorLabel}</span>
-                <span className="font-semibold text-slate-200">
-                  {isEn ? SFIC_TEAM_INFO.facultyMentor.name : SFIC_TEAM_INFO.facultyMentor.nameGu}
-                </span>
-                <span className="text-slate-500 hidden sm:inline">• {SFIC_TEAM_INFO.facultyMentor.department}</span>
-              </div>
-
+            {/* Official Release Badge */}
+            <div className="shrink-0 flex flex-col items-center lg:items-end w-full lg:w-auto pt-2 lg:pt-0 border-t lg:border-t-0 border-slate-800/60">
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse shrink-0" />
-                <span className="font-mono text-slate-300">
+                <span className="text-xs font-mono font-bold text-slate-200">
                   {APP_VERSION} ({APP_BUILD_NAME})
                 </span>
               </div>
+              <span className="text-[10px] text-slate-500 mt-0.5">
+                {t.releaseLabel}
+              </span>
             </div>
 
           </div>
