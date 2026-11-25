@@ -169,8 +169,21 @@ export default function TrackVaultView({
         const url = new URL(window.location.href);
         if (url.searchParams.has("id")) {
           url.searchParams.delete("id");
-          window.history.replaceState({}, "", url.pathname + (url.search ? `?${url.searchParams.toString()}` : ""));
+          const searchStr = url.searchParams.toString();
+          window.history.replaceState({}, "", url.pathname + (searchStr ? `?${searchStr}` : ""));
         }
+      } catch {}
+    }
+  }, []);
+
+  const handleOpenTimelineModal = useCallback((app: CitizenApplication) => {
+    setSelectedApp(app);
+    setShowTimelineModal(true);
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("id", app.id);
+        window.history.replaceState({}, "", url.pathname + "?" + url.searchParams.toString());
       } catch {}
     }
   }, []);
@@ -184,7 +197,13 @@ export default function TrackVaultView({
   const [stageUpdateAlert, setStageUpdateAlert] = useState<string | null>(null);
 
   // Freeze background scrolling when any modal is open
-  useBodyScrollLock(Boolean(showTimelineModal || showPrintModal || showCertificateModal || showOfficerModal));
+  const isAnyModalOpen = Boolean(showTimelineModal || showPrintModal || showCertificateModal || showOfficerModal);
+  const modalOpenRef = useRef<boolean>(isAnyModalOpen);
+  useEffect(() => {
+    modalOpenRef.current = isAnyModalOpen;
+  }, [isAnyModalOpen]);
+
+  useBodyScrollLock(isAnyModalOpen);
 
   // Close modals on Escape key
   useEffect(() => {
@@ -340,8 +359,9 @@ export default function TrackVaultView({
       // Only first load shows loading spinner; all subsequent runs are 100% silent
       loadCitizenVault(citizenMobile, citizenAadhaar, idParam, !isFirst);
 
-      // Silent background poll every 4.5 seconds
+      // Silent background poll every 4.5 seconds (paused when citizen is viewing a modal)
       pollTimer = setInterval(() => {
+        if (modalOpenRef.current) return;
         loadCitizenVault(citizenMobile, citizenAadhaar, undefined, true);
       }, 4500);
     } else if (authMode === "citizen") {
@@ -357,7 +377,14 @@ export default function TrackVaultView({
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.application) {
-              setSelectedApp((prev) => (prev ? { ...prev, ...data.application } : data.application));
+              // PRESERVE CURRENT USER SELECTION: Never overwrite another application with idParam!
+              setSelectedApp((prev) => {
+                if (!prev) return data.application;
+                if (prev.id.toUpperCase() === data.application.id.toUpperCase()) {
+                  return { ...prev, ...data.application };
+                }
+                return prev;
+              });
               setRecords((prev) => {
                 const exists = prev.some((a) => a.id.toUpperCase() === data.application.id.toUpperCase());
                 return exists
@@ -371,7 +398,10 @@ export default function TrackVaultView({
 
       if (idParam) {
         fetchSingleApp();
-        pollTimer = setInterval(fetchSingleApp, 3500);
+        pollTimer = setInterval(() => {
+          if (modalOpenRef.current) return;
+          fetchSingleApp();
+        }, 3500);
       }
     }
 
@@ -836,14 +866,12 @@ export default function TrackVaultView({
                     role="button"
                     tabIndex={0}
                     onClick={() => {
-                      setSelectedApp(app);
-                      setShowTimelineModal(true);
+                      handleOpenTimelineModal(app);
                     }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" || e.key === " ") {
                         e.preventDefault();
-                        setSelectedApp(app);
-                        setShowTimelineModal(true);
+                        handleOpenTimelineModal(app);
                       }
                     }}
                     className={`group bg-white rounded-2xl p-3.5 sm:p-4 border transition-all duration-200 cursor-pointer shadow-xs hover:shadow-md flex flex-col justify-between gap-2.5 ${
@@ -963,8 +991,7 @@ export default function TrackVaultView({
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedApp(app);
-                            setShowTimelineModal(true);
+                            handleOpenTimelineModal(app);
                           }}
                           className="text-[11px] font-black text-orange-700 hover:text-white hover:bg-orange-600 bg-orange-50 active:scale-95 px-2.5 py-1.5 rounded-lg border border-orange-200 transition flex items-center gap-1 cursor-pointer shadow-2xs whitespace-nowrap"
                         >

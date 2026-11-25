@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { Printer, X, ShieldCheck, Award, CreditCard, FileText, Lock } from "lucide-react";
+import { Printer, X, ShieldCheck, Award, CreditCard, FileText, Lock, CheckCircle2 } from "lucide-react";
 import { generateCertificateSeal } from "@/lib/digital-notary";
 
 interface OfficialGovernmentCertificateProps {
@@ -190,7 +190,7 @@ export default function OfficialGovernmentCertificate({
       id={id}
       className={`${
         isPvcCard ? "pvc-card-page-1" : ""
-      } relative w-full max-w-[315px] sm:max-w-[360px] mx-auto min-h-[210px] h-auto sm:h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2 sm:p-3 flex flex-col justify-between select-none`}
+      } relative w-full max-w-[320px] sm:max-w-[335px] mx-auto min-h-[210px] h-auto sm:h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2 sm:p-3 flex flex-col justify-between select-none`}
     >
       {/* Background Guilloche Security Layer */}
       <div className="absolute inset-0 pointer-events-none">
@@ -290,7 +290,7 @@ export default function OfficialGovernmentCertificate({
       id={id}
       className={`${
         isPvcCard ? "pvc-card-page-2" : ""
-      } relative w-full max-w-[315px] sm:max-w-[360px] mx-auto min-h-[210px] h-auto sm:h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2 sm:p-3 flex flex-col justify-between select-none`}
+      } relative w-full max-w-[320px] sm:max-w-[335px] mx-auto min-h-[210px] h-auto sm:h-[220px] rounded-2xl overflow-hidden border-2 border-amber-300 shadow-md bg-gradient-to-b from-[#fed7aa]/80 via-[#fffdfa] to-[#bbf7d0]/80 p-2 sm:p-3 flex flex-col justify-between select-none`}
     >
       {/* Background Guilloche Security Layer */}
       <div className="absolute inset-0 pointer-events-none">
@@ -467,7 +467,7 @@ export default function OfficialGovernmentCertificate({
 
       {/* 4. BOTTOM SECTION: BOTH FRONT & BACK CUTOUT CARDS WITH AUTHENTIC GUILLOCHE & TRICOLOR PATTERN */}
       <div className="p-3 sm:p-4 pt-1 bg-slate-100/70 border-t border-slate-200">
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-stretch justify-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-stretch justify-center max-w-full">
           {renderCardFront("cutout-card-front", false)}
           {renderCardBack("cutout-card-back", false)}
         </div>
@@ -662,15 +662,15 @@ export default function OfficialGovernmentCertificate({
         .map((el) => el.outerHTML)
         .join("\n");
       const printArea = document.getElementById("official-cert-print-area");
-      pageStyle = `@page { size: A4 portrait; margin: 8mm; }`;
-      printBodyHtml = `<style>${allStyles}</style>${printArea ? printArea.innerHTML : ""}`;
+      pageStyle = `@page { size: A4 portrait; margin: 6mm 8mm; }`;
+      printBodyHtml = `<style>${allStyles} body { margin: 0; padding: 0; background: #fff; } #official-cert-print-area { max-width: 100% !important; border: none !important; box-shadow: none !important; margin: 0 auto; }</style>${printArea ? printArea.innerHTML : ""}`;
     }
 
     const fullDoc = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8"/>
-  <title>${isPvc ? "Aadhaar PVC Card (Page 1: Front | Page 2: Back)" : "UIDAI e-Aadhaar Letter"}</title>
+  <title>${isAadhaar ? (isPvc ? "Aadhaar PVC Card (Page 1: Front | Page 2: Back)" : "UIDAI e-Aadhaar Letter") : "Government of Gujarat Certificate - " + certNumber}</title>
   <style>
     ${pageStyle}
     *, *::before, *::after { box-sizing: border-box; }
@@ -734,7 +734,7 @@ export default function OfficialGovernmentCertificate({
 
 
   return (
-    <div className="relative w-full max-w-4xl mx-auto my-auto bg-white rounded-3xl shadow-2xl border border-slate-300 overflow-hidden text-slate-900 animate-in fade-in zoom-in-95 duration-200">
+    <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col mx-auto my-auto bg-white rounded-2xl sm:rounded-3xl shadow-2xl border border-slate-300 overflow-hidden text-slate-900 animate-in fade-in zoom-in-95 duration-200">
       {/* ── Global Injected Print CSS: Perfect 100% Reliable Centered Printout ── */}
       <style jsx global>{`
         @media print {
@@ -830,65 +830,61 @@ export default function OfficialGovernmentCertificate({
         }
       `}</style>
 
-      {/* ── Fixed Floating Close Button (Desktop & Tablet) ── */}
-      {isModalPreview && onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          className="hidden sm:flex fixed top-5 right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 items-center justify-center transition cursor-pointer active:scale-90 cert-no-print"
-          title="બંધ કરો (Esc)"
-          aria-label="બંધ કરો"
-        >
-          <X size={22} className="stroke-[2.5]" />
-        </button>
-      )}
-
-      {/* ── Top Bar with Actions ── */}
-      <div className="bg-slate-900 text-white px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-3 border-b border-slate-800 cert-no-print">
-        <div className="flex items-center gap-2">
+      {/* ── Top Bar with Actions (Sticky Header, Never Chopped Off) ── */}
+      <div className="shrink-0 bg-slate-900 text-white px-3 sm:px-6 py-2.5 sm:py-3 flex items-center justify-between gap-2.5 border-b border-slate-800 cert-no-print z-20">
+        <div className="flex items-center gap-2 min-w-0">
           {isAadhaar ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🪪</span>
-              <div>
-                <span className="font-black text-xs sm:text-sm text-amber-300 block">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl sm:text-2xl shrink-0">🪪</span>
+              <div className="min-w-0">
+                <span className="font-black text-xs sm:text-sm text-amber-300 block truncate">
                   ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ &bull; UIDAI e-Aadhaar
                 </span>
-                <span className="text-[10px] sm:text-[11px] text-slate-400">
+                <span className="text-[10px] sm:text-[11px] text-slate-400 block truncate">
                   સત્તાવાર આધાર કાર્ડ પત્ર & કટઆઉટ કાર્ડ (100% અસલ સરકારી ફોર્મેટ)
                 </span>
               </div>
             </div>
           ) : isPan ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xl">💳</span>
-              <div>
-                <span className="font-black text-xs sm:text-sm text-amber-300 block">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl sm:text-2xl shrink-0">💳</span>
+              <div className="min-w-0">
+                <span className="font-black text-xs sm:text-sm text-amber-300 block truncate">
                   આવકવેરા વિભાગ &bull; Income Tax Department PAN Card
                 </span>
-                <span className="text-[10px] sm:text-[11px] text-slate-400">પરમેનન્ટ એકાઉન્ટ નંબર કાર્ડ (Form 49A)</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 block truncate">
+                  પરમેનન્ટ એકાઉન્ટ નંબર કાર્ડ (Form 49A)
+                </span>
               </div>
             </div>
           ) : isRation ? (
-            <div className="flex items-center gap-2">
-              <span className="text-xl">🌾</span>
-              <div>
-                <span className="font-black text-xs sm:text-sm text-amber-300 block">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl sm:text-2xl shrink-0">🌾</span>
+              <div className="min-w-0">
+                <span className="font-black text-xs sm:text-sm text-amber-300 block truncate">
                   ગુજરાત અન્ન & નાગરિક પુરવઠા વિભાગ &bull; NFSA Digital Ration Card
                 </span>
-                <span className="text-[10px] sm:text-[11px] text-slate-400">બારકોડેડ રેશનકાર્ડ પુસ્તિકા</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-400 block truncate">
+                  બારકોડેડ રેશનકાર્ડ પુસ્તિકા
+                </span>
               </div>
             </div>
           ) : (
-            <div className="flex items-center gap-2">
-              <Award size={18} className="text-amber-400" />
-              <span className="font-bold text-xs sm:text-sm">
-                ગુજરાત સરકાર ડિજિટલ પ્રમાણપત્ર &bull; કાનૂની દસ્તાવેજ
-              </span>
+            <div className="flex items-center gap-2 min-w-0">
+              <Award size={20} className="text-amber-400 shrink-0" />
+              <div className="min-w-0">
+                <span className="font-black text-xs sm:text-sm text-white block truncate">
+                  ગુજરાત સરકાર સત્તાવાર ડિજિટલ પ્રમાણપત્ર
+                </span>
+                <span className="text-[10px] sm:text-[11px] text-amber-300/90 block truncate">
+                  {app.schemeNameGu || app.schemeName || "સત્તાવાર કાનૂની દસ્તાવેજ"} &bull; {app.id}
+                </span>
+              </div>
             </div>
           )}
         </div>
 
-        <div className="flex items-center flex-wrap gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
           {isAadhaar && (
             <>
               {/* Screen Preview Mode Switcher */}
@@ -896,26 +892,27 @@ export default function OfficialGovernmentCertificate({
                 <button
                   type="button"
                   onClick={() => setViewMode("letter")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
                     viewMode === "letter"
                       ? "bg-amber-400 text-slate-950 shadow-xs"
                       : "text-slate-200 hover:text-white"
                   }`}
                 >
                   <FileText size={13} />
-                  <span>📄 સંપૂર્ણ લેટર</span>
+                  <span className="hidden sm:inline">લેટર</span>
+                  <span className="sm:hidden">પત્ર</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode("pvc")}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
+                  className={`flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
                     viewMode === "pvc"
                       ? "bg-amber-400 text-slate-950 shadow-xs"
                       : "text-slate-200 hover:text-white"
                   }`}
                 >
                   <CreditCard size={13} />
-                  <span>🪪 PVC કાર્ડ (આગળ-પાછળ)</span>
+                  <span>PVC કાર્ડ</span>
                 </button>
               </div>
 
@@ -923,22 +920,23 @@ export default function OfficialGovernmentCertificate({
               <button
                 type="button"
                 onClick={() => handlePrint("letter")}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95"
+                className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95"
                 title="સંપૂર્ણ આધાર પત્ર 1 પેજ A4 પર પ્રિન્ટ કરો"
               >
                 <Printer size={13} />
-                <span>📄 લેટર પ્રિન્ટ (1 પેજ)</span>
+                <span className="hidden sm:inline">લેટર પ્રિન્ટ</span>
+                <span className="sm:hidden">પ્રિન્ટ</span>
               </button>
 
               {/* 1-Click Print 2-Page Dual PVC Card (Page 1 Front, Page 2 Back) */}
               <button
                 type="button"
                 onClick={() => handlePrint("pvc")}
-                className="flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95"
+                className="hidden md:flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-slate-950 font-black text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95"
                 title="કાર્ડ પ્રિન્ટ કરો: પેજ ૧ આગળની બાજુ અને પેજ ૨ પાછળની બાજુ"
               >
                 <Printer size={13} />
-                <span>🪪 કાર્ડ પ્રિન્ટ (૧: આગળ | ૨: પાછળ)</span>
+                <span>🪪 કાર્ડ પ્રિન્ટ</span>
               </button>
             </>
           )}
@@ -947,7 +945,8 @@ export default function OfficialGovernmentCertificate({
             <button
               type="button"
               onClick={() => handlePrint()}
-              className="flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer active:scale-95"
+              title="પ્રમાણપત્ર PDF ડાઉનલોડ અથવા પ્રિન્ટ કરો"
             >
               <Printer size={14} />
               <span>PDF ડાઉનલોડ / પ્રિન્ટ</span>
@@ -958,21 +957,23 @@ export default function OfficialGovernmentCertificate({
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center gap-1.5 px-3.5 sm:px-4 py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer ml-auto shrink-0"
+              className="flex items-center justify-center gap-1 px-3 sm:px-3.5 py-1.5 sm:py-2 bg-rose-600 hover:bg-rose-500 active:scale-95 text-white font-bold text-xs rounded-xl shadow-md transition cursor-pointer shrink-0"
               title="બંધ કરો (Esc)"
+              aria-label="બંધ કરો"
             >
               <X size={16} className="stroke-[2.5]" />
-              <span>બંધ કરો</span>
+              <span className="hidden sm:inline">બંધ કરો</span>
             </button>
           )}
         </div>
       </div>
 
-      {/* ── Document Printable Body ── */}
-      <div className="p-3 sm:p-6 max-h-[84vh] overflow-y-auto bg-slate-200/90 flex justify-center">
+      {/* ── Document Printable Body (Scrollable, centered) ── */}
+      <div className="flex-1 overflow-y-auto p-2.5 sm:p-5 md:p-6 bg-slate-200/90 flex justify-center min-h-0">
         <div
           id="official-cert-print-area"
-          className="relative bg-white shadow-2xl rounded-2xl overflow-hidden text-black font-sans border border-slate-300 transition-all w-full max-w-[740px]"
+          className="relative bg-white shadow-2xl rounded-2xl overflow-hidden text-black font-sans border border-slate-300 transition-all w-full max-w-[760px] my-auto"
+        >
         >
           {/* ══════════════════════════════════════════════════════════════════
               DOCUMENT TYPE 1: AADHAAR CARD
@@ -1086,59 +1087,197 @@ export default function OfficialGovernmentCertificate({
           ) : (
             /* ══════════════════════════════════════════════════════════════════
                 DOCUMENT TYPE 4: REVENUE & PANCHAYAT DIGITAL CERTIFICATE
+                Authentic Digital Gujarat / e-Nagar Official Certificate Design
                ══════════════════════════════════════════════════════════════════ */
-            <div className="border-4 border-double border-slate-900 p-5 rounded-xl space-y-4">
-              <div className="text-center border-b-2 border-slate-800 pb-3">
+            <div className="relative p-5 sm:p-8 bg-white border-8 border-double border-slate-800 text-slate-900 overflow-hidden select-none">
+              {/* Subtle Official Watermark Background */}
+              <div className="absolute inset-0 flex items-center justify-center opacity-[0.035] pointer-events-none select-none">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/demo-docs/emblem_of_india.svg" alt="Emblem" className="w-9 h-14 mx-auto mb-1 object-contain" />
-                <p className="text-[10px] font-black uppercase text-slate-700">GOVERNMENT OF GUJARAT &bull; ગુજરાત સરકાર</p>
-                <h1 className="text-lg font-black text-slate-950">મહેસૂલ અને પંચાયત વિભાગ</h1>
-                <p className="text-xs font-bold text-slate-600">તાલુકા મામલતદાર કચેરી, {talukaStr}, જિલ્લો: {districtStr}</p>
+                <img
+                  src="/demo-docs/emblem_of_india.svg"
+                  alt="Watermark Emblem"
+                  className="w-80 h-96 object-contain"
+                />
               </div>
 
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200 text-xs flex justify-between">
-                <div>પ્રમાણપત્ર નં: <strong className="font-mono">{certNumber}</strong></div>
-                <div>તારીખ: <strong>{issueDate}</strong></div>
-                <div>માન્યતા: <strong className="text-emerald-700">{validUntilDate}</strong></div>
+              {/* Top Tricolor Strip */}
+              <div className="flex h-1.5 w-full rounded-full overflow-hidden mb-4">
+                <div className="flex-1 bg-[#ea580c]" />
+                <div className="flex-1 bg-white border-y border-slate-200" />
+                <div className="flex-1 bg-[#16a34a]" />
               </div>
 
-              <div className="text-center my-3">
-                <span className="bg-slate-900 text-amber-300 font-black text-sm px-4 py-1.5 rounded-lg border border-amber-400">
-                  {app.schemeNameGu || app.schemeName}
-                </span>
-              </div>
-
-              <p className="text-xs leading-relaxed text-slate-800 indent-6">
-                આથી પ્રમાણિત કરવામાં આવે છે કે શ્રી/શ્રીમતી <strong>{citizenNameGu}</strong>, રહેવાસી ગામ:{" "}
-                <strong>{villageStr}</strong>, તાલુકો: <strong>{talukaStr}</strong>, જિલ્લો:{" "}
-                <strong>{districtStr}</strong>, આધાર છેલ્લા ૪ આંકડા:{" "}
-                <strong className="font-mono">XXXX-XXXX-{app.aadhaarLast4 || "1413"}</strong> દ્વારા કરવામાં આવેલ
-                અરજી સંદર્ભે સક્ષમ સત્તાધિકારી દ્વારા તમામ આધાર-પુરાવા કાયદેસર અને માન્ય ઠરેલ છે.
-              </p>
-
-              <div className="pt-3 border-t-2 border-slate-800 flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
+              {/* Official Government Header */}
+              <div className="flex items-start justify-between gap-4 border-b-2 border-slate-800 pb-3">
+                <div className="flex items-center gap-3">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
-                    src={`https://api.qrserver.com/v1/create-qr-code/?size=70x70&data=${encodeURIComponent(verifyUrl)}`}
-                    alt="QR"
-                    className="w-14 h-14 border border-slate-300 p-0.5"
+                    src="/demo-docs/emblem_of_india.svg"
+                    alt="Ashoka Emblem"
+                    className="w-12 h-18 object-contain shrink-0"
                   />
                   <div>
-                    <span className="font-black text-emerald-800 flex items-center gap-1">
-                      <ShieldCheck size={13} /> અધિકૃત QR
-                    </span>
-                    <span className="text-[9px] text-slate-600 font-mono font-bold block">
-                      સીલ: {certSeal}
-                    </span>
-                    <span className="text-[8.5px] text-slate-500">ઓનલાઇન ખરાઈ માટે સ્કેન કરો</span>
+                    <p className="text-[10px] sm:text-xs font-black uppercase tracking-wider text-slate-700">
+                      GOVERNMENT OF GUJARAT &bull; ગુજરાત સરકાર
+                    </p>
+                    <h1 className="text-base sm:text-xl font-black text-slate-950 leading-tight">
+                      મહેસૂલ અને પંચાયત વિભાગ
+                    </h1>
+                    <p className="text-xs sm:text-sm font-bold text-slate-800">
+                      જન સેવા કેન્દ્ર &bull; તાલુકા મામલતદાર કચેરી, {talukaStr}
+                    </p>
+                    <p className="text-[11px] text-slate-600 font-medium">
+                      જિલ્લો: {districtStr} &bull; Gujarat Statutory Citizen Services
+                    </p>
                   </div>
                 </div>
 
-                <div className="border border-emerald-600 bg-emerald-50 p-2 rounded text-[10px] text-right">
-                  <span className="font-black text-emerald-900 block">✔ DIGITALLY SIGNED</span>
-                  <span>મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ, {talukaStr}</span>
+                {/* Citizen Verified Photo Box */}
+                <div className="shrink-0 flex flex-col items-center">
+                  <div className="w-20 h-24 border-2 border-slate-800 bg-white shadow-xs rounded-sm overflow-hidden relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={citizenPhotoSrc}
+                      alt="Citizen Photo"
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute bottom-0 inset-x-0 bg-emerald-700/90 text-white text-[7.5px] font-bold text-center py-0.5">
+                      ✓ ચકાસાયેલ
+                    </div>
+                  </div>
+                  <span className="text-[8px] font-mono text-slate-500 mt-0.5">e-Sign Photo</span>
                 </div>
+              </div>
+
+              {/* Security & Verification Metadata Bar */}
+              <div className="my-3.5 bg-slate-50 border border-slate-300 rounded-xl p-2.5 sm:p-3 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div>
+                  <span className="text-[9.5px] text-slate-500 font-bold block uppercase">પ્રમાણપત્ર નંબર:</span>
+                  <strong className="font-mono text-slate-950 text-xs sm:text-[13px] font-black">{certNumber}</strong>
+                </div>
+                <div>
+                  <span className="text-[9.5px] text-slate-500 font-bold block uppercase">અરજી ક્રમાંક:</span>
+                  <strong className="font-mono text-slate-900 text-xs font-bold">{app.id}</strong>
+                </div>
+                <div>
+                  <span className="text-[9.5px] text-slate-500 font-bold block uppercase">ઇશ્યૂ તારીખ:</span>
+                  <strong className="text-slate-900 font-bold">{issueDate}</strong>
+                </div>
+                <div>
+                  <span className="text-[9.5px] text-slate-500 font-bold block uppercase">માન્યતા સમયગાળો:</span>
+                  <strong className="text-emerald-700 font-bold">{validUntilDate} (૩ વર્ષ)</strong>
+                </div>
+              </div>
+
+              {/* Certificate Main Title Banner */}
+              <div className="text-center my-3.5">
+                <div className="inline-block bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-slate-950 font-black text-sm sm:text-base px-5 py-1.5 rounded-xl border border-amber-400 shadow-xs">
+                  📜 {app.schemeNameGu || app.schemeName}
+                </div>
+                <p className="text-[11px] text-slate-600 font-medium mt-1 font-mono">
+                  {app.schemeName || "OFFICIAL REVENUE CERTIFICATE"} &bull; Gujarat Act No. 12 of 2013
+                </p>
+              </div>
+
+              {/* Beneficiary Details Table */}
+              <div className="border border-slate-300 rounded-xl overflow-hidden my-3 text-xs">
+                <table className="w-full text-left border-collapse">
+                  <tbody>
+                    <tr className="border-b border-slate-200 bg-slate-50/70">
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-600 w-1/3">અરજદારનું પૂરું નામ:</td>
+                      <td className="p-2 sm:p-2.5 font-black text-slate-950 text-xs sm:text-sm">
+                        {citizenNameGu} <span className="font-medium text-slate-600">({citizenNameEn})</span>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-slate-200">
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-600">પિતા / પતિનું નામ:</td>
+                      <td className="p-2 sm:p-2.5 font-semibold text-slate-900">
+                        {fatherNameGu} <span className="text-slate-500 text-[11px]">({fatherNameEn})</span>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-slate-200 bg-slate-50/70">
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-600">રહેઠાણનું સરનામું:</td>
+                      <td className="p-2 sm:p-2.5 text-slate-900">
+                        ગામ: <strong>{villageStr}</strong>, તાલુકો: <strong>{talukaStr}</strong>, જિલ્લો: <strong>{districtStr}</strong> - {pincodeStr}
+                      </td>
+                    </tr>
+                    <tr className="border-b border-slate-200">
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-600">આધાર ઓળખ (છેલ્લા ૪ આંકડા):</td>
+                      <td className="p-2 sm:p-2.5 font-mono text-slate-900 font-bold">
+                        XXXX-XXXX-{app.aadhaarLast4 && app.aadhaarLast4 !== "NEW" ? app.aadhaarLast4 : "1413"} <span className="text-emerald-700 font-sans text-xs">✓ UIDAI Verified</span>
+                      </td>
+                    </tr>
+                    <tr className="border-b border-slate-200 bg-slate-50/70">
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-600">પ્રમાણપત્ર વિગત / આવક / વર્ગ:</td>
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-900">
+                        {schemeId.includes("caste")
+                          ? "સામાજિક અને શૈક્ષણિક રીતે પછાત વર્ગ (SEBC / OBC) • નોન-ક્રીમીલેયર પરિશિષ્ટ-ક"
+                          : schemeId.includes("income")
+                          ? "કુલ વાર્ષિક કૌટુંબિક આવક: ₹ ૧,૨૦,૦૦૦/- (અંકે રૂપિયા એક લાખ વીસ હજાર પુરા)"
+                          : "ગુજરાત સરકાર માન્ય કલ્યાણકારી યોજના અંતર્ગત તમામ પાત્રતા શરતો પૂર્ણ થયેલ છે."}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td className="p-2 sm:p-2.5 font-bold text-slate-600">પ્રમાણપત્રનો હેતુ:</td>
+                      <td className="p-2 sm:p-2.5 text-slate-800">
+                        શિક્ષણ, શિષ્યવૃત્તિ, સરકારી યોજનાકીય લાભ તથા સત્તાવાર ઉપયોગ અર્થે.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Statutory Legal Declaration */}
+              <div className="bg-amber-50/70 border border-amber-200 rounded-xl p-3 my-3 text-[11px] sm:text-xs leading-relaxed text-slate-800">
+                <p className="indent-4">
+                  આથી પ્રમાણિત કરવામાં આવે છે કે શ્રી/શ્રીમતી <strong>{citizenNameGu}</strong>, રહેવાસી <strong>{villageStr}</strong>, તાલુકો: <strong>{talukaStr}</strong>, જિલ્લો: <strong>{districtStr}</strong> દ્વારા રજૂ કરવામાં આવેલ અરજી, તલાટી કમ મંત્રી પંચનામું, જવાબ અને રજૂ કરેલ તમામ પુરાવાઓની સક્ષમ સત્તાધિકારી દ્વારા ખરાઈ કરવામાં આવી છે અને તેઓનું પ્રમાણપત્ર કાયદેસર અને માન્ય ઠરેલ છે.
+                </p>
+              </div>
+
+              {/* Footer: Authentic QR & Digital Signature Box */}
+              <div className="pt-3 border-t-2 border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+                {/* QR Code Verification */}
+                <div className="flex items-center gap-2.5">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={`https://api.qrserver.com/v1/create-qr-code/?size=85x85&data=${encodeURIComponent(verifyUrl)}`}
+                    alt="Certificate QR"
+                    className="w-16 h-16 sm:w-18 sm:h-18 border-2 border-slate-800 p-0.5 rounded-lg bg-white shrink-0"
+                  />
+                  <div className="space-y-0.5">
+                    <span className="font-black text-emerald-800 flex items-center gap-1 text-xs">
+                      <ShieldCheck size={14} /> ગુજરાત સરકાર અધિકૃત QR
+                    </span>
+                    <span className="text-[9.5px] text-slate-700 font-mono font-bold block">
+                      સીલ ક્રમાંક: {certSeal}
+                    </span>
+                    <span className="text-[8.5px] text-slate-500 block">
+                      મોબાઈલ કેમેરાથી સ્કેન કરી અધિકૃતતા ચકાસો
+                    </span>
+                  </div>
+                </div>
+
+                {/* Digital e-Sign Stamp */}
+                <div className="border-2 border-emerald-600 bg-emerald-50/80 p-2.5 rounded-xl text-right shrink-0 min-w-[210px]">
+                  <div className="flex items-center justify-end gap-1 text-emerald-800 font-black text-xs">
+                    <Award size={14} className="text-emerald-700" />
+                    <span>✔ OFFICIALLY DIGITALLY SIGNED</span>
+                  </div>
+                  <p className="text-[11px] font-bold text-slate-900 mt-0.5">
+                    મામલતદાર & એક્ઝિક્યુટિવ મેજિસ્ટ્રેટ
+                  </p>
+                  <p className="text-[9.5px] text-slate-600">
+                    તાલુકા મામલતદાર કચેરી, {talukaStr}
+                  </p>
+                  <p className="text-[8.5px] font-mono text-emerald-700 mt-0.5 font-bold">
+                    e-Sign Timestamp: {issueDate} 11:30:00 IST
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom Legal Disclaimer */}
+              <div className="mt-3 pt-2 border-t border-slate-200 text-center text-[8.5px] text-slate-500 font-sans">
+                આ પ્રમાણપત્ર ઈન્ફોર્મેશન ટેકનોલોજી એક્ટ ૨૦૦૦ ની કલમ ૫ હેઠળ ડિજિટલ સહી (e-Sign) થી માન્ય છે અને કોઈ ભૌતિક સહી કે સિક્કાની જરૂર નથી.
               </div>
             </div>
           )}

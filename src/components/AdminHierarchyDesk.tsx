@@ -490,14 +490,14 @@ export default function AdminHierarchyDesk({
       if (e.key === "Escape") {
         if (zoomDocImage) {
           setZoomDocImage(null);
-        } else if (reviewModalOpen) {
-          setReviewModalOpen(false);
         } else if (certificateModalApp) {
           setCertificateModalApp(null);
         } else if (receiptModalApp) {
           setReceiptModalApp(null);
         } else if (noticeModalApp) {
           setNoticeModalApp(null);
+        } else if (reviewModalOpen) {
+          setReviewModalOpen(false);
         }
       }
     };
@@ -593,7 +593,14 @@ export default function AdminHierarchyDesk({
           });
 
         if (hasChanged) {
-          setApplications(sortApplicationsLatestFirst(unique));
+          const sorted = sortApplicationsLatestFirst(unique);
+          setApplications(sorted);
+          // Preserve currently viewed application without resetting or switching to another app
+          setSelectedApp((current) => {
+            if (!current) return null;
+            const match = sorted.find((a) => a.id.toUpperCase() === current.id.toUpperCase());
+            return match || current;
+          });
         }
       }
     } catch (e) {
@@ -831,7 +838,8 @@ export default function AdminHierarchyDesk({
         officerName: currentOfficer.name,
       });
 
-      // Automatically open the official certificate modal for instant viewing & printing!
+      // Automatically close the scrutiny review modal and open the official certificate modal for instant viewing & printing!
+      setReviewModalOpen(false);
       setCertificateModalApp(approvedApp);
     } catch {
       alert("સર્વર ક્ષતિ આવી.");
