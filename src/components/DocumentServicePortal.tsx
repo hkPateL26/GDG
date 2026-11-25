@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   DOCUMENT_SERVICES,
   GUJARAT_DISTRICTS,
@@ -31,18 +31,30 @@ import {
   Download,
   Landmark,
   ArrowLeftRight,
+  ArrowLeft,
+  ArrowRight,
+  User,
   Camera,
   LogOut,
   RotateCw,
   X,
   Lock,
+  ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import WhatsAppDispatchCard from "@/components/WhatsAppDispatchCard";
 import CitizenLoginShield from "@/components/CitizenLoginShield";
 import FamilyMemberManagerBar from "@/components/FamilyMemberManagerBar";
-import { getActiveFamilyMember } from "@/lib/family-ledger";
+import {
+  getActiveFamilyMember,
+  loadFamilyMembers,
+  setActiveFamilyMemberId,
+  FamilyMemberProfile,
+} from "@/lib/family-ledger";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
+import { triggerHaptic } from "@/lib/haptic";
+import { queueOfflineAction } from "@/lib/offline-sync";
 import DigiLockerGatewayModal from "@/components/DigiLockerGatewayModal";
 import {
   DigiLockerDocument,
@@ -90,6 +102,15 @@ export default function DocumentServicePortal({
         const params = new URLSearchParams(window.location.search);
         const srv = params.get("service");
         if (srv) return srv;
+        const typeParam = params.get("type");
+        if (typeParam) {
+          if (typeParam === "health" || typeParam === "ayushman") return "ayushman";
+          if (typeParam === "ration") return "ration";
+          if (typeParam === "aadhaar") return "aadhaar";
+          if (typeParam === "pan") return "pan";
+          if (typeParam === "driving") return "driving";
+          return typeParam;
+        }
         const saved = sessionStorage.getItem("nagrik_reapply_context");
         if (saved) {
           const parsed = JSON.parse(saved);
@@ -184,10 +205,10 @@ export default function DocumentServicePortal({
   const [applicantName, setApplicantName] = useState<string>("");
   const [applicantNameGu, setApplicantNameGu] = useState<string>("");
   const [fatherOrHusbandName, setFatherOrHusbandName] = useState<string>("");
-  const [motherName] = useState<string>("");
-  const [dob, setDob] = useState<string>("1985-06-15");
+  const [motherName, setMotherName] = useState<string>("");
+  const [dob, setDob] = useState<string>("");
   const [gender, setGender] = useState<"male" | "female">("male");
-  const [maritalStatus] = useState<string>("વિવાહિત (Married)");
+  const [maritalStatus, setMaritalStatus] = useState<string>("વિવાહિત (Married)");
   const [mobileNumber, setMobileNumber] = useState<string>("");
   const [emailAddress, setEmailAddress] = useState<string>("");
   const [aadhaarNumber, setAadhaarNumber] = useState<string>("");
@@ -198,7 +219,7 @@ export default function DocumentServicePortal({
   const [village, setVillage] = useState<string>("");
   const [houseNo, setHouseNo] = useState<string>("");
   const [streetSociety, setStreetSociety] = useState<string>("");
-  const [pincode, setPincode] = useState<string>("360311");
+  const [pincode, setPincode] = useState<string>("");
   const [userUploadedPhoto, setUserUploadedPhoto] = useState<string>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -211,37 +232,92 @@ export default function DocumentServicePortal({
   });
 
   // Service Specific Kacheri Fields
-  const [rationCategory, setRationCategory] = useState<string>("NFSA - APL-1");
-  const [fpsShopNo, setFpsShopNo] = useState<string>("FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)");
-  const [gasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
-  const [bankAccountNo] = useState<string>("•••• •••• 4912");
-  const [bankIfsc] = useState<string>("SBIN0001249");
-  const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("180000");
-  const [occupation, setOccupation] = useState<string>("ખેતી / વ્યવસાય (Farmer)");
-  const [subCaste, setSubCaste] = useState<string>("કડવા પાટીદાર (પટેલ)");
-  const [religion, setReligion] = useState<string>("હિન્દુ (Hindu)");
+  const [rationCategory, setRationCategory] = useState<string>("");
+  const [fpsShopNo, setFpsShopNo] = useState<string>("");
+  const [gasConnectionStatus, setGasConnectionStatus] = useState<string>("સિંગલ બોટલ (Single Cylinder)");
+  const [bankAccountNo, setBankAccountNo] = useState<string>("");
+  const [bankIfsc, setBankIfsc] = useState<string>("");
+  const [annualIncomeVal, setAnnualIncomeVal] = useState<string>("");
+  const [occupation, setOccupation] = useState<string>("");
+  const [subCaste, setSubCaste] = useState<string>("");
+  const [religion, setReligion] = useState<string>("");
 
   // Extended Government Services Form States
-  const [surveyNumber, setSurveyNumber] = useState<string>("241/1 પૈકી");
-  const [khataNumber, setKhataNumber] = useState<string>("412");
-  const [landArea, setLandArea] = useState<string>("1.42 હેક્ટર");
-  const [childName, setChildName] = useState<string>("હરી");
-  const [birthPlace, setBirthPlace] = useState<string>("સિવિલ હોસ્પિટલ, રાજકોટ");
-  const [deceasedName, setDeceasedName] = useState<string>("નારણભાઈ પટેલ");
-  const [deathDate, setDeathDate] = useState<string>("2023-11-04");
-  const [deathPlace, setDeathPlace] = useState<string>("રાજકોટ (ઘરે)");
-  const [ewsPropertyType, setEwsPropertyType] = useState<string>("રહેણાંક મકાન (< ૧૦૦૦ ચો.ફૂટ)");
-  const [domicileYears, setDomicileYears] = useState<string>("૨૦ વર્ષ (જન્મથી ગુજરાત)");
-  const [seniorBloodGroup, setSeniorBloodGroup] = useState<string>("B+");
-  const [seniorEmergencyPhone, setSeniorEmergencyPhone] = useState<string>("9974442291");
-  const [drivingClass, setDrivingClass] = useState<string>("MCWG (મોટરસાયકલ) & LMV (કાર)");
-  const [rtoOfficeName, setRtoOfficeName] = useState<string>("GJ-03 RTO કચેરી, રાજકોટ");
-  const [marriageDate, setMarriageDate] = useState<string>("2025-02-14");
-  const [spouseName, setSpouseName] = useState<string>("પ્રિયાબેન");
+  const [surveyNumber, setSurveyNumber] = useState<string>("");
+  const [khataNumber, setKhataNumber] = useState<string>("");
+  const [landArea, setLandArea] = useState<string>("");
+  const [childName, setChildName] = useState<string>("");
+  const [birthPlace, setBirthPlace] = useState<string>("");
+  const [deceasedName, setDeceasedName] = useState<string>("");
+  const [deathDate, setDeathDate] = useState<string>("");
+  const [deathPlace, setDeathPlace] = useState<string>("");
+  const [ewsPropertyType, setEwsPropertyType] = useState<string>("");
+  const [domicileYears, setDomicileYears] = useState<string>("");
+  const [seniorBloodGroup, setSeniorBloodGroup] = useState<string>("");
+  const [seniorEmergencyPhone, setSeniorEmergencyPhone] = useState<string>("");
+  const [drivingClass, setDrivingClass] = useState<string>("MCWG & LMV");
+  const [rtoOfficeName, setRtoOfficeName] = useState<string>("");
+  const [marriageDate, setMarriageDate] = useState<string>("");
+  const [spouseName, setSpouseName] = useState<string>("");
+
+  // Form Usability, Validation & Feedback States
+  const [formValidationError, setFormValidationError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [showDemoLoadedToast, setShowDemoLoadedToast] = useState<boolean>(false);
+  const [showResetToast, setShowResetToast] = useState<boolean>(false);
+
+  // ── 1-Click AI Auto-Fill States ──
+  const [autoFillSuggestion, setAutoFillSuggestion] = useState<{
+    nameEn?: string;
+    nameGu?: string;
+    dob?: string;
+    gender?: "male" | "female";
+    fatherName?: string;
+    address?: string;
+    village?: string;
+    taluka?: string;
+    district?: string;
+    pincode?: string;
+    aadhaarLast4?: string;
+    docTitle?: string;
+  } | null>(null);
+  const [showAutoFillSuccess, setShowAutoFillSuccess] = useState<boolean>(false);
+
+  const applyAutoFill = () => {
+    if (!autoFillSuggestion) return;
+    try {
+      if (typeof window !== "undefined" && "vibrate" in navigator) {
+        navigator.vibrate([30, 50, 30]);
+      }
+    } catch {}
+    if (autoFillSuggestion.nameEn) setApplicantName(autoFillSuggestion.nameEn);
+    if (autoFillSuggestion.nameGu) setApplicantNameGu(autoFillSuggestion.nameGu);
+    if (autoFillSuggestion.fatherName) setFatherOrHusbandName(autoFillSuggestion.fatherName);
+    if (autoFillSuggestion.dob) setDob(autoFillSuggestion.dob);
+    if (autoFillSuggestion.gender) setGender(autoFillSuggestion.gender);
+    if (autoFillSuggestion.village) setVillage(autoFillSuggestion.village);
+    if (autoFillSuggestion.taluka) setTaluka(autoFillSuggestion.taluka);
+    if (autoFillSuggestion.district) setDistrict(autoFillSuggestion.district);
+    if (autoFillSuggestion.pincode) setPincode(autoFillSuggestion.pincode);
+    if (autoFillSuggestion.address) setStreetSociety(autoFillSuggestion.address);
+    if (autoFillSuggestion.aadhaarLast4) setAadhaarNumber(autoFillSuggestion.aadhaarLast4);
+
+    setShowAutoFillSuccess(true);
+    setTimeout(() => setShowAutoFillSuccess(false), 4500);
+    setAutoFillSuggestion(null);
+  };
 
   // Category and Search filter for the 69 services selector
   const [serviceCategoryFilter, setServiceCategoryFilter] = useState<string>("all");
   const [serviceSearchQuery, setServiceSearchQuery] = useState<string>("");
+  const [formStep, setFormStep] = useState<1 | 2 | 3 | 4>(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("step") === "payment" || Boolean(initialPaymentOpen)) return 4;
+      if (params.get("reapply")) return 2;
+    }
+    return 1;
+  });
 
   // 5. Document Uploads & AI Inspections
   const [uploadedDocs, setUploadedDocs] = useState<Record<string, UploadedDocState>>({});
@@ -295,6 +371,7 @@ export default function DocumentServicePortal({
   const [showSlipModal, setShowSlipModal] = useState<boolean>(false);
   const [copiedVpa, setCopiedVpa] = useState<boolean>(false);
 
+
   // Synchronize browser history and back button with modal states
   const handleClosePaymentModal = () => {
     setShowPaymentModal(false);
@@ -320,13 +397,53 @@ export default function DocumentServicePortal({
   };
 
   useEffect(() => {
-    const handlePopState = () => {
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/payment")) {
-        setShowPaymentModal(false);
-        setSubmittedApp(null);
+    const handlePopState = (e: PopStateEvent) => {
+      if (typeof window !== "undefined") {
+        if (!window.location.pathname.startsWith("/payment")) {
+          setShowPaymentModal(false);
+        }
+        if (e.state && typeof e.state.docFormStep === "number") {
+          setFormStep(e.state.docFormStep as 1 | 2 | 3 | 4);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } else {
+          const params = new URLSearchParams(window.location.search);
+          const stepVal = parseInt(params.get("step") || "", 10);
+          if (stepVal >= 1 && stepVal <= 4) {
+            setFormStep(stepVal as 1 | 2 | 3 | 4);
+          } else {
+            setFormStep(1);
+          }
+        }
       }
     };
     window.addEventListener("popstate", handlePopState);
+
+    // Auto-recover any pending payment if app was killed and restored
+    if (typeof window !== "undefined") {
+      try {
+        const pendingStr = sessionStorage.getItem("nagrik_pending_pay_order") || localStorage.getItem("nagrik_pending_pay_order");
+        if (pendingStr) {
+          const pending = JSON.parse(pendingStr);
+          if (pending?.orderId && Date.now() - pending.timestamp < 300000) {
+            fetch(`/api/payment/status?orderId=${encodeURIComponent(pending.orderId)}&applicationId=${encodeURIComponent(pending.applicationId || "")}`)
+              .then((res) => res.json())
+              .then((data) => {
+                if (data.success && data.paid && data.paymentId) {
+                  sessionStorage.removeItem("nagrik_pending_pay_order");
+                  localStorage.removeItem("nagrik_pending_pay_order");
+                  handleFinalPaymentSubmit(
+                    data.paymentId,
+                    { razorpay_payment_id: data.paymentId, razorpay_order_id: pending.orderId },
+                    pending.orderId
+                  );
+                }
+              })
+              .catch(() => {});
+          }
+        }
+      } catch {}
+    }
+
     return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
@@ -336,12 +453,28 @@ export default function DocumentServicePortal({
 
   // Freeze background scrolling when any payment or receipt modal is open
   useBodyScrollLock(Boolean(showPaymentModal || submittedApp || showSlipModal));
+
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    const isAnyModalActive = Boolean(showPaymentModal || submittedApp || showSlipModal || previewDocModal);
+    if (!isAnyModalActive) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (previewDocModal) setPreviewDocModal(null);
+        else if (showSlipModal) setShowSlipModal(false);
+        else if (showPaymentModal) handleClosePaymentModal();
+        else if (submittedApp) handleCloseReceiptModal();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showPaymentModal, submittedApp, showSlipModal, previewDocModal]);
   const [notificationPayload, setNotificationPayload] = useState<{
     sms?: { sentTo: string; message: string; timestamp: string };
     email?: { sentTo: string; subject: string; timestamp: string };
   } | null>(null);
 
-  const [citizenSession, setCitizenSession] = useState<{
+    const [citizenSession, setCitizenSession] = useState<{
     citizenName?: string;
     citizenNameGu?: string;
     mobile?: string;
@@ -352,54 +485,163 @@ export default function DocumentServicePortal({
     annualIncome?: number;
   } | null>(null);
 
+  const [familyMembers, setFamilyMembers] = useState<FamilyMemberProfile[]>([]);
+  const [selectedMemberId, setSelectedMemberId] = useState<string>("member-self");
+  const [memberSelectedToast, setMemberSelectedToast] = useState<string | null>(null);
+
+  // Dedicated Family Member Auto-Fill Handler
+  const handleSelectFamilyMember = useCallback((member: FamilyMemberProfile) => {
+    setSelectedMemberId(member.id);
+    setActiveFamilyMemberId(member.id, member);
+    try {
+      localStorage.setItem("nagrik_active_family_member", member.id);
+      localStorage.setItem("nagrik_active_family_member_id", member.id);
+    } catch {}
+    triggerHaptic();
+
+    if (member.nameGu) setApplicantNameGu(member.nameGu);
+    if (member.nameEn) setApplicantName(member.nameEn);
+    else if (member.nameGu) setApplicantName(member.nameGu);
+
+    // Smart Father/Husband Name Detection
+    if (member.fatherOrHusbandNameGu) {
+      setFatherOrHusbandName(member.fatherOrHusbandNameGu);
+    } else if (member.relationGu?.includes("પત્ની") || member.relationEn?.toLowerCase().includes("wife")) {
+      const head = citizenSession?.citizenNameGu || citizenSession?.citizenName || "";
+      if (head) setFatherOrHusbandName(head);
+    } else if (member.relationGu?.includes("પોતે") || member.relationEn?.toLowerCase().includes("self")) {
+      const fatherMember = familyMembers.find((m) => m.id === "member-father" || m.relationGu?.includes("પિતા"));
+      if (fatherMember?.nameGu) {
+        setFatherOrHusbandName(fatherMember.nameGu);
+      }
+    }
+
+    if (member.dob) setDob(member.dob);
+    if (member.gender) setGender(member.gender);
+
+    if (member.mobile) {
+      setMobileNumber(member.mobile);
+    } else if (citizenSession?.mobile) {
+      setMobileNumber(citizenSession.mobile);
+    }
+
+    if (member.aadhaarMasked) {
+      setAadhaarNumber(member.aadhaarMasked);
+      setLookupNumber(member.aadhaarLast4 || "");
+    } else if (member.aadhaarLast4) {
+      setAadhaarNumber(`XXXX-XXXX-${member.aadhaarLast4}`);
+      setLookupNumber(member.aadhaarLast4);
+    }
+
+    if (citizenSession?.district) setDistrict(citizenSession.district);
+    if (citizenSession?.taluka) setTaluka(citizenSession.taluka);
+    if (citizenSession?.village) setVillage(citizenSession.village);
+
+    // Clear validation errors
+    setFieldErrors({});
+    setFormValidationError(null);
+
+    setMemberSelectedToast(`✅ ${member.nameGu} (${member.relationGu.split(" ")[0]}) ની વિગતો ફોર્મમાં ભરાઈ ગઈ છે.`);
+    setTimeout(() => {
+      setMemberSelectedToast(null);
+    }, 4500);
+  }, [citizenSession, familyMembers]);
+
   // Restore authenticated citizen session and auto-prefill fields for active family member
   useEffect(() => {
     if (typeof window !== "undefined") {
       const syncSession = () => {
         const saved = localStorage.getItem("nagrik_citizen_session");
+        let cit: any = null;
         if (saved) {
           try {
             const parsed = JSON.parse(saved);
             if (parsed) {
-              const cit = parsed.citizen || parsed;
+              cit = parsed.citizen || parsed;
               setCitizenSession(cit);
-              const activeMember = getActiveFamilyMember(cit);
-              setApplicantName(activeMember.nameEn || activeMember.nameGu || cit.citizenName || "Hari Vinodrai Patel");
-              setApplicantNameGu(activeMember.nameGu || cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
-              setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu || "વિનોદરાઈ કરશનભાઈ પટેલ");
-              setDob(activeMember.dob || "1998-05-15");
-              setGender(activeMember.gender || "male");
-              setMobileNumber(activeMember.mobile || cit.mobile || "9974442291");
-              setAadhaarNumber(activeMember.aadhaarMasked || `XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
-              setLookupNumber(activeMember.aadhaarLast4 || cit.aadhaarLast4 || "4829");
-              if (cit.district) setDistrict(cit.district);
-              if (cit.taluka) setTaluka(cit.taluka);
-              if (cit.village) setVillage(cit.village);
               if (cit.annualIncome) setAnnualIncomeVal(String(cit.annualIncome));
+              setUserUploadedPhoto(localStorage.getItem("nagrik_user_photo") || "");
             }
           } catch (e) {
             console.error("Failed to parse citizen session:", e);
           }
         } else {
           setCitizenSession(null);
+          setUserUploadedPhoto("");
         }
+
+        const members = loadFamilyMembers(cit || {});
+        setFamilyMembers(members);
+
+        const activeMemberId =
+          localStorage.getItem("nagrik_active_family_member") ||
+          localStorage.getItem("nagrik_active_family_member_id") ||
+          "member-self";
+        setSelectedMemberId(activeMemberId);
+
+        const activeMember = members.find((m) => m.id === activeMemberId) || members[0] || (cit ? getActiveFamilyMember(cit) : null);
+
+        if (activeMember) {
+          if (activeMember.nameEn || cit?.citizenName) {
+            setApplicantName(activeMember.nameEn || cit?.citizenName || "");
+          }
+          if (activeMember.nameGu || cit?.citizenNameGu) {
+            setApplicantNameGu(activeMember.nameGu || cit?.citizenNameGu || "");
+          }
+          if (activeMember.fatherOrHusbandNameGu) {
+            setFatherOrHusbandName(activeMember.fatherOrHusbandNameGu);
+          }
+          if (activeMember.dob) {
+            setDob(activeMember.dob);
+          }
+          if (activeMember.gender) {
+            setGender(activeMember.gender);
+          }
+          if (activeMember.mobile || cit?.mobile) {
+            setMobileNumber(activeMember.mobile || cit?.mobile || "");
+          }
+          if (activeMember.aadhaarMasked || cit?.aadhaarLast4) {
+            setAadhaarNumber(activeMember.aadhaarMasked || (cit?.aadhaarLast4 ? `XXXX-XXXX-${cit.aadhaarLast4}` : ""));
+            setLookupNumber(activeMember.aadhaarLast4 || cit?.aadhaarLast4 || "");
+          }
+        }
+        if (cit?.district) setDistrict(cit.district);
+        if (cit?.taluka) setTaluka(cit.taluka);
+        if (cit?.village) setVillage(cit.village);
       };
 
       syncSession();
+
+      const handleFamilyMemberChange = (e: Event) => {
+        const customEvt = e as CustomEvent<{ memberId: string; member?: FamilyMemberProfile }>;
+        const memberId = customEvt.detail?.memberId;
+        const currentMembers = loadFamilyMembers(citizenSession || {});
+        const targetMember = customEvt.detail?.member || currentMembers.find((m) => m.id === memberId);
+        if (targetMember) {
+          handleSelectFamilyMember(targetMember);
+        } else {
+          syncSession();
+        }
+      };
+
       window.addEventListener("storage", syncSession);
       window.addEventListener("nagrik_auth_change", syncSession);
-      window.addEventListener("nagrik_family_member_change", syncSession);
+      window.addEventListener("nagrik_family_member_change", handleFamilyMemberChange);
       window.addEventListener("nagrik_family_updated", syncSession);
       return () => {
         window.removeEventListener("storage", syncSession);
         window.removeEventListener("nagrik_auth_change", syncSession);
-        window.removeEventListener("nagrik_family_member_change", syncSession);
+        window.removeEventListener("nagrik_family_member_change", handleFamilyMemberChange);
         window.removeEventListener("nagrik_family_updated", syncSession);
       };
     }
-  }, []);
+  }, [handleSelectFamilyMember, citizenSession]);
 
   const handleDocLogout = () => {
+    try {
+      localStorage.removeItem("nagrik_user_photo");
+    } catch {}
+    setUserUploadedPhoto("");
     localStorage.removeItem("nagrik_citizen_session");
     window.dispatchEvent(new Event("storage"));
     window.dispatchEvent(new Event("nagrik_auth_change"));
@@ -542,7 +784,8 @@ export default function DocumentServicePortal({
   const handleFileUpload = async (docId: string, file: File) => {
     // 1. Client-side File Size Validation (BUG-023: Max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      alert("❌ દસ્તાવેજ ફાઇલ સાઇઝ ૫ MB થી ઓછી હોવી જોઈએ. કૃપા કરીને નાની ફાઇલ પસંદ કરો.");
+      setFormValidationError("❌ દસ્તાવેજ ફાઇલ સાઇઝ ૫ MB થી ઓછી હોવી જોઈએ. કૃપા કરીને ૫ MB કરતાં નાની JPG, PNG અથવા PDF ફાઇલ પસંદ કરો. (Maximum file size is 5MB)");
+      window.scrollTo({ top: 120, behavior: "smooth" });
       return;
     }
 
@@ -684,6 +927,25 @@ export default function DocumentServicePortal({
             documentType: a.documentType || a.documentNameGu,
           },
         }));
+
+        // ── 1-Click AI Auto-Fill Detection ──
+        if (calculatedStatus === "valid" && (a.autoFillProfile || a.extractedInfo?.detectedName)) {
+          const prof = a.autoFillProfile || {};
+          setAutoFillSuggestion({
+            nameEn: prof.nameEn || a.extractedInfo?.detectedName || "",
+            nameGu: prof.nameGu || "",
+            dob: prof.dob || "1985-06-15",
+            gender: (prof.gender as "male" | "female") || "male",
+            fatherName: prof.fatherOrHusbandName || "",
+            address: prof.address || "",
+            village: prof.village || "ગોમટા",
+            taluka: prof.taluka || "ગોંડલ",
+            district: prof.district || "રાજકોટ",
+            pincode: prof.pincode || "360311",
+            aadhaarLast4: prof.idNumberMasked || "•••• •••• 4429",
+            docTitle: docItemObj?.nameGu || docItemObj?.nameEn || "ઓળખ પુરાવો",
+          });
+        }
       } else {
         throw new Error("Verification failed");
       }
@@ -778,26 +1040,147 @@ export default function DocumentServicePortal({
 
   // 1-Click Fast Demo Data Button (Judge Presentation)
   const handleAutoFillDemo = () => {
+    // 1. Applicant Personal Info
+    setApplicantName("Hari Vinodrai Patel");
+    setApplicantNameGu("હરી વિનોદરાઈ પટેલ");
+    setFatherOrHusbandName("વિનોદરાઈ કરશનભાઈ પટેલ");
+    setMotherName("ભાવનાબેન વિનોદરાઈ પટેલ");
+    setDob("1985-06-15");
+    setGender("male");
+    setMobileNumber("9974442291");
+    setEmailAddress("haripatel@gujarat.gov.in");
+    setAadhaarNumber("4829");
     setLookupNumber("982548291045");
-    handleFetchExistingRecord();
-    setSelectedCorrections(["address", "mobile"]);
 
-    // Auto mark all docs as AI Verified
+    // 2. Address Details
+    setDistrict("Rajkot");
+    setTaluka("Gondal");
+    setVillage("ગોમટા (Gomta)");
+    setHouseNo("૧૨");
+    setStreetSociety("શિવ દર્શન રેસિડેન્સી, કાલાવડ રોડ");
+    setPincode("360311");
+
+    // 3. Service Specific Sample Data
+    setRationCategory("NFSA - APL-1");
+    setFpsShopNo("FPS-108 (રાજકોટ પંચાયત સેવા કેન્દ્ર)");
+    setBankAccountNo("•••• •••• 4912");
+    setBankIfsc("SBIN0001249");
+    setAnnualIncomeVal("180000");
+    setOccupation("ખેતી / વ્યવસાય (Farmer)");
+    setSubCaste("કડવા પાટીદાર (પટેલ)");
+    setReligion("હિન્દુ (Hindu)");
+    setSurveyNumber("241/1 પૈકી");
+    setKhataNumber("412");
+    setLandArea("1.42 હેક્ટર");
+    setChildName("આરવ");
+    setBirthPlace("સિવિલ હોસ્પિટલ, રાજકોટ");
+    setDeceasedName("નારણભાઈ પટેલ");
+    setDeathDate("2023-11-04");
+    setDeathPlace("રાજકોટ (ઘરે)");
+    setEwsPropertyType("રહેણાંક મકાન (< ૧૦૦૦ ચો.ફૂટ)");
+    setDomicileYears("૨૦ વર્ષ (જન્મથી ગુજરાત)");
+    setSeniorBloodGroup("B+");
+    setSeniorEmergencyPhone("9974442291");
+    setDrivingClass("MCWG (મોટરસાયકલ) & LMV (કાર)");
+    setRtoOfficeName("GJ-03 RTO કચેરી, રાજકોટ");
+    setMarriageDate("2025-02-14");
+    setSpouseName("પ્રિયાબેન");
+
+    // 4. Update Mode Lookup
+    setSelectedCorrections(["address", "mobile"]);
+    if (serviceMode === "update") {
+      try {
+        const profile = lookupCitizenExistingRecord(service.id, "1413");
+        setFetchedProfile(profile);
+      } catch {}
+    }
+
+    // 5. Auto mark all docs as AI Verified (covers all slots across new & update modes)
     const demoDocs: Record<string, UploadedDocState> = {};
-    requiredDocs.forEach((d) => {
+    const allPossibleDocs = [
+      ...(service.requiredDocsNew || []),
+      ...(service.requiredDocsUpdate || []),
+      ...getDynamicRequiredDocs(),
+      { id: "applicant_photo", nameEn: "Passport Photo", nameGu: "પાસપોર્ટ ફોટો" },
+      { id: "current_aadhaar", nameEn: "Current Aadhaar Card", nameGu: "હાલના આધાર કાર્ડની નકલ" },
+      { id: "update_proof", nameEn: "Supporting Update Document", nameGu: "સુધારા માટેનો પુરાવો" },
+      { id: "address_proof", nameEn: "Address Proof", nameGu: "રહેઠાણ પુરાવો" },
+      { id: "address_proof_new", nameEn: "Proof of New Address", nameGu: "નવા સરનામાનો અધિકૃત પુરાવો" },
+      { id: "name_dob_proof", nameEn: "Name and DOB Proof", nameGu: "નામ અને જન્મ પુરાવો" },
+      { id: "member_proof", nameEn: "Member Proof", nameGu: "સભ્ય પુરાવો" },
+      { id: "identity_proof", nameEn: "Identity Proof", nameGu: "ઓળખ પુરાવો" },
+      { id: "electricity_bill", nameEn: "Electricity Bill", nameGu: "વીજળી બિલ" },
+    ];
+    allPossibleDocs.forEach((d) => {
+      if (!d || !d.id) return;
+      const docName = String(d.nameEn || d.nameGu || d.id);
+      const prefix = (docName.split(" ")[0] || "doc").toLowerCase().replace(/[^a-z0-9]/g, "");
       demoDocs[d.id] = {
         file: null,
-        fileName: `${d.nameEn.split(" ")[0].toLowerCase()}_verified.pdf`,
+        fileName: `${prefix || "document"}_verified.pdf`,
         fileType: "application/pdf",
         base64: "",
         status: "valid",
         qualityScore: 96,
-        adviceGu: `${d.nameGu} - AI દ્વારા ૧૦૦% પ્રમાણિત. સરકારી પોર્ટલ માટે યોગ્ય.`,
+        adviceGu: `${d.nameGu || "દસ્તાવેજ"} - AI દ્વારા ૧૦૦% પ્રમાણિત. સરકારી પોર્ટલ માટે યોગ્ય.`,
         needsUpdate: false,
         needsNewDocument: false,
       };
     });
     setUploadedDocs(demoDocs);
+    setFormValidationError(null);
+    setFieldErrors({});
+    setShowResetToast(false);
+    setShowDemoLoadedToast(true);
+    setTimeout(() => setShowDemoLoadedToast(false), 4000);
+  };
+
+  // One-Click Form Reset / Clear
+  const handleResetForm = () => {
+    setApplicantName("");
+    setApplicantNameGu("");
+    setFatherOrHusbandName("");
+    setMotherName("");
+    setDob("");
+    setGender("male");
+    setMobileNumber("");
+    setEmailAddress("");
+    setAadhaarNumber("");
+    setLookupNumber("");
+    setHouseNo("");
+    setStreetSociety("");
+    setPincode("");
+    setVillage("");
+    setRationCategory("");
+    setFpsShopNo("");
+    setBankAccountNo("");
+    setBankIfsc("");
+    setAnnualIncomeVal("");
+    setOccupation("");
+    setSubCaste("");
+    setReligion("");
+    setSurveyNumber("");
+    setKhataNumber("");
+    setLandArea("");
+    setChildName("");
+    setBirthPlace("");
+    setDeceasedName("");
+    setDeathDate("");
+    setDeathPlace("");
+    setEwsPropertyType("");
+    setDomicileYears("");
+    setSeniorBloodGroup("");
+    setSeniorEmergencyPhone("");
+    setRtoOfficeName("");
+    setMarriageDate("");
+    setSpouseName("");
+    setUploadedDocs({});
+    setSelectedCorrections([]);
+    setFormValidationError(null);
+    setFieldErrors({});
+    setShowDemoLoadedToast(false);
+    setShowResetToast(true);
+    setTimeout(() => setShowResetToast(false), 3500);
   };
 
   // 1-Click Official DigiLocker Gateway Response Handler
@@ -934,7 +1317,8 @@ export default function DocumentServicePortal({
       const compat = validateDocSlotCompatibility(targetSlot, targetSlotNameGu, doc.id, doc.nameGu, isDocPdf);
 
       if (!compat.isCompatible || compat.isStrictMismatch) {
-        alert(compat.warningMessageGu || "આ દસ્તાવેજ પસંદ કરેલા સ્લોટ માટે અમાન્ય છે!");
+        setFormValidationError(compat.warningMessageGu || "આ દસ્તાવેજ પસંદ કરેલા સ્લોટ માટે અમાન્ય છે! કૃપા કરીને યોગ્ય પુરાવો પસંદ કરો.");
+        window.scrollTo({ top: 120, behavior: "smooth" });
         return;
       }
 
@@ -1036,12 +1420,284 @@ export default function DocumentServicePortal({
     }
   };
 
+  // ── Step 2 Field-by-Field Validation ──
+  const validateStep2Form = (): { valid: boolean; errors: Record<string, string>; message: string } => {
+    const errors: Record<string, string> = {};
+    const messages: string[] = [];
+
+    const hasName = Boolean(
+      (applicantName && applicantName.trim().length > 0) ||
+      (applicantNameGu && applicantNameGu.trim().length > 0)
+    );
+    if (!hasName) {
+      errors.name = "અરજદારનું નામ દાખલ કરવું ફરજિયાત છે (Name is required)";
+      messages.push("• અરજદારનું પૂરું નામ (ગુજરાતી અથવા અંગ્રેજી)");
+    }
+
+    if (!fatherOrHusbandName || fatherOrHusbandName.trim().length === 0) {
+      errors.fatherName = "પિતા અથવા પતિનું નામ દાખલ કરવું ફરજિયાત છે";
+      messages.push("• પિતા / પતિનું પૂરું નામ");
+    }
+
+    const cleanMobile = mobileNumber.replace(/\D/g, "");
+    if (!cleanMobile) {
+      errors.mobile = "મોબાઈલ નંબર દાખલ કરવો ફરજિયાત છે (Mobile is required)";
+      messages.push("• ૧૦ આંકડાનો મોબાઈલ નંબર");
+    } else if (cleanMobile.length !== 10) {
+      errors.mobile = "માન્ય ૧૦ આંકડાનો મોબાઈલ નંબર દાખલ કરો (Must be 10 digits)";
+      messages.push("• માન્ય ૧૦-આંકડાનો મોબાઈલ નંબર");
+    }
+
+    if (!dob || !dob.trim()) {
+      errors.dob = "જન્મ તારીખ દાખલ કરવી ફરજિયાત છે (Date of Birth is required)";
+      messages.push("• જન્મ તારીખ (DOB)");
+    }
+
+    if (!gender) {
+      errors.gender = "જાતિ પસંદ કરવી ફરજિયાત છે (Gender is required)";
+      messages.push("• જાતિ (Gender)");
+    }
+
+    if (!district || !district.trim()) {
+      errors.district = "જિલ્લો પસંદ કરવો ફરજિયાત છે";
+      messages.push("• જિલ્લો (District)");
+    }
+
+    if (!taluka || !taluka.trim()) {
+      errors.taluka = "તાલુકો પસંદ કરવો ફરજિયાત છે";
+      messages.push("• તાલુકો (Taluka)");
+    }
+
+    if (!village || !village.trim()) {
+      errors.village = "ગામ અથવા શહેર પસંદ કરવું ફરજિયાત છે (Village/City is required)";
+      messages.push("• ગામ / શહેરની પસંદગી");
+    }
+
+    if (service.id === "land_records") {
+      if (!khataNumber.trim()) {
+        errors.khataNumber = "ખાતા નંબર ફરજિયાત છે";
+        messages.push("• જમીન ખાતા નંબર");
+      }
+      if (!surveyNumber.trim()) {
+        errors.surveyNumber = "સર્વે નંબર ફરજિયાત છે";
+        messages.push("• જમીન સર્વે / બ્લોક નંબર");
+      }
+    } else if (service.id === "death_cert") {
+      if (!deceasedName.trim()) {
+        errors.deceasedName = "મૃતકનું નામ ફરજિયાત છે";
+        messages.push("• મૃતકનું પૂરું નામ");
+      }
+      if (!deathDate.trim()) {
+        errors.deathDate = "મરણ તારીખ ફરજિયાત છે";
+        messages.push("• મરણ તારીખ");
+      }
+    } else if (service.id === "marriage_cert") {
+      if (!marriageDate.trim()) {
+        errors.marriageDate = "લગ્ન તારીખ ફરજિયાત છે";
+        messages.push("• લગ્ન તારીખ");
+      }
+      if (!spouseName.trim()) {
+        errors.spouseName = "પત્નીનું નામ ફરજિયાત છે";
+        messages.push("• પત્નીનું પૂરું નામ");
+      }
+    }
+
+    if (messages.length > 0) {
+      return {
+        valid: false,
+        errors,
+        message: "કૃપા કરીને આગળ વધતા પહેલા નીચેની ફરજિયાત વિગતો પૂર્ણ કરો:\n" + messages.join("\n"),
+      };
+    }
+
+    if (!applicantName.trim() && applicantNameGu.trim()) {
+      setApplicantName(applicantNameGu.trim());
+    } else if (applicantName.trim() && !applicantNameGu.trim()) {
+      setApplicantNameGu(applicantName.trim());
+    }
+
+    return { valid: true, errors: {}, message: "" };
+  };
+
+  // Helper boolean checking if Step 2 form has all required data
+  const isStep2Complete = Boolean(
+    (applicantNameGu.trim() || applicantName.trim()) &&
+    fatherOrHusbandName.trim() &&
+    dob.trim() &&
+    gender &&
+    mobileNumber.replace(/\D/g, "").length === 10 &&
+    district.trim() &&
+    taluka.trim() &&
+    village.trim()
+  );
+
+  // ── Step 3 Document Validation ──
+  const validateStep3Documents = (): { valid: boolean; message: string } => {
+    const invalidDocs = requiredDocs.filter((d) => uploadedDocs[d.id]?.status === "invalid");
+    if (invalidDocs.length > 0) {
+      const firstInvalid = invalidDocs[0];
+      const firstState = uploadedDocs[firstInvalid.id];
+      let msg = `❌ દસ્તાવેજ અસ્વીકાર્ય છે: '${firstInvalid.nameGu}' સરકારી નિયમો અનુસાર માન્ય નથી.`;
+      if (firstState?.nameMatchStatus === "mismatch") {
+        msg = `❌ દસ્તાવેજમાં નામ મિસમેચ: અપલોડ કરેલ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName}' ના નામે ભરેલું છે.`;
+      } else if (firstState?.matchesExpected === false) {
+        msg = `❌ ખોટો દસ્તાવેજ: '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ થયેલ છે.`;
+      } else if (firstState?.serviceRuleAdviceGu) {
+        msg = `❌ સરકારી સેવા નિયમ ભંગ: ${firstState.serviceRuleAdviceGu}`;
+      }
+      return { valid: false, message: msg };
+    }
+
+    const missingDocs = requiredDocs.filter((d) => d.mandatory && !uploadedDocs[d.id]);
+    if (missingDocs.length > 0) {
+      return {
+        valid: false,
+        message:
+          "⚠️ કૃપા કરીને નીચેના તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n" +
+          missingDocs.map((d) => `• ${d.nameGu} (${d.nameEn})`).join("\n"),
+      };
+    }
+
+    return { valid: true, message: "" };
+  };
+
+  // ── Strict Progressive Step-by-Step Validation & Security Gate ──
+  const validateStepData = (stepNumber: 1 | 2 | 3): { valid: boolean; reason: string } => {
+    if (stepNumber === 1) {
+      if (!service || !service.id) {
+        return { valid: false, reason: "કૃપા કરીને પહેલાં કોઈ એક સત્તાવાર સરકારી સેવા પસંદ કરો." };
+      }
+      return { valid: true, reason: "" };
+    }
+
+    if (stepNumber === 2) {
+      const s2Check = validateStep2Form();
+      if (!s2Check.valid) {
+        return {
+          valid: false,
+          reason: "પગલું ૨ માં અરજદારની તમામ ફરજિયાત વિગતો ભરવી આવશ્યક છે. ખાલી ફોર્મ સાથે આગળ વધી શકાશે નહીં.",
+        };
+      }
+      return { valid: true, reason: "" };
+    }
+
+    if (stepNumber === 3) {
+      const s2 = validateStepData(2);
+      if (!s2.valid) return s2;
+
+      const hasInvalid = requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid");
+      if (hasInvalid) {
+        return {
+          valid: false,
+          reason: "ધ્યાન આપો: એક અથવા વધુ દસ્તાવેજ અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.",
+        };
+      }
+      return { valid: true, reason: "" };
+    }
+
+    return { valid: true, reason: "" };
+  };
+
+  const canNavigateToStep = (targetStep: 1 | 2 | 3 | 4): { allowed: boolean; reason: string } => {
+    if (targetStep === 1) {
+      return { allowed: true, reason: "" };
+    }
+
+    if (targetStep === 2) {
+      const s1 = validateStepData(1);
+      if (!s1.valid) return { allowed: false, reason: s1.reason };
+      return { allowed: true, reason: "" };
+    }
+
+    if (targetStep === 3) {
+      const s1 = validateStepData(1);
+      if (!s1.valid) return { allowed: false, reason: s1.reason };
+      const s2 = validateStepData(2);
+      if (!s2.valid) {
+        return {
+          allowed: false,
+          reason: "પગલું ૩ (જરૂરી પુરાવા) પર જવા માટે પહેલાં અરજદારનું નામ અને વિગતો ભરો (પગલું ૨ પૂર્ણ કરો).",
+        };
+      }
+      return { allowed: true, reason: "" };
+    }
+
+    if (targetStep === 4) {
+      const s1 = validateStepData(1);
+      if (!s1.valid) return { allowed: false, reason: s1.reason };
+
+      const s2 = validateStepData(2);
+      if (!s2.valid) {
+        return {
+          allowed: false,
+          reason: "પગલું ૪ (ચકાસણી & ફી) પર સીધા જઈ શકાતું નથી. કૃપા કરીને પહેલાં પગલું ૨ માં અરજદારની વિગતો ભરો.",
+        };
+      }
+
+      if (formStep === 1) {
+        return {
+          allowed: false,
+          reason: "પગલું ૪ (ચકાસણી & ફી) પર સીધા જઈ શકાતું નથી. કૃપા કરીને ક્રમશઃ પગલું ૨ અને ૩ પૂર્ણ કરો.",
+        };
+      }
+
+      const s3 = validateStepData(3);
+      if (!s3.valid) return { allowed: false, reason: s3.reason };
+
+      return { allowed: true, reason: "" };
+    }
+
+    return { allowed: true, reason: "" };
+  };
+
+  const handleStepClick = (targetStep: 1 | 2 | 3 | 4) => {
+    if (targetStep === formStep) return;
+
+    // Moving backward is always permitted so citizens can review/edit anytime
+    if (targetStep < formStep) {
+      setFormValidationError(null);
+      setFormStep(targetStep);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (typeof window !== "undefined") {
+        try {
+          const url = new URL(window.location.href);
+          url.searchParams.set("step", String(targetStep));
+          window.history.pushState({ docFormStep: targetStep }, "", url.toString());
+        } catch {}
+      }
+      return;
+    }
+
+    // Moving forward requires step prerequisites to be fulfilled
+    const check = canNavigateToStep(targetStep);
+    if (!check.allowed) {
+      setFormValidationError(check.reason);
+      return;
+    }
+
+    setFormValidationError(null);
+    setFormStep(targetStep);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("step", String(targetStep));
+        window.history.pushState({ docFormStep: targetStep }, "", url.toString());
+      } catch {}
+    }
+  };
+
   // Step 1: Pre-Submission Validation & Open Government Cyber Treasury Payment Gateway
   const handleOpenPaymentGateway = (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!applicantName.trim()) {
-      alert("કૃપા કરીને અરજદારનું નામ ભરો.");
+    const validName = Boolean(
+      (applicantName && applicantName.trim().length > 0) ||
+      (applicantNameGu && applicantNameGu.trim().length > 0)
+    );
+    if (!validName) {
+      setFormValidationError("⚠️ કૃપા કરીને અરજદારનું પૂરું નામ દાખલ કરો.");
+      setFormStep(2);
       return;
     }
 
@@ -1054,38 +1710,34 @@ export default function DocumentServicePortal({
     if (invalidDocs.length > 0) {
       const firstInvalid = invalidDocs[0];
       const firstState = uploadedDocs[firstInvalid.id];
+      let msg = `❌ અરજી સબમિટ થઈ શકશે નહીં: અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`;
       if (firstState?.nameMatchStatus === "mismatch") {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (અન્ય વ્યક્તિનો દસ્તાવેજ):\n\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName || "અરજદાર"}' ના નામે ભરેલું છે.\n\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે. કૃપા કરીને સાચો દસ્તાવેજ અપલોડ કરો.`
-        );
+        msg = `❌ અરજી સબમિટ થઈ શકશે નહીં (અન્ય વ્યક્તિનો દસ્તાવેજ):\nઅપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' પર અન્ય વ્યક્તિ (${firstState.detectedName || "બીજી વ્યક્તિ"}) નું નામ છે, જ્યારે ફોર્મ અરજદાર '${applicantNameGu || applicantName}' ના નામે ભરેલું છે.\nસરકારી નિયમો મુજબ ફક્ત અરજદારના પોતાના જ અસલ દસ્તાવેજ માન્ય ગણાશે.`;
       } else if (firstState?.matchesExpected === false) {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (ખોટો દસ્તાવેજ):\n\nતમે '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ કરી છે.\n\nસરકારી નિયમ મુજબ ખોટા દસ્તાવેજ (જેમ કે માર્કશીટ, અયોગ્ય બિલ, બોનાફાઈડ) ચાલશે નહીં. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
-        );
+        msg = `❌ અરજી સબમિટ થઈ શકશે નહીં (ખોટો દસ્તાવેજ):\nતમે '${firstInvalid.nameGu}' ની જગ્યાએ અમાન્ય ફાઇલ (${firstState.fileName}) અપલોડ કરી છે.\nકૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`;
       } else if (firstState?.serviceRuleMatch === false) {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં (સરકારી સેવા નિયમ ભંગ):\n\n${firstState.serviceRuleAdviceGu || "અપલોડ કરેલ દસ્તાવેજ આ સેવાના કાયદાકીય નિયમો પૂર્ણ કરતો નથી."}\n\nકૃપા કરીને સરકારી ધારાધોરણો મુજબ પાત્ર દસ્તાવેજ અપલોડ કરો.`
-        );
-      } else {
-        alert(
-          `❌ અરજી સબમિટ થઈ શકશે નહીં:\n\nતમે અપલોડ કરેલ દસ્તાવેજ '${firstInvalid.nameGu}' અસ્વીકાર્ય છે. કૃપા કરીને સાચો સત્તાવાર પુરાવો અપલોડ કરો.`
-        );
+        msg = `❌ અરજી સબમિટ થઈ શકશે નહીં (સરકારી સેવા નિયમ ભંગ):\n${firstState.serviceRuleAdviceGu || "અપલોડ કરેલ દસ્તાવેજ આ સેવાના કાયદાકીય નિયમો પૂર્ણ કરતો નથી."}`;
       }
+      setFormValidationError(msg);
+      setFormStep(3);
       return;
     }
 
     // Check mandatory documents
     const missingDocs = requiredDocs.filter((d) => d.mandatory && !uploadedDocs[d.id]);
     if (missingDocs.length > 0) {
-      alert(
-        `⚠️ કૃપા કરીને તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n- ${missingDocs.map((d) => d.nameGu).join("\n- ")}`
+      setFormValidationError(
+        `⚠️ કૃપા કરીને તમામ ફરજિયાત (*) દસ્તાવેજો અપલોડ કરો:\n` +
+        missingDocs.map((d) => `• ${d.nameGu} (${d.nameEn})`).join("\n")
       );
+      setFormStep(3);
       return;
     }
 
     // If update mode, ensure at least one correction is selected
     if (serviceMode === "update" && selectedCorrections.length === 0) {
-      alert("⚠️ કૃપા કરીને ઓછામાં ઓછો ૧ સુધારો (Checkbox) પસંદ કરો.");
+      setFormValidationError("⚠️ કૃપા કરીને ઓછામાં ઓછો ૧ સુધારો (Checkbox) પસંદ કરો.");
+      setFormStep(1);
       return;
     }
 
@@ -1133,7 +1785,8 @@ export default function DocumentServicePortal({
       const isLoaded = await loadRazorpayScript();
       // @ts-expect-error Window Razorpay dynamic definition
       if (!isLoaded || !window.Razorpay) {
-        alert("Razorpay ગેટવે લોડ થવામાં ક્ષતિ આવી. કૃપા કરીને UPI અથવા ચલણ મોડનો ઉપયોગ કરો.");
+        setFormValidationError("Razorpay ગેટવે લોડ થવામાં ક્ષતિ આવી. કૃપા કરીને UPI અથવા ચલણ મોડનો ઉપયોગ કરો.");
+        window.scrollTo({ top: 120, behavior: "smooth" });
         setIsProcessingPayment(false);
         return;
       }
@@ -1146,19 +1799,125 @@ export default function DocumentServicePortal({
           amount: service.fee,
           applicationId: activeChallanNo,
           serviceName: `${service.nameGu} અરજી ફી`,
-          citizenName: applicantName || citizenSession?.citizenName || "Hari Patel",
-          citizenMobile: mobileNumber || citizenSession?.mobile || "9974442291",
+          citizenName: applicantName || applicantNameGu || citizenSession?.citizenName || "Citizen",
+          citizenMobile: mobileNumber || citizenSession?.mobile || "",
         }),
       });
 
       const orderData = await res.json();
       if (!orderData.success) {
-        alert(orderData.error || "ઓર્ડર જનરેટ કરવામાં ક્ષતિ આવી.");
+        setFormValidationError(orderData.error || "ઓર્ડર જનરેટ કરવામાં ક્ષતિ આવી.");
+        window.scrollTo({ top: 120, behavior: "smooth" });
         setIsProcessingPayment(false);
         return;
       }
 
       // 2. Open Official Razorpay Checkout Modal
+      let pollTimer: NodeJS.Timeout | null = null;
+      let isCompleted = false;
+
+      // Persist pending order so Android Activity pause/resume or low-memory kill can recover seamlessly
+      const pendingOrderInfo = {
+        orderId: orderData.orderId,
+        applicationId: activeChallanNo,
+        timestamp: Date.now(),
+      };
+      if (typeof window !== "undefined") {
+        try {
+          sessionStorage.setItem("nagrik_pending_pay_order", JSON.stringify(pendingOrderInfo));
+          localStorage.setItem("nagrik_pending_pay_order", JSON.stringify(pendingOrderInfo));
+        } catch {}
+      }
+
+      const finishPaymentOnce = async (
+        paymentId: string,
+        rzpResp?: { razorpay_payment_id: string; razorpay_order_id?: string; razorpay_signature?: string },
+        orderId?: string
+      ) => {
+        if (isCompleted) return;
+        isCompleted = true;
+        if (pollTimer) clearInterval(pollTimer);
+        if (typeof window !== "undefined") {
+          try {
+            sessionStorage.removeItem("nagrik_pending_pay_order");
+            localStorage.removeItem("nagrik_pending_pay_order");
+            window.removeEventListener("focus", handleCheckStatus);
+            document.removeEventListener("visibilitychange", handleCheckStatus);
+            // 1. Close Razorpay instance
+            try {
+              // @ts-expect-error global hook
+              if (window._currentRazorpayInstance && typeof window._currentRazorpayInstance.close === 'function') {
+                // @ts-expect-error global hook
+                window._currentRazorpayInstance.close();
+                // @ts-expect-error global hook
+                window._currentRazorpayInstance = null;
+              }
+            } catch (e) {}
+
+            // 2. Force remove all Razorpay iframe modals and backdrops from DOM
+            try {
+              document.querySelectorAll('.razorpay-container, iframe[src*="razorpay"], .razorpay-checkout-frame').forEach((el) => el.remove());
+              document.body.style.overflow = '';
+              document.body.classList.remove('razorpay-open');
+            } catch (e) {}
+
+            // 3. Dismiss native popup dialog if running inside Android Capacitor app
+            // @ts-expect-error NagrikNativeBridge dynamic definition
+            if (window.NagrikNativeBridge?.dismissPaymentDialog) {
+              // @ts-expect-error NagrikNativeBridge dynamic definition
+              window.NagrikNativeBridge.dismissPaymentDialog();
+            }
+          } catch {}
+        }
+        setIsProcessingPayment(false);
+        await handleFinalPaymentSubmit(paymentId, rzpResp, orderId);
+      };
+
+      // Expose globally so native Android WebView bridge & callbacks can invoke instantly
+      if (typeof window !== "undefined") {
+        // @ts-expect-error global hook
+        window.nagrikCompletePayment = (pid: string) => finishPaymentOnce(pid, undefined, orderData.orderId);
+        const onNativeSuccess = (e: Event) => {
+          const detail = (e as CustomEvent<{ paymentId?: string }>).detail;
+          const pid = detail?.paymentId || "pay_verified_" + Date.now();
+          finishPaymentOnce(pid, undefined, orderData.orderId);
+        };
+        window.addEventListener("nagrik_payment_success", onNativeSuccess, { once: true });
+      }
+
+      const handleCheckStatus = async () => {
+        if (isCompleted) return;
+        if (!orderData.orderId || orderData.orderId.startsWith("order_test_")) return;
+        try {
+          const sRes = await fetch(
+            `/api/payment/status?orderId=${encodeURIComponent(orderData.orderId)}&applicationId=${encodeURIComponent(activeChallanNo)}`
+          );
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            if (sData.success && sData.paid && sData.paymentId) {
+              await finishPaymentOnce(
+                sData.paymentId,
+                { razorpay_payment_id: sData.paymentId, razorpay_order_id: orderData.orderId },
+                orderData.orderId
+              );
+            }
+          }
+        } catch (pollErr) {
+          console.warn("Polling status warning:", pollErr);
+        }
+      };
+
+      // Real-time 1.5-second background status polling: Catches UPI app returns & background authorizations instantly!
+      if (orderData.orderId && !orderData.orderId.startsWith("order_test_")) {
+        pollTimer = setInterval(handleCheckStatus, 1000);
+      }
+
+      // App-Resume listener: Catches immediate return from PhonePe / Google Pay / Paytm
+      if (typeof window !== "undefined") {
+        window.addEventListener("focus", handleCheckStatus);
+        document.addEventListener("visibilitychange", handleCheckStatus);
+      }
+
       const options = {
         key: orderData.keyId,
         amount: orderData.amount,
@@ -1167,10 +1926,11 @@ export default function DocumentServicePortal({
         description: `${service.nameGu} - સરકારી અરજી ફી`,
         image: "/icon.svg",
         order_id: orderData.orderId.startsWith("order_test_") ? undefined : orderData.orderId,
+        callback_url: typeof window !== "undefined" ? `${window.location.origin}/api/payment/callback?applicationId=${encodeURIComponent(activeChallanNo)}` : undefined,
         prefill: {
-          name: applicantName || citizenSession?.citizenName || "Hari Patel",
+          name: applicantName || applicantNameGu || citizenSession?.citizenName || "",
           email: emailAddress || "citizen@gujarat.gov.in",
-          contact: mobileNumber || citizenSession?.mobile || "9974442291",
+          contact: mobileNumber || citizenSession?.mobile || "",
         },
         notes: {
           applicationId: activeChallanNo,
@@ -1184,8 +1944,7 @@ export default function DocumentServicePortal({
           razorpay_order_id?: string;
           razorpay_signature?: string;
         }) {
-          // Immediately pop up receipt and complete verification in background!
-          await handleFinalPaymentSubmit(
+          await finishPaymentOnce(
             response.razorpay_payment_id,
             response,
             orderData.orderId
@@ -1193,13 +1952,26 @@ export default function DocumentServicePortal({
         },
         modal: {
           ondismiss: function () {
-            setIsProcessingPayment(false);
+            // Keep polling active for 90 seconds in case citizen switched to UPI app
+            setTimeout(() => {
+              if (!isCompleted && pollTimer) {
+                clearInterval(pollTimer);
+              }
+              setIsProcessingPayment(false);
+            }, 90000);
           },
         },
       };
 
       // @ts-expect-error Window Razorpay dynamic definition
       const rzpInstance = new window.Razorpay(options);
+      // @ts-expect-error global reference
+      window._currentRazorpayInstance = rzpInstance;
+      rzpInstance.on("payment.failed", function (resp: unknown) {
+        console.warn("Razorpay payment failed or cancelled:", resp);
+        if (pollTimer) clearInterval(pollTimer);
+        setIsProcessingPayment(false);
+      });
       rzpInstance.open();
     } catch (err) {
       console.error("Razorpay checkout error:", err);
@@ -1234,9 +2006,11 @@ export default function DocumentServicePortal({
         ? rawPhoto
         : undefined;
 
-    const resolvedPayStatus = paymentMethod === "challan" ? "pending_challan" : "paid";
+    const resolvedPayStatus = (paymentMethod === "challan" && !customTxnId) ? "pending_challan" : "paid";
     const resolvedPayMethodNameGu = customTxnId
-      ? "Razorpay લાઈવ ગેટવે (કાર્ડ/UPI/નેટબેંકિંગ)"
+      ? (customTxnId.startsWith("pay_test_") || customTxnId.startsWith("TXN-TEST")
+          ? "ત્વરિત ૧-ક્લિક ડેમો/ટેસ્ટ પેમેન્ટ (સાયબર ટ્રેઝરી વેરિફાઇડ)"
+          : "Razorpay લાઈવ ગેટવે (કાર્ડ/UPI/નેટબેંકિંગ)")
       : paymentMethod === "upi"
       ? "UPI / Bharat QR (NPCI Direct)"
       : paymentMethod === "card"
@@ -1292,14 +2066,14 @@ export default function DocumentServicePortal({
       appointmentCenter: isBiometricNeeded ? `જન સેવા કેન્દ્ર (Jan Seva Kendra), ${taluka}` : undefined,
       appointmentToken: fallbackToken,
       signatureType,
-      mobile: mobileNumber || "9974442291",
+      mobile: mobileNumber || citizenSession?.mobile || "",
       email: emailAddress || "citizen@gujarat.gov.in",
       aadhaarLast4:
         service.id === "aadhaar" && serviceMode === "new"
           ? "NEW"
           : aadhaarNumber
           ? aadhaarNumber.slice(-4)
-          : "4829",
+          : citizenSession?.aadhaarLast4 || "XXXX",
       status: "processing",
       appliedDate: today,
       lastUpdated: today,
@@ -1357,7 +2131,7 @@ export default function DocumentServicePortal({
 
     const instantNotifications = {
       sms: {
-        sentTo: instantApp.mobile || "9974442291",
+        sentTo: instantApp.mobile || mobileNumber || citizenSession?.mobile || "",
         message: `Govt of Gujarat: નમસ્તે ${instantApp.citizenNameGu}, તમારી ${instantApp.schemeNameGu} માટેની અરજી (${instantApp.id}) સફળતાપૂર્વક સ્વીકારાઈ છે.`,
         timestamp: new Date().toLocaleTimeString(),
       },
@@ -1371,6 +2145,7 @@ export default function DocumentServicePortal({
     // 2. IMMEDIATE ZERO-LATENCY UI UPDATE (< 15ms)
     setShowPaymentModal(false);
     setSubmittedApp(instantApp);
+    setShowSlipModal(true);
     setNotificationPayload(instantNotifications);
     setIsProcessingPayment(false);
     setSubmitting(false);
@@ -1487,7 +2262,12 @@ export default function DocumentServicePortal({
         }
       })
       .catch((netErr) => {
-        console.warn("Background server registration note:", netErr);
+        console.warn("Background server registration note (saved offline):", netErr);
+        try {
+          queueOfflineAction("application_submit", payload, instantApp.id);
+        } catch (queueErr) {
+          console.warn("Offline queue error:", queueErr);
+        }
       });
 
     // Parallel Background Sync B: Cryptographic Razorpay Signature Verification
@@ -1606,10 +2386,10 @@ export default function DocumentServicePortal({
           serviceTitle="નાગરિક દસ્તાવેજ સેવા & સુધારો પોર્ટલ"
           onSuccess={(cit) => {
             setCitizenSession(cit);
-            setApplicantName(cit.citizenName || "Hari Vinodrai Patel");
-            setApplicantNameGu(cit.citizenNameGu || "હરી વિનોદરાઈ પટેલ");
-            setMobileNumber(cit.mobile || "9974442291");
-            setAadhaarNumber(`XXXX-XXXX-${cit.aadhaarLast4 || "1413"}`);
+            setApplicantName(cit.citizenName || "");
+            setApplicantNameGu(cit.citizenNameGu || "");
+            setMobileNumber(cit.mobile || "");
+            setAadhaarNumber(cit.aadhaarLast4 ? `XXXX-XXXX-${cit.aadhaarLast4}` : "");
             if (cit.district) setDistrict(cit.district);
             if (cit.taluka) setTaluka(cit.taluka);
             if (cit.village) setVillage(cit.village);
@@ -1624,17 +2404,24 @@ export default function DocumentServicePortal({
     <div className="space-y-6">
       {/* ── Official Cyber Treasury Payment Gateway Modal ── */}
       {showPaymentModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-5 shadow-2xl border-2 border-orange-500 relative">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cyber-treasury-modal-title"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-200"
+        >
+          <div className="bg-white rounded-t-[28px] rounded-b-none sm:rounded-3xl max-w-xl w-full p-5 sm:p-7 space-y-4 shadow-2xl border-t-2 sm:border-2 border-orange-500 relative max-h-[92vh] overflow-y-auto animate-bottom-sheet sm:animate-none">
+            {/* Mobile Native Pull Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden shrink-0" />
             {/* Top National Ribbon */}
             <div className="h-1.5 w-full bg-gradient-to-r from-[#FF9933] via-white to-[#138808] rounded-full mb-1" />
 
             <div className="flex items-start justify-between border-b pb-3">
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-xl">🏛️</span>
+                  <div className="w-10 h-10 rounded-xl bg-[#002B49] text-amber-400 flex items-center justify-center shrink-0 shadow-sm border border-amber-400/30"><Landmark size={20} /></div>
                   <div>
-                    <h3 className="font-black text-slate-900 text-sm sm:text-base leading-tight">
+                    <h3 id="cyber-treasury-modal-title" className="font-black text-slate-900 text-sm sm:text-base leading-tight">
                       ગુજરાત સાયબર ટ્રેઝરી પોર્ટલ (Cyber Treasury e-Grass)
                     </h3>
                     <p className="text-[11px] text-slate-500 font-medium">
@@ -1646,7 +2433,8 @@ export default function DocumentServicePortal({
               <button
                 type="button"
                 onClick={handleClosePaymentModal}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="પેમેન્ટ વિન્ડો બંધ કરો (Close payment modal)"
               >
                 ✕
               </button>
@@ -1774,30 +2562,9 @@ export default function DocumentServicePortal({
                     </div>
                   </div>
 
-                  {/* Single Unified Official Gujarat Cyber Treasury Online Payment Button */}
-                  <div className="pt-1 space-y-1.5">
-                    <button
-                      type="button"
-                      onClick={handleRazorpayLiveCheckout}
-                      disabled={isProcessingPayment}
-                      className="w-full py-3.5 px-4 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-[0.98] text-white rounded-2xl font-black shadow-lg transition flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60 border-2 border-amber-400/50"
-                    >
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
-                        <span className="text-base sm:text-lg">🏛️</span>
-                        <span>સત્તાવાર સાયબર ટ્રેઝરી દ્વારા ચૂકવણી કરો (Pay ₹ {service.fee})</span>
-                        <Lock size={15} className="text-amber-300 shrink-0" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-amber-200/90 font-medium font-sans">
-                        <span>UPI (GPay / PhonePe / Paytm / BHIM)</span>
-                        <span>•</span>
-                        <span>કાર્ડ</span>
-                        <span>•</span>
-                        <span>નેટ બેંકિંગ</span>
-                      </div>
-                    </button>
-                    <p className="text-[10px] sm:text-[11px] text-center text-slate-500 font-medium">
-                      🔒 નાણાં વિભાગ, ગુજરાત સરકાર • Cyber Treasury e-Grass ૨૫૬-બીટ SSL સુરક્ષિત પેમેન્ટ ગેટવે (Powered by Razorpay DPI)
-                    </p>
+                                    <div className="mt-3 p-3 rounded-xl bg-amber-50/90 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2.5 font-medium shadow-sm">
+                    <ShieldCheck size={18} className="text-amber-800 shrink-0" />
+                    <span>નીચે આપેલ સત્તાવાર બટન પર ક્લિક કરવાથી સુરક્ષિત Razorpay સાયબર ટ્રેઝરી ગેટવે ખુલશે (તમામ UPI, GPay, PhonePe, Paytm અને QR કોડ સ્વીકાર્ય).</span>
                   </div>
                 </div>
               )}
@@ -1814,30 +2581,9 @@ export default function DocumentServicePortal({
                     <option>Axis Bank / Kotak Mahindra Bank</option>
                   </select>
 
-                  {/* Single Unified Official Gujarat Cyber Treasury Online Payment Button */}
-                  <div className="pt-1 space-y-1.5">
-                    <button
-                      type="button"
-                      onClick={handleRazorpayLiveCheckout}
-                      disabled={isProcessingPayment}
-                      className="w-full py-3.5 px-4 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-[0.98] text-white rounded-2xl font-black shadow-lg transition flex flex-col items-center justify-center gap-1 cursor-pointer disabled:opacity-60 border-2 border-amber-400/50"
-                    >
-                      <div className="flex items-center gap-2 text-xs sm:text-sm font-black tracking-wide text-white">
-                        <span className="text-base sm:text-lg">🏛️</span>
-                        <span>સત્તાવાર સાયબર ટ્રેઝરી દ્વારા ચૂકવણી કરો (Pay ₹ {service.fee})</span>
-                        <Lock size={15} className="text-amber-300 shrink-0" />
-                      </div>
-                      <div className="flex items-center gap-1.5 text-[10px] text-amber-200/90 font-medium font-sans">
-                        <span>ડેબિટ કાર્ડ (RuPay / Visa / Master)</span>
-                        <span>•</span>
-                        <span>નેટ બેંકિંગ</span>
-                        <span>•</span>
-                        <span>ક્રેડિટ કાર્ડ</span>
-                      </div>
-                    </button>
-                    <p className="text-[10px] sm:text-[11px] text-center text-slate-500 font-medium">
-                      🔒 નાણાં વિભાગ, ગુજરાત સરકાર • ૨૫૬-બીટ SSL એન્ક્રિપ્ટેડ સાયબર ટ્રેઝરી ગેટવે (Powered by Razorpay DPI)
-                    </p>
+                  <div className="mt-2 p-3 rounded-xl bg-amber-50/90 border border-amber-300/80 text-[11px] text-amber-950 flex items-center gap-2.5 font-medium shadow-sm">
+                    <ShieldCheck size={18} className="text-amber-800 shrink-0" />
+                    <span>નીચે આપેલ સત્તાવાર બટન પર ક્લિક કરવાથી ૨૫૬-બીટ SSL એન્ક્રિપ્ટેડ બેંકિંગ ગેટવે ખુલશે (RuPay, Visa, Master કાર્ડ અને નેટ બેંકિંગ સ્વીકાર્ય).</span>
                   </div>
                 </div>
               )}
@@ -1877,13 +2623,24 @@ export default function DocumentServicePortal({
                   રદ કરો
                 </button>
 
-                {/* Only render bottom submit button for Cash Challan (Online payment has dedicated Razorpay button above) */}
-                {paymentMethod === "challan" && (
+                {/* Online Payment (UPI / Card) triggers official Razorpay, Cash Challan generates offline challan */}
+                {paymentMethod !== "challan" ? (
+                  <button
+                    type="button"
+                    onClick={handleRazorpayLiveCheckout}
+                    disabled={isProcessingPayment}
+                    className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
+                  >
+                    <Landmark size={18} className="text-amber-300 shrink-0" />
+                    <span>સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee})</span>
+                    <Lock size={15} className="text-amber-300 shrink-0" />
+                  </button>
+                ) : (
                   <button
                     type="button"
                     onClick={() => handleFinalPaymentSubmit()}
                     disabled={isProcessingPayment}
-                    className="px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+                    className="w-full sm:w-auto px-6 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
                   >
                     <Landmark size={18} />
                     <span>ઓફલાઇન રોકડ ચલણ જનરેટ કરો & સબમિટ</span>
@@ -1897,16 +2654,24 @@ export default function DocumentServicePortal({
 
       {/* ── Submission Success & Real-Time Alert Modal ── */}
       {submittedApp && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-300">
-          <div className={`bg-white rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-5 shadow-2xl border-2 relative ${
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="submission-success-modal-title"
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-6 overflow-y-auto animate-in fade-in duration-300"
+        >
+          <div className={`bg-white rounded-t-[28px] rounded-b-none sm:rounded-3xl max-w-2xl w-full p-5 sm:p-8 space-y-4 shadow-2xl border-t-2 sm:border-2 relative max-h-[92vh] overflow-y-auto animate-bottom-sheet sm:animate-none ${
             submittedApp.paymentStatus === "pending_challan" ? "border-amber-500" : "border-emerald-500"
           }`}>
+            {/* Mobile Native Pull Handle */}
+            <div className="w-12 h-1.5 bg-slate-300 rounded-full mx-auto mb-1 sm:hidden shrink-0" />
             {/* Top Right Close Button */}
             <button
               type="button"
               onClick={handleCloseReceiptModal}
-              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer"
+              className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 p-1.5 rounded-xl hover:bg-slate-100 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
               title="બંધ કરો"
+              aria-label="રસીદ વિન્ડો બંધ કરો (Close receipt modal)"
             >
               <X size={20} />
             </button>
@@ -1929,7 +2694,7 @@ export default function DocumentServicePortal({
                   ? "સત્તાવાર રોકડ ચલણ જનરેટ થયું • Cash Challan Issued"
                   : "સત્તાવાર અરજી નોંધણી સફળ • Govt Registered"}
               </span>
-              <h2 className="text-xl sm:text-2xl font-black text-slate-900">
+              <h2 id="submission-success-modal-title" className="text-xl sm:text-2xl font-black text-slate-900">
                 {submittedApp.paymentStatus === "pending_challan"
                   ? "ઓફલાઇન રોકડ ચલણ પાવતી સફળતાપૂર્વક જનરેટ થઈ!"
                   : "અરજી સફળતાપૂર્વક સ્વીકારાઈ ગઈ છે!"}
@@ -2026,11 +2791,31 @@ export default function DocumentServicePortal({
                   <span>ઓટોમેટેડ નાગરિક સૂચનાઓ (Live SMS & Email Alert Simulated):</span>
                 </h4>
 
-                {/* SMS Simulation */}
+                {/* Official WhatsApp Citizen Notification Simulator & Share Gateway */}
+            <WhatsAppDispatchCard
+              app={{
+                id: submittedApp.id,
+                citizenName: submittedApp.citizenName,
+                citizenNameGu: submittedApp.citizenNameGu,
+                schemeName: submittedApp.schemeName,
+                schemeNameGu: submittedApp.schemeNameGu,
+                feeAmount: submittedApp.feeAmount || service.fee,
+                paymentStatus: submittedApp.paymentStatus,
+                challanNo: submittedApp.challanNo,
+                txnId: submittedApp.txnId,
+                mobile: submittedApp.mobile || mobileNumber,
+                trackingSecret: submittedApp.trackingSecret,
+                taluka: submittedApp.taluka || taluka,
+                district: submittedApp.district || district,
+                districtGu: submittedApp.districtGu,
+              }}
+            />
+
+            {/* SMS Simulation */}
                 {notificationPayload.sms && (
                   <div className="bg-slate-900 text-slate-100 rounded-2xl p-3.5 space-y-1.5 shadow-md">
                     <div className="flex items-center justify-between text-[11px] text-slate-400 border-b border-slate-800 pb-1">
-                      <span className="font-mono text-orange-400 font-bold">📱 GOVT-GUJ SMS ALERT</span>
+                      <span className="font-mono text-orange-400 font-bold">GOVT-GUJ SMS ALERT</span>
                       <span>To: {notificationPayload.sms.sentTo}</span>
                     </div>
                     <p className="text-xs font-mono leading-relaxed text-slate-200">
@@ -2083,6 +2868,9 @@ export default function DocumentServicePortal({
       {/* ── Official A4 Government Receipt Slip Modal (PDF Download / Print) ── */}
       {showSlipModal && submittedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર સરકારી પહોંચ રસીદ (Official Government Receipt Slip)"
           className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowSlipModal(false);
@@ -2100,7 +2888,7 @@ export default function DocumentServicePortal({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-gradient-to-r from-orange-50 via-amber-50 to-orange-50 p-4 rounded-2xl border border-orange-200 shadow-xs">
         <div>
           <h2 className="font-extrabold text-slate-900 text-base sm:text-lg flex items-center gap-2">
-            <span className="p-1 bg-orange-600 text-white rounded-lg text-xs">🏛️</span>
+            <span className="p-1.5 bg-[#002B49] text-amber-300 rounded-lg inline-flex items-center justify-center"><Landmark size={15} /></span>
             <span>ડિજિટલ દસ્તાવેજ સેવા & સુધારો પોર્ટલ (Service Portal)</span>
           </h2>
           <p className="text-xs text-slate-600">
@@ -2108,15 +2896,94 @@ export default function DocumentServicePortal({
           </p>
         </div>
 
-        <button
-          type="button"
-          onClick={handleAutoFillDemo}
-          className="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0"
-        >
-          <Sparkles size={14} />
-          <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0 flex-wrap">
+          <button
+            id="btnClearForm"
+            type="button"
+            onClick={handleResetForm}
+            className="px-3 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-2xs transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+            title="ફોર્મ ખાલી કરો / સાફ કરો (Clear form)"
+          >
+            <RotateCw size={13} />
+            <span>ફોર્મ સાફ કરો (Clear)</span>
+          </button>
+
+          <button
+            id="btnFastDemo"
+            type="button"
+            onClick={handleAutoFillDemo}
+            className="px-4 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs font-extrabold shadow-sm transition active:scale-95 flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+            title="ડેમો મૂલ્યાંકન માટે સેમ્પલ ડેટા ભરો"
+          >
+            <Sparkles size={14} />
+            <span>+ ૧-ક્લિક ડેમો ડેટા ભરો (Fast Demo)</span>
+          </button>
+        </div>
       </div>
+
+      {showDemoLoadedToast && (
+        <div
+          role="status"
+          className="bg-emerald-50 border border-emerald-300 text-emerald-950 p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-in fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+            <span>✨ ડેમો સેમ્પલ ડેટા સફળતાપૂર્વક ભરાયો છે (Sample Data Loaded for Demonstration).</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDemoLoadedToast(false)}
+            className="text-emerald-700 hover:text-emerald-900 p-0.5"
+            aria-label="સૂચના બંધ કરો"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {showResetToast && (
+        <div
+          role="status"
+          className="bg-slate-100 border border-slate-300 text-slate-900 p-3 rounded-xl text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-in fade-in"
+        >
+          <div className="flex items-center gap-2">
+            <CheckCircle2 size={16} className="text-slate-600 shrink-0" />
+            <span>🔄 ફોર્મ સંપૂર્ણ સાફ કરવામાં આવ્યું છે (Form Cleared to Blank).</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowResetToast(false)}
+            className="text-slate-700 hover:text-slate-900 p-0.5"
+            aria-label="સૂચના બંધ કરો"
+          >
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      {/* Accessible Inline Validation Alert Banner */}
+      {formValidationError && (
+        <div
+          role="alert"
+          aria-live="assertive"
+          className="bg-rose-50 border-2 border-rose-300 text-rose-950 p-3.5 sm:p-4 rounded-2xl flex items-start justify-between gap-3 shadow-sm animate-in fade-in"
+        >
+          <div className="flex items-start gap-2.5">
+            <AlertTriangle className="text-rose-600 shrink-0 mt-0.5" size={18} />
+            <div className="text-xs sm:text-sm font-semibold whitespace-pre-line leading-relaxed">
+              {formValidationError}
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFormValidationError(null)}
+            className="p-1 text-rose-700 hover:text-rose-900 rounded-lg hover:bg-rose-100 transition shrink-0 cursor-pointer"
+            aria-label="સંદેશ બંધ કરો (Dismiss error alert)"
+          >
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
       {/* ── Re-Apply Context Banner ── */}
       {reapplyContext && (
@@ -2125,7 +2992,7 @@ export default function DocumentServicePortal({
             <div className="flex items-center gap-2 flex-wrap">
               <span className="bg-rose-600 text-white font-black text-xs px-2.5 py-0.5 rounded-full flex items-center gap-1.5 shadow-xs">
                 <RotateCw size={12} className="animate-spin-slow" />
-                <span>🔄 પુનઃ અરજી મોડ (Re-Apply Mode)</span>
+                <span>પુનઃ અરજી મોડ (Re-Apply Mode)</span>
               </span>
               <span className="font-mono font-bold text-xs text-rose-800 bg-rose-100 px-2 py-0.5 rounded-md border border-rose-200">
                 અગાઉનો અરજી ક્રમાંક: {reapplyContext.appId}
@@ -2164,7 +3031,7 @@ export default function DocumentServicePortal({
                   2FA પ્રમાણિત અરજદાર: {citizenSession.citizenNameGu || citizenSession.citizenName}
                 </p>
                 <p className="text-[11px] text-emerald-700">
-                  📱 +91 {citizenSession.mobile} &bull; 🪪 આધાર: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
+                  +91 {citizenSession.mobile} &bull; આધાર કાર્ડ: XXXX-XXXX-{citizenSession.aadhaarLast4 || "4829"} (વિગતો આપોઆપ ભરાઈ ગઈ છે)
                 </p>
               </div>
             </div>
@@ -2179,12 +3046,120 @@ export default function DocumentServicePortal({
             </button>
           </div>
 
-          <FamilyMemberManagerBar citizen={citizenSession} activeTab="documents" />
+          <FamilyMemberManagerBar citizen={citizenSession} activeTab="documents" onSelectForDocument={handleSelectFamilyMember} />
         </div>
       )}
 
 
-      {/* ── Step 1: Select Document Service ── */}
+      {/* ── Main Step-by-Step Guided Application Wizard (૧-૨-૩-૪ સરળ પગલાં) ── */}
+      <form onSubmit={handleOpenPaymentGateway} className="space-y-4 sm:space-y-6">
+        {/* Visual Step Progress Tracker (૧-૨-૩-૪ સરળ પગલાં) */}
+        <div className="bg-white rounded-2xl p-2.5 sm:p-4 border border-slate-200 shadow-sm">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { step: 1, num: "૧", title: "સેવા પસંદ કરો", sub: service.nameGu.slice(0, 14) + "..." },
+              { step: 2, num: "૨", title: "અરજદાર વિગતો", sub: (applicantNameGu || applicantName || "વિગતો ભરો").slice(0, 14) },
+              { step: 3, num: "૩", title: "જરૂરી પુરાવા", sub: `${requiredDocs.length} દસ્તાવેજો` },
+              { step: 4, num: "૪", title: "ચકાસણી & ફી", sub: `₹ ${service.fee} (સાયબર ટ્રેઝરી)` },
+            ].map((s) => {
+              const isActive = formStep === s.step;
+              const isCompleted = formStep > s.step;
+              const navCheck = canNavigateToStep(s.step as 1 | 2 | 3 | 4);
+              const isLocked = !isActive && !isCompleted && !navCheck.allowed;
+
+              return (
+                <button
+                  key={s.step}
+                  type="button"
+                  onClick={() => handleStepClick(s.step as 1 | 2 | 3 | 4)}
+                  title={isLocked ? navCheck.reason : s.title}
+                  className={`p-2.5 sm:p-3 rounded-xl border text-left transition flex items-center gap-2 sm:gap-2.5 ${
+                    isActive
+                      ? "bg-orange-50 border-orange-500 ring-2 ring-orange-200 shadow-xs cursor-default"
+                      : isCompleted
+                      ? "bg-emerald-50/70 border-emerald-300 text-slate-800 hover:bg-emerald-50 cursor-pointer"
+                      : isLocked
+                      ? "bg-slate-100/90 border-slate-200 text-slate-400 opacity-75 cursor-not-allowed hover:bg-slate-100"
+                      : "bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100 cursor-pointer"
+                  }`}
+                >
+                  <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-black text-xs shrink-0 ${
+                    isActive
+                      ? "bg-orange-600 text-white shadow-sm"
+                      : isCompleted
+                      ? "bg-emerald-600 text-white"
+                      : isLocked
+                      ? "bg-slate-300 text-slate-500"
+                      : "bg-slate-200 text-slate-600"
+                  }`}>
+                    {isCompleted ? "✓" : isLocked ? <Lock size={12} /> : s.num}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <span className={`block text-xs font-black truncate ${
+                      isActive
+                        ? "text-orange-950 font-black"
+                        : isCompleted
+                        ? "text-emerald-950 font-bold"
+                        : isLocked
+                        ? "text-slate-400 font-medium"
+                        : "text-slate-700 font-semibold"
+                    }`}>
+                      {s.title}
+                    </span>
+                    <span className="block text-[10px] text-slate-500 truncate">
+                      {isLocked ? "🔒 અગાઉનું પગલું ભરો" : s.sub}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* ── STEP 1: સેવા પસંદગી ── */}
+        {formStep === 1 && (
+          <div className="space-y-4">
+            {/* Featured Popular Services */}
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-3">
+              <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider flex items-center gap-1.5">
+                <Sparkles size={13} className="text-amber-500" />
+                <span>વારંવાર વપરાતી મુખ્ય સરકારી સેવાઓ:</span>
+              </span>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                {[
+                  { id: "income", name: "આવકનું પ્રમાણપત્ર", sub: "૩ વર્ષ માન્ય", emoji: "📜", fee: 20 },
+                  { id: "land_records", name: "જમીન ૭/૧૨ & ૮-અ", sub: "ડિજિટલ ઉતારા", emoji: "🌾", fee: 20 },
+                  { id: "varasai_entry", name: "વારસાઈ આંબલીયો", sub: "પેઢીનામું નોંધણી", emoji: "🌳", fee: 20 },
+                  { id: "khedut_kharekhar", name: "ખેડૂત ખરાઈ દાખલો", sub: "સાચો ખેડૂત પ્રમાણપત્ર", emoji: "🚜", fee: 20 },
+                ].map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setSelectedServiceId(item.id);
+                      setFetchedProfile(null);
+                      setUploadedDocs({});
+                    }}
+                    className={`p-3 rounded-2xl border text-left transition flex flex-col justify-between gap-1.5 cursor-pointer ${
+                      selectedServiceId === item.id
+                        ? "border-orange-500 bg-orange-50/80 ring-2 ring-orange-400/30 shadow-xs"
+                        : "border-slate-200 hover:border-orange-300 bg-slate-50/60 hover:bg-white"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-2xl">{item.emoji}</span>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-white border border-slate-200 text-slate-700">
+                        ₹{item.fee}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="font-bold text-xs text-slate-900 leading-tight">{item.name}</p>
+                      <p className="text-[10px] text-slate-500">{item.sub}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">
         <h3 className="font-bold text-xs uppercase tracking-wider text-slate-500">
           ૧. સરકારી દસ્તાવેજ / સેવા પસંદ કરો (SELECT DOCUMENT SERVICE):
@@ -2744,11 +3719,58 @@ export default function DocumentServicePortal({
         </div>
       )}
 
-      {/* ── Step 2: Main Application Form (Official Kacheri Layout) ── */}
-      <form onSubmit={handleOpenPaymentGateway} className="space-y-6">
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left Column: Official Kacheri Application Particulars (5 cols) */}
-          <div className="lg:col-span-5 space-y-4">
+              {/* Step 1 Bottom Action Bar */}
+        <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <span className="text-2xl shrink-0">{service.emoji}</span>
+            <div className="min-w-0">
+              <span className="text-[10px] text-slate-500 block uppercase font-bold">પસંદ કરેલ સેવા:</span>
+              <p className="text-slate-900 font-black text-xs sm:text-sm truncate">{service.nameGu}</p>
+              <span className="text-[10px] bg-orange-100 text-orange-800 font-bold px-2 py-0.5 rounded-full inline-block mt-0.5">
+                {service.fee === 0 ? "સરકારી ફી: નિઃશુલ્ક" : `સરકારી ફી: ₹${service.fee}`}
+              </span>
+            </div>
+          </div>
+
+          <button
+            id="btnStep1Next"
+            type="button"
+            onClick={() => handleStepClick(2)}
+            className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+          >
+            <span>આગળ વધો: અરજદારની વિગતો ભરો (પગલું ૨)</span>
+            <ArrowRight size={16} />
+          </button>
+        </div>
+      </div>
+      )}
+
+      {/* ── STEP 2: અરજદારની સત્તાવાર વિગતો (Kacheri Form) ── */}
+      {formStep === 2 && (
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
+          {/* Selected Service Header Reminder */}
+          <div className="bg-orange-50 border border-orange-200 p-3 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0">{service.emoji}</span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-orange-700 font-bold block uppercase">પગલું ૨ / ૪ • અરજદારની સત્તાવાર વિગતો</span>
+                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  સેવા: {service.nameGu} ({serviceMode === "new" ? "નવી અરજી" : "સુધારો"})
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFormStep(1);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="text-xs text-orange-800 hover:text-orange-950 font-bold underline shrink-0 cursor-pointer"
+            >
+              🔄 સેવા બદલો
+            </button>
+          </div>
+        <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-5 space-y-4">
               <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
                 <div>
@@ -2765,54 +3787,245 @@ export default function DocumentServicePortal({
                 </span>
               </div>
 
-              {/* Applicant Name Fields */}
+              {/* ── કુટુંબના સભ્ય પસંદગી (કોના માટે અરજી કરવી છે? ઓટો-ફિલ) ── */}
+              {familyMembers.length > 0 && (
+                <div className="bg-gradient-to-r from-orange-50/90 via-amber-50/60 to-orange-50/40 border border-orange-200 rounded-2xl p-3 sm:p-4 space-y-2.5 shadow-2xs">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 border-b border-orange-200/70 pb-2">
+                    <div className="flex items-center gap-2">
+                      <span className="text-lg">👨‍👩‍👧‍👦</span>
+                      <div>
+                        <h4 className="text-xs sm:text-sm font-black text-slate-900 flex items-center gap-1.5">
+                          <span>કોના માટે અરજી કરવી છે? (અરજદાર પસંદ કરો)</span>
+                          <span className="text-[10px] bg-orange-600 text-white font-bold px-2 py-0.5 rounded-full">ઓટો-ફિલ</span>
+                        </h4>
+                        <p className="text-[11px] text-slate-600 font-medium">
+                          પરિવારના કોઈપણ સભ્ય પર ક્લિક કરો — તેમની તમામ વિગતો નીચે ફોર્મમાં આપોઆપ ભરાઈ જશે.
+                        </p>
+                      </div>
+                    </div>
+                    <span className="text-[10px] text-orange-900 bg-orange-100/90 font-bold px-2.5 py-0.5 rounded-full shrink-0">
+                      કુલ સભ્યો: {familyMembers.length}
+                    </span>
+                  </div>
+
+                  {/* Member Selection Buttons Grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+                    {familyMembers.map((member) => {
+                      const isSelected = selectedMemberId === member.id;
+                      return (
+                        <button
+                          key={member.id}
+                          type="button"
+                          onClick={() => handleSelectFamilyMember(member)}
+                          className={`relative p-2.5 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between gap-1.5 ${
+                            isSelected
+                              ? "bg-white border-orange-600 ring-2 ring-orange-500 shadow-md shadow-orange-500/15"
+                              : "bg-white/80 hover:bg-white border-slate-200 hover:border-orange-300 text-slate-700 shadow-2xs"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-1">
+                            <span className="text-base">{member.avatarEmoji || "👤"}</span>
+                            {isSelected ? (
+                              <span className="text-[9px] bg-orange-600 text-white font-black px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                                ✓ પસંદ કરેલ
+                              </span>
+                            ) : (
+                              <span className="text-[9px] text-slate-400 font-mono">
+                                {member.aadhaarLast4 ? `..${member.aadhaarLast4}` : ""}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-black text-slate-900 truncate leading-snug">
+                              {member.nameGu}
+                            </p>
+                            <p className="text-[10px] text-slate-500 truncate font-semibold">
+                              {member.relationGu.split(" ")[0]} • {member.age ? `${member.age} વર્ષ` : ""}
+                            </p>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Toast when member is chosen */}
+              {memberSelectedToast && (
+                <div className="bg-emerald-100 border border-emerald-400 text-emerald-950 px-3.5 py-2.5 rounded-xl text-xs font-bold flex items-center justify-between gap-2 shadow-xs animate-in fade-in slide-in-from-top-1">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
+                    <span>{memberSelectedToast}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setMemberSelectedToast(null)}
+                    className="text-emerald-800 hover:text-emerald-950 font-black text-xs px-1 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
+
+              {/* ✨ 1-Click AI Auto-Fill Action Banner */}
+              {autoFillSuggestion && (
+                <div className="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white rounded-2xl p-3.5 shadow-md border-2 border-emerald-300 animate-in fade-in slide-in-from-top-2 duration-300 space-y-2">
+                  <div className="flex items-start justify-between gap-2.5">
+                    <div className="space-y-0.5">
+                      <div className="flex items-center gap-1.5 font-black text-xs text-amber-200">
+                        <Sparkles size={15} className="text-amber-300 animate-pulse shrink-0" />
+                        <span>✨ AI એ {autoFillSuggestion.docTitle}માંથી વિગતો શોધી!</span>
+                      </div>
+                      <p className="text-[11px] text-emerald-100 font-medium">
+                        અરજદાર: <strong className="text-white font-bold">{autoFillSuggestion.nameGu || autoFillSuggestion.nameEn}</strong>
+                        {autoFillSuggestion.village && ` • ગામ: ${autoFillSuggestion.village}`}
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={applyAutoFill}
+                      className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs shadow active:scale-95 transition shrink-0 cursor-pointer flex items-center gap-1"
+                    >
+                      <span>⚡ ૧-ક્લિક ફોર્મ ભરો</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {showAutoFillSuccess && (
+                <div className="bg-emerald-100 border border-emerald-400 text-emerald-950 px-3 py-2 rounded-xl text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                  <CheckCircle2 size={15} className="text-emerald-700 shrink-0" />
+                  <span>✅ દસ્તાવેજમાંથી તમામ વિગતો ફોર્મમાં સફળતાપૂર્વક ભરાઈ ગઈ છે!</span>
+                </div>
+              )}
+
+              {/* Applicant Name Fields (Bilingual) */}
               <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    અરજદારનું પૂરું નામ (ગુજરાતીમાં) *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={applicantNameGu || applicantName}
-                    onChange={(e) => {
-                      setApplicantNameGu(e.target.value);
-                      if (!applicantName) setApplicantName(e.target.value);
-                    }}
-                    placeholder="દા.ત. રમેશભાઈ કાંતિલાલ પટેલ"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      અરજદારનું પૂરું નામ (ગુજરાતીમાં) <span className="text-rose-600 font-black">*</span>
+                    </label>
+                    <input
+                      id="applicantNameGu"
+                      name="applicantNameGu"
+                      type="text"
+                      value={applicantNameGu}
+                      onChange={(e) => {
+                        setApplicantNameGu(e.target.value);
+                        if (!applicantName) setApplicantName(e.target.value);
+                        if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+                      }}
+                      placeholder="દા.ત. રમેશભાઈ કાંતિલાલ પટેલ"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
+                        fieldErrors.name
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
+                    />
+                    {fieldErrors.name && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.name}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      અરજદારનું પૂરું નામ (English) <span className="text-rose-600 font-black">*</span>
+                    </label>
+                    <input
+                      id="applicantNameEn"
+                      name="applicantNameEn"
+                      type="text"
+                      value={applicantName}
+                      onChange={(e) => {
+                        setApplicantName(e.target.value);
+                        if (!applicantNameGu) setApplicantNameGu(e.target.value);
+                        if (fieldErrors.name) setFieldErrors((prev) => ({ ...prev, name: "" }));
+                      }}
+                      placeholder="e.g. Ramesh Kantilal Patel"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm font-semibold focus:outline-none focus:ring-2 ${
+                        fieldErrors.name
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
+                    />
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">આધાર કાર્ડ મુજબનું સત્તાવાર અંગ્રેજી નામ</span>
+                  </div>
                 </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    પિતા / પતિનું પૂરું નામ (Father/Husband Name) *
-                  </label>
-                  <input
-                    type="text"
-                    value={fatherOrHusbandName}
-                    onChange={(e) => setFatherOrHusbandName(e.target.value)}
-                    placeholder="દા.ત. કાંતિલાલ લાલજીભાઈ પટેલ"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
-                  />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      પિતા / પતિનું પૂરું નામ <span className="text-rose-600 font-black">*</span>
+                    </label>
+                    <input
+                      id="applicantFatherName"
+                      name="applicantFatherName"
+                      type="text"
+                      value={fatherOrHusbandName}
+                      onChange={(e) => {
+                        setFatherOrHusbandName(e.target.value);
+                        if (fieldErrors.fatherName) setFieldErrors((prev) => ({ ...prev, fatherName: "" }));
+                      }}
+                      placeholder="દા.ત. કાંતિલાલ લાલજીભાઈ પટેલ"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 ${
+                        fieldErrors.fatherName
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
+                    />
+                    {fieldErrors.fatherName && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.fatherName}</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      માતાનું પૂરું નામ <span className="text-slate-400 font-normal">(Mother&apos;s Name - વૈકલ્પિક)</span>
+                    </label>
+                    <input
+                      id="applicantMotherName"
+                      name="applicantMotherName"
+                      type="text"
+                      value={motherName}
+                      onChange={(e) => setMotherName(e.target.value)}
+                      placeholder="દા.ત. શાંતાબેન પટેલ"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    />
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      જન્મ તારીખ (DOB) *
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      જન્મ તારીખ (Date of Birth) <span className="text-rose-600 font-black">*</span>
                     </label>
                     <input
+                      id="applicantDob"
+                      name="applicantDob"
                       type="date"
                       value={dob}
-                      onChange={(e) => setDob(e.target.value)}
-                      className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-orange-500"
+                      onChange={(e) => {
+                        setDob(e.target.value);
+                        if (fieldErrors.dob) setFieldErrors((prev) => ({ ...prev, dob: "" }));
+                      }}
+                      className={`w-full px-2.5 py-2 bg-slate-50 rounded-xl text-xs font-medium focus:ring-2 ${
+                        fieldErrors.dob
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
                     />
+                    {fieldErrors.dob && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.dob}</p>
+                    )}
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">જાતિ (Gender) *</label>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">જાતિ (Gender) <span className="text-rose-600 font-black">*</span></label>
                     <select
+                      id="applicantGender"
+                      name="applicantGender"
                       value={gender}
                       onChange={(e) => setGender(e.target.value as "male" | "female")}
                       className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:ring-2 focus:ring-orange-500"
@@ -2825,18 +4038,31 @@ export default function DocumentServicePortal({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                   <div>
-                    <label className="block text-xs font-semibold text-slate-600 mb-1">
-                      મોબાઈલ નંબર (SMS એલર્ટ) *
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      મોબાઈલ નંબર (SMS એલર્ટ માટે) <span className="text-rose-600 font-black">*</span>
                     </label>
                     <input
+                      id="applicantMobile"
+                      name="applicantMobile"
                       type="tel"
                       required
                       maxLength={10}
                       value={mobileNumber}
-                      onChange={(e) => setMobileNumber(e.target.value)}
-                      placeholder="9974442291"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
+                      onChange={(e) => {
+                        const val = e.target.value.replace(/\D/g, "").slice(0, 10);
+                        setMobileNumber(val);
+                        if (fieldErrors.mobile) setFieldErrors((prev) => ({ ...prev, mobile: "" }));
+                      }}
+                      placeholder="દા.ત. 9825012345"
+                      className={`w-full px-3 py-2 bg-slate-50 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 font-mono min-h-[42px] ${
+                        fieldErrors.mobile
+                          ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                          : "border border-slate-200 focus:ring-orange-500"
+                      }`}
                     />
+                    {fieldErrors.mobile && (
+                      <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.mobile}</p>
+                    )}
                   </div>
 
                   {service.id === "aadhaar" && serviceMode === "new" ? (
@@ -2856,15 +4082,15 @@ export default function DocumentServicePortal({
                     <div>
                       <label className="block text-xs font-semibold text-slate-600 mb-1">
                         {service.id === "aadhaar"
-                          ? "હાલના આધારના છેલ્લા ૪ આંકડા *"
-                          : "અરજદારના આધારના છેલ્લા ૪ આંકડા (e-KYC) *"}
+                          ? "હાલના આધારના છેલ્લા ૪ આંકડા"
+                          : "અરજદારના આધારના છેલ્લા ૪ આંકડા (e-KYC)"}
                       </label>
                       <input
                         type="text"
                         maxLength={4}
                         value={aadhaarNumber}
                         onChange={(e) => setAadhaarNumber(e.target.value)}
-                        placeholder="4829"
+                        placeholder="દા.ત. 4829"
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 font-mono min-h-[42px]"
                       />
                     </div>
@@ -2925,24 +4151,36 @@ export default function DocumentServicePortal({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-600 mb-1">
-                    ગામ / શહેર (Village / City) *
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    ગામ / શહેર (Village / City) <span className="text-rose-600 font-black">*</span>
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select
-                      value={village}
-                      onChange={(e) => {
-                        setVillage(e.target.value);
-                      }}
-                      className="w-full px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    >
-                      <option value="">-- ગામ / શહેર પસંદ કરો --</option>
-                      {getVillagesForTaluka(taluka).map((v) => (
-                        <option key={v} value={v}>
-                          {v}
-                        </option>
-                      ))}
-                    </select>
+                    <div>
+                      <select
+                        id="applicantVillage"
+                        name="applicantVillage"
+                        value={village}
+                        onChange={(e) => {
+                          setVillage(e.target.value);
+                          if (fieldErrors.village) setFieldErrors((prev) => ({ ...prev, village: "" }));
+                        }}
+                        className={`w-full px-2.5 py-2 bg-slate-50 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 ${
+                          fieldErrors.village
+                            ? "border-2 border-rose-500 bg-rose-50/50 focus:ring-rose-500"
+                            : "border border-slate-200 focus:ring-orange-500"
+                        }`}
+                      >
+                        <option value="">-- ગામ / શહેર પસંદ કરો --</option>
+                        {getVillagesForTaluka(taluka).map((v) => (
+                          <option key={v} value={v}>
+                            {v}
+                          </option>
+                        ))}
+                      </select>
+                      {fieldErrors.village && (
+                        <p className="text-[11px] text-rose-600 font-bold mt-1">⚠️ {fieldErrors.village}</p>
+                      )}
+                    </div>
                     <input
                       type="text"
                       value={streetSociety}
@@ -2957,7 +4195,7 @@ export default function DocumentServicePortal({
                 {service.id === "ration" && (
                   <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-amber-900 block">🛒 રેશનકાર્ડ કચેરી વિગત:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-amber-800 block">કેટેગરી</span>
                         <input
@@ -2983,7 +4221,7 @@ export default function DocumentServicePortal({
                 {service.id === "income" && (
                   <div className="bg-blue-50/60 border border-blue-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-blue-900 block">📜 આવક દાખલા પરિશિષ્ટ-૧:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-blue-800 block">કુટુંબની વાર્ષિક આવક (₹)</span>
                         <input
@@ -3009,7 +4247,7 @@ export default function DocumentServicePortal({
                 {service.id === "caste" && (
                   <div className="bg-purple-50/60 border border-purple-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-purple-900 block">⚖️ જાતિ / નોન-ક્રીમીલેયર વિગતો:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-purple-800 block">પેટા જાતિ (Sub-Caste)</span>
                         <input
@@ -3035,7 +4273,7 @@ export default function DocumentServicePortal({
                 {service.id === "land_records" && (
                   <div className="bg-emerald-50/60 border border-emerald-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-emerald-900 block">🌾 જમીન મહેસૂલી વિગતો (e-Dhara RoR 7/12):</span>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <span className="text-[10px] text-emerald-800 block">ખાતા નંબર *</span>
                         <input
@@ -3070,7 +4308,7 @@ export default function DocumentServicePortal({
                 {service.id === "birth_cert" && (
                   <div className="bg-sky-50/60 border border-sky-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-sky-900 block">👶 જન્મ નોંધણી વિગત (Civil Registration System):</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-sky-800 block">બાળકનું નામ (Child Name)</span>
                         <input
@@ -3096,7 +4334,7 @@ export default function DocumentServicePortal({
                 {service.id === "death_cert" && (
                   <div className="bg-slate-100 border border-slate-300 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-slate-800 block">🕊️ મરણ નોંધણી વિગત:</span>
-                    <div className="grid grid-cols-3 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                       <div>
                         <span className="text-[10px] text-slate-600 block">મૃતકનું પૂરું નામ *</span>
                         <input
@@ -3131,7 +4369,7 @@ export default function DocumentServicePortal({
                 {service.id === "ews_cert" && (
                   <div className="bg-indigo-50/60 border border-indigo-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-indigo-900 block">🏛️ EWS મિલકત માપદંડ વિગતો:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-indigo-800 block">મકાન કાર્પેટ એરિયા</span>
                         <input
@@ -3154,7 +4392,7 @@ export default function DocumentServicePortal({
                 {service.id === "domicile_cert" && (
                   <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-amber-900 block">🏠 ડોમિસાઇલ વસવાટ ખરાઈ:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-amber-800 block">ગુજરાતમાં સતત વસવાટ વર્ષો</span>
                         <input
@@ -3177,7 +4415,7 @@ export default function DocumentServicePortal({
                 {service.id === "senior_citizen" && (
                   <div className="bg-rose-50/60 border border-rose-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-rose-900 block">👴 વરિષ્ઠ નાગરિક આરોગ્ય & ઇમરજન્સી:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-rose-800 block">બ્લડ ગ્રુપ (Blood Group)</span>
                         <select
@@ -3211,7 +4449,7 @@ export default function DocumentServicePortal({
                 {service.id === "driving_licence" && (
                   <div className="bg-teal-50/60 border border-teal-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-teal-900 block">🚗 વાહન વર્ગ & RTO વિગત (SARATHI):</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-teal-800 block">વાહન વર્ગ (Vehicle Class)</span>
                         <select
@@ -3241,7 +4479,7 @@ export default function DocumentServicePortal({
                 {service.id === "marriage_cert" && (
                   <div className="bg-pink-50/60 border border-pink-200 rounded-xl p-2.5 space-y-2 text-xs">
                     <span className="font-bold text-pink-900 block">💍 લગ્ન નોંધણી વિગતો:</span>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                       <div>
                         <span className="text-[10px] text-pink-800 block">લગ્ન તારીખ *</span>
                         <input
@@ -3349,10 +4587,108 @@ export default function DocumentServicePortal({
                 </div>
               </div>
             </div>
+            {/* Step 2 Bottom Navigation */}
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50 p-3.5 sm:p-4 rounded-2xl border border-slate-200">
+              <button
+                id="btnStep2Back"
+                type="button"
+                onClick={() => {
+                  setFormStep(1);
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft size={16} />
+                <span>← પાછળ (સેવા પસંદગી)</span>
+              </button>
+
+              {!isStep2Complete && (
+                <div className="w-full bg-amber-50 border-2 border-amber-300 text-amber-950 p-3 sm:p-3.5 rounded-2xl text-xs font-bold flex items-start gap-2.5 shadow-2xs animate-in fade-in">
+                  <AlertTriangle size={18} className="text-amber-600 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-black text-amber-900 block text-xs sm:text-sm">
+                      ⚠️ ફોર્મ ભરવું ફરજિયાત છે (ખાલી ફોર્મ સ્વીકાર્ય નથી):
+                    </span>
+                    <span className="text-[11px] sm:text-xs text-amber-800 font-medium">
+                      ઉપરથી પરિવારના કોઈ સભ્યને પસંદ કરો અથવા તમામ લાલ ફૂદડી (*) વાળા ખાના ભરો. જ્યાં સુધી વિગતો નહીં ભરાય ત્યાં સુધી પગલું ૩ લૉક રહેશે.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                id="btnStep2Next"
+                type="button"
+                onClick={() => {
+                  const check = validateStep2Form();
+                  if (!check.valid) {
+                    setFieldErrors(check.errors);
+                    setFormValidationError(check.message);
+                    const firstErr = Object.keys(check.errors)[0];
+                    let el: HTMLElement | null = null;
+                    if (firstErr === "name") el = document.getElementById("applicantNameGu");
+                    else if (firstErr === "fatherName") el = document.getElementById("applicantFatherName");
+                    else if (firstErr === "mobile") el = document.getElementById("applicantMobile");
+                    else if (firstErr === "dob") el = document.getElementById("applicantDob");
+                    else if (firstErr === "village") el = document.getElementById("applicantVillage");
+                    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+                    else window.scrollTo({ top: 120, behavior: "smooth" });
+                    return;
+                  }
+                  setFieldErrors({});
+                  setFormValidationError(null);
+                  handleStepClick(3);
+                }}
+                className={`w-full sm:w-auto px-6 py-3 rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer ${
+                  isStep2Complete
+                    ? "bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white shadow-orange-600/20"
+                    : "bg-slate-200 hover:bg-slate-300 text-slate-600 border border-slate-300"
+                }`}
+              >
+                {isStep2Complete ? (
+                  <>
+                    <span>આગળ વધો: પુરાવા આપો (પગલું ૩)</span>
+                    <ArrowRight size={16} />
+                  </>
+                ) : (
+                  <>
+                    <Lock size={16} className="text-slate-500" />
+                    <span>પગલું ૩ લૉક છે (વિગતો ભરો)</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── STEP 3: જરૂરી દસ્તાવેજો & AI સ્માર્ટ ચેકિંગ ── */}
+      {formStep === 3 && (
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
+          {/* Selected Service Header Reminder */}
+          <div className="bg-orange-50 border border-orange-200 p-3 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0">{service.emoji}</span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-orange-700 font-bold block uppercase">પગલું ૩ / ૪ • જરૂરી દસ્તાવેજો & AI સ્માર્ટ ચેકિંગ</span>
+                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  અરજદાર: {applicantNameGu || applicantName || "નાગરિક"} • કુલ જરૂરી: {requiredDocs.length} દસ્તાવેજો
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setFormStep(2);
+                window.scrollTo({ top: 0, behavior: "smooth" });
+              }}
+              className="text-xs text-orange-800 hover:text-orange-950 font-bold underline shrink-0 cursor-pointer"
+            >
+              ← વિગતો બદલો
+            </button>
           </div>
 
-          {/* Right Column: Required Documents Checklist & AI Pre-Inspection (7 cols) */}
-          <div className="lg:col-span-7 space-y-4">
+          <div className="space-y-4">
             <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-4">
               <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <div>
@@ -3730,7 +5066,9 @@ export default function DocumentServicePortal({
                               <div className="flex items-start gap-1.5">
                                 <span className="font-bold text-slate-500 shrink-0">📋 ફોર્મમાં અરજદાર:</span>
                                 <span className="font-extrabold text-slate-900 truncate">
-                                  {applicantNameGu || applicantName || "વિનોદરાઈ કરશનભાઈ પટેલ"}
+                                  {applicantNameGu || applicantName || (
+                                    <span className="text-slate-400 italic">નામ નોંધાયેલ નથી</span>
+                                  )}
                                 </span>
                               </div>
 
@@ -3826,23 +5164,225 @@ export default function DocumentServicePortal({
                     <p className="text-[11px] text-slate-500">સાયબર ટ્રેઝરી ચલણ અને GST મુક્ત</p>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={submitting || requiredDocs.some((d) => uploadedDocs[d.id]?.status === "invalid")}
-                    className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-sm font-extrabold shadow-md transition active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    <CreditCard size={16} />
-                    <span>આગળ વધો & સરકારી ફી ચૂકવો (Proceed to Pay)</span>
-                  </button>
+                  <div className="flex items-center gap-2 w-full sm:w-auto">
+                    <button
+                      id="btnStep3Back"
+                      type="button"
+                      onClick={() => {
+                        setFormStep(2);
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <ArrowLeft size={16} />
+                      <span>← પાછળ (વિગતો)</span>
+                    </button>
+                    <button
+                      id="btnStep3Next"
+                      type="button"
+                      onClick={() => {
+                        const check = validateStep3Documents();
+                        if (!check.valid) {
+                          setFormValidationError(check.message);
+                          window.scrollTo({ top: 120, behavior: "smooth" });
+                          return;
+                        }
+                        setFormValidationError(null);
+                        handleStepClick(4);
+                      }}
+                      className="flex-1 sm:flex-initial px-6 py-2.5 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-700 hover:to-amber-700 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+                    >
+                      <span>આગળ વધો: ચકાસણી & ફી (પગલું ૪)</span>
+                      <ArrowRight size={16} />
+                    </button>
+                  </div>
                 </div>
-
-                <p className="text-center text-[11px] text-slate-400">
-                  🔒 તમારી માહિતી UIDAI અને ગુજરાત સરકારના ડેટા સુરક્ષા ધારા હેઠળ ૧૦૦% એન્ક્રિપ્ટેડ છે.
-                </p>
               </div>
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── STEP 4: આખરી ચકાસણી અને સરકારી ફી ચુકવણી ── */}
+      {formStep === 4 && (
+        <div className="space-y-4 w-full max-w-4xl mx-auto">
+          {/* Selected Service Header Reminder */}
+          <div className="bg-orange-50 border border-orange-200 p-3 rounded-2xl flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 min-w-0">
+              <span className="text-xl shrink-0">🏛️</span>
+              <div className="min-w-0">
+                <span className="text-[10px] text-orange-700 font-bold block uppercase">પગલું ૪ / ૪ • આખરી ચકાસણી અને સરકારી ફી ચુકવણી</span>
+                <p className="text-xs sm:text-sm font-black text-slate-900 truncate">
+                  સાયબર ટ્રેઝરી ચુકવણી સારાંશ (Cyber Treasury Review)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Authentic Government Summary Slip */}
+          <div className="bg-white rounded-2xl shadow-sm border-2 border-slate-900 p-4 sm:p-6 space-y-4">
+            <div className="border-b-2 border-slate-900 pb-3 flex items-center justify-between">
+              <div>
+                <span className="text-[10px] font-black uppercase tracking-wider text-orange-600 block">
+                  GUJARAT DIGITAL PUBLIC INFRASTRUCTURE (DPI)
+                </span>
+                <h3 className="font-black text-base sm:text-lg text-slate-900">
+                  અરજી ચકાસણી સારાંશ અને સાયબર ટ્રેઝરી ચલણ
+                </h3>
+              </div>
+              <span className="text-xs bg-slate-900 text-amber-300 font-mono font-bold px-3 py-1 rounded-lg">
+                FORM-DPI-2026
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 text-xs bg-slate-50 p-3.5 rounded-xl border border-slate-200">
+              <div>
+                <span className="text-slate-500 text-[10px] block">પસંદ કરેલ સેવા:</span>
+                <strong className="text-slate-900 font-bold text-sm">{service.nameGu}</strong>
+                <span className="text-[10px] text-slate-600 block">{serviceMode === "new" ? "🆕 નવી અરજી" : "🔄 સુધારો / ફેરફાર"}</span>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">અરજદારનું નામ:</span>
+                <strong className="text-slate-900 font-bold">
+                  {applicantNameGu || applicantName || (
+                    <span className="text-rose-600 font-semibold italic">અરજદારનું નામ બાકી છે</span>
+                  )}
+                </strong>
+              </div>
+              {fatherOrHusbandName && (
+                <div>
+                  <span className="text-slate-500 text-[10px] block">પિતા / પતિનું નામ:</span>
+                  <strong className="text-slate-900 font-bold">{fatherOrHusbandName}</strong>
+                </div>
+              )}
+              {motherName && (
+                <div>
+                  <span className="text-slate-500 text-[10px] block">માતાનું નામ:</span>
+                  <strong className="text-slate-900 font-bold">{motherName}</strong>
+                </div>
+              )}
+              <div>
+                <span className="text-slate-500 text-[10px] block">સંપર્ક / મોબાઈલ:</span>
+                <strong className="text-slate-900 font-mono font-bold">
+                  {mobileNumber || (
+                    <span className="text-rose-600 font-semibold italic">મોબાઈલ નંબર બાકી છે</span>
+                  )}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">ગામ / કચેરી:</span>
+                <strong className="text-slate-900 font-bold">
+                  {village ? (
+                    `${village}, તા. ${taluka}, જિ. ${district}`
+                  ) : (
+                    <span className="text-rose-600 font-semibold italic">ગામ પસંદ કરેલ નથી</span>
+                  )}
+                </strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">સંલગ્ન પુરાવા:</span>
+                <strong className="text-emerald-700 font-bold">✓ {requiredDocs.length} દસ્તાવેજો ચકાસાયેલ</strong>
+              </div>
+              <div>
+                <span className="text-slate-500 text-[10px] block">સરકારી ફી:</span>
+                <strong className="text-orange-700 font-black text-sm">₹ {service.fee} (GST મુક્ત)</strong>
+              </div>
+            </div>
+
+            {/* Phygital Signature Selection */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-slate-800 block">નાગરિક પ્રમાણીકરણ (Verification & Signature):</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${signatureType === "aadhaar-esign" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="signatureTypeFinal"
+                    checked={signatureType === "aadhaar-esign"}
+                    onChange={() => setSignatureType("aadhaar-esign")}
+                    className="accent-orange-600"
+                  />
+                  <span>🔐 આધાર OTP ડિજિટલ સહી - eSign (IT Act 2000)</span>
+                </label>
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${signatureType === "physical-declaration" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="signatureTypeFinal"
+                    checked={signatureType === "physical-declaration"}
+                    onChange={() => setSignatureType("physical-declaration")}
+                    className="accent-orange-600"
+                  />
+                  <span>✍️ સ્વ-ઘોષણા પત્ર સાથે ભૌતિક સહી</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Payment Method Selector */}
+            <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+              <span className="text-xs font-bold text-slate-800 block">ચુકવણી માધ્યમ (Payment Gateway):</span>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${paymentMethod !== "challan" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethodFinal"
+                    checked={paymentMethod !== "challan"}
+                    onChange={() => setPaymentMethod("upi")}
+                    className="accent-orange-600"
+                  />
+                  <span>🏛️ ઓનલાઇન સાયબર ટ્રેઝરી (UPI / NetBanking / Cards / QR)</span>
+                </label>
+                <label className={`p-2.5 rounded-xl border flex items-center gap-2 cursor-pointer transition ${paymentMethod === "challan" ? "bg-orange-50 border-orange-400 font-bold text-orange-950" : "bg-white border-slate-200 text-slate-700"}`}>
+                  <input
+                    type="radio"
+                    name="paymentMethodFinal"
+                    checked={paymentMethod === "challan"}
+                    onChange={() => setPaymentMethod("challan")}
+                    className="accent-orange-600"
+                  />
+                  <span>🧾 ઓફલાઇન સરકારી ચલણ (જન સેવા કેન્દ્ર પર રોકડ)</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Official Submit & Pay Actions */}
+            <div className="pt-2 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => handleStepClick(3)}
+                className="w-full sm:w-auto px-5 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-xs sm:text-sm font-bold transition active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <ArrowLeft size={16} />
+                <span>← પાછળ (પુરાવા બદલો)</span>
+              </button>
+
+              {paymentMethod !== "challan" ? (
+                <button
+                  type="button"
+                  onClick={handleRazorpayLiveCheckout}
+                  disabled={isProcessingPayment}
+                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-[#002B49] via-[#0b3c65] to-[#002B49] hover:from-[#001D33] hover:to-[#082d4d] active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-lg transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer border-2 border-amber-400/50"
+                >
+                  <Landmark size={18} className="text-amber-300 shrink-0" />
+                  <span>🏛️ સત્તાવાર સાયબર ટ્રેઝરી Razorpay દ્વારા ચૂકવો (Pay ₹ {service.fee}) 🔒</span>
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => handleFinalPaymentSubmit()}
+                  disabled={isProcessingPayment}
+                  className="w-full sm:w-auto px-8 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition disabled:opacity-50 flex items-center justify-center gap-2 whitespace-nowrap cursor-pointer"
+                >
+                  <Landmark size={18} />
+                  <span>ઓફલાઇન રોકડ ચલણ જનરેટ કરો & સબમિટ</span>
+                </button>
+              )}
+            </div>
+
+            <p className="text-center text-[11px] text-slate-400 pt-1">
+              🔒 તમારી માહિતી UIDAI અને ગુજરાત સરકારના ડેટા સુરક્ષા ધારા હેઠળ ૧૦૦% એન્ક્રિપ્ટેડ છે.
+            </p>
+          </div>
+        </div>
+      )}
       </form>
 
       {/* ── Official MeriPehchaan & DigiLocker Gateway Modal ── */}
@@ -3856,16 +5396,19 @@ export default function DocumentServicePortal({
           (activeDigiLockerTarget === "applicant_photo" ? "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો" : "દસ્તાવેજ")
         }
         serviceTitle={service.nameGu}
-        citizenName={applicantName || citizenSession?.citizenName || "Hari Vinodrai Patel"}
-        citizenNameGu={applicantNameGu || citizenSession?.citizenNameGu || "હરી વિનોદરાઈ પટેલ"}
-        citizenMobile={mobileNumber || citizenSession?.mobile || "9974442291"}
-        citizenAadhaar={aadhaarNumber || `XXXX-XXXX-${citizenSession?.aadhaarLast4 || "1413"}`}
+        citizenName={applicantName || citizenSession?.citizenName || ""}
+        citizenNameGu={applicantNameGu || citizenSession?.citizenNameGu || ""}
+        citizenMobile={mobileNumber || citizenSession?.mobile || ""}
+        citizenAadhaar={aadhaarNumber || (citizenSession?.aadhaarLast4 ? `XXXX-XXXX-${citizenSession.aadhaarLast4}` : "")}
         onDocumentFetched={handleDigiLockerDocumentFetched}
       />
 
       {/* ── Document Preview Popup Modal (PDF or Image) ── */}
       {previewDocModal && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="doc-preview-modal-title"
           className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200 overscroll-contain"
           onClick={() => setPreviewDocModal(null)}
           onWheel={(e) => e.stopPropagation()}
@@ -3880,7 +5423,7 @@ export default function DocumentServicePortal({
               <div className="flex items-center gap-2 truncate">
                 <span className="text-xl">📄</span>
                 <div>
-                  <h4 className="font-black text-xs sm:text-sm text-slate-900 truncate">
+                  <h4 id="doc-preview-modal-title" className="font-black text-xs sm:text-sm text-slate-900 truncate">
                     {previewDocModal.title}
                   </h4>
                   <span className="text-[10px] text-slate-500">
@@ -3891,8 +5434,9 @@ export default function DocumentServicePortal({
               <button
                 type="button"
                 onClick={() => setPreviewDocModal(null)}
-                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer"
+                className="p-1.5 hover:bg-slate-100 rounded-full text-slate-500 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
                 title="બંધ કરો"
+                aria-label="દસ્તાવેજ દર્શક બંધ કરો (Close document viewer)"
               >
                 <X size={18} />
               </button>

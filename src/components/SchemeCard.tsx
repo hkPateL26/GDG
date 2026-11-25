@@ -97,10 +97,7 @@ export default function SchemeCard({
               {localizedBenefits[0] || scheme.benefits[0]}
             </p>
           </div>
-
-          <span className="text-gray-300 group-hover:text-orange-400 flex-shrink-0">
-            ›
-          </span>
+          <span className="text-gray-400 group-hover:text-orange-500 flex-shrink-0 text-base font-bold">›</span>
         </div>
       </Link>
     );

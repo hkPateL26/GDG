@@ -150,6 +150,16 @@ export default function SchemeDetailPage({
     }
   };
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!showApplyModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowApplyModal(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [showApplyModal]);
+
   // Handle live application submission to Cloud Firestore
   const handleApplySubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -258,7 +268,7 @@ export default function SchemeDetailPage({
         <div className="bg-white border-b border-gray-100 py-3 px-4">
           <div className="max-w-4xl mx-auto flex items-center justify-between text-xs">
             <Link
-              href="/schemes"
+              href={scheme.category ? `/schemes?category=${encodeURIComponent(scheme.category)}` : "/schemes"}
               className="text-gray-500 hover:text-orange-600 flex items-center gap-1 font-semibold transition"
             >
               <ArrowLeft size={14} /> બધી યોજનાઓ (All Schemes)
@@ -555,7 +565,12 @@ export default function SchemeDetailPage({
 
         {/* ── LIVE APPLICATION FORM MODAL ── */}
         {showApplyModal && (
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="scheme-apply-modal-title"
+            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4 overflow-y-auto"
+          >
             <div className="bg-white text-gray-900 w-full max-w-lg rounded-3xl shadow-2xl border border-gray-200 overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-150">
               {/* Ribbon */}
               <div className="h-2 w-full bg-gradient-to-r from-orange-500 via-white to-green-600" />
@@ -566,13 +581,15 @@ export default function SchemeDetailPage({
                   <span className="text-[11px] font-bold text-orange-600 uppercase tracking-wide">
                     સરકારી સહાય અરજી ફોર્મ • Live Cloud DB
                   </span>
-                  <h3 className="text-lg font-black text-gray-900 leading-tight">
+                  <h3 id="scheme-apply-modal-title" className="text-lg font-black text-gray-900 leading-tight">
                     {scheme.nameGu}
                   </h3>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setShowApplyModal(false)}
-                  className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100"
+                  className="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                  aria-label="અરજી ફોર્મ બંધ કરો (Close application form)"
                 >
                   <X size={20} />
                 </button>
@@ -649,7 +666,7 @@ export default function SchemeDetailPage({
                 )}
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label htmlFor="apply-citizen-name" className="block text-xs font-bold text-gray-700 mb-1">
                     અરજદારનું પૂરું નામ (Full Name as per Aadhaar) *
                     {isDigiLockerVerified && (
                       <span className="inline-flex items-center gap-0.5 text-[9.5px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded ml-1.5">
@@ -658,6 +675,7 @@ export default function SchemeDetailPage({
                     )}
                   </label>
                   <input
+                    id="apply-citizen-name"
                     type="text"
                     required
                     value={citizenName}
@@ -669,10 +687,11 @@ export default function SchemeDetailPage({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                    <label htmlFor="apply-mobile" className="block text-xs font-bold text-gray-700 mb-1">
                       મોબાઈલ નંબર (૧૦ આંકડા) *
                     </label>
                     <input
+                      id="apply-mobile"
                       type="tel"
                       required
                       maxLength={10}
@@ -683,10 +702,11 @@ export default function SchemeDetailPage({
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                    <label htmlFor="apply-aadhaar" className="block text-xs font-bold text-gray-700 mb-1">
                       આધાર કાર્ડ છેલ્લા ૪ અંક *
                     </label>
                     <input
+                      id="apply-aadhaar"
                       type="text"
                       required
                       maxLength={4}
@@ -700,10 +720,11 @@ export default function SchemeDetailPage({
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                    <label htmlFor="apply-district" className="block text-xs font-bold text-gray-700 mb-1">
                       જિલ્લો (District) *
                     </label>
                     <select
+                      id="apply-district"
                       value={district}
                       onChange={(e) => setDistrict(e.target.value)}
                       className="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs text-gray-900 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -716,10 +737,11 @@ export default function SchemeDetailPage({
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-700 mb-1">
+                    <label htmlFor="apply-taluka" className="block text-xs font-bold text-gray-700 mb-1">
                       તાલુકો (Taluka) *
                     </label>
                     <input
+                      id="apply-taluka"
                       type="text"
                       required
                       value={taluka}
@@ -731,10 +753,11 @@ export default function SchemeDetailPage({
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-gray-700 mb-1">
+                  <label htmlFor="apply-village" className="block text-xs font-bold text-gray-700 mb-1">
                     ગામ / સોસાયટી / વિસ્તાર *
                   </label>
                   <input
+                    id="apply-village"
                     type="text"
                     required
                     value={village}
@@ -769,13 +792,15 @@ export default function SchemeDetailPage({
                     <p className="text-[10px] text-slate-600 leading-snug">
                       તમારો ફોટો અપલોડ કરો. આ ફોટો સત્તાવાર સરકારી દસ્તાવેજમાં લાઈવ લાગશે.
                     </p>
-                    <label className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-[11px] font-bold shadow-xs transition">
+                    <label htmlFor="apply-passport-photo" className="cursor-pointer inline-flex items-center gap-1.5 px-3 py-1 bg-orange-600 hover:bg-orange-700 active:scale-95 text-white rounded-xl text-[11px] font-bold shadow-xs transition">
                       <Camera size={12} />
                       <span>{citizenPhoto ? "ફોટો બદલો (Change)" : "ફોટો અપલોડ કરો (Upload)"}</span>
                       <input
+                        id="apply-passport-photo"
                         type="file"
                         accept="image/*"
                         className="hidden"
+                        aria-label="અરજદારનો પાસપોર્ટ ફોટો (Passport photo)"
                         onChange={(e) => {
                           const file = e.target.files?.[0];
                           if (file) {

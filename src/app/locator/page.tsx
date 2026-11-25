@@ -91,10 +91,12 @@ export default function OfficeLocatorPage() {
                 className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
+                id="locator-search-input"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="શોધો: મામલતદાર, આવકનો દાખલો, 7/12, રેશન કાર્ડ..."
+                aria-label="કચેરી અથવા સેવા શોધો (Search government offices or services)"
                 className="w-full pl-11 pr-4 py-3 rounded-xl text-gray-800 text-sm shadow-lg focus:outline-none focus:ring-2 focus:ring-orange-300"
               />
             </div>

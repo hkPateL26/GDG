@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   GUJARAT_DISTRICTS,
   CitizenApplication,
   CitizenLedgerProfile,
   getApplicationSLADetails,
+  sortApplicationsLatestFirst,
 } from "@/lib/large-datasets";
 import {
   Search,
@@ -139,6 +140,8 @@ export default function TrackVaultView({
     }
     return "";
   });
+  const [citizenStatusFilter, setCitizenStatusFilter] = useState<"all" | "approved" | "processing" | "rejected">("all");
+  const [showAllCitizenRecords, setShowAllCitizenRecords] = useState(false);
   const [selectedDistrict, setSelectedDistrict] = useState("all");
   const [selectedStatus, setSelectedStatus] = useState("all");
   const [page, setPage] = useState(1);
@@ -156,6 +159,21 @@ export default function TrackVaultView({
 
   const [selectedApp, setSelectedApp] = useState<CitizenApplication | null>(null);
   const [showTimelineModal, setShowTimelineModal] = useState<boolean>(false);
+  const hasAutoOpenedModalRef = useRef<boolean>(false);
+
+  const handleCloseTimelineModal = useCallback(() => {
+    setShowTimelineModal(false);
+    hasAutoOpenedModalRef.current = true;
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("id")) {
+          url.searchParams.delete("id");
+          window.history.replaceState({}, "", url.pathname + (url.search ? `?${url.searchParams.toString()}` : ""));
+        }
+      } catch {}
+    }
+  }, []);
   const [showPrintModal, setShowPrintModal] = useState<boolean>(false);
   const [showCertificateModal, setShowCertificateModal] = useState<boolean>(false);
   const [loading, setLoading] = useState(false);
@@ -177,17 +195,19 @@ export default function TrackVaultView({
         } else if (showCertificateModal) {
           setShowCertificateModal(false);
         } else if (showTimelineModal) {
-          setShowTimelineModal(false);
+          handleCloseTimelineModal();
+        } else if (showOfficerModal) {
+          setShowOfficerModal(false);
         }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [showPrintModal, showCertificateModal, showTimelineModal]);
+  }, [showPrintModal, showCertificateModal, showTimelineModal, showOfficerModal, handleCloseTimelineModal]);
 
   // Load Citizen Vault on Mount or Citizen Prop change
-  const loadCitizenVault = useCallback(async (mobile: string, aadhaarLast4?: string, targetId?: string) => {
-    setLoading(true);
+  const loadCitizenVault = useCallback(async (mobile: string, aadhaarLast4?: string, targetId?: string, isSilent = false) => {
+    if (!isSilent) setLoading(true);
     setError("");
     try {
       const res = await fetch("/api/auth/otp", {
@@ -214,27 +234,69 @@ export default function TrackVaultView({
           }
         }
 
-        const combined = [...localApps, ...myApps];
+        // Priority Merge: Server status ALWAYS wins so approvals and e-Sign seals show immediately!
+        const serverMap = new Map<string, CitizenApplication>();
+        myApps.forEach((a) => {
+          if (a && a.id) serverMap.set(a.id.toUpperCase(), a);
+        });
+
         const seen = new Set<string>();
         const uniqueApps: CitizenApplication[] = [];
-        for (const a of combined) {
-          if (a && a.id && !seen.has(a.id)) {
-            seen.add(a.id);
-            uniqueApps.push(a);
+
+        // 1. Add server records first (fresh from officer actions)
+        for (const s of myApps) {
+          if (s && s.id && !seen.has(s.id.toUpperCase())) {
+            seen.add(s.id.toUpperCase());
+            uniqueApps.push(s);
           }
         }
-        setRecords(uniqueApps);
+
+        // 2. Merge local records, updating with server data if present
+        for (const l of localApps) {
+          if (!l || !l.id) continue;
+          const cleanId = l.id.toUpperCase();
+          if (serverMap.has(cleanId)) {
+            const serverVersion = serverMap.get(cleanId)!;
+            const idx = uniqueApps.findIndex((a) => a.id.toUpperCase() === cleanId);
+            if (idx >= 0) {
+              uniqueApps[idx] = { ...l, ...serverVersion };
+            }
+          } else if (!seen.has(cleanId)) {
+            seen.add(cleanId);
+            uniqueApps.push(l);
+          }
+        }
+
+        // CRITICAL FIX 1: ALWAYS SORT LATEST APPLICATION FIRST (DESCENDING BY APPLIED DATE)
+        const sortedApps = sortApplicationsLatestFirst(uniqueApps);
+        setRecords(sortedApps);
+
+        // Update localStorage with fresh merged data so entire browser has latest state
+        if (typeof window !== "undefined") {
+          try {
+            localStorage.setItem("nagrik_user_applications", JSON.stringify(sortedApps));
+          } catch {}
+        }
 
         const activeTargetId = targetId || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("id") : "");
-        if (activeTargetId) {
-          const found = uniqueApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
+        if (activeTargetId && !hasAutoOpenedModalRef.current) {
+          const found = sortedApps.find((a) => a.id.toLowerCase() === activeTargetId.toLowerCase());
           if (found) {
             setSelectedApp(found);
             setShowTimelineModal(true);
+            hasAutoOpenedModalRef.current = true;
           }
-        } else if (uniqueApps.length > 0) {
-          setSelectedApp(uniqueApps[0]);
         }
+
+        // CRITICAL FIX 2: PRESERVE SELECTED APP ACROSS BACKGROUND POLLING!
+        // Never overwrite an already opened application with index 0 or another app!
+        setSelectedApp((currentSelected) => {
+          if (currentSelected) {
+            const match = sortedApps.find((a) => a.id.toUpperCase() === currentSelected.id.toUpperCase());
+            return match || currentSelected;
+          }
+          return sortedApps[0] || null;
+        });
       } else {
         setError(data.error || "તમારી અરજીઓ લોડ કરવામાં સમસ્યા આવી.");
       }
@@ -242,42 +304,82 @@ export default function TrackVaultView({
       console.error("Failed to load citizen vault:", err);
       setError("સર્વર ક્ષતિ આવી.");
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   }, []);
 
+  const isInitialLoadRef = useRef<boolean>(true);
+  const citizenMobile = citizen?.mobile;
+  const citizenAadhaar = citizen?.aadhaarLast4;
+
   useEffect(() => {
-    if (citizen && citizen.mobile) {
+    // 1. Listen for real-time live application updates from background sync engine
+    const handleAppUpdated = (e: Event) => {
+      const custom = e as CustomEvent<{ application: CitizenApplication }>;
+      if (custom.detail?.application) {
+        const freshApp = custom.detail.application;
+        setRecords((prev) =>
+          sortApplicationsLatestFirst(prev.map((a) => (a.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...a, ...freshApp } : a)))
+        );
+        setSelectedApp((prev) =>
+          prev && prev.id.toUpperCase() === freshApp.id.toUpperCase() ? { ...prev, ...freshApp } : prev
+        );
+      }
+    };
+    window.addEventListener("nagrik_application_updated", handleAppUpdated);
+
+    let pollTimer: NodeJS.Timeout | undefined;
+
+    if (citizenMobile) {
       const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
       const idParam = urlParams ? urlParams.get("id") || undefined : undefined;
-      const timer = setTimeout(() => {
-        loadCitizenVault(citizen.mobile, citizen.aadhaarLast4, idParam);
-      }, 0);
-      return () => clearTimeout(timer);
+
+      const isFirst = isInitialLoadRef.current;
+      isInitialLoadRef.current = false;
+
+      // Only first load shows loading spinner; all subsequent runs are 100% silent
+      loadCitizenVault(citizenMobile, citizenAadhaar, idParam, !isFirst);
+
+      // Silent background poll every 4.5 seconds
+      pollTimer = setInterval(() => {
+        loadCitizenVault(citizenMobile, citizenAadhaar, undefined, true);
+      }, 4500);
     } else if (authMode === "citizen") {
-      // Public Citizen Direct Tracking via ID and Tracking Secret (e.g. from receipt or QR code)
+      // Public Citizen Direct Tracking via ID and Tracking Secret
       const urlParams = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : null;
       const idParam = urlParams?.get("id")?.trim();
       const secretParam = urlParams?.get("secret")?.trim();
-      if (idParam) {
+
+      const fetchSingleApp = () => {
+        if (!idParam) return;
         const fetchUrl = `/api/track?id=${encodeURIComponent(idParam)}${secretParam ? `&secret=${encodeURIComponent(secretParam)}` : ""}`;
-        fetch(fetchUrl)
+        fetch(fetchUrl, { cache: "no-store" })
           .then((res) => res.json())
           .then((data) => {
             if (data.success && data.application) {
-              setSelectedApp(data.application);
-              setRecords([data.application]);
-              setShowTimelineModal(true);
-            } else if (data.error) {
-              setError(data.error);
+              setSelectedApp((prev) => (prev ? { ...prev, ...data.application } : data.application));
+              setRecords((prev) => {
+                const exists = prev.some((a) => a.id.toUpperCase() === data.application.id.toUpperCase());
+                return exists
+                  ? prev.map((a) => (a.id.toUpperCase() === data.application.id.toUpperCase() ? { ...a, ...data.application } : a))
+                  : [data.application, ...prev];
+              });
             }
           })
-          .catch(() => {
-            setError("અરજી ટ્રેક કરવામાં ક્ષતિ આવી.");
-          });
+          .catch(() => {});
+      };
+
+      if (idParam) {
+        fetchSingleApp();
+        pollTimer = setInterval(fetchSingleApp, 3500);
       }
     }
-  }, [citizen, authMode, loadCitizenVault]);
+
+    return () => {
+      window.removeEventListener("nagrik_application_updated", handleAppUpdated);
+      if (pollTimer) clearInterval(pollTimer);
+    };
+  }, [citizenMobile, citizenAadhaar, authMode, loadCitizenVault]);
 
   // Load Master Registry (For Officer Mode)
   const loadOfficerData = useCallback(async () => {
@@ -515,6 +617,29 @@ export default function TrackVaultView({
     }
   };
 
+  // Citizen View Dynamic Filter & Pagination Calculations
+  const citizenApprovedCount = records.filter((r) => r.status === "approved").length;
+  const citizenProcessingCount = records.filter((r) => r.status === "processing" || r.status === "pending").length;
+  const citizenRejectedCount = records.filter((r) => r.status === "rejected").length;
+
+  const filteredCitizenRecords = records.filter((app) => {
+    if (citizenStatusFilter === "approved" && app.status !== "approved") return false;
+    if (citizenStatusFilter === "processing" && (app.status !== "processing" && app.status !== "pending")) return false;
+    if (citizenStatusFilter === "rejected" && app.status !== "rejected") return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      const matchId = (app.id || "").toLowerCase().includes(q);
+      const matchScheme = (app.schemeNameGu || "").toLowerCase().includes(q) || (app.schemeName || "").toLowerCase().includes(q);
+      const matchCitizen = (app.citizenNameGu || "").toLowerCase().includes(q) || (app.citizenName || "").toLowerCase().includes(q);
+      return matchId || matchScheme || matchCitizen;
+    }
+    return true;
+  });
+
+  const displayedCitizenRecords = showAllCitizenRecords || filteredCitizenRecords.length <= 4
+    ? filteredCitizenRecords
+    : filteredCitizenRecords.slice(0, 4);
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
 
@@ -532,7 +657,7 @@ export default function TrackVaultView({
           <button type="button" onClick={() => setStageUpdateAlert(null)} className="text-blue-700 hover:text-blue-900 px-2 font-black">✕</button>
         </div>
       )}
-      {loading && (
+      {loading && records.length === 0 && (
         <div className="flex items-center justify-center gap-2 p-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-600 font-bold">
           <Loader2 size={14} className="animate-spin text-orange-600" />
           <span>કચેરી ડેટા લોડ થઈ રહ્યો છે...</span>
@@ -574,19 +699,103 @@ export default function TrackVaultView({
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
                 <input
+                  id="vault-search-input"
                   type="text"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   onKeyUp={handleSearchSubmit}
                   placeholder="અરજી નંબર કે નામથી શોધો..."
-                  className="w-full pl-8 pr-3 py-2 sm:py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
+                  aria-label="અરજી નંબર અથવા નામથી શોધો (Search applications by ID or name)"
+                  className="w-full pl-8 pr-8 py-2 sm:py-1.5 bg-slate-50 focus:bg-white border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-orange-500 font-semibold"
                 />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery("");
+                      if (typeof window !== "undefined") {
+                        const url = new URL(window.location.href);
+                        url.searchParams.delete("id");
+                        const searchStr = url.searchParams.toString();
+                        window.history.replaceState({}, "", url.pathname + (searchStr ? `?${searchStr}` : ""));
+                      }
+                    }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-slate-200 hover:bg-slate-300 text-slate-700 flex items-center justify-center text-xs font-bold transition cursor-pointer"
+                    title="સર્ચ ક્લિયર કરો"
+                    aria-label="શોધ સાફ કરો (Clear search)"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
           </div>
 
+          {/* Quick Status Filter Tabs for Citizen (No Long Scroll) */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar scrollbar-none pb-1 text-xs">
+            {[
+              { id: "all", label: `બધી અરજીઓ (${records.length})`, activeBg: "bg-slate-900 text-white" },
+              { id: "approved", label: `🟢 મંજૂર થયેલી (${citizenApprovedCount})`, activeBg: "bg-emerald-600 text-white" },
+              { id: "processing", label: `🔵 તપાસ ચાલુ (${citizenProcessingCount})`, activeBg: "bg-blue-600 text-white" },
+              { id: "rejected", label: `🔴 સુધારો જરૂરી (${citizenRejectedCount})`, activeBg: "bg-rose-600 text-white" },
+            ].map((tab) => {
+              const isActive = citizenStatusFilter === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  type="button"
+                  onClick={() => {
+                    setCitizenStatusFilter(tab.id as any);
+                    setShowAllCitizenRecords(false);
+                    setSearchQuery("");
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("id");
+                      const searchStr = url.searchParams.toString();
+                      window.history.replaceState({}, "", url.pathname + (searchStr ? `?${searchStr}` : ""));
+                    }
+                  }}
+                  className={`px-3.5 py-1.5 rounded-xl font-bold transition whitespace-nowrap cursor-pointer shrink-0 border ${
+                    isActive
+                      ? `${tab.activeBg} border-transparent shadow-xs font-black ring-2 ring-slate-400/30`
+                      : "bg-white hover:bg-slate-100 text-slate-700 border-slate-200"
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              );
+            })}
+          </div>
+
           {/* Citizen's Application Cards Grid */}
-          {records.length === 0 ? (
+          {filteredCitizenRecords.length === 0 ? (
+            records.length > 0 ? (
+              <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-3">
+                <div className="text-4xl">🔍</div>
+                <h4 className="font-bold text-slate-800 text-base">
+                  {searchQuery ? `"${searchQuery}" માટે કોઈ અરજી મળી નથી` : "આ ફિલ્ટરમાં કોઈ અરજી નથી"}
+                </h4>
+                <p className="text-xs text-slate-500 max-w-sm mx-auto">
+                  તમારી પ્રોફાઇલમાં કુલ {records.length} અરજીઓ ઉપલબ્ધ છે.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery("");
+                    setCitizenStatusFilter("all");
+                    if (typeof window !== "undefined") {
+                      const url = new URL(window.location.href);
+                      url.searchParams.delete("id");
+                      window.history.replaceState({}, "", url.pathname);
+                    }
+                  }}
+                  className="inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition cursor-pointer"
+                >
+                  <RotateCw size={13} />
+                  <span>બધી {records.length} અરજીઓ બતાવો (Show All {records.length})</span>
+                </button>
+              </div>
+            ) : (
             <div className="bg-white rounded-3xl p-8 text-center border border-slate-200 space-y-3">
               <div className="text-4xl">📄</div>
               <h4 className="font-bold text-slate-800 text-base">કોઈ અરજી મળી નથી</h4>
@@ -612,9 +821,11 @@ export default function TrackVaultView({
                 </Link>
               )}
             </div>
+            )
           ) : (
+            <>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-3.5">
-              {records.map((app, idx) => {
+              {displayedCitizenRecords.map((app, idx) => {
                 const cfg = STATUS_CONFIG[app.status] || STATUS_CONFIG.processing;
                 const isSelected = selectedApp?.id === app.id;
                 const sla = getApplicationSLADetails(app);
@@ -766,6 +977,28 @@ export default function TrackVaultView({
                 );
               })}
             </div>
+
+            {/* Show More / Show Less Pagination Toggle */}
+            {filteredCitizenRecords.length > 4 && (
+              <div className="flex justify-center pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAllCitizenRecords(!showAllCitizenRecords)}
+                  className="px-6 py-2.5 bg-gradient-to-r from-slate-900 to-slate-800 hover:from-slate-800 hover:to-slate-700 active:scale-95 text-white rounded-xl text-xs sm:text-sm font-black shadow-md transition flex items-center gap-2 cursor-pointer border border-slate-700"
+                >
+                  {showAllCitizenRecords ? (
+                    <>
+                      <span>⬆️ ઓછું બતાવો (Show Top 4)</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>⬇️ બાકીની ${filteredCitizenRecords.length - 4} અરજીઓ જુઓ (Show All ${filteredCitizenRecords.length})</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            )}
+            </>
           )}
 
           {/* ── Citizen Application Live Timeline & Stages Detail Modal Popup ── */}
@@ -776,7 +1009,7 @@ export default function TrackVaultView({
               aria-labelledby="timeline-modal-title"
               className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-4 md:p-6 overflow-y-auto animate-in fade-in duration-200"
               onClick={(e) => {
-                if (e.target === e.currentTarget) setShowTimelineModal(false);
+                if (e.target === e.currentTarget) handleCloseTimelineModal();
               }}
             >
               <div
@@ -809,7 +1042,7 @@ export default function TrackVaultView({
 
                   <button
                     type="button"
-                    onClick={() => setShowTimelineModal(false)}
+                    onClick={handleCloseTimelineModal}
                     className="w-8 h-8 sm:w-9 sm:h-9 bg-black/20 hover:bg-black/40 active:scale-95 text-white rounded-full flex items-center justify-center transition shrink-0 cursor-pointer"
                     title="બંધ કરો (Esc)"
                   >
@@ -937,7 +1170,7 @@ export default function TrackVaultView({
                         <button
                           type="button"
                           onClick={() => {
-                            setShowTimelineModal(false);
+                            handleCloseTimelineModal();
                             handleReApply(selectedApp);
                           }}
                           className="px-3 py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-700 hover:to-red-700 active:scale-95 text-white font-black rounded-xl text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
@@ -1187,7 +1420,7 @@ export default function TrackVaultView({
 
                   <button
                     type="button"
-                    onClick={() => setShowTimelineModal(false)}
+                    onClick={handleCloseTimelineModal}
                     className="px-4 py-2 bg-slate-200 hover:bg-slate-300 active:scale-95 text-slate-800 font-black rounded-xl text-xs transition flex items-center justify-center gap-1 cursor-pointer shrink-0"
                   >
                     <X size={13} />
@@ -1430,13 +1663,18 @@ export default function TrackVaultView({
 
       {/* ── Officer Login Modal ── */}
       {showOfficerModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vault-officer-modal-title"
+          className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200"
+        >
           <div className="bg-white rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl border-2 border-slate-900">
             <div className="text-center space-y-1">
               <div className="w-12 h-12 bg-slate-900 text-amber-300 rounded-2xl flex items-center justify-center mx-auto text-xl shadow-inner">
                 🏛️
               </div>
-              <h3 className="text-lg font-black text-slate-900">કચેરી સત્તાવાર એડમિન લૉગિન</h3>
+              <h3 id="vault-officer-modal-title" className="text-lg font-black text-slate-900">કચેરી સત્તાવાર એડમિન લૉગિન</h3>
               <p className="text-xs text-slate-500">
                 તાલુકા મામલતદાર / વિસ્તરણ અધિકારી અધિકૃત પ્રવેશ
               </p>
@@ -1448,8 +1686,9 @@ export default function TrackVaultView({
 
             <form onSubmit={handleOfficerLogin} className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-700 font-bold mb-1">કર્મચારી ID (Officer ID)</label>
+                <label htmlFor="vault-officer-id" className="block text-slate-700 font-bold mb-1">કર્મચારી ID (Officer ID)</label>
                 <input
+                  id="vault-officer-id"
                   type="text"
                   value={officerIdInput}
                   onChange={(e) => setOfficerIdInput(e.target.value)}
@@ -1458,8 +1697,9 @@ export default function TrackVaultView({
                 />
               </div>
               <div>
-                <label className="block text-slate-700 font-bold mb-1">સુરક્ષા PIN (Security PIN)</label>
+                <label htmlFor="vault-officer-pin" className="block text-slate-700 font-bold mb-1">સુરક્ષા PIN (Security PIN)</label>
                 <input
+                  id="vault-officer-pin"
                   type="password"
                   value={officerPinInput}
                   onChange={(e) => setOfficerPinInput(e.target.value)}
@@ -1469,7 +1709,7 @@ export default function TrackVaultView({
               </div>
 
               {officerError && (
-                <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">
+                <div role="alert" aria-live="assertive" className="p-2.5 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">
                   {officerError}
                 </div>
               )}
@@ -1478,14 +1718,15 @@ export default function TrackVaultView({
                 <button
                   type="button"
                   onClick={() => setShowOfficerModal(false)}
-                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold"
+                  className="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold min-h-[44px] flex items-center justify-center cursor-pointer"
+                  aria-label="રદ કરો (Cancel)"
                 >
                   રદ કરો
                 </button>
                 <button
                   type="submit"
                   disabled={officerLoading}
-                  className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-amber-300 rounded-xl font-black shadow-md flex items-center justify-center gap-1"
+                  className="flex-1 py-2.5 bg-slate-900 hover:bg-black text-amber-300 rounded-xl font-black shadow-md flex items-center justify-center gap-1 min-h-[44px] cursor-pointer"
                 >
                   {officerLoading ? <Loader2 size={13} className="animate-spin" /> : <Lock size={13} />}
                   <span>લૉગિન કરો</span>
@@ -1499,6 +1740,9 @@ export default function TrackVaultView({
       {/* ── Official Receipt Slip Modal (PDF Download / Print) ── */}
       {showPrintModal && selectedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પહોંચ પૂર્વાવલોકન (Official Receipt Slip Modal)"
           className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowPrintModal(false);
@@ -1515,6 +1759,9 @@ export default function TrackVaultView({
       {/* ── Official Government Certificate Modal (PDF Download / Print) ── */}
       {showCertificateModal && selectedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પ્રમાણપત્ર પૂર્વાવલોકન (Official Government Certificate Modal)"
           className="fixed inset-0 z-[60] bg-black/80 backdrop-blur-sm flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setShowCertificateModal(false);

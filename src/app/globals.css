@@ -29,6 +29,47 @@ body {
   overflow-x: clip;
   width: 100%;
   position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+html.is-native-android,
+body.is-native-android {
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior-y: contain;
+}
+
+/* ── Native Mobile App Typography & Scale Enforcement ── */
+html {
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@media screen and (max-width: 374px) {
+  html {
+    font-size: 14px;
+  }
+
+  body {
+    line-height: 1.45;
+  }
+
+  .app-touch-card {
+    touch-action: manipulation;
+  }
+}
+
+@media screen and (min-width: 375px) and (max-width: 640px) {
+  html {
+    font-size: 15px;
+  }
+
+  body {
+    line-height: 1.5;
+  }
+
+  .app-touch-card {
+    touch-action: manipulation;
+  }
 }
 
 /* ── Native App Touch Lock on Mobile (Disables accidental website text highlight) ── */
@@ -122,16 +163,30 @@ body.modal-open {
   animation: shimmer 1.5s infinite;
 }
 
-/* ── Focus visible ── */
-:focus-visible { outline: 2px solid #f97316; outline-offset: 2px; }
+/* ── Focus visible (WCAG 2.2 AA SC 2.4.7 & SC 2.4.11) ── */
+:focus-visible {
+  outline: 2px solid #ea580c !important;
+  outline-offset: 2px !important;
+}
+
+/* Ensure interactive elements have crisp visible focus indicators */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid #ea580c;
+  outline-offset: 2px;
+}
 
 /* ── Tap highlight remove (mobile) ── */
 * { -webkit-tap-highlight-color: transparent; }
 
-/* ── Safe Word break for Gujarati/Hindi/English text (No Character Clipping) ── */
+/* ── Safe Word break & Font Legibility for Gujarati/Hindi/English text (No Character or Matra Clipping) ── */
 p, h1, h2, h3, h4, h5, h6, span, li, button, a, label, strong {
   overflow-wrap: break-word;
   word-break: normal;
+  text-rendering: optimizeLegibility;
 }
 
 /* ── Authentic Government Certificate Print Rules (STRICT SINGLE A4 PAGE) ── */

@@ -1,7 +1,9 @@
-// NagrikSeva AI Service Worker (Enables 1-Click Native PWA Install on Chrome/Android/Desktop)
-const CACHE_NAME = 'nagrikseva-v2.5.1';
+// NagrikSeva AI Service Worker (Enables 1-Click Native PWA Install & Offline Resilience)
+const CACHE_NAME = 'nagrikseva-v2.9.2';
 const STATIC_ASSETS = [
+  '/',
   '/manifest.json',
+  '/offline.html',
   '/icon.svg',
   '/icon-192.png',
   '/icon-512.png',
@@ -70,10 +72,33 @@ self.addEventListener('fetch', (event) => {
         const cachedResponse = await caches.match(event.request);
         if (cachedResponse) return cachedResponse;
         if (event.request.mode === 'navigate') {
+          const offlineMatch = await caches.match('/offline.html');
+          if (offlineMatch) return offlineMatch;
           const rootMatch = await caches.match('/');
           if (rootMatch) return rootMatch;
         }
         return new Response('', { status: 204 });
       })
+  );
+});
+
+// Official Government Notification Shutter / Banner Click Handler
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+  const urlToOpen = (event.notification.data && event.notification.data.url) || '/track';
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (let client of windowClients) {
+        if (client.url && client.url.includes('/track') && 'focus' in client) {
+          if ('navigate' in client && urlToOpen) {
+            client.navigate(urlToOpen);
+          }
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
   );
 });

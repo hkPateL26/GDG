@@ -60,7 +60,7 @@ function cleanForFirestore(obj: unknown): unknown {
   return result;
 }
 
-function withFirestoreTimeout<T>(promise: Promise<T>, ms = 650): Promise<T | null> {
+function withFirestoreTimeout<T>(promise: Promise<T>, ms = 1800): Promise<T | null> {
   return Promise.race([
     promise,
     new Promise<null>((resolve) => setTimeout(() => resolve(null), ms)),
@@ -187,13 +187,29 @@ export async function GET(req: NextRequest) {
         }
       }
 
+      if (!targetApp && db) {
+        // Fallback: check alternative collection (applications vs demo_applications)
+        try {
+          const altCollection = getTargetCollection(req) === "applications" ? "demo_applications" : "applications";
+          const altRef = doc(db, altCollection, cleanId);
+          const altSnap = await withFirestoreTimeout(getDoc(altRef), 1200);
+          if (altSnap && altSnap.exists()) {
+            targetApp = altSnap.data() as CitizenApplication;
+            addCustomApplication(targetApp);
+          }
+        } catch {
+          // ignore
+        }
+      }
+
       if (!targetApp) {
         return NextResponse.json(
           {
             error: `No application found for "${id}". Please check your application ID.`,
+            notFound: true,
             success: false,
           },
-          { status: 404 }
+          { status: 200 }
         );
       }
 
@@ -216,7 +232,12 @@ export async function GET(req: NextRequest) {
               id: targetApp.id,
               scheme: targetApp.schemeName,
               schemeGu: targetApp.schemeNameGu,
+              schemeName: targetApp.schemeName,
+              schemeNameGu: targetApp.schemeNameGu,
               schemeEmoji: targetApp.schemeEmoji,
+              citizenName: targetApp.citizenName,
+              citizenNameGu: targetApp.citizenNameGu || targetApp.citizenName,
+              officerDesignation: targetApp.officerDesignation,
               status: targetApp.status,
               workflowStage:
                 targetApp.workflowStage !== undefined
@@ -263,7 +284,12 @@ export async function GET(req: NextRequest) {
             id: targetApp.id,
             scheme: targetApp.schemeName,
             schemeGu: targetApp.schemeNameGu,
+            schemeName: targetApp.schemeName,
+            schemeNameGu: targetApp.schemeNameGu,
             schemeEmoji: targetApp.schemeEmoji,
+            citizenNameGu: targetApp.citizenNameGu || targetApp.citizenName,
+            officerDesignation: targetApp.officerDesignation,
+            remarksGu: targetApp.remarksGu,
             status: targetApp.status,
             workflowStage:
               targetApp.workflowStage !== undefined
@@ -502,12 +528,17 @@ export async function POST(req: NextRequest) {
 
     // 2. Sync to Firebase Cloud Firestore asynchronously in background so it NEVER blocks payment confirmation!
     if (db) {
-      setDoc(
-        doc(db, getTargetCollection(req), id),
-        cleanForFirestore(newApp) as Record<string, unknown>
-      ).catch((fbErr) => {
-        console.warn("Firestore async save fallback:", fbErr);
-      });
+      try {
+        await withFirestoreTimeout(
+          setDoc(
+            doc(db, getTargetCollection(req), id),
+            cleanForFirestore(newApp) as Record<string, unknown>
+          ),
+          2000
+        );
+      } catch (fbErr) {
+        console.warn("Firestore save fallback:", fbErr);
+      }
     }
 
     // Dynamic App Origin for SMS & Email Links
@@ -598,8 +629,13 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // If still not found and the client passed the application payload (e.g. created in client session)
-    if (!targetApp && body.application && typeof body.application === "object" && body.application.id) {
+    // In demo or test mode, if application was created in client sandbox session
+    const isDemoPermitted =
+      verifyDemoGateCookie(req) ||
+      process.env.NODE_ENV !== "production" ||
+      process.env.ALLOW_DEMO_CREDENTIALS === "true";
+
+    if (!targetApp && isDemoPermitted && body.application && typeof body.application === "object" && body.application.id) {
       const clientApp = body.application as CitizenApplication;
       if (clientApp.id.trim().toUpperCase() === cleanId) {
         targetApp = clientApp;

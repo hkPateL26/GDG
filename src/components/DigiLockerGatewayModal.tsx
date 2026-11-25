@@ -20,6 +20,8 @@ import {
   FileCheck2,
   Smartphone,
   Fingerprint,
+  Landmark,
+  ShieldCheck,
 } from "lucide-react";
 import {
   DigiLockerDocument,
@@ -160,6 +162,18 @@ export default function DigiLockerGatewayModal({
     }
     return () => clearInterval(timer);
   }, [step, otpCountdown]);
+
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
 
   // Sync vault documents from local storage + Cloud Firestore
   useEffect(() => {
@@ -492,6 +506,9 @@ export default function DigiLockerGatewayModal({
 
   return (
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="digilocker-modal-title"
       className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 overflow-y-auto overscroll-contain animate-in fade-in duration-200"
       onClick={onClose}
       onWheel={(e) => e.stopPropagation()}
@@ -514,9 +531,7 @@ export default function DigiLockerGatewayModal({
         <div className="bg-gradient-to-r from-blue-900 via-slate-900 to-indigo-950 px-4 sm:px-6 py-3.5 text-white flex items-center justify-between shrink-0 shadow-sm">
           <div className="flex items-center gap-3">
             {/* Government Emblem / Ashoka Lion Capital styling */}
-            <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-lg font-black shrink-0">
-              🏛️
-            </div>
+            <div className="w-9 h-9 rounded-full bg-white/10 border border-white/20 flex items-center justify-center text-lg font-black shrink-0"><Landmark size={20} className="text-white" /></div>
             <div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <span className="text-[11px] font-black uppercase tracking-wider text-amber-300">
@@ -526,7 +541,7 @@ export default function DigiLockerGatewayModal({
                   MeitY Govt of India
                 </span>
               </div>
-              <h3 className="text-sm sm:text-base font-extrabold text-white leading-tight flex items-center gap-1.5">
+              <h3 id="digilocker-modal-title" className="text-sm sm:text-base font-extrabold text-white leading-tight flex items-center gap-1.5">
                 <span>DigiLocker સત્તાવાર દસ્તાવેજ ગેટવે</span>
                 <span className="text-xs">🔒</span>
               </h3>
@@ -536,8 +551,9 @@ export default function DigiLockerGatewayModal({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-slate-300 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
+            className="w-11 h-11 rounded-full bg-white/10 hover:bg-white/20 active:scale-95 text-slate-200 hover:text-white flex items-center justify-center transition cursor-pointer shrink-0"
             title="બંધ કરો (Close)"
+            aria-label="ડિજીલોકર વિન્ડો બંધ કરો (Close DigiLocker)"
           >
             <X size={18} />
           </button>
@@ -606,8 +622,7 @@ export default function DigiLockerGatewayModal({
                   className={`py-1.5 rounded-lg transition ${
                     authMode === "mobile" ? "bg-white text-blue-900 shadow-xs" : "hover:text-slate-900"
                   }`}
-                >
-                  📱 મોબાઈલ OTP
+                >મોબાઈલ OTP
                 </button>
                 <button
                   type="button"
@@ -683,7 +698,7 @@ export default function DigiLockerGatewayModal({
                     સક્રિય અરજદાર પ્રોફાઇલ:
                   </span>
                   <span className="font-bold text-blue-900">
-                    👤 {activeCit.nameGu}
+                    {activeCit.nameGu}
                   </span>
                 </div>
 
@@ -895,9 +910,7 @@ export default function DigiLockerGatewayModal({
               {/* Target Slot Not In DigiLocker Notice */}
               {effectiveTargetSlotId !== "all" && !isSlotSupportedByDigiLocker(effectiveTargetSlotId, "", effectiveTargetSlotName) ? (
                 <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl p-6 text-center space-y-4 my-2">
-                  <div className="w-14 h-14 rounded-full bg-amber-100 border-2 border-amber-300 mx-auto flex items-center justify-center text-3xl shadow-xs">
-                    🏛️
-                  </div>
+                  <div className="w-14 h-14 rounded-full bg-amber-100 border-2 border-amber-300 mx-auto flex items-center justify-center text-3xl shadow-xs"><Landmark size={20} className="text-white" /></div>
                   <div className="space-y-1">
                     <span className="text-xs bg-amber-200/80 text-amber-900 font-extrabold px-3 py-1 rounded-full uppercase tracking-wider">
                       ઓફલાઇન મહેસૂલી રેકોર્ડ
@@ -1054,7 +1067,7 @@ export default function DigiLockerGatewayModal({
                           {customDocFileName && (
                             <div className="p-2.5 bg-white border border-slate-200 rounded-xl space-y-1 text-[11px]">
                               <div className="flex items-center justify-between font-bold text-slate-800">
-                                <span className="truncate max-w-[260px]">📄 {customDocFileName}</span>
+                                <span className="truncate max-w-[260px]">{customDocFileName}</span>
                                 <span className="text-slate-500 font-mono text-[10px]">{customDocFileSize}</span>
                               </div>
                               {customDocSha256 && (

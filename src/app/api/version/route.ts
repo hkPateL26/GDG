@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
-import { APP_VERSION, APP_BUILD_NAME, APP_RELEASE_DATE } from "@/lib/app-version";
+import { APP_VERSION, APP_BUILD_NAME, APP_RELEASE_DATE, APP_CHANGELOG } from "@/lib/app-version";
 import fs from "fs";
 import path from "path";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+let cachedMtime: number | null = null;
+
 function getLatestSrcMtime(dirPath: string): number {
+  if (cachedMtime !== null) return cachedMtime;
   let latest = 0;
   try {
     const entries = fs.readdirSync(dirPath, { withFileTypes: true });
@@ -28,6 +31,7 @@ function getLatestSrcMtime(dirPath: string): number {
   } catch {
     // Ignore fs errors in serverless environments where src may not be readable
   }
+  cachedMtime = latest;
   return latest;
 }
 
@@ -47,6 +51,10 @@ export async function GET() {
       buildHash,
       buildName: APP_BUILD_NAME,
       releaseDate: APP_RELEASE_DATE,
+      apkDownloadUrl: "/download/nagrik-seva-ai.apk",
+      apkSize: "94 MB",
+      latestChangelog: APP_CHANGELOG[0] || null,
+      isMandatory: false,
     },
     {
       headers: {

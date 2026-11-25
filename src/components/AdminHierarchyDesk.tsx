@@ -11,6 +11,7 @@ import {
   GUJARAT_DISTRICTS,
   CitizenApplication,
   getVillagesForTaluka,
+  sortApplicationsLatestFirst,
 } from "@/lib/large-datasets";
 import {
   Shield,
@@ -29,17 +30,20 @@ import {
   FileCheck,
   Receipt,
   RefreshCw,
+  Scale,
   Brain,
 } from "lucide-react";
 import AiBottleneckMonitor from "@/components/AiBottleneckMonitor";
 import OfficialGovernmentCertificate from "@/components/OfficialGovernmentCertificate";
 import GovernmentReceiptSlip from "@/components/GovernmentReceiptSlip";
+import StatutoryShowCauseNoticeModal from "@/components/StatutoryShowCauseNoticeModal";
 import {
   SkeletonAdminTable,
 } from "@/components/Skeleton";
 import { useBodyScrollLock } from "@/lib/useBodyScrollLock";
 import AdminPortalCmsManager from "@/components/AdminPortalCmsManager";
 import SecretariatApexBiDashboard from "@/components/SecretariatApexBiDashboard";
+import { triggerOfficialGovNotification } from "@/utils/governmentNotificationService";
 
 const GUJARATI_NAME_MAP: Record<string, string> = {
   "rameshbhai kantilal patel": "રમેશભાઈ કાંતિલાલ પટેલ",
@@ -350,7 +354,43 @@ export default function AdminHierarchyDesk({
   );
 
   // Active Desk Tab
-  const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy" | "sachivalay_bi">("queue");
+  const [activeTab, setActiveTab] = useState<"queue" | "sla" | "policy" | "sachivalay_bi">(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const tab = params.get("tab") || params.get("deskTab");
+      if (tab === "queue" || tab === "sla" || tab === "policy" || tab === "sachivalay_bi") {
+        return tab;
+      }
+    }
+    return "queue";
+  });
+
+  const handleDeskTabChange = (tab: "queue" | "sla" | "policy" | "sachivalay_bi") => {
+    setActiveTab(tab);
+    if (typeof window !== "undefined") {
+      try {
+        const url = new URL(window.location.href);
+        url.searchParams.set("tab", tab);
+        window.history.replaceState({ deskTab: tab }, "", url.toString());
+      } catch {}
+    }
+  };
+
+  useEffect(() => {
+    const handlePop = () => {
+      if (typeof window !== "undefined") {
+        const params = new URLSearchParams(window.location.search);
+        const tab = params.get("tab") || params.get("deskTab");
+        if (tab === "queue" || tab === "sla" || tab === "policy" || tab === "sachivalay_bi") {
+          setActiveTab(tab);
+        } else {
+          setActiveTab("queue");
+        }
+      }
+    };
+    window.addEventListener("popstate", handlePop);
+    return () => window.removeEventListener("popstate", handlePop);
+  }, []);
 
   // Cascading Filters scoped by Officer Jurisdiction
   const [selectedDistrict, setSelectedDistrict] = useState<string>(() => {
@@ -427,8 +467,9 @@ export default function AdminHierarchyDesk({
   const [certificateModalApp, setCertificateModalApp] = useState<CitizenApplication | null>(null);
   const [receiptModalApp, setReceiptModalApp] = useState<CitizenApplication | null>(null);
   const [zoomDocImage, setZoomDocImage] = useState<{ src: string; title: string; ocrData?: Record<string, string> } | null>(null);
+  const [noticeModalApp, setNoticeModalApp] = useState<CitizenApplication | null>(null);
 
-  const isAnyModalOpen = Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage);
+  const isAnyModalOpen = Boolean(reviewModalOpen || certificateModalApp || receiptModalApp || zoomDocImage || noticeModalApp);
   const modalOpenRef = useRef<boolean>(isAnyModalOpen);
 
   useEffect(() => {
@@ -441,6 +482,28 @@ export default function AdminHierarchyDesk({
 
   // Freeze background scrolling when any administrative modal is open
   useBodyScrollLock(isAnyModalOpen);
+
+  // Keyboard Escape key handler to close administrative modals (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isAnyModalOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (zoomDocImage) {
+          setZoomDocImage(null);
+        } else if (reviewModalOpen) {
+          setReviewModalOpen(false);
+        } else if (certificateModalApp) {
+          setCertificateModalApp(null);
+        } else if (receiptModalApp) {
+          setReceiptModalApp(null);
+        } else if (noticeModalApp) {
+          setNoticeModalApp(null);
+        }
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isAnyModalOpen, zoomDocImage, reviewModalOpen, certificateModalApp, receiptModalApp, noticeModalApp]);
 
   // Review Modal Actions State
   const [actionSuccessMsg, setActionSuccessMsg] = useState<string | null>(null);
@@ -530,7 +593,7 @@ export default function AdminHierarchyDesk({
           });
 
         if (hasChanged) {
-          setApplications(unique);
+          setApplications(sortApplicationsLatestFirst(unique));
         }
       }
     } catch (e) {
@@ -676,6 +739,26 @@ export default function AdminHierarchyDesk({
     }
   };
 
+  // Statutory GRTPSA 2013 Escalation to District Collector Desk
+  const handleEscalateFromNotice = (appId: string, targetOfficer: string) => {
+    setApplications((prev) =>
+      prev.map((a) => {
+        if (a.id === appId) {
+          return {
+            ...a,
+            escalated: true,
+            escalatedTo: targetOfficer,
+            deskGu: "જિલ્લા કલેક્ટર કચેરી, રાજકોટ (અપીલ સત્તામંડળ)",
+          };
+        }
+        return a;
+      })
+    );
+    setActionSuccessMsg(
+      `અરજી ${appId} સફળતાપૂર્વક જિલ્લા કલેક્ટર (${targetOfficer}) ના ડેસ્ક પર એસ્કેલેટ કરવામાં આવી છે.`
+    );
+  };
+
   // Advance Stage / Mamlatdar Digital e-Sign Approval
   const handleApproveEsign = async (app: CitizenApplication) => {
     setIsProcessingAction(true);
@@ -737,6 +820,17 @@ export default function AdminHierarchyDesk({
         "તાલુકા મામલતદાર ડિજિટલ સહી (e-Sign) સફળ! સત્તાવાર પ્રમાણપત્ર જનરેટ થઈ ગયું છે."
       );
 
+      // Trigger official mobile push and status bar notification
+      triggerOfficialGovNotification({
+        appId: approvedApp.id,
+        serviceNameGu: approvedApp.schemeNameGu || "સરકારી સેવા",
+        status: "approved",
+        title: "🏛️ ગુજરાત સરકાર • ઈ-નગર પોર્ટલ",
+        headerGu: "અરજી મંજૂર (Mamlatdar e-Sign પૂર્ણ)",
+        message: `અભિનંદન! તમારી ${approvedApp.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${approvedApp.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
+        officerName: currentOfficer.name,
+      });
+
       // Automatically open the official certificate modal for instant viewing & printing!
       setCertificateModalApp(approvedApp);
     } catch {
@@ -779,6 +873,46 @@ export default function AdminHierarchyDesk({
 
       setApplications((prev) => prev.map((a) => (a.id === app.id ? rejectedApp : a)));
       setSelectedApp(rejectedApp);
+
+      // Sync rejection to localStorage
+      if (typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("nagrik_user_applications");
+          if (raw) {
+            const localApps: CitizenApplication[] = JSON.parse(raw);
+            const updated = localApps.map((a) =>
+              a.id === rejectedApp.id ? rejectedApp : a
+            );
+            localStorage.setItem("nagrik_user_applications", JSON.stringify(updated));
+          }
+          const savedSessionStr = localStorage.getItem("nagrik_citizen_session");
+          if (savedSessionStr) {
+            const session = JSON.parse(savedSessionStr);
+            if (session.activeApplications) {
+              session.activeApplications = session.activeApplications.map((a: { id?: string }) =>
+                a.id === rejectedApp.id ? rejectedApp : a
+              );
+              localStorage.setItem("nagrik_citizen_session", JSON.stringify(session));
+            }
+          }
+          window.dispatchEvent(new Event("storage"));
+        } catch (storageErr) {
+          console.warn("Storage sync error:", storageErr);
+        }
+      }
+
+      // Trigger official rejection / correction push notification
+      triggerOfficialGovNotification({
+        appId: rejectedApp.id,
+        serviceNameGu: rejectedApp.schemeNameGu || "સરકારી સેવા",
+        status: "rejected",
+        title: "⚠️ ગુજરાત સરકાર • કચેરી ચકાસણી સૂચના",
+        headerGu: "પૂરક પુરાવા / સુધારણા જરૂરી",
+        message: `તમારી ${rejectedApp.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${rejectedApp.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${translatedRejection.gujaratiExplanation}. વિગતો ચકાસી સુધારો કરવા ક્લિક કરો.`,
+        remarksGu: translatedRejection.gujaratiExplanation,
+        officerName: currentOfficer.name,
+      });
+
       setActionSuccessMsg(
         "અરજીમાં સુધારણા માટે નાગરિકને AI ગુજરાતી સૂચના સફળતાપૂર્વક મોકલાઈ ગઈ છે."
       );
@@ -959,7 +1093,7 @@ export default function AdminHierarchyDesk({
 
         {/* ── Supervisor Inspection Alert Banner (When a Higher Authority is inspecting a subordinate desk) ── */}
         {currentOfficer.id !== authenticatedOfficer.id && (
-          <div className="bg-amber-500/15 border border-amber-400/60 p-2.5 rounded-xl text-xs text-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-200 shadow-inner">
+          <div className="bg-amber-500/15 border border-amber-400/60 p-2.5 rounded-xl text-xs text-amber-100 font-medium flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 animate-in fade-in duration-200 shadow-inner">
             <div className="flex items-center gap-2 min-w-0">
               <span className="text-base shrink-0">👁️</span>
               <p className="leading-snug text-[11.5px]">
@@ -1057,7 +1191,7 @@ export default function AdminHierarchyDesk({
       }`}>
         <button
           type="button"
-          onClick={() => setActiveTab("queue")}
+          onClick={() => handleDeskTabChange("queue")}
           className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
             activeTab === "queue"
               ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
@@ -1073,7 +1207,7 @@ export default function AdminHierarchyDesk({
 
         <button
           type="button"
-          onClick={() => setActiveTab("sla")}
+          onClick={() => handleDeskTabChange("sla")}
           className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
             activeTab === "sla"
               ? "bg-rose-600 text-white shadow-sm ring-1 ring-rose-500"
@@ -1087,7 +1221,7 @@ export default function AdminHierarchyDesk({
         {currentOfficer.canModifyPolicy && (
           <button
             type="button"
-            onClick={() => setActiveTab("policy")}
+            onClick={() => handleDeskTabChange("policy")}
             className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
               activeTab === "policy"
                 ? "bg-slate-900 text-white shadow-sm ring-1 ring-slate-800"
@@ -1102,7 +1236,7 @@ export default function AdminHierarchyDesk({
         {currentOfficer.role === "state_admin" && (
           <button
             type="button"
-            onClick={() => setActiveTab("sachivalay_bi")}
+            onClick={() => handleDeskTabChange("sachivalay_bi")}
             className={`w-full sm:w-auto px-2 sm:px-4 py-2 sm:py-2.5 rounded-xl text-[11px] sm:text-xs font-bold transition flex items-center justify-center sm:justify-start gap-1.5 cursor-pointer min-h-[38px] sm:min-h-[42px] select-none ${
               activeTab === "sachivalay_bi"
                 ? "bg-indigo-950 text-white shadow-sm ring-1 ring-indigo-800"
@@ -1293,9 +1427,9 @@ export default function AdminHierarchyDesk({
             </div>
           ) : (
             <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-xs">
-              {/* Desktop Table View (Max Height Capped for Clean Viewport) */}
-              <div className="hidden md:block max-h-[580px] overflow-y-auto">
-                <table className="w-full text-left text-xs table-fixed">
+              {/* Desktop Table View (Max Height Capped for Clean Viewport, Smooth Horizontal Pan on Tablet) */}
+              <div className="hidden md:block max-h-[580px] overflow-y-auto overflow-x-auto">
+                <table className="w-full min-w-[760px] text-left text-xs table-fixed">
                   <colgroup>
                     <col className="w-[20%]" />
                     <col className="w-[23%]" />
@@ -1407,6 +1541,22 @@ export default function AdminHierarchyDesk({
                               <span className="text-[10.5px] text-slate-600 block leading-snug whitespace-normal break-words">
                                 {sla.currentDeskGu}
                               </span>
+                              {sla.isBreached && (
+                                <div className="pt-1 flex items-center gap-1.5 flex-wrap">
+                                  <span className="inline-flex items-center gap-1 text-[9px] bg-rose-600 text-white font-black px-2 py-0.5 rounded-full animate-pulse shadow-2xs">
+                                    <AlertTriangle size={9} /> SLA EXCEEDED
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => setNoticeModalApp(app)}
+                                    className="text-[9.5px] bg-rose-50 hover:bg-rose-100 text-rose-700 font-extrabold px-2 py-0.5 rounded-md border border-rose-300 flex items-center gap-1 cursor-pointer transition active:scale-95 shadow-2xs"
+                                    title="કારણ દર્શક નોટિસ (GRTPSA ૨૦૧૩ કલમ ૮)"
+                                  >
+                                    <Scale size={10} className="text-rose-600" />
+                                    <span>કલમ ૮ નોટિસ</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           </td>
 
@@ -1628,6 +1778,9 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {reviewModalOpen && selectedApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="app-review-modal-title"
           className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-200 overflow-y-auto"
           onClick={() => setReviewModalOpen(false)}
         >
@@ -1642,14 +1795,15 @@ export default function AdminHierarchyDesk({
             <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
               <div className="flex items-center gap-2 min-w-0">
                 <span className="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse shrink-0" />
-                <h3 className="font-black text-sm sm:text-base text-slate-900 truncate">
+                <h3 id="app-review-modal-title" className="font-black text-sm sm:text-base text-slate-900 truncate">
                   અરજી વિગત & અધિકારી સ્ક્રુટિની ડેસ્ક &bull; {selectedApp.id}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setReviewModalOpen(false)}
-                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition cursor-pointer min-h-[36px] min-w-[36px] flex items-center justify-center"
+                className="p-1.5 hover:bg-slate-100 rounded-xl text-slate-500 transition cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="અરજી સ્ક્રુટિની વિન્ડો બંધ કરો (Close review modal)"
               >
                 <X size={18} />
               </button>
@@ -1953,6 +2107,26 @@ export default function AdminHierarchyDesk({
                     </button>
                   )}
                 </div>
+
+                {/* Gate 3: Statutory GRTPSA 2013 Show-Cause Notice */}
+                <div className="bg-white p-3 rounded-xl border border-rose-200 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-800 block">
+                      ૩. કાનૂની SLA & કારણ દર્શક નોટિસ
+                    </span>
+                    <span className="text-[10px] bg-rose-100 text-rose-800 font-black px-2 py-0.5 rounded-full border border-rose-300">
+                      GRTPSA ૨૦૧૩ કલમ ૮
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setNoticeModalApp(selectedApp)}
+                    className="w-full py-2 bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 text-white font-black text-xs rounded-xl transition cursor-pointer active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    <Scale size={14} />
+                    <span>⚖️ સત્તાવાર કારણ દર્શક નોટિસ (Show-Cause Notice)</span>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -2019,6 +2193,9 @@ export default function AdminHierarchyDesk({
       {/* ── DOCUMENT ZOOM LIGHTBOX MODAL ── */}
       {zoomDocImage && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="zoom-doc-modal-title"
           className="fixed inset-0 z-[70] bg-black/85 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 animate-in fade-in duration-200"
           onClick={() => setZoomDocImage(null)}
         >
@@ -2027,11 +2204,12 @@ export default function AdminHierarchyDesk({
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex items-center justify-between border-b border-slate-200 pb-2">
-              <h4 className="font-bold text-sm text-slate-900">{zoomDocImage.title}</h4>
+              <h4 id="zoom-doc-modal-title" className="font-bold text-sm text-slate-900">{zoomDocImage.title}</h4>
               <button
                 type="button"
                 onClick={() => setZoomDocImage(null)}
-                className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 cursor-pointer"
+                className="p-1 hover:bg-slate-100 rounded-lg text-slate-600 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+                aria-label="દસ્તાવેજ બંધ કરો (Close document viewer)"
               >
                 <X size={18} />
               </button>
@@ -2065,6 +2243,9 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {certificateModalApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પ્રમાણપત્ર પૂર્વાવલોકન (Official Certificate Preview)"
           className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setCertificateModalApp(null);
@@ -2083,6 +2264,9 @@ export default function AdminHierarchyDesk({
           ══════════════════════════════════════════════════════════════ */}
       {receiptModalApp && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="સત્તાવાર પહોંચ પૂર્વાવલોકન (Official Receipt Preview)"
           className="fixed inset-0 z-[60] bg-black/85 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto animate-in fade-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setReceiptModalApp(null);
@@ -2094,6 +2278,20 @@ export default function AdminHierarchyDesk({
             onClose={() => setReceiptModalApp(null)}
           />
         </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          OFFICIAL STATUTORY SHOW-CAUSE NOTICE MODAL (GRTPSA 2013)
+          ══════════════════════════════════════════════════════════════ */}
+      {noticeModalApp && (
+        <StatutoryShowCauseNoticeModal
+          app={noticeModalApp}
+          onClose={() => setNoticeModalApp(null)}
+          onEscalate={(appId, targetOfficer) => {
+            handleEscalateFromNotice(appId, targetOfficer);
+            setNoticeModalApp(null);
+          }}
+        />
       )}
     </div>
   );

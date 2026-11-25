@@ -16,6 +16,9 @@ import {
   IndianRupee,
   HeartPulse,
   Search,
+  Languages,
+  Mic,
+  ShieldCheck,
 } from "lucide-react";
 
 export default function Home() {
@@ -32,35 +35,35 @@ export default function Home() {
   const superAppGrid = [
     {
       icon: Sparkles,
-      label: t.home.superAppEligibility,
+      label: t.home.superAppEligibility || "પાત્રતા",
       href: "/eligibility",
       bg: "bg-orange-50 text-orange-600 border-orange-200/70",
     },
     {
       icon: IndianRupee,
-      label: t.home.superAppBenefits,
+      label: t.home.superAppBenefits || "લાભ ગણો",
       href: "/benefit-calculator",
       bg: "bg-emerald-50 text-emerald-600 border-emerald-200/70",
     },
     {
       icon: Search,
-      label: t.home.superAppTrack,
+      label: t.home.superAppTrack || "અરજી ટ્રેક",
       href: "/track",
       bg: "bg-purple-50 text-purple-600 border-purple-200/70",
     },
     {
       icon: FileText,
-      label: t.home.superAppDocs,
+      label: t.home.superAppDocs || "દસ્તાવેજ",
       href: "/documents?type=ration",
       bg: "bg-amber-50 text-amber-600 border-amber-200/70",
     },
   ];
 
   const stats = [
-    { num: "26+",  label: t.home.statSchemes,     shortLabel: t.home.statSchemesShort,   emoji: "📋" },
-    { num: "16",   label: t.home.statLanguages,   shortLabel: t.home.statLanguagesShort, emoji: "🗣️" },
-    { num: "24/7", label: t.home.statAiVoice,     shortLabel: t.home.statAiVoiceShort,  emoji: "🎙️" },
-    { num: "100%", label: t.home.statFreeService, shortLabel: t.home.statFreeServiceShort, emoji: "✅" },
+    { num: "26+",  label: t.home.statSchemes || "સરકારી યોજનાઓ",          shortLabel: t.home.statSchemesShort || "યોજનાઓ",   icon: LayoutGrid },
+    { num: "16",   label: t.home.statLanguages || "ભાષાઓ (ગુજ/હિં/અંગ્રેજી)", shortLabel: t.home.statLanguagesShort || "ભાષાઓ",    icon: Languages },
+    { num: "24/7", label: t.home.statAiVoice || "AI & વોઈસ સપોર્ટ",        shortLabel: t.home.statAiVoiceShort || "AI વોઈસ",  icon: Mic },
+    { num: "100%", label: t.home.statFreeService || "મફત નાગરિક સેવા",          shortLabel: t.home.statFreeServiceShort || "મફત સેવા", icon: ShieldCheck },
   ];
 
   return (
@@ -79,12 +82,12 @@ export default function Home() {
           {/* 2. PhonePe / UMANG 4-Column Unique Quick Services Grid (No duplicate Bottom Nav items) */}
           <div className="bg-white rounded-3xl p-3.5 border border-slate-200/80 shadow-2xs">
             <div className="flex items-center justify-between mb-2.5 px-0.5">
-              <h2 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+              <h2 className="text-sm font-black text-slate-800 flex items-center gap-2">
                 <Sparkles size={14} className="text-orange-500 shrink-0" />
                 <span>{t.home.quickToolsHeading}</span>
               </h2>
-              <span className="text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
-                {t.home.oneClickBadge}
+              <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200/60">
+                {t.home.oneClickBadge || "1-Click"}
               </span>
             </div>
 
@@ -96,11 +99,11 @@ export default function Home() {
                   className="app-touch-card flex flex-col items-center justify-start group min-w-0"
                 >
                   <div
-                    className={`w-12 h-12 rounded-2xl border flex items-center justify-center shadow-2xs transition-transform group-active:scale-92 ${bg}`}
+                    className={`w-14 h-14 rounded-2xl border flex items-center justify-center shadow-xs transition-transform group-active:scale-92 ${bg}`}
                   >
-                    <Icon size={21} strokeWidth={2.1} />
+                    <Icon size={25} strokeWidth={2.2} />
                   </div>
-                  <span className="text-[11px] font-bold text-slate-700 mt-1.5 text-center whitespace-nowrap truncate w-full px-0.5">
+                  <span className="text-xs font-bold text-slate-700 mt-2 text-center whitespace-nowrap truncate w-full px-0.5">
                     {label}
                   </span>
                 </Link>
@@ -115,10 +118,10 @@ export default function Home() {
                 key={s.label}
                 className="bg-white rounded-2xl py-2 px-1.5 border border-slate-200/80 shadow-2xs text-center"
               >
-                <div className="text-sm font-black text-orange-600 leading-tight">
+                <div className="text-base font-black text-orange-600 leading-tight">
                   {s.num}
                 </div>
-                <div className="text-[10px] font-semibold text-slate-500 truncate mt-0.5">
+                <div className="text-xs font-bold text-slate-500 truncate mt-1">
                   {s.shortLabel}
                 </div>
               </div>
@@ -149,8 +152,8 @@ export default function Home() {
             <p className="text-orange-100 text-base sm:text-lg mb-1">
               {t.home.heroSubtitle}
             </p>
-            <p className="text-orange-200 text-xs sm:text-sm mb-7">
-              {t.home.heroDesc}
+            <p className="text-orange-100 font-medium text-xs sm:text-sm mb-7">
+              {t.home.heroDesc || "સરકારી યોજનાઓ, દસ્તાવેજ સહાય, પાત્રતા ચકાસણી અને સ્થિતિ ટ્રેકિંગ — બધું એક જ જગ્યાએ"}
             </p>
 
             <div className="flex flex-wrap gap-2.5 justify-center">
@@ -164,7 +167,7 @@ export default function Home() {
                 href="/benefit-calculator"
                 className="flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition shadow active:scale-95"
               >
-                {t.home.calcBenefitsHero}
+                {t.home.calcBenefitsHero || "લાભ ગણો & WhatsApp પાસ"}
               </Link>
               <Link
                 href="/locator"
@@ -179,13 +182,18 @@ export default function Home() {
         {/* ── Desktop Stats ── */}
         <section className="hidden sm:block bg-white border-b shadow-sm">
           <div className="max-w-4xl mx-auto px-4 py-5 grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4 text-center">
-            {stats.map((s) => (
-              <div key={s.label} className="py-2">
-                <div className="text-xl sm:text-2xl mb-0.5">{s.emoji}</div>
-                <div className="text-xl sm:text-2xl font-bold text-orange-500">{s.num}</div>
-                <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
-              </div>
-            ))}
+            {stats.map((s) => {
+              const IconComp = s.icon;
+              return (
+                <div key={s.label} className="py-2">
+                  <div className="flex items-center justify-center mb-1 text-orange-600">
+                    {IconComp ? <IconComp size={22} className="stroke-[2.2]" /> : null}
+                  </div>
+                  <div className="text-xl sm:text-2xl font-bold text-orange-500">{s.num}</div>
+                  <div className="text-xs text-gray-500 mt-0.5">{s.label}</div>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -236,7 +244,7 @@ export default function Home() {
                     <span className="text-xs font-medium text-gray-700 group-hover:text-blue-600 flex-1 truncate">
                       {label}
                     </span>
-                    <ChevronRight size={13} className="text-gray-300 group-hover:text-blue-400 flex-shrink-0" />
+                    <ChevronRight size={13} className="text-gray-400 group-hover:text-blue-500 flex-shrink-0" />
                   </Link>
                 ))}
               </div>

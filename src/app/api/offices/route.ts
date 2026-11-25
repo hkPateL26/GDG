@@ -8,6 +8,7 @@ import {
   ExtendedOffice,
 } from "@/lib/offices-data";
 import { redisCache } from "@/lib/redis-cache";
+import { getOfficerSessionFromRequest } from "@/lib/officer-auth";
 
 export const dynamic = "force-dynamic";
 
@@ -34,45 +35,65 @@ export async function GET(req: NextRequest) {
     const district = searchParams.get("district")?.trim();
     const search = searchParams.get("search")?.trim() || "";
 
-    const bundled = getAllActiveOffices();
-    let allOffices = bundled;
+    let allOffices: ExtendedOffice[] = [];
 
-    // Optional Firestore sync with strict 1.2s timeout
-    if (db) {
-      try {
-        const colRef = collection(db, "offices");
-        const snapshot = await firestoreTimeout(getDocs(colRef), 1200);
+    // 1. Check Redis Cache first (<1ms)
+    try {
+      const cached = await redisCache.get<ExtendedOffice[]>(CACHE_KEY_OFFICES_PREFIX);
+      if (cached && Array.isArray(cached) && cached.length > 0) {
+        allOffices = cached;
+      }
+    } catch {
+      // cache non-fatal
+    }
 
-        if (snapshot && !snapshot.empty) {
-          const dbDocs = snapshot.docs.map((d) => ({
-            id: d.id,
-            ...d.data(),
-          })) as (ExtendedOffice & { _deleted?: boolean })[];
+    if (allOffices.length === 0) {
+      const bundled = getAllActiveOffices();
+      allOffices = bundled;
 
-          const dbMap = new Map<string, ExtendedOffice & { _deleted?: boolean }>();
-          dbDocs.forEach((d) => dbMap.set(d.id, d));
+      // Optional Firestore sync with strict 1.2s timeout
+      if (db) {
+        try {
+          const colRef = collection(db, "offices");
+          const snapshot = await firestoreTimeout(getDocs(colRef), 1200);
 
-          const merged: ExtendedOffice[] = [];
+          if (snapshot && !snapshot.empty) {
+            const dbDocs = snapshot.docs.map((d) => ({
+              id: d.id,
+              ...d.data(),
+            })) as (ExtendedOffice & { _deleted?: boolean })[];
 
-          // 1. Add active db docs
-          dbDocs.forEach((d) => {
-            if (!d._deleted) {
-              merged.push(d);
-            }
-          });
+            const dbMap = new Map<string, ExtendedOffice & { _deleted?: boolean }>();
+            dbDocs.forEach((d) => dbMap.set(d.id, d));
 
-          // 2. Add bundled not overridden
-          bundled.forEach((o) => {
-            if (!dbMap.has(o.id)) {
-              merged.push(o);
-            }
-          });
+            const merged: ExtendedOffice[] = [];
 
-          allOffices = merged;
+            // 1. Add active db docs
+            dbDocs.forEach((d) => {
+              if (!d._deleted) {
+                merged.push(d);
+              }
+            });
+
+            // 2. Add bundled not overridden
+            bundled.forEach((o) => {
+              if (!dbMap.has(o.id)) {
+                merged.push(o);
+              }
+            });
+
+            allOffices = merged;
+          }
+        } catch (dbErr: any) {
+          console.warn("Firestore offices fetch warning (using memory):", dbErr?.message || dbErr);
         }
-      } catch (dbErr: any) {
-        // Fallback to local memory immediately without hanging
-        console.warn("Firestore offices fetch warning (using memory):", dbErr?.message || dbErr);
+      }
+
+      // Populate Redis cache
+      try {
+        await redisCache.set(CACHE_KEY_OFFICES_PREFIX, allOffices, 300);
+      } catch {
+        // cache non-fatal
       }
     }
 
@@ -119,6 +140,14 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
+    const officer = await getOfficerSessionFromRequest(req);
+    if (!officer || (!officer.canModifyPolicy && officer.tierLevel > 2)) {
+      return NextResponse.json(
+        { success: false, error: "અનધિકૃત ઍક્સેસ. ફક્ત સચિવાલય/જિલ્લા વહીવટી અધિકારીઓને પરવાનગી છે." },
+        { status: 403 }
+      );
+    }
+
     const body = await req.json();
     if (!body || !body.name || !body.district) {
       return NextResponse.json(
@@ -199,6 +228,14 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
+    const officer = await getOfficerSessionFromRequest(req);
+    if (!officer || (!officer.canModifyPolicy && officer.tierLevel > 2)) {
+      return NextResponse.json(
+        { success: false, error: "અનધિકૃત ઍક્સેસ. ફક્ત સચિવાલય/જિલ્લા વહીવટી અધિકારીઓને પરવાનગી છે." },
+        { status: 403 }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     let id = searchParams.get("id")?.trim();
 

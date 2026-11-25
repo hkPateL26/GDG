@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { INITIAL_PUBLIC_NOTICES, PublicNotice } from "@/lib/public-notices-data";
 import { redisCache } from "@/lib/redis-cache";
+import { getOfficerSessionFromRequest } from "@/lib/officer-auth";
 
 const CACHE_KEY_NOTICES = "cms:public_notices:v1";
 
@@ -35,8 +36,16 @@ export async function GET() {
   }
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
+    const officer = await getOfficerSessionFromRequest(req);
+    if (!officer || (!officer.canModifyPolicy && officer.tierLevel > 2)) {
+      return NextResponse.json(
+        { success: false, error: "અનધિકૃત ઍક્સેસ. ફક્ત સચિવાલય/જિલ્લા વહીવટી અધિકારીઓને પરવાનગી છે." },
+        { status: 403 }
+      );
+    }
+
     const notice: PublicNotice = await req.json();
     if (!notice.id || !notice.titleGu) {
       return NextResponse.json(

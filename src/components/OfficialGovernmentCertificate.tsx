@@ -3,7 +3,8 @@
 
 import React, { useState, useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { Printer, X, ShieldCheck, Award, CreditCard, FileText } from "lucide-react";
+import { Printer, X, ShieldCheck, Award, CreditCard, FileText, Lock } from "lucide-react";
+import { generateCertificateSeal } from "@/lib/digital-notary";
 
 interface OfficialGovernmentCertificateProps {
   app: CitizenApplication;
@@ -133,7 +134,8 @@ export default function OfficialGovernmentCertificate({
       ? window.location.origin
       : (process.env.NEXT_PUBLIC_APP_URL || "https://nagrikseva-ai.gov.in");
 
-  const verifyUrl = `${origin}/track?id=${encodeURIComponent(app.id)}`;
+  const certSeal = generateCertificateSeal(app);
+  const verifyUrl = `${origin}/verify?id=${encodeURIComponent(app.id)}&seal=${encodeURIComponent(certSeal)}`;
   const certNumber = `GJ-CERT-2026-${app.id.replace("APP-GUJ-", "")}`;
   const issueDate = app.lastUpdated || "2026-09-28";
   const validUntilDate = "2029-03-31";
@@ -166,19 +168,19 @@ export default function OfficialGovernmentCertificate({
     "/demo-docs/aadhaar_photo_hq.png";
 
   // Safe Citizen Benchmark Details
-  const citizenNameGu = app.citizenNameGu || "હરી વિનોદરાઈ પટેલ";
-  const citizenNameEn = app.citizenName || "Hari Vinodrai Patel";
-  const fatherNameGu = "વિનોદરાઈ નારણભાઈ પટેલ";
-  const fatherNameEn = "Vinodrai Naranbhai Patel";
-  const dobStr = "15/06/1985";
+  const citizenNameGu = app.citizenNameGu || app.citizenName || "અરજદાર";
+  const citizenNameEn = app.citizenName || app.citizenNameGu || "Citizen";
+  const fatherNameGu = (typeof app.kacheriDetails?.fatherOrHusbandName === "string" ? app.kacheriDetails.fatherOrHusbandName : "") || "વિનોદરાઈ નારણભાઈ પટેલ";
+  const fatherNameEn = (typeof app.kacheriDetails?.fatherOrHusbandName === "string" ? app.kacheriDetails.fatherOrHusbandName : "") || "Vinodrai Naranbhai Patel";
+  const dobStr = (typeof app.kacheriDetails?.dob === "string" ? app.kacheriDetails.dob : "") || "15/06/1985";
   const genderStrGu = app.gender === "female" ? "સ્ત્રી" : "પુરુષ";
   const genderStrEn = app.gender === "female" ? "FEMALE" : "MALE";
   const villageStr = app.village || "ઓમ નગર (Omnagar)";
   const talukaStr = app.taluka || "Rajkot Urban";
   const districtStr = app.districtGu || app.district || "રાજકોટ";
   const districtEn = app.district || "Rajkot";
-  const pincodeStr = "360004";
-  const mobileStr = app.mobile || "9974442291";
+  const pincodeStr = (typeof app.kacheriDetails?.pincode === "string" ? app.kacheriDetails.pincode : "") || "360004";
+  const mobileStr = app.mobile || "";
   const formattedAadhaar = `5429 8912 ${app.aadhaarLast4 && app.aadhaarLast4 !== "NEW" ? app.aadhaarLast4 : "1413"}`;
   const eidStr = `4048/93054/00490`;
   const vidStr = `9110 5041 8009 0808`;
@@ -829,12 +831,12 @@ export default function OfficialGovernmentCertificate({
         }
       `}</style>
 
-      {/* ── Fixed Floating Close Button (Always visible on mobile & desktop) ── */}
+      {/* ── Fixed Floating Close Button (Desktop & Tablet) ── */}
       {isModalPreview && onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="fixed top-3 right-3 sm:top-5 sm:right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 flex items-center justify-center transition cursor-pointer active:scale-90 cert-no-print"
+          className="hidden sm:flex fixed top-5 right-5 z-[100] w-11 h-11 rounded-full bg-rose-600 hover:bg-rose-700 text-white shadow-2xl border-2 border-white/50 items-center justify-center transition cursor-pointer active:scale-90 cert-no-print"
           title="બંધ કરો (Esc)"
           aria-label="બંધ કરો"
         >
@@ -898,7 +900,7 @@ export default function OfficialGovernmentCertificate({
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
                     viewMode === "letter"
                       ? "bg-amber-400 text-slate-950 shadow-xs"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-200 hover:text-white"
                   }`}
                 >
                   <FileText size={13} />
@@ -910,7 +912,7 @@ export default function OfficialGovernmentCertificate({
                   className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition cursor-pointer ${
                     viewMode === "pvc"
                       ? "bg-amber-400 text-slate-950 shadow-xs"
-                      : "text-slate-300 hover:text-white"
+                      : "text-slate-200 hover:text-white"
                   }`}
                 >
                   <CreditCard size={13} />
@@ -1127,7 +1129,10 @@ export default function OfficialGovernmentCertificate({
                     <span className="font-black text-emerald-800 flex items-center gap-1">
                       <ShieldCheck size={13} /> અધિકૃત QR
                     </span>
-                    <span className="text-[10px] text-slate-500">ઓનલાઇન ખરાઈ માટે</span>
+                    <span className="text-[9px] text-slate-600 font-mono font-bold block">
+                      સીલ: {certSeal}
+                    </span>
+                    <span className="text-[8.5px] text-slate-500">ઓનલાઇન ખરાઈ માટે સ્કેન કરો</span>
                   </div>
                 </div>
 

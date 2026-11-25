@@ -6,9 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --test test/officer-auth-config.test.mjs test/demo-credentials-isolation.test.mjs test/digital-notary.test.mjs test/offline-sync.test.mjs test/whatsapp-dispatch.test.mjs test/statutory-sla.test.mjs test/entitlement-passbook.test.mjs test/voice-hotline.test.mjs"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.2",
+    "@capacitor/app": "^6.0.3",
+    "@capacitor/camera": "^6.1.3",
+    "@capacitor/core": "^6.2.2",
+    "@capacitor/geolocation": "^6.1.1",
+    "@capacitor/splash-screen": "^6.0.4",
+    "@capacitor/status-bar": "^6.0.3",
     "@genkit-ai/googleai": "^1.28.0",
     "@genkit-ai/next": "^1.42.0",
     "@google/generative-ai": "^0.24.1",
@@ -21,6 +29,7 @@
     "react-dom": "19.2.8"
   },
   "devDependencies": {
+    "@capacitor/cli": "^6.2.2",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

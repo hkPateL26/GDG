@@ -19,6 +19,9 @@ import {
   Search,
   FolderLock,
   ClipboardCheck,
+  ShieldCheck,
+  Eye,
+  BookOpen,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useIsPwaInstalled, executeNativePwaInstall } from "@/lib/usePwaInstall";
@@ -100,6 +103,18 @@ export default function Navbar() {
     };
   }, []);
 
+  // Keyboard Escape key handler to close mobile drawer (WCAG 2.2 AA SC 2.1.1)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
+
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (currentLang !== DEFAULT_LANGUAGE) {
       e.preventDefault();
@@ -110,7 +125,9 @@ export default function Navbar() {
   const navLinks = [
     { href: "/",                   label: t.nav.home,        Icon: Home },
     { href: "/schemes",            label: t.nav.schemes,     Icon: LayoutGrid },
-    { href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
+
+                  {
+                    href: "/benefit-calculator",  label: t.nav.benefits,    Icon: IndianRupee },
     { href: "/locator",            label: t.nav.offices,     Icon: MapPin },
     { href: "/chat",               label: t.nav.chat,        Icon: Bot },
   ];
@@ -165,6 +182,7 @@ export default function Navbar() {
               );
             })}
 
+
             <a
               href="tel:14567"
               className="ml-1 flex items-center gap-1 bg-orange-500 hover:bg-orange-600 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs"
@@ -179,9 +197,9 @@ export default function Navbar() {
               <LanguageSelector variant="desktop" />
             </div>
 
-            {/* 🔐 Single Unified Entry (Login / Dashboard / Officer Desk) */}
+            {/* 🔐 Single Unified Entry (Officer OR Citizen OR Login) */}
             <div className="flex items-center gap-1.5 shrink-0">
-              {officerSession && (
+              {officerSession ? (
                 <Link
                   href="/portal?mode=officer"
                   className="ml-1.5 flex items-center gap-2 bg-slate-900 hover:bg-slate-800 text-amber-300 border-2 border-amber-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
@@ -189,7 +207,7 @@ export default function Navbar() {
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse shrink-0" />
                   <span className="max-w-[170px] truncate">
-                    🏛️ {officerSession.name || "કચેરી એડમિન"} (
+                    {officerSession.name || "કચેરી એડમિન"} (
                     {officerSession.role === "talati"
                       ? "તલાટી"
                       : officerSession.role === "district_collector"
@@ -202,9 +220,7 @@ export default function Navbar() {
                     )
                   </span>
                 </Link>
-              )}
-
-              {citizenSession ? (
+              ) : citizenSession ? (
                 <Link
                   href="/portal?mode=citizen"
                   className="ml-1 flex items-center gap-2 bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border-2 border-emerald-400 px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap shrink-0 transition shadow-xs hover:shadow"
@@ -212,16 +228,12 @@ export default function Navbar() {
                 >
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
                   <span className="max-w-[160px] truncate">
-                    👤 
-                  {currentLang === "gu"
-                    ? (citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ")
-                    : (citizenSession.citizenName || citizenSession.citizenNameGu || "Citizen Portal")} ({currentLang === "gu" ? "વોલ્ટ" : currentLang === "en" ? "Vault" : currentLang === "hi" || currentLang === "mr" ? "वॉल्ट" : "Vault"})
-                
+                    {currentLang === "gu"
+                      ? (citizenSession.citizenNameGu || citizenSession.citizenName || "નાગરિક પોર્ટલ")
+                      : (citizenSession.citizenName || citizenSession.citizenNameGu || "Citizen Portal")} ({currentLang === "gu" ? "વોલ્ટ" : currentLang === "en" ? "Vault" : currentLang === "hi" || currentLang === "mr" ? "वॉल्ट" : "Vault"})
                   </span>
                 </Link>
-              ) : null}
-
-              {!officerSession && !citizenSession && (
+              ) : (
                 <div
                   className="relative"
                   onMouseEnter={() => setShowLoginDropdown(true)}
@@ -234,7 +246,7 @@ export default function Navbar() {
                     title="લૉગિન પોર્ટલ પસંદ કરો"
                   >
                     <Lock size={13} className="shrink-0" />
-                    <span>🔐 લૉગિન</span>
+                    <span>લૉગિન</span>
                     <ChevronDown
                       size={12}
                       className={`transition-transform duration-200 ${showLoginDropdown ? "rotate-180" : ""}`}
@@ -248,7 +260,13 @@ export default function Navbar() {
                       {/* Option 1: Citizen Login */}
                       <Link
                         href="/portal?mode=citizen"
-                        onClick={() => setShowLoginDropdown(false)}
+                        onClick={() => {
+                          setShowLoginDropdown(false);
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("nagrik_auth_change"));
+                            window.dispatchEvent(new Event("nagrik_route_change"));
+                          }
+                        }}
                         className="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-orange-50 transition group/item"
                       >
                         <div className="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
@@ -270,7 +288,13 @@ export default function Navbar() {
                       {/* Option 2: Officer / Admin Login */}
                       <Link
                         href="/portal?mode=officer"
-                        onClick={() => setShowLoginDropdown(false)}
+                        onClick={() => {
+                          setShowLoginDropdown(false);
+                          if (typeof window !== "undefined") {
+                            window.dispatchEvent(new Event("nagrik_auth_change"));
+                            window.dispatchEvent(new Event("nagrik_route_change"));
+                          }
+                        }}
                         className="flex items-start gap-2.5 p-2.5 rounded-xl hover:bg-slate-100 transition group/item"
                       >
                         <div className="w-8 h-8 rounded-lg bg-slate-900 text-amber-300 flex items-center justify-center shrink-0 group-hover/item:scale-105 transition">
@@ -286,6 +310,8 @@ export default function Navbar() {
                           </p>
                         </div>
                       </Link>
+
+
                     </div>
                   </div>
                 )}
@@ -321,13 +347,15 @@ export default function Navbar() {
               >
                 <Smartphone size={13} className="shrink-0" />
                 <span className="hidden sm:inline" suppressHydrationWarning>{t.nav.installApp}</span>
-                <span className="sm:hidden text-[10.5px]" suppressHydrationWarning>ઇન્સ્ટોલ</span>
+                <span className="hidden min-[370px]:inline sm:hidden text-[10.5px]" suppressHydrationWarning>ઇન્સ્ટોલ</span>
               </button>
             )}
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:scale-92 transition shrink-0 cursor-pointer"
-              aria-label="Toggle menu"
+              className="p-2 rounded-xl text-slate-700 hover:bg-slate-100 active:scale-92 transition shrink-0 cursor-pointer min-h-[44px] min-w-[44px] flex items-center justify-center"
+              aria-label={isOpen ? "મેનૂ બંધ કરો (Close menu)" : "મેનૂ ખોલો (Open menu)"}
+              aria-expanded={isOpen}
+              aria-controls="mobile-navigation-drawer"
             >
               {isOpen ? <X size={21} /> : <Menu size={21} />}
             </button>
@@ -341,8 +369,10 @@ export default function Navbar() {
       {/* ── Mobile & Tablet Native Bottom Sheet Drawer (GPay / DigiLocker Style) ── */}
       {isOpen && (
         <div
+          id="mobile-navigation-drawer"
           role="dialog"
           aria-modal="true"
+          aria-labelledby="mobile-nav-title"
           className="xl:hidden fixed inset-0 z-[9990] bg-slate-950/60 backdrop-blur-xs flex items-end justify-center animate-in fade-in duration-150"
           onClick={() => setIsOpen(false)}
         >
@@ -356,13 +386,13 @@ export default function Navbar() {
             </div>
 
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <p className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <p id="mobile-nav-title" className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
                 ☰ {currentLang === "en" ? "Navigation & Citizen Menu" : currentLang === "hi" ? "मुख्य मेनू और नागरिक सेवाएं" : "મુખ્ય મેનૂ & નાગરિક સેવાઓ"}
               </p>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100"
-                aria-label="Close drawer"
+                className="p-2 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 transition min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+                aria-label="મેનૂ બંધ કરો (Close navigation drawer)"
               >
                 <X size={18} />
               </button>
@@ -453,6 +483,10 @@ export default function Navbar() {
                     onClick={(e) => {
                       setIsOpen(false);
                       handleNavClick(e, "/portal?mode=citizen");
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new Event("nagrik_auth_change"));
+                        window.dispatchEvent(new Event("nagrik_route_change"));
+                      }
                     }}
                     className="app-touch-card flex items-center gap-2 p-2.5 rounded-2xl border bg-emerald-50/90 hover:bg-emerald-100 border-emerald-300 text-emerald-950 transition"
                   >
@@ -476,6 +510,10 @@ export default function Navbar() {
                     onClick={(e) => {
                       setIsOpen(false);
                       handleNavClick(e, "/portal?mode=officer");
+                      if (typeof window !== "undefined") {
+                        window.dispatchEvent(new Event("nagrik_auth_change"));
+                        window.dispatchEvent(new Event("nagrik_route_change"));
+                      }
                     }}
                     className="app-touch-card flex items-center gap-2 p-2.5 rounded-2xl border bg-slate-900 hover:bg-slate-800 border-slate-700 text-white transition"
                   >
@@ -492,6 +530,8 @@ export default function Navbar() {
                     </div>
                   </Link>
                 </div>
+
+
               </div>
             )}
 
@@ -530,8 +570,16 @@ export default function Navbar() {
                     Icon: ClipboardCheck,
                     bg: "bg-orange-50 border-orange-200/80 text-orange-700",
                   },
-                ].map(({ href, label, sub, Icon, bg }) => {
+                  {
+                    href: "/locator",
+                    label: currentLang === "en" ? "Kacheri Locator" : currentLang === "hi" ? "कचहरी लोकेटर" : "સરકારી કચેરી શોધો",
+                    sub: currentLang === "en" ? "Geo Maps" : currentLang === "hi" ? "भू-मानचित्र" : "નકશો & સંપર્ક",
+                    Icon: MapPin,
+                    bg: "bg-teal-50 border-teal-200/80 text-teal-700",
+                  },
+                ].map(({ href, label, sub, Icon, bg }, idx) => {
                   const active = pathname === href;
+                  const isLastOdd = idx === 4;
                   return (
                     <Link
                       key={href}
@@ -541,6 +589,8 @@ export default function Navbar() {
                         handleNavClick(e, href);
                       }}
                       className={`app-touch-card flex items-center gap-2.5 p-2.5 rounded-2xl border transition ${
+                        isLastOdd ? "col-span-2" : ""
+                      } ${
                         active
                           ? "bg-orange-600 text-white border-orange-600 shadow-sm"
                           : "bg-slate-50/90 hover:bg-slate-100 border-slate-200/80 text-slate-800"

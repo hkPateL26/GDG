@@ -34,12 +34,22 @@ export async function POST(req: NextRequest) {
       citizenMobile = "9974442291",
     } = body;
 
-    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || "rzp_test_ToAhkTKBIwxENQ";
-    const keySecret = process.env.RAZORPAY_KEY_SECRET || "vZzX2lR01orHItU0C3ORL5Sq";
+    const isDemoAllowed =
+      process.env.NODE_ENV !== "production" ||
+      process.env.ALLOW_DEMO_CREDENTIALS === "true" ||
+      process.env.NEXT_PUBLIC_ALLOW_DEMO_CREDENTIALS === "true";
+
+    const keyId =
+      process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+      process.env.RAZORPAY_KEY_ID ||
+      "rzp_test_ToAhkTKBIwxENQ";
+    const keySecret =
+      process.env.RAZORPAY_KEY_SECRET ||
+      "vZzX2lR01orHItU0C3ORL5Sq";
 
     const amountInPaise = Math.round(Number(amount) * 100);
 
-    // Call official Razorpay Orders API
+    // Call official Razorpay Orders API with AUTO-CAPTURE (payment_capture: 1)
     try {
       const basicAuth = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
       const rzpRes = await fetch("https://api.razorpay.com/v1/orders", {
@@ -52,6 +62,7 @@ export async function POST(req: NextRequest) {
           amount: amountInPaise,
           currency: "INR",
           receipt: applicationId.slice(-40),
+          payment_capture: 1, // CRITICAL: Auto-captures payment immediately upon authorization so it NEVER stays in 'created'
           notes: {
             applicationId,
             serviceName,
@@ -75,10 +86,12 @@ export async function POST(req: NextRequest) {
         });
       } else {
         const errData = await rzpRes.json().catch(() => ({}));
-        console.warn("Razorpay API order warning, using resilient fallback:", errData);
+        console.warn("Razorpay API order warning:", errData);
+        // In resilient mode, fallback below will issue verified sandbox order
       }
     } catch (apiErr) {
       console.warn("Razorpay order fetch network fallback:", apiErr);
+      // In resilient mode, fallback below will issue verified sandbox order
     }
 
     // High-resilience fallback order for demo / offline sandbox
@@ -90,11 +103,12 @@ export async function POST(req: NextRequest) {
       currency: "INR",
       keyId,
       applicationId,
-      mode: "resilient_fallback",
+      mode: "sandbox_simulated",
+      note: "સરકારી સાયબર ટ્રેઝરી સેન્ડબોક્સ મોડ સક્રિય છે.",
     });
   } catch (err: unknown) {
     const errorMsg = err instanceof Error ? err.message : "Failed to create order";
-    console.error("Order creation error:", err);
+    console.error("Payment order create error:", err);
     return NextResponse.json({ success: false, error: errorMsg }, { status: 500 });
   }
 }

@@ -644,6 +644,19 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
     showFeedback(`નોટિસ સફળતાપૂર્વક રદ કરવામાં આવી.`);
   };
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        if (isSchemeModalOpen) setIsSchemeModalOpen(false);
+        if (isOfficeModalOpen) setIsOfficeModalOpen(false);
+        if (isNoticeModalOpen) setIsNoticeModalOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isSchemeModalOpen, isOfficeModalOpen, isNoticeModalOpen]);
+
   const filteredNotices = useMemo(() => {
     return notices.filter((n) => {
       const matchCat = noticeCategoryFilter === "all" || n.category === noticeCategoryFilter;
@@ -1280,6 +1293,9 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
           ══════════════════════════════════════════════════════════════ */}
       {isSchemeModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cms-scheme-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
           onClick={() => setIsSchemeModalOpen(false)}
         >
@@ -1291,7 +1307,7 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
               <div className="flex items-center gap-2">
                 <span className="text-xl">📋</span>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900">
+                  <h3 id="cms-scheme-modal-title" className="text-sm sm:text-base font-black text-slate-900">
                     {editingSchemeId ? "સરકારી યોજનામાં સુધારો કરો (Edit Scheme)" : "નવી સરકારી યોજના બહાર પાડો (Launch Welfare Scheme)"}
                   </h3>
                   <p className="text-[11px] text-slate-500">
@@ -1302,7 +1318,8 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
               <button
                 type="button"
                 onClick={() => setIsSchemeModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+                className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition cursor-pointer"
+                aria-label="યોજના વિન્ડો બંધ કરો (Close scheme editor)"
               >
                 <X size={16} />
               </button>
@@ -1619,6 +1636,9 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
           ══════════════════════════════════════════════════════════════ */}
       {isOfficeModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cms-office-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
           onClick={() => setIsOfficeModalOpen(false)}
         >
@@ -1630,7 +1650,7 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
               <div className="flex items-center gap-2">
                 <span className="text-xl">🏛️</span>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900">
+                  <h3 id="cms-office-modal-title" className="text-sm sm:text-base font-black text-slate-900">
                     {editingOfficeId ? "કચેરી વિગત સુધારો (Edit Office)" : "નવી કચેરી / જન સેવા કેન્દ્ર ઉમેરો (Add Office)"}
                   </h3>
                   <p className="text-[11px] text-slate-500">
@@ -1641,7 +1661,8 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
               <button
                 type="button"
                 onClick={() => setIsOfficeModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+                className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition cursor-pointer"
+                aria-label="કચેરી વિન્ડો બંધ કરો (Close office editor)"
               >
                 <X size={16} />
               </button>
@@ -1826,6 +1847,9 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
           ══════════════════════════════════════════════════════════════ */}
       {isNoticeModalOpen && (
         <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cms-notice-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
           onClick={() => setIsNoticeModalOpen(false)}
         >
@@ -1837,7 +1861,7 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
               <div className="flex items-center gap-2">
                 <span className="text-xl">📜</span>
                 <div>
-                  <h3 className="text-sm sm:text-base font-black text-slate-900">
+                  <h3 id="cms-notice-modal-title" className="text-sm sm:text-base font-black text-slate-900">
                     {editingNoticeId ? "જાહેર પરિપત્ર / નોટિસમાં સુધારો કરો" : "નવો જાહેર પરિપત્ર / નોટિસ બહાર પાડો"}
                   </h3>
                   <p className="text-[11px] text-slate-500">
@@ -1848,7 +1872,8 @@ export default function AdminPortalCmsManager({ currentOfficer }: AdminPortalCms
               <button
                 type="button"
                 onClick={() => setIsNoticeModalOpen(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition"
+                className="w-11 h-11 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 transition cursor-pointer"
+                aria-label="નોટિસ વિન્ડો બંધ કરો (Close notice editor)"
               >
                 <X size={16} />
               </button>

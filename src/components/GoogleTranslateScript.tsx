@@ -245,11 +245,14 @@ export default function GoogleTranslateScript() {
             const checkInterval = setInterval(() => {
               attempts++;
               const combo = document.querySelector(".goog-te-combo") as HTMLSelectElement | null;
-              if (combo) {
+              if (combo && combo.options && combo.options.length > 1) {
                 clearInterval(checkInterval);
                 if (combo.value !== activeLang) {
                   combo.value = activeLang;
                   combo.dispatchEvent(new Event("change", { bubbles: true }));
+                  if (typeof combo.onchange === "function") {
+                    combo.onchange(new Event("change"));
+                  }
                 }
                 // Verify once more after 300ms in case Google Translate reset it
                 setTimeout(() => {
@@ -259,7 +262,7 @@ export default function GoogleTranslateScript() {
                     currentCombo.dispatchEvent(new Event("change", { bubbles: true }));
                   }
                   window.dispatchEvent(new Event("nagrikseva:pageReady"));
-                }, 300);
+                }, 400);
               } else if (attempts >= 60) {
                 clearInterval(checkInterval);
                 window.dispatchEvent(new Event("nagrikseva:pageReady"));
@@ -290,12 +293,8 @@ export default function GoogleTranslateScript() {
       }
     };
 
-    // Only load Google Translate script if a non-default language is selected
-    if (savedLang && savedLang !== DEFAULT_LANGUAGE) {
-      loadScript();
-    } else {
-      window.dispatchEvent(new Event("nagrikseva:pageReady"));
-    }
+    // Always load Google Translate script proactively in background
+    loadScript();
 
     const handleLangChange = (e: Event) => {
       const customEvent = e as CustomEvent<string>;

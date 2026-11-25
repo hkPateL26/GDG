@@ -73,6 +73,16 @@ export default function InstallAppModal({
     }
   }, [onClose]);
 
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1 Keyboard)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, onClose]);
+
   const handleInstallClick = async () => {
     const outcome = await executeNativePwaInstall();
     if (outcome === "installed" || outcome === "dismissed") {
@@ -112,6 +122,7 @@ export default function InstallAppModal({
     <div
       role="dialog"
       aria-modal="true"
+      aria-labelledby="install-modal-title"
       className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9995] flex items-center justify-center p-4 animate-in fade-in duration-200"
       onClick={onClose}
     >
@@ -125,8 +136,8 @@ export default function InstallAppModal({
         {/* Modal Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition"
-          aria-label="Close"
+          className="absolute top-4 right-4 text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+          aria-label="ઇન્સ્ટોલ વિન્ડો બંધ કરો (Close install modal)"
         >
           <X size={20} />
         </button>
@@ -148,7 +159,7 @@ export default function InstallAppModal({
             <span className="inline-flex items-center gap-1 bg-orange-100 text-orange-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full mb-1">
               <Sparkles size={11} className="text-orange-600" /> Digital Public Infrastructure
             </span>
-            <h3 className="text-xl font-black text-gray-900">
+            <h3 id="install-modal-title" className="text-xl font-black text-gray-900">
               નાગરિકસેવા AI મોબાઈલ એપ
             </h3>
             <p className="text-xs text-gray-500 mt-1 max-w-xs mx-auto">
@@ -210,23 +221,34 @@ export default function InstallAppModal({
                   </div>
                 </div>
               ) : (
-                /* Android 1-Click Install Button */
-                <button
-                  onClick={handleInstallClick}
-                  disabled={isInstalling}
-                  className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-sm transition active:scale-95 cursor-pointer disabled:opacity-80"
-                >
-                  {isInstalling ? (
-                    <>
-                      <RefreshCw size={18} className="animate-spin" />
-                      <span>એપ ઇન્સ્ટોલ થઈ રહી છે...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Download size={18} /> ફોનમાં હમણાં જ ઇન્સ્ટોલ કરો (૧-ક્લિક)
-                    </>
-                  )}
-                </button>
+                /* Android 1-Click Install Button & Direct APK */
+                <div className="space-y-2.5">
+                  <button
+                    onClick={handleInstallClick}
+                    disabled={isInstalling}
+                    className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white font-extrabold py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-500/30 flex items-center justify-center gap-2 text-sm transition active:scale-95 cursor-pointer disabled:opacity-80"
+                  >
+                    {isInstalling ? (
+                      <>
+                        <RefreshCw size={18} className="animate-spin" />
+                        <span>એપ ઇન્સ્ટોલ થઈ રહી છે...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Download size={18} /> ફોનમાં હમણાં જ ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                      </>
+                    )}
+                  </button>
+
+                  <a
+                    href="/download/nagrik-seva-ai.apk"
+                    download="nagrik-seva-ai.apk"
+                    className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 px-4 rounded-2xl border border-slate-700 flex items-center justify-center gap-2 text-xs transition active:scale-95 text-center shadow-md cursor-pointer"
+                  >
+                    <Download size={16} className="text-emerald-400" />
+                    <span>સીધું Android APK ડાઉનલોડ કરો (.apk ફાઈલ)</span>
+                  </a>
+                </div>
               )}
             </div>
           ) : (
@@ -271,22 +293,33 @@ export default function InstallAppModal({
               </div>
 
               {/* Also Provide Desktop Browser Install if supported */}
-              <button
-                onClick={handleInstallClick}
-                disabled={isInstalling}
-                className="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
-              >
-                {isInstalling ? (
-                  <>
-                    <RefreshCw size={14} className="animate-spin" />
-                    <span>ઇન્સ્ટોલ થઈ રહ્યું છે...</span>
-                  </>
-                ) : (
-                  <>
-                    <Download size={14} /> આ લેપટોપ / PC પર ઇન્સ્ટોલ કરો (૧-ક્લિક)
-                  </>
-                )}
-              </button>
+              <div className="space-y-2">
+                <button
+                  onClick={handleInstallClick}
+                  disabled={isInstalling}
+                  className="w-full bg-gray-900 hover:bg-black text-white font-bold py-2.5 px-4 rounded-xl text-xs flex items-center justify-center gap-2 transition cursor-pointer"
+                >
+                  {isInstalling ? (
+                    <>
+                      <RefreshCw size={14} className="animate-spin" />
+                      <span>ઇન્સ્ટોલ થઈ રહ્યું છે...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Download size={14} /> આ લેપટોપ / PC પર ઇન્સ્ટોલ કરો (૧-ક્લિક)
+                    </>
+                  )}
+                </button>
+
+                <a
+                  href="/download/nagrik-seva-ai.apk"
+                  download="nagrik-seva-ai.apk"
+                  className="w-full bg-slate-100 hover:bg-slate-200 text-slate-800 font-semibold py-2 px-3 rounded-xl border border-slate-300 flex items-center justify-center gap-2 text-[11px] transition text-center cursor-pointer"
+                >
+                  <Download size={14} className="text-orange-600" />
+                  <span>Android APK ફાઈલ ડાઉનલોડ કરો (.apk)</span>
+                </a>
+              </div>
             </div>
           )}
 

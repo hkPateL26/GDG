@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ઑફલાઇન મોડ | NagrikSeva AI</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    body {
+      background-color: #f8fafc;
+      color: #0f172a;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      text-align: center;
+    }
+    .card {
+      background: white;
+      max-width: 480px;
+      width: 100%;
+      border-radius: 1.25rem;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+      border: 1px solid #e2e8f0;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background-color: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #ffedd5;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-size: 0.825rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.25rem auto;
+      background: #ffedd5;
+      color: #ea580c;
+      border-radius: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #0f172a;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.95rem;
+      color: #64748b;
+      margin-bottom: 1.5rem;
+      line-height: 1.5;
+    }
+    .offline-tip {
+      background-color: #f0fdf4;
+      border: 1px solid #dcfce7;
+      color: #166534;
+      padding: 1rem;
+      border-radius: 0.75rem;
+      font-size: 0.85rem;
+      text-align: left;
+      margin-bottom: 2rem;
+      line-height: 1.5;
+    }
+    .btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    button, a {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.875rem 1.5rem;
+      border-radius: 0.75rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .btn-primary {
+      background-color: #ea580c;
+      color: white;
+      border: none;
+    }
+    .btn-primary:hover {
+      background-color: #c2410c;
+    }
+    .btn-secondary {
+      background-color: #f1f5f9;
+      color: #334155;
+      border: 1px solid #cbd5e1;
+    }
+    .btn-secondary:hover {
+      background-color: #e2e8f0;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="badge">
+      <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:#ea580c;"></span>
+      ગુજરાત સરકાર - ડિજિટલ પબ્લિક ઇન્ફ્રાસ્ટ્રક્ચર (DPI)
+    </div>
+
+    <div class="icon">
+      <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="1" y1="1" x2="23" y2="23"></line>
+        <path d="M16.72 11.06A10.94 10.94 0 0 1 19 12.55"></path>
+        <path d="M5 12.55a10.94 10.94 0 0 1 5.17-2.39"></path>
+        <path d="M10.71 5.05A16 16 0 0 1 22.58 9"></path>
+        <path d="M1.42 9a15.91 15.91 0 0 1 4.7-2.88"></path>
+        <path d="M8.53 16.11a6 6 0 0 1 6.95 0"></path>
+        <line x1="12" y1="20" x2="12.01" y2="20"></line>
+      </svg>
+    </div>
+
+    <h1>તમે હાલમાં ઑફલાઇન છો</h1>
+    <p class="subtitle">You are currently offline. Check your network or Wi-Fi connection.</p>
+
+    <div class="offline-tip">
+      <strong>🛡️ સુરક્ષિત કેશ્ડ ડેટા:</strong><br>
+      તમારા અગાઉ ખોલેલા સરકારી દસ્તાવેજો, અરજી રસીદો અને ડિજિટલ વૉલ્ટ તમારા ફોનમાં સુરક્ષિત સંગ્રહિત છે. ઇન્ટરનેટ પુનઃસ્થાપિત થતાં જ નવી અરજીઓ આપોઆપ ક્લાઉડ સર્વર સાથે સિંક થશે.
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-primary" onclick="window.location.reload()">
+        ફરી પ્રયાસ કરો (Retry Connection)
+      </button>
+      <a href="/" class="btn-secondary">
+        મુખ્ય પૃષ્ઠ પર પાછા જાઓ (Home)
+      </a>
+    </div>
+  </div>
+</body>
+</html>

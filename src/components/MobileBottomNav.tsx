@@ -9,7 +9,7 @@ import {
   Bot,
   MapPin,
   User,
-  Sparkles,
+  ShieldCheck,
 } from "lucide-react";
 import { triggerHaptic } from "@/lib/haptic";
 import { useLanguage } from "@/context/LanguageContext";
@@ -33,11 +33,13 @@ export default function MobileBottomNav() {
     const timer = setTimeout(syncState, 0);
     window.addEventListener("storage", syncState);
     window.addEventListener("nagrik_auth_change", syncState);
+    window.addEventListener("nagrik_route_change", syncState);
     window.addEventListener("popstate", syncState);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("storage", syncState);
       window.removeEventListener("nagrik_auth_change", syncState);
+      window.removeEventListener("nagrik_route_change", syncState);
       window.removeEventListener("popstate", syncState);
     };
   }, [syncState, pathname]);
@@ -75,13 +77,13 @@ export default function MobileBottomNav() {
     },
     {
       key: "login",
-      href: "/portal",
+      href: officerSession && !citizenSession ? "/portal?mode=officer" : citizenSession ? "/portal?mode=citizen" : "/portal",
       label: citizenSession
         ? isEn ? "Vault" : isHi ? "वॉल्ट" : isMr ? "वॉल्ट" : isMl ? "വോൾട്ട്" : "વોલ્ટ"
         : officerSession
         ? isEn ? "Desk" : isHi ? "डेस्क" : isMr ? "डेस्क" : isMl ? "ഡെസ്ക്" : "ડેસ્ક"
         : isEn ? "Login" : isHi ? "लॉगिन" : isMr ? "लॉगिन" : isMl ? "ലോഗിൻ" : "લૉગિન",
-      icon: User,
+      icon: citizenSession ? ShieldCheck : User,
       badge: citizenSession ? "2FA" : officerSession ? (isEn ? "OFFICER" : isHi ? "अधिकारी" : isMr ? "अधिकारी" : isMl ? "ഓഫീസർ" : "કચેરી") : undefined,
     },
   ];
@@ -91,19 +93,34 @@ export default function MobileBottomNav() {
     if (key === "schemes") return pathname.startsWith("/schemes");
     if (key === "chat") return pathname.startsWith("/chat");
     if (key === "locator") return pathname.startsWith("/locator");
-    if (key === "login") return pathname.startsWith("/portal") || pathname.startsWith("/admin");
+    if (key === "login") {
+      return (
+        pathname.startsWith("/portal") ||
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/track") ||
+        pathname.startsWith("/documents") ||
+        pathname.startsWith("/passbook") ||
+        pathname.startsWith("/eligibility")
+      );
+    }
     return false;
   };
 
-  // Strictly show Bottom Menu ONLY when running inside the Installed App (PWA Standalone mode)
-  if (!isStandalone) return null;
+  // Show Bottom Menu on Mobile screens, Installed PWA, or Native Android App
+  const [mounted, setMounted] = useState<boolean>(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   return (
     <nav
       aria-label="Mobile Bottom Navigation"
-      className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/88 backdrop-blur-2xl border-t border-slate-200/80 shadow-[0_-8px_30px_rgba(15,23,42,0.07)] px-1.5 pt-1.5 pb-[max(env(safe-area-inset-bottom,8px),8px)] print:hidden select-none"
+      className="xl:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-2xl border-t border-slate-200/90 shadow-[0_-8px_30px_rgba(15,23,42,0.08)] px-2 pt-2 pb-[max(env(safe-area-inset-bottom,12px),12px)] print:hidden select-none"
     >
-      <div className="grid grid-cols-5 items-center max-w-md mx-auto w-full gap-0.5">
+      <div className="grid grid-cols-5 items-center max-w-md mx-auto w-full gap-1">
         {navItems.map((item) => {
           const isActive = isItemActive(item.key);
           const IconComponent = item.icon;
@@ -113,6 +130,8 @@ export default function MobileBottomNav() {
               <div key={item.key} className="flex justify-center">
                 <Link
                   href={item.href}
+                  aria-current={isActive ? "page" : undefined}
+                  aria-label={`${item.label} ${isActive ? "(Active)" : ""}`}
                   onClick={() => {
                     triggerHaptic("medium");
                   }}
@@ -120,20 +139,17 @@ export default function MobileBottomNav() {
                 >
                   {/* Material 3 / WhatsApp Active Pill with AI Sparkle */}
                   <div
-                    className={`relative w-14 h-8 rounded-full flex items-center justify-center transition-all duration-200 ${
+                    className={`relative w-15 h-8.5 rounded-full flex items-center justify-center transition-all duration-200 ${
                       isActive
                         ? "bg-gradient-to-r from-orange-600 via-amber-500 to-orange-500 text-white shadow-md shadow-orange-500/30 scale-105"
                         : "bg-slate-900 text-amber-300 hover:bg-slate-800 shadow-xs"
                     }`}
                   >
-                    <IconComponent size={19} className="stroke-[2.3]" />
-                    <Sparkles
-                      size={10}
-                      className="absolute top-1 right-2 text-amber-300 animate-pulse"
-                    />
+                    <IconComponent size={21} className="stroke-[2.3]" />
+                    
                   </div>
                   <span
-                    className={`text-[10.5px] leading-tight mt-1 transition-colors whitespace-nowrap truncate max-w-full px-0.5 ${
+                    className={`text-xs leading-tight mt-1 transition-colors whitespace-nowrap truncate max-w-full px-0.5 ${
                       isActive ? "font-black text-orange-600" : "font-bold text-slate-700"
                     }`}
                   >
@@ -148,36 +164,38 @@ export default function MobileBottomNav() {
             <div key={item.key} className="flex justify-center min-w-0">
               <Link
                 href={item.href}
+                aria-current={isActive ? "page" : undefined}
+                aria-label={`${item.label} ${isActive ? "(Active)" : ""}`}
                 onClick={() => {
                   triggerHaptic("selection");
                 }}
                 className={`w-full flex flex-col items-center justify-center py-0.5 rounded-2xl transition-all duration-150 active:scale-92 cursor-pointer relative text-center min-w-0 ${
-                  isActive ? "text-orange-700" : "text-slate-500 hover:text-slate-800"
+                  isActive ? "text-orange-700" : "text-slate-600 hover:text-slate-900"
                 }`}
               >
                 {/* WhatsApp / Material 3 Active Pill Indicator */}
                 <div
-                  className={`relative flex items-center justify-center w-14 h-8 rounded-full transition-all duration-200 ${
+                  className={`relative flex items-center justify-center w-15 h-8.5 rounded-full transition-all duration-200 ${
                     isActive
                       ? "bg-orange-100/95 text-orange-600 shadow-2xs"
-                      : "bg-transparent text-slate-500"
+                      : "bg-transparent text-slate-600"
                   }`}
                 >
                   <IconComponent
-                    size={19}
+                    size={21}
                     className={`transition-transform duration-200 ${
-                      isActive ? "stroke-[2.5] scale-105" : "stroke-[1.9]"
+                      isActive ? "stroke-[2.5] scale-105" : "stroke-[2.0]"
                     }`}
                   />
                   {item.badge && (
-                    <span className="absolute -top-1 right-1 text-[8px] bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded-full leading-tight shadow-2xs">
+                    <span className="absolute -top-1 right-1 text-[9px] bg-emerald-600 text-white font-black px-1.5 py-0.2 rounded-full leading-tight shadow-2xs">
                       {item.badge}
                     </span>
                   )}
                 </div>
                 <span
-                  className={`text-[10.5px] leading-tight tracking-tight mt-1 transition-all whitespace-nowrap truncate max-w-full px-0.5 ${
-                    isActive ? "font-black text-orange-700" : "font-semibold text-slate-600"
+                  className={`text-xs leading-tight tracking-tight mt-1 transition-all whitespace-nowrap truncate max-w-full px-0.5 ${
+                    isActive ? "font-black text-orange-700" : "font-bold text-slate-700"
                   }`}
                 >
                   {item.label}

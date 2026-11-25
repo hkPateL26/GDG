@@ -7,6 +7,7 @@ import { Scheme } from "@/types";
 import {
   LayoutGrid,
   ChevronRight,
+  Award,
 } from "lucide-react";
 
 interface DynamicFeaturedSchemesProps {
@@ -53,11 +54,11 @@ export default function DynamicFeaturedSchemes({ variant }: DynamicFeaturedSchem
     return (
       <div className="space-y-2 pt-0.5">
         <div className="flex items-center justify-between px-1">
-          <h2 className="text-xs font-extrabold text-slate-800 flex items-center gap-1.5">
+          <h2 className="text-sm font-black text-slate-800 flex items-center gap-2">
             <LayoutGrid size={14} className="text-orange-500 shrink-0" />
             <span>મુખ્ય સરકારી યોજનાઓ (સ્વાઈપ કરો)</span>
           </h2>
-          <span className="text-[10px] font-semibold text-slate-400">
+          <span className="text-xs font-bold text-slate-500">
             ← સ્વાઈપ →
           </span>
         </div>
@@ -75,7 +76,7 @@ export default function DynamicFeaturedSchemes({ variant }: DynamicFeaturedSchem
               <div>
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <span className="w-9 h-9 rounded-xl bg-orange-50 border border-orange-100 flex items-center justify-center text-lg shrink-0">
-                    {scheme.icon || "📋"}
+                    <Award size={18} className="text-orange-600 shrink-0" />
                   </span>
                   <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200/60 px-2 py-0.5 rounded-full whitespace-nowrap">
                     ● સક્રિય યોજના
@@ -132,7 +133,7 @@ export default function DynamicFeaturedSchemes({ variant }: DynamicFeaturedSchem
             href={`/schemes/${scheme.id}`}
             className="flex items-center gap-3 px-4 py-3 hover:bg-orange-50 transition group"
           >
-            <span className="text-xl flex-shrink-0 w-7 text-center">{scheme.icon || "📋"}</span>
+            <span className="text-xl flex-shrink-0 w-7 text-center"><Award size={18} className="text-orange-600 shrink-0" /></span>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-gray-800 truncate group-hover:text-orange-600">
                 {scheme.nameGu}
@@ -141,7 +142,7 @@ export default function DynamicFeaturedSchemes({ variant }: DynamicFeaturedSchem
                 {scheme.benefits?.[0] || scheme.description}
               </p>
             </div>
-            <ChevronRight size={14} className="text-gray-300 group-hover:text-orange-400 flex-shrink-0" />
+            <ChevronRight size={14} className="text-gray-400 group-hover:text-orange-500 flex-shrink-0" />
           </Link>
         ))}
       </div>

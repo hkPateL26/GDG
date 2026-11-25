@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { Globe, Check, ChevronDown, X, Sparkles, Search } from "lucide-react";
 import { INDIAN_LANGUAGES } from "@/lib/languages";
@@ -18,6 +18,16 @@ export default function LanguageSelector({
   useBodyScrollLock(isOpen);
   const [searchQuery, setSearchQuery] = useState("");
   const modalRef = useRef<HTMLDivElement>(null);
+
+  // Keyboard Escape key handler (WCAG 2.2 AA SC 2.1.1)
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen]);
 
   const currentLang =
     INDIAN_LANGUAGES.find((l) => l.code === selectedCode) || INDIAN_LANGUAGES[0];
@@ -60,8 +70,9 @@ export default function LanguageSelector({
             return (
               <button
                 key={lang.code}
+                data-lang-code={lang.code}
                 onClick={() => handleSelectLanguage(lang.code)}
-                className={`text-center py-1.5 px-1 rounded-xl text-xs font-semibold transition ${
+                className={`notranslate text-center py-1.5 px-1 rounded-xl text-xs font-semibold transition ${
                   isSelected
                     ? "bg-orange-600 text-white shadow-xs font-bold ring-2 ring-orange-300"
                     : "bg-white text-gray-700 hover:bg-orange-100/60 border border-gray-200"
@@ -129,12 +140,13 @@ export default function LanguageSelector({
       <div
         role="dialog"
         aria-modal="true"
+        aria-labelledby="language-modal-title"
         className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs z-[9995] flex items-end sm:items-center justify-center p-0 sm:p-4 animate-in fade-in duration-150"
         onClick={() => setIsOpen(false)}
       >
         <div
           ref={modalRef}
-          className="bg-white text-gray-900 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 overflow-hidden relative flex flex-col max-h-[85vh] sm:max-h-[88vh] animate-bottom-sheet pb-[env(safe-area-inset-bottom,0px)]"
+          className="notranslate bg-white text-gray-900 w-full sm:max-w-lg rounded-t-3xl sm:rounded-3xl shadow-2xl border-t sm:border border-gray-200 overflow-hidden relative flex flex-col max-h-[85vh] sm:max-h-[88vh] animate-bottom-sheet pb-[env(safe-area-inset-bottom,0px)]"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Native Mobile Bottom Sheet Drag Handle */}
@@ -154,7 +166,7 @@ export default function LanguageSelector({
                 </div>
               </div>
               <div className="min-w-0">
-                <h3 className="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate">
+                <h3 id="language-modal-title" className="text-sm sm:text-lg font-black text-gray-900 leading-tight truncate">
                   ભારતીય ભાષાઓ (Select Language)
                 </h3>
                 <p className="text-[11px] text-gray-500 truncate">
@@ -164,8 +176,8 @@ export default function LanguageSelector({
             </div>
             <button
               onClick={() => setIsOpen(false)}
-              className="text-gray-400 hover:text-gray-700 p-1.5 rounded-full hover:bg-gray-100 transition shrink-0"
-              aria-label="Close"
+              className="text-gray-400 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition shrink-0 min-h-[44px] min-w-[44px] flex items-center justify-center cursor-pointer"
+              aria-label="ભાષા વિન્ડો બંધ કરો (Close language selector)"
             >
               <X size={18} />
             </button>
@@ -179,16 +191,19 @@ export default function LanguageSelector({
                 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
               />
               <input
+                id="language-search-input"
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="ભાષા શોધો / Search (Hindi, Marathi, Tamil, etc.)..."
+                aria-label="ભાષા શોધો (Search languages)"
                 className="w-full bg-white border border-gray-200 rounded-xl pl-9 pr-3 py-2 text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:border-orange-500 focus:ring-1 focus:ring-orange-500"
               />
               {searchQuery && (
                 <button
                   onClick={() => setSearchQuery("")}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs p-1"
+                  aria-label="શોધ સાફ કરો (Clear search)"
                 >
                   ✕
                 </button>
@@ -204,8 +219,9 @@ export default function LanguageSelector({
                 return (
                   <button
                     key={lang.code}
+                    data-lang-code={lang.code}
                     onClick={() => handleSelectLanguage(lang.code)}
-                    className={`flex items-center justify-between p-3 rounded-2xl border text-left transition cursor-pointer active:scale-96 ${
+                    className={`notranslate flex items-center justify-between p-3 rounded-2xl border text-left transition cursor-pointer active:scale-96 ${
                       isSelected
                         ? "bg-gradient-to-r from-orange-50 to-amber-50 border-orange-500 ring-2 ring-orange-400/60 shadow-xs"
                         : "bg-white hover:bg-gray-50/80 border-gray-200 hover:border-orange-200 shadow-2xs"
