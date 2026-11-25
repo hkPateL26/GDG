@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { CitizenApplication } from "@/lib/large-datasets";
-import { Printer, X, ShieldCheck, Award, CreditCard, FileText, Lock, CheckCircle2 } from "lucide-react";
+import { Printer, X, ShieldCheck, Award, CreditCard, FileText } from "lucide-react";
 import { generateCertificateSeal } from "@/lib/digital-notary";
 
 interface OfficialGovernmentCertificateProps {
@@ -973,7 +973,6 @@ export default function OfficialGovernmentCertificate({
         <div
           id="official-cert-print-area"
           className="relative bg-white shadow-2xl rounded-2xl overflow-hidden text-black font-sans border border-slate-300 transition-all w-full max-w-[760px] my-auto"
-        >
         >
           {/* ══════════════════════════════════════════════════════════════════
               DOCUMENT TYPE 1: AADHAAR CARD
