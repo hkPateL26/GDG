@@ -25,6 +25,7 @@ import {
   getApplicationById,
   rejectApplication,
   getApplicationsCollectionName,
+  getCitizenBenefitProfile,
 } from "@/lib/large-datasets";
 import {
   getOfficerSessionFromRequest,
@@ -391,6 +392,21 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
+
+    // 1. Citizen Profile Retrieval Action (used by TrackVaultView and Citizen Vault)
+    if (body.action === "get_citizen_profile") {
+      const mobile = body.mobile;
+      const aadhaarLast4 = body.aadhaarLast4;
+      if (!mobile) {
+        return NextResponse.json(
+          { success: false, error: "મોબાઈલ નંબર જરૂરી છે." },
+          { status: 400 }
+        );
+      }
+      const profile = getCitizenBenefitProfile(mobile, aadhaarLast4);
+      return NextResponse.json({ success: true, citizen: profile });
+    }
+
     const {
       citizenName,
       citizenNameGu,
