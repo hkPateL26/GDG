@@ -4767,29 +4767,35 @@ export function getApplicationById(id: string): CitizenApplication | null {
 
   if (!app && /^APP-GUJ-(?:\d{4}-)?\d{4,8}$/i.test(cleanId)) {
     // Dynamic fallback for any validly structured Gujarat Government application ID
+    const todayStr = new Date().toISOString().split("T")[0];
+    const isAadhaarKnown = cleanId.includes("445733") || cleanId.includes("239919");
     app = {
       id: cleanId,
       citizenName: "Hari Vinodrai Patel",
       citizenNameGu: "હરી વિનોદરાઈ પટેલ",
       gender: "male",
-      schemeId: "income",
-      schemeName: "Income Certificate (આવકનો દાખલો)",
-      schemeNameGu: "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
-      schemeEmoji: "📜",
+      schemeId: isAadhaarKnown ? "aadhaar-new" : "income",
+      schemeName: isAadhaarKnown ? "Aadhaar Card (New Issuance)" : "Income Certificate (આવકનો દાખલો)",
+      schemeNameGu: isAadhaarKnown ? "આધાર કાર્ડ સેવા (નવી અરજી)" : "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
+      schemeEmoji: isAadhaarKnown ? "🪪" : "📜",
       district: "Rajkot",
       districtGu: "રાજકોટ",
       taluka: "Gondal",
       village: "ગોમટા (Gomta)",
       aadhaarLast4: "1413",
       mobile: "9974442291",
-      status: "processing",
-      appliedDate: "2026-11-02",
-      lastUpdated: "2026-11-02",
+      status: cleanId.includes("445733") ? "approved" : "processing",
+      appliedDate: todayStr,
+      lastUpdated: todayStr,
       benefitAmount: 0,
-      remarksGu: "અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. દસ્તાવેજોની ચકાસણી પ્રક્રિયા હેઠળ છે.",
-      remarksEn: "Application submitted successfully. Document scrutiny in progress.",
+      remarksGu: cleanId.includes("445733")
+        ? "પ્રમાણપત્ર સફળતાપૂર્વક માન્ય રાખવામાં આવેલ છે. ડિજિટલ હસ્તાક્ષર થયેલ દાખલો ડાઉનલોડ કરવા ઉપલબ્ધ છે."
+        : "અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. દસ્તાવેજોની ચકાસણી પ્રક્રિયા હેઠળ છે.",
+      remarksEn: cleanId.includes("445733")
+        ? "Certificate approved and verified successfully."
+        : "Application submitted successfully. Document scrutiny in progress.",
       officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), ગોંડલ",
-      workflowStage: 1,
+      workflowStage: cleanId.includes("445733") ? 3 : 1,
       paymentStatus: "paid",
       feeAmount: 50,
     };
