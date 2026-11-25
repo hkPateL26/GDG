@@ -277,12 +277,12 @@ export async function scanAndNotifyCitizenApplicationTransitions(): Promise<void
 
           if (statusChanged || (serverApp.remarksGu && serverApp.remarksGu !== app.remarksGu)) {
             hasUpdatedApps = true;
-            // Merge server attributes into local app
+            // Merge ONLY server operational attributes (status, stage, remarks, officer)
+            // NEVER overwrite the citizen's original scheme selection or applicant identity!
             apps[i] = {
               ...app,
-              ...serverApp,
-              status: newStatus,
-              workflowStage: newStage,
+              status: newStatus || app.status,
+              workflowStage: newStage ?? app.workflowStage,
               remarksGu: serverApp.remarksGu || app.remarksGu,
               remarksEn: serverApp.remarksEn || app.remarksEn,
               officerDesignation: serverApp.officerDesignation || app.officerDesignation,

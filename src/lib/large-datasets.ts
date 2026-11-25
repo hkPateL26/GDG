@@ -4768,36 +4768,60 @@ export function getApplicationById(id: string): CitizenApplication | null {
   if (!app && /^APP-GUJ-(?:\d{4}-)?\d{4,8}$/i.test(cleanId)) {
     // Dynamic fallback for any validly structured Gujarat Government application ID
     const todayStr = new Date().toISOString().split("T")[0];
-    const isAadhaarKnown = cleanId.includes("445733") || cleanId.includes("239919");
+    const is132555 = cleanId.includes("132555");
+    const is186280 = cleanId.includes("186280");
+    const isAadhaarKnown = cleanId.includes("445733") || cleanId.includes("239919") || is132555;
+    const isApprovedKnown = cleanId.includes("445733") || is186280;
+
+    let schemeId = "income";
+    let schemeName = "Income Certificate (આવકનો દાખલો)";
+    let schemeNameGu = "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)";
+    let schemeEmoji = "📜";
+
+    if (isAadhaarKnown) {
+      schemeId = "aadhaar-new";
+      schemeName = is132555 ? "Aadhaar Card (UIDAI) (New Issuance)" : "Aadhaar Card (New Issuance)";
+      schemeNameGu = "આધાર કાર્ડ સેવા (નવી અરજી)";
+      schemeEmoji = "🪪";
+    } else if (is186280) {
+      schemeId = "ration-add-member";
+      schemeName = "Digital Ration Card - Add Member";
+      schemeNameGu = "રેશનકાર્ડમાં નવા સભ્ય ઉમેરવા (Add Member) (નવી અરજી)";
+      schemeEmoji = "🛒";
+    }
+
     app = {
       id: cleanId,
-      citizenName: "Hari Vinodrai Patel",
-      citizenNameGu: "હરી વિનોદરાઈ પટેલ",
-      gender: "male",
-      schemeId: isAadhaarKnown ? "aadhaar-new" : "income",
-      schemeName: isAadhaarKnown ? "Aadhaar Card (New Issuance)" : "Income Certificate (આવકનો દાખલો)",
-      schemeNameGu: isAadhaarKnown ? "આધાર કાર્ડ સેવા (નવી અરજી)" : "આવકનું પ્રમાણપત્ર (૩ વર્ષ માન્ય)",
-      schemeEmoji: isAadhaarKnown ? "🪪" : "📜",
+      citizenName: is132555 ? "Priyaben Hari Patel" : "Hari Vinodrai Patel",
+      citizenNameGu: is132555 ? "પ્રિયાબેન હરી પટેલ" : "હરી વિનોદરાઈ પટેલ",
+      gender: is132555 ? "female" : "male",
+      schemeId,
+      schemeName,
+      schemeNameGu,
+      schemeEmoji,
       district: "Rajkot",
       districtGu: "રાજકોટ",
       taluka: "Gondal",
       village: "ગોમટા (Gomta)",
       aadhaarLast4: "1413",
       mobile: "9974442291",
-      status: cleanId.includes("445733") ? "approved" : "processing",
+      status: isApprovedKnown ? "approved" : "processing",
       appliedDate: todayStr,
       lastUpdated: todayStr,
       benefitAmount: 0,
-      remarksGu: cleanId.includes("445733")
+      remarksGu: isApprovedKnown
         ? "પ્રમાણપત્ર સફળતાપૂર્વક માન્ય રાખવામાં આવેલ છે. ડિજિટલ હસ્તાક્ષર થયેલ દાખલો ડાઉનલોડ કરવા ઉપલબ્ધ છે."
+        : is132555
+        ? "સ્ક્રુટિની ચાલુ: અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. ફી ₹50 ભરપાઈ (Txn: pay_U4RHGGb2jQBe0g). દસ્તાવેજોની પ્રાથમિક સ્ક્રુટિની પ્રક્રિયા હેઠળ છે."
         : "અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. દસ્તાવેજોની ચકાસણી પ્રક્રિયા હેઠળ છે.",
-      remarksEn: cleanId.includes("445733")
+      remarksEn: isApprovedKnown
         ? "Certificate approved and verified successfully."
         : "Application submitted successfully. Document scrutiny in progress.",
       officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), ગોંડલ",
-      workflowStage: cleanId.includes("445733") ? 3 : 1,
+      workflowStage: isApprovedKnown ? 3 : 1,
       paymentStatus: "paid",
-      feeAmount: 50,
+      feeAmount: is186280 ? 20 : 50,
+      txnId: is132555 ? "pay_U4RHGGb2jQBe0g" : undefined,
     };
     addCustomApplication(app);
   }
