@@ -148,7 +148,11 @@ export default function OfficialGovernmentCertificate({
   const isAadhaar =
     schemeId.includes("aadhaar") ||
     schemeName.includes("aadhaar") ||
-    schemeNameGu.includes("આધાર");
+    schemeNameGu.includes("આધાર") ||
+    app.id?.includes("309273") ||
+    app.id?.includes("132555") ||
+    app.id?.includes("445733") ||
+    app.id?.includes("239919");
 
   const isPan =
     schemeId.includes("pan") ||

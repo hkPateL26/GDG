@@ -304,13 +304,34 @@ export async function scanAndNotifyCitizenApplicationTransitions(): Promise<void
             notifiedMap[app.id] = "approved";
             hasNewNotification = true;
 
+            const isAadhaar =
+              app.schemeId?.includes("aadhaar") ||
+              app.schemeName?.toLowerCase().includes("aadhaar") ||
+              app.schemeNameGu?.includes("આધાર") ||
+              app.id?.includes("132555") ||
+              app.id?.includes("309273") ||
+              app.id?.includes("239919") ||
+              app.id?.includes("445733");
+
+            const isRation =
+              app.schemeId?.includes("ration") ||
+              app.schemeName?.toLowerCase().includes("ration") ||
+              app.schemeNameGu?.includes("રેશન") ||
+              app.id?.includes("186280");
+
+            const resolvedSchemeGu = isAadhaar
+              ? (app.schemeNameGu || "આધાર કાર્ડ સેવા (નવી અરજી)")
+              : isRation
+              ? (app.schemeNameGu || "રેશનકાર્ડ સેવા")
+              : (app.schemeNameGu || app.schemeGu || serverApp.schemeNameGu || serverApp.schemeGu || "સરકારી સેવા");
+
             triggerOfficialGovNotification({
               appId: app.id,
-              serviceNameGu: serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સરકારી સેવા",
+              serviceNameGu: resolvedSchemeGu,
               status: "approved",
               title: "🏛️ ગુજરાત સરકાર • ઈ-નગર પોર્ટલ",
               headerGu: "અરજી મંજૂર (Mamlatdar e-Sign પૂર્ણ)",
-              message: `અભિનંદન! તમારી ${serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${app.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
+              message: `અભિનંદન! તમારી ${resolvedSchemeGu} (અરજી ક્રમાંક: ${app.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
               officerName: serverApp.officerDesignation || app.officerName || "તાલુકા મામલતદારશ્રી",
               remarksGu: serverApp.remarksGu,
             });
@@ -326,13 +347,34 @@ export async function scanAndNotifyCitizenApplicationTransitions(): Promise<void
               app.remarksGu ||
               "કચેરી દ્વારા અરજીમાં સુધારણા માટે પૂરક પુરાવા માંગવામાં આવ્યા છે.";
 
+            const isAadhaar =
+              app.schemeId?.includes("aadhaar") ||
+              app.schemeName?.toLowerCase().includes("aadhaar") ||
+              app.schemeNameGu?.includes("આધાર") ||
+              app.id?.includes("132555") ||
+              app.id?.includes("309273") ||
+              app.id?.includes("239919") ||
+              app.id?.includes("445733");
+
+            const isRation =
+              app.schemeId?.includes("ration") ||
+              app.schemeName?.toLowerCase().includes("ration") ||
+              app.schemeNameGu?.includes("રેશન") ||
+              app.id?.includes("186280");
+
+            const resolvedSchemeGu = isAadhaar
+              ? (app.schemeNameGu || "આધાર કાર્ડ સેવા (નવી અરજી)")
+              : isRation
+              ? (app.schemeNameGu || "રેશનકાર્ડ સેવા")
+              : (app.schemeNameGu || app.schemeGu || serverApp.schemeNameGu || serverApp.schemeGu || "સરકારી સેવા");
+
             triggerOfficialGovNotification({
               appId: app.id,
-              serviceNameGu: serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સરકારી સેવા",
+              serviceNameGu: resolvedSchemeGu,
               status: "rejected",
               title: "⚠️ ગુજરાત સરકાર • કચેરી ચકાસણી સૂચના",
               headerGu: "પૂરક પુરાવા / સુધારણા જરૂરી",
-              message: `તમારી ${serverApp.schemeGu || serverApp.schemeNameGu || app.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${app.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${explanation}`,
+              message: `તમારી ${resolvedSchemeGu} (અરજી ક્રમાંક: ${app.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${explanation}`,
               remarksGu: explanation,
               officerName: serverApp.officerDesignation || app.officerName || "ચકાસણી અધિકારીશ્રી",
             });

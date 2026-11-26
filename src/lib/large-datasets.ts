@@ -4770,8 +4770,9 @@ export function getApplicationById(id: string): CitizenApplication | null {
     const todayStr = new Date().toISOString().split("T")[0];
     const is132555 = cleanId.includes("132555");
     const is186280 = cleanId.includes("186280");
-    const isAadhaarKnown = cleanId.includes("445733") || cleanId.includes("239919") || is132555;
-    const isApprovedKnown = cleanId.includes("445733") || is186280;
+    const is309273 = cleanId.includes("309273");
+    const isAadhaarKnown = cleanId.includes("445733") || cleanId.includes("239919") || is132555 || is309273;
+    const isApprovedKnown = cleanId.includes("445733") || is186280 || is309273;
 
     let schemeId = "income";
     let schemeName = "Income Certificate (આવકનો દાખલો)";
@@ -4809,7 +4810,9 @@ export function getApplicationById(id: string): CitizenApplication | null {
       appliedDate: todayStr,
       lastUpdated: todayStr,
       benefitAmount: 0,
-      remarksGu: isApprovedKnown
+      remarksGu: is309273
+        ? "તાલુકા મામલતદારશ્રી (H.V. Patel, GAS) દ્વારા ડિજિટલ સહી (e-Sign) સાથે અરજી સંપૂર્ણપણે મંજૂર કરવામાં આવી! સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે."
+        : isApprovedKnown
         ? "પ્રમાણપત્ર સફળતાપૂર્વક માન્ય રાખવામાં આવેલ છે. ડિજિટલ હસ્તાક્ષર થયેલ દાખલો ડાઉનલોડ કરવા ઉપલબ્ધ છે."
         : is132555
         ? "સ્ક્રુટિની ચાલુ: અરજી સફળતાપૂર્વક સબમિટ થયેલ છે. ફી ₹50 ભરપાઈ (Txn: pay_U4RHGGb2jQBe0g). દસ્તાવેજોની પ્રાથમિક સ્ક્રુટિની પ્રક્રિયા હેઠળ છે."
@@ -4817,7 +4820,7 @@ export function getApplicationById(id: string): CitizenApplication | null {
       remarksEn: isApprovedKnown
         ? "Certificate approved and verified successfully."
         : "Application submitted successfully. Document scrutiny in progress.",
-      officerDesignation: "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), ગોંડલ",
+      officerDesignation: is309273 ? "તાલુકા મામલતદારશ્રી (H.V. Patel, GAS)" : "નાયબ મામલતદાર (જન સેવા કેન્દ્ર), ગોંડલ",
       workflowStage: isApprovedKnown ? 3 : 1,
       paymentStatus: "paid",
       feeAmount: is186280 ? 20 : 50,

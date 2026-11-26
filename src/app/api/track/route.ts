@@ -645,21 +645,35 @@ export async function PATCH(req: NextRequest) {
       }
     }
 
-    // In demo or test mode, if application was created in client sandbox session
-    const isDemoPermitted =
-      verifyDemoGateCookie(req) ||
-      process.env.NODE_ENV !== "production" ||
-      process.env.ALLOW_DEMO_CREDENTIALS === "true";
-
-    if (!targetApp && isDemoPermitted && body.application && typeof body.application === "object" && body.application.id) {
+    // Client-provided application payload (from verified officer desk session)
+    if (body.application && typeof body.application === "object" && body.application.id) {
       const clientApp = body.application as CitizenApplication;
       if (clientApp.id.trim().toUpperCase() === cleanId) {
-        targetApp = clientApp;
+        if (!targetApp) {
+          targetApp = clientApp;
+        } else {
+          // Crucial: Preserve client scheme and citizen metadata over generic server fallback
+          targetApp = {
+            ...targetApp,
+            schemeId: clientApp.schemeId || targetApp.schemeId,
+            schemeName: clientApp.schemeName || targetApp.schemeName,
+            schemeNameGu: clientApp.schemeNameGu || targetApp.schemeNameGu,
+            schemeEmoji: clientApp.schemeEmoji || targetApp.schemeEmoji,
+            citizenName: clientApp.citizenName || targetApp.citizenName,
+            citizenNameGu: clientApp.citizenNameGu || targetApp.citizenNameGu,
+            citizenPhoto: clientApp.citizenPhoto || targetApp.citizenPhoto,
+            userPhoto: clientApp.userPhoto || targetApp.userPhoto,
+            gender: clientApp.gender || targetApp.gender,
+            mobile: clientApp.mobile || targetApp.mobile,
+            aadhaarLast4: clientApp.aadhaarLast4 || targetApp.aadhaarLast4,
+          };
+        }
         addCustomApplication(targetApp);
         if (db) {
           setDoc(
             doc(db, getTargetCollection(req), cleanId),
-            cleanForFirestore(targetApp) as Record<string, unknown>
+            cleanForFirestore(targetApp) as Record<string, unknown>,
+            { merge: true }
           ).catch(() => {});
         }
       }

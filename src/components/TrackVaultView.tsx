@@ -97,6 +97,7 @@ function healOrPreserveApp(app: CitizenApplication): CitizenApplication {
   const isAadhaarKnown =
     app.id === "APP-GUJ-2026-445733" ||
     app.id === "APP-GUJ-2026-239919" ||
+    app.id === "APP-GUJ-2026-309273" ||
     app.schemeId === "aadhaar-new" ||
     (app.schemeId?.includes("aadhaar") && !app.schemeId?.includes("update"));
   if (
@@ -109,7 +110,7 @@ function healOrPreserveApp(app: CitizenApplication): CitizenApplication {
       schemeName: "Aadhaar Card (New Issuance)",
       schemeNameGu: "આધાર કાર્ડ સેવા (નવી અરજી)",
       schemeEmoji: "🪪",
-      status: app.id === "APP-GUJ-2026-445733" ? "approved" : app.status || "processing",
+      status: (app.id === "APP-GUJ-2026-445733" || app.id === "APP-GUJ-2026-309273") ? "approved" : app.status || "processing",
     };
   }
   return app;

@@ -782,13 +782,25 @@ export default function AdminHierarchyDesk({
       });
       const data = await res.json();
       
-      const approvedApp: CitizenApplication = data.success && data.application ? data.application : {
+      const serverResult = data.success && data.application ? data.application : {};
+      const approvedApp: CitizenApplication = {
         ...app,
+        ...serverResult,
+        // Crucial: Citizen application identity and scheme MUST NEVER be corrupted or overwritten by server fallback
+        id: app.id,
+        schemeId: app.schemeId || serverResult.schemeId || "aadhaar-new",
+        schemeName: app.schemeName || serverResult.schemeName || "Aadhaar Card (New Issuance)",
+        schemeNameGu: app.schemeNameGu || serverResult.schemeNameGu || "આધાર કાર્ડ સેવા (નવી અરજી)",
+        schemeEmoji: app.schemeEmoji || serverResult.schemeEmoji || "🪪",
+        citizenName: app.citizenName || serverResult.citizenName || "Hari Vinodrai Patel",
+        citizenNameGu: app.citizenNameGu || serverResult.citizenNameGu || "હરી વિનોદરાઈ પટેલ",
+        citizenPhoto: app.citizenPhoto || serverResult.citizenPhoto,
+        userPhoto: app.userPhoto || serverResult.userPhoto,
         status: "approved" as const,
         workflowStage: 3,
         lastUpdated: new Date().toISOString().split("T")[0],
-        remarksGu: `${currentOfficer.name} દ્વારા ડિજિટલ સહી (e-Sign) સાથે અરજી સંપૂર્ણપણે મંજૂર કરવામાં આવી!`,
-        remarksEn: `Approved with digital e-Sign by ${currentOfficer.name}.`,
+        remarksGu: serverResult.remarksGu || `${currentOfficer.name} દ્વારા ડિજિટલ સહી (e-Sign) સાથે અરજી સંપૂર્ણપણે મંજૂર કરવામાં આવી!`,
+        remarksEn: serverResult.remarksEn || `Approved with digital e-Sign by ${currentOfficer.name}.`,
       };
 
       setApplications((prev) =>
@@ -828,13 +840,18 @@ export default function AdminHierarchyDesk({
       );
 
       // Trigger official mobile push and status bar notification
+      const effectiveSchemeGu =
+        app.schemeNameGu ||
+        approvedApp.schemeNameGu ||
+        (approvedApp.schemeId?.includes("aadhaar") ? "આધાર કાર્ડ સેવા (નવી અરજી)" : "સરકારી સેવા");
+
       triggerOfficialGovNotification({
         appId: approvedApp.id,
-        serviceNameGu: approvedApp.schemeNameGu || "સરકારી સેવા",
+        serviceNameGu: effectiveSchemeGu,
         status: "approved",
         title: "🏛️ ગુજરાત સરકાર • ઈ-નગર પોર્ટલ",
         headerGu: "અરજી મંજૂર (Mamlatdar e-Sign પૂર્ણ)",
-        message: `અભિનંદન! તમારી ${approvedApp.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${approvedApp.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
+        message: `અભિનંદન! તમારી ${effectiveSchemeGu} (અરજી ક્રમાંક: ${approvedApp.id}) મામલતદારશ્રી દ્વારા ડિજિટલ સહી (e-Sign) સાથે મંજૂર કરવામાં આવી છે. સત્તાવાર ડિજિટલ પ્રમાણપત્ર તૈયાર છે.`,
         officerName: currentOfficer.name,
       });
 
@@ -872,8 +889,19 @@ export default function AdminHierarchyDesk({
         }),
       });
       const data = await res.json();
-      const rejectedApp = data.success && data.application ? data.application : {
+      const serverRejection = data.success && data.application ? data.application : {};
+      const rejectedApp: CitizenApplication = {
         ...app,
+        ...serverRejection,
+        id: app.id,
+        schemeId: app.schemeId || serverRejection.schemeId,
+        schemeName: app.schemeName || serverRejection.schemeName,
+        schemeNameGu: app.schemeNameGu || serverRejection.schemeNameGu,
+        schemeEmoji: app.schemeEmoji || serverRejection.schemeEmoji,
+        citizenName: app.citizenName || serverRejection.citizenName,
+        citizenNameGu: app.citizenNameGu || serverRejection.citizenNameGu,
+        citizenPhoto: app.citizenPhoto || serverRejection.citizenPhoto,
+        userPhoto: app.userPhoto || serverRejection.userPhoto,
         status: "rejected" as const,
         remarksGu: translatedRejection.gujaratiExplanation,
         remarksEn: rejectionInput,
@@ -910,13 +938,18 @@ export default function AdminHierarchyDesk({
       }
 
       // Trigger official rejection / correction push notification
+      const effectiveRejectionSchemeGu =
+        app.schemeNameGu ||
+        rejectedApp.schemeNameGu ||
+        (rejectedApp.schemeId?.includes("aadhaar") ? "આધાર કાર્ડ સેવા (નવી અરજી)" : "સરકારી સેવા");
+
       triggerOfficialGovNotification({
         appId: rejectedApp.id,
-        serviceNameGu: rejectedApp.schemeNameGu || "સરકારી સેવા",
+        serviceNameGu: effectiveRejectionSchemeGu,
         status: "rejected",
         title: "⚠️ ગુજરાત સરકાર • કચેરી ચકાસણી સૂચના",
         headerGu: "પૂરક પુરાવા / સુધારણા જરૂરી",
-        message: `તમારી ${rejectedApp.schemeNameGu || "સેવા"} (અરજી ક્રમાંક: ${rejectedApp.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${translatedRejection.gujaratiExplanation}. વિગતો ચકાસી સુધારો કરવા ક્લિક કરો.`,
+        message: `તમારી ${effectiveRejectionSchemeGu} (અરજી ક્રમાંક: ${rejectedApp.id}) માં કચેરી દ્વારા સુધારણા જરૂરી છે: ${translatedRejection.gujaratiExplanation}. વિગતો ચકાસી સુધારો કરવા ક્લિક કરો.`,
         remarksGu: translatedRejection.gujaratiExplanation,
         officerName: currentOfficer.name,
       });
