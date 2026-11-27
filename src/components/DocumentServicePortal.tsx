@@ -1346,7 +1346,7 @@ export default function DocumentServicePortal({
           doc.extractedData?.photoUrl ||
           "/demo-docs/aadhaar_photo_hq.png";
 
-        updatedUploads[targetSlot] = {
+        const photoDocPayload: UploadedDocState = {
           file: null,
           fileName: doc.fileName || "applicant_passport_photo.jpg",
           fileType: "image/jpeg",
@@ -1369,13 +1369,25 @@ export default function DocumentServicePortal({
           documentType: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો",
         };
 
+        updatedUploads[targetSlot] = photoDocPayload;
+        updatedUploads["applicant_photo"] = photoDocPayload;
+        requiredDocs.forEach((s) => {
+          if (
+            s.id === "applicant_photo" ||
+            s.id === "passport_photo" ||
+            (s.id.includes("photo") && !s.id.includes("photo_id") && !s.id.includes("identity"))
+          ) {
+            updatedUploads[s.id] = photoDocPayload;
+          }
+        });
+
         setUserUploadedPhoto(photoCandidate);
         if (typeof window !== "undefined") {
           try {
             localStorage.setItem("nagrik_user_photo", photoCandidate);
           } catch {}
         }
-        return;
+        setFormValidationError(null);
       } else {
         const fileData = doc.userUploadedBase64 || doc.filePreviewUrl || "";
         const isImg =
@@ -2017,7 +2029,7 @@ export default function DocumentServicePortal({
 
     // Only send photo in JSON payload if it's an image and < 300KB to keep POST ultra-fast
     const networkSafePhoto =
-      rawPhoto && rawPhoto.startsWith("data:image/") && rawPhoto.length < 300000
+      rawPhoto && (rawPhoto.startsWith("data:image/") || rawPhoto.startsWith("/") || rawPhoto.startsWith("http")) && rawPhoto.length < 300000
         ? rawPhoto
         : undefined;
 
@@ -4916,7 +4928,7 @@ export default function DocumentServicePortal({
                       {/* Upload Controls (JPG, PNG, PDF) */}
                       <div className="flex flex-wrap items-center justify-between gap-2 pt-1 border-t border-black/5">
                         <div className="flex items-center gap-2.5 text-xs">
-                          {docItem.id === "applicant_photo" && isValid && (docState?.base64 || userUploadedPhoto) && (
+                          {(docItem.id === "applicant_photo" || docItem.id === "passport_photo" || (docItem.id.includes("photo") && !docItem.id.includes("photo_id"))) && isValid && (docState?.base64 || userUploadedPhoto) && (
                             // eslint-disable-next-line @next/next/no-img-element
                             <img
                               src={docState?.base64 || userUploadedPhoto}
@@ -4993,7 +5005,13 @@ export default function DocumentServicePortal({
                             <span>{docState ? "ફાઇલ બદલો" : "અપલોડ"}</span>
                             <input
                               type="file"
-                              accept={docItem.id === "applicant_photo" ? "image/jpeg,image/png" : "image/jpeg,image/png,application/pdf"}
+                              accept={
+                                docItem.id === "applicant_photo" ||
+                                docItem.id === "passport_photo" ||
+                                (docItem.id.includes("photo") && !docItem.id.includes("photo_id"))
+                                  ? "image/jpeg,image/png"
+                                  : "image/jpeg,image/png,application/pdf"
+                              }
                               className="hidden"
                               onChange={(e) => {
                                 if (e.target.files && e.target.files[0]) {
