@@ -213,15 +213,15 @@ export function validateDocSlotCompatibility(
         warningMessageGu: `❌ અમાન્ય ફાઇલ પ્રકાર: 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટમાં PDF ફાઇલ માન્ય નથી! ફક્ત અરજદારનો રંગીન પાસપોર્ટ ફોટો (JPG / PNG) જ અપલોડ કરો.`,
       };
     }
-    // ONLY Aadhaar (photo extract) or direct photo is allowed!
-    if (dId === "aadhaar" || dId === "photo" || dId.includes("photo")) {
+    // ONLY direct photo or applicant photo is allowed!
+    if (dId === "applicant_photo" || dId === "passport_photo" || (dId.includes("photo") && dId !== "photo_id")) {
       return { isCompatible: true, isStrictMismatch: false, matchScore: 100 };
     }
     return {
       isCompatible: false,
       isStrictMismatch: true,
       matchScore: 0,
-      warningMessageGu: `❌ અસંગત દસ્તાવેજ: 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટમાં '${chosenDocNameGu}' માન્ય નથી! ફક્ત અરજદારનો રંગીન પાસપોર્ટ ફોટો અથવા આધાર ફોટો જ માન્ય છે.`,
+      warningMessageGu: `❌ અસંગત દસ્તાવેજ: 'અરજદારનો પાસપોર્ટ ફોટો' સ્લોટમાં '${chosenDocNameGu}' માન્ય નથી! કૃપા કરીને ડીજીલોકરમાંથી 'અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો' પસંદ કરો.`,
     };
   }
 
@@ -478,6 +478,47 @@ export interface DigiLockerConsentArtifact {
 // Authentic Default Issued Documents Repository (Specimen Data)
 // ─────────────────────────────────────────────────────────────────────────
 export const DEFAULT_ISSUED_DOCUMENTS: DigiLockerDocument[] = [
+  {
+    id: "applicant_photo",
+    name: "Passport Size Photograph",
+    nameGu: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo)",
+    category: "identity",
+    docType: "PHOTO",
+    uri: "in.gov.uidai-PHOTO-XXXX-XXXX-1413",
+    issuer: "Unique Identification Authority of India (UIDAI) e-KYC Repository",
+    issuerGu: "યુનિક આઇડેન્ટિફિકેશન ઓથોરિટી ઓફ ઇન્ડિયા (UIDAI e-KYC), ભારત સરકાર",
+    issuerCode: "GOI-UIDAI-PHOTO",
+    docNumber: "EKYC-PHOTO-2026-1413",
+    issueDate: "15/06/2024",
+    validTill: "આજીવન (Studio Quality)",
+    filePreviewUrl: "/demo-docs/aadhaar_photo_hq.png",
+    fileMimeType: "image/jpeg",
+    fileName: "applicant_passport_photo.jpg",
+    fileSize: "85 KB",
+    digitalSignature: {
+      signedBy: "UIDAI e-KYC Biometric Photo Authority",
+      designation: "Authorized Signatory (Digital Sign 2.1)",
+      certAuthority: "National Informatics Centre (NIC-CA)",
+      timestamp: "2026-04-10 11:22:15 IST",
+      status: "VALID",
+      sha256: "8f3b2c1a0e9d7c4b5a6f8e7d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b",
+    },
+    extractedData: {
+      fullName: "Hari Vinodrai Patel",
+      fullNameGu: "હરી વિનોદરાઈ પટેલ",
+      fatherName: "Vinodrai Karshanbhai Patel",
+      fatherNameGu: "વિનોદરાઈ કરશનભાઈ પટેલ",
+      dob: "1982-06-15",
+      gender: "male",
+      address: "પ્લોટ નં. ૨૪, પટેલ ચોક, ગોમટા ગામ, તા. ગોંડલ, જિ. રાજકોટ",
+      district: "Rajkot",
+      taluka: "Gondal",
+      village: "ગોમટા (Gomta)",
+      pincode: "360311",
+      aadhaarLast4: "1413",
+      photoUrl: "/demo-docs/aadhaar_photo_hq.png",
+    },
+  },
   {
     id: "aadhaar",
     name: "Aadhaar Card",
@@ -1148,6 +1189,7 @@ export interface MasterDocTypeOption {
 }
 
 export const DIGILOCKER_MASTER_DOC_TYPES: MasterDocTypeOption[] = [
+  { id: "applicant_photo", nameGu: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો (Passport Photo)", nameEn: "Passport Size Photograph", category: "identity", docType: "PHOTO", issuerGu: "યુનિક આઇડેન્ટિફિકેશન ઓથોરિટી ઓફ ઇન્ડિયા (UIDAI e-KYC)", issuerEn: "Unique Identification Authority of India (UIDAI e-KYC)" },
   { id: "income", nameGu: "આવકનો દાખલો (Income Certificate)", nameEn: "Income Certificate", category: "revenue", docType: "INCRM", issuerGu: "મામલતદાર કચેરી, મહેસૂલ વિભાગ, ગુજરાત સરકાર", issuerEn: "Mamlatdar Office, Revenue Department" },
   { id: "aadhaar", nameGu: "આધાર કાર્ડ (Aadhaar Card)", nameEn: "Aadhaar Card", category: "identity", docType: "ADHAR", issuerGu: "UIDAI, ભારત સરકાર", issuerEn: "Unique Identification Authority of India" },
   { id: "ration", nameGu: "રેશનકાર્ડ (NFSA Ration Card)", nameEn: "Ration Card", category: "civil_supplies", docType: "RATN", issuerGu: "અન્ન અને નાગરિક પુરવઠા વિભાગ, ગુજરાત સરકાર", issuerEn: "Food & Civil Supplies Department" },
@@ -1202,9 +1244,9 @@ export function getIssuedDocuments(
         fullName: citizenNameEn || updated.extractedData.fullName,
         aadhaarLast4: aadhaarLast4 || updated.extractedData.aadhaarLast4,
       };
-      if (doc.id === "aadhaar" && aadhaarLast4) {
-        updated.docNumber = `XXXX-XXXX-${aadhaarLast4}`;
-        updated.uri = `in.gov.uidai-ADHAR-XXXX-XXXX-${aadhaarLast4}`;
+      if ((doc.id === "aadhaar" || doc.id === "applicant_photo") && aadhaarLast4) {
+        updated.docNumber = doc.id === "aadhaar" ? `XXXX-XXXX-${aadhaarLast4}` : `EKYC-PHOTO-2026-${aadhaarLast4}`;
+        updated.uri = doc.id === "aadhaar" ? `in.gov.uidai-ADHAR-XXXX-XXXX-${aadhaarLast4}` : `in.gov.uidai-PHOTO-XXXX-XXXX-${aadhaarLast4}`;
       }
     }
     return updated;

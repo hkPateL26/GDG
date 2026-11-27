@@ -1224,28 +1224,37 @@ export default function DocumentServicePortal({
           (slot.id.includes("photo") && !slot.id.includes("photo_id") && !slot.id.includes("identity"));
 
         if (isPhotoSlot) {
-          // Look for Aadhaar doc or explicit photo doc
+          // Look for explicit photo doc first, then fallback to Aadhaar doc
+          const photoDoc = availableDocs.find((d) => d.id === "applicant_photo" || d.id === "passport_photo" || d.docType === "PHOTO");
           const aadhaarDoc = availableDocs.find((d) => d.id === "aadhaar" || d.docType === "ADHAR");
-          const photoUrl = aadhaarDoc?.extractedData?.photoUrl || "/demo-docs/aadhaar_photo_hq.png";
+          const targetDoc = photoDoc || aadhaarDoc;
+          const photoUrl =
+            photoDoc?.filePreviewUrl ||
+            photoDoc?.userUploadedBase64 ||
+            photoDoc?.extractedData?.photoUrl ||
+            aadhaarDoc?.extractedData?.photoUrl ||
+            "/demo-docs/aadhaar_photo_hq.png";
 
           updatedUploads[slot.id] = {
             file: null,
-            fileName: "aadhaar_verified_photo.jpg",
+            fileName: photoDoc?.fileName || "applicant_passport_photo.jpg",
             fileType: "image/jpeg",
             base64: photoUrl,
-            fileSize: "85 KB",
+            fileSize: photoDoc?.fileSize || "85 KB",
             sha256Hash:
-              aadhaarDoc?.sha256Hash || "8f3b2c1a0e9d7c4b5a6f8e7d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b",
+              photoDoc?.sha256Hash ||
+              aadhaarDoc?.sha256Hash ||
+              "8f3b2c1a0e9d7c4b5a6f8e7d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b",
             status: "valid",
             qualityScore: 100,
-            adviceGu: `✅ DigiLocker UIDAI Verified • આધાર કાર્ડમાંથી અરજદારનો રંગીન પાસપોર્ટ ફોટો સફળતાપૂર્વક મેળવાયો.`,
+            adviceGu: `✅ DigiLocker UIDAI Verified • અરજદારનો રંગીન પાસપોર્ટ સાઇઝ ફોટો સફળતાપૂર્વક મેળવાયો.`,
             needsUpdate: false,
             needsNewDocument: false,
             nameMatchStatus: "matched",
             nameMatchConfidence: 100,
             isDigiLockerVerified: true,
-            digiLockerUri: aadhaarDoc?.uri || "in.gov.uidai-ADHAR-XXXX-XXXX-4589",
-            digiLockerIssuer: aadhaarDoc?.issuerGu || "ભારતીય વિશિષ્ટ ઓળખ સત્તામંડળ (UIDAI)",
+            digiLockerUri: targetDoc?.uri || "in.gov.uidai-PHOTO-XXXX-XXXX-1413",
+            digiLockerIssuer: targetDoc?.issuerGu || "યુનિક આઇડેન્ટિફિકેશન ઓથોરિટી ઓફ ઇન્ડિયા (UIDAI e-KYC)",
             documentType: "અરજદારનો પાસપોર્ટ સાઇઝ રંગીન ફોટો",
           };
 
@@ -1331,20 +1340,25 @@ export default function DocumentServicePortal({
         (targetSlot.includes("photo") && !targetSlot.includes("photo_id") && !targetSlot.includes("identity"));
 
       if (isPhotoSlot) {
-        const photoCandidate = doc.extractedData?.photoUrl || "/demo-docs/aadhaar_photo_hq.png";
+        const photoCandidate =
+          doc.filePreviewUrl ||
+          doc.userUploadedBase64 ||
+          doc.extractedData?.photoUrl ||
+          "/demo-docs/aadhaar_photo_hq.png";
+
         updatedUploads[targetSlot] = {
           file: null,
-          fileName: "aadhaar_verified_photo.jpg",
+          fileName: doc.fileName || "applicant_passport_photo.jpg",
           fileType: "image/jpeg",
           base64: photoCandidate,
-          fileSize: "85 KB",
+          fileSize: doc.fileSize || "85 KB",
           sha256Hash:
             doc.sha256Hash ||
             doc.digitalSignature?.sha256 ||
             "8f3b2c1a0e9d7c4b5a6f8e7d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b",
           status: "valid",
           qualityScore: 100,
-          adviceGu: `✅ DigiLocker UIDAI Verified • આધાર કાર્ડમાંથી અરજદારનો રંગીન પાસપોર્ટ ફોટો સફળતાપૂર્વક મેળવાયો.`,
+          adviceGu: `✅ DigiLocker UIDAI Verified • અરજદારનો રંગીન પાસપોર્ટ સાઇઝ ફોટો સફળતાપૂર્વક મેળવાયો.`,
           needsUpdate: false,
           needsNewDocument: false,
           nameMatchStatus: "matched",
@@ -1361,6 +1375,7 @@ export default function DocumentServicePortal({
             localStorage.setItem("nagrik_user_photo", photoCandidate);
           } catch {}
         }
+        return;
       } else {
         const fileData = doc.userUploadedBase64 || doc.filePreviewUrl || "";
         const isImg =

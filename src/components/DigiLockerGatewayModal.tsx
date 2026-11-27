@@ -1161,7 +1161,29 @@ export default function DigiLockerGatewayModal({
 
               {/* List of Issued Documents */}
               <div className="space-y-2.5 max-h-[46vh] overflow-y-auto pr-1">
-                {issuedDocs.map((doc) => {
+                {issuedDocs
+                  .slice()
+                  .sort((a, b) => {
+                    const isTargetPhoto =
+                      effectiveTargetSlotId === "applicant_photo" ||
+                      effectiveTargetSlotId === "photo_proof" ||
+                      effectiveTargetSlotId === "passport_photo" ||
+                      effectiveTargetSlotId.includes("photo");
+
+                    if (isTargetPhoto) {
+                      const isAPhoto = a.id === "applicant_photo" || a.id.includes("photo");
+                      const isBPhoto = b.id === "applicant_photo" || b.id.includes("photo");
+                      if (isAPhoto && !isBPhoto) return -1;
+                      if (!isAPhoto && isBPhoto) return 1;
+                    }
+
+                    const aCompat = validateDocSlotCompatibility(effectiveTargetSlotId, effectiveTargetSlotName, a.id, a.nameGu, false).isCompatible;
+                    const bCompat = validateDocSlotCompatibility(effectiveTargetSlotId, effectiveTargetSlotName, b.id, b.nameGu, false).isCompatible;
+                    if (aCompat && !bCompat) return -1;
+                    if (!aCompat && bCompat) return 1;
+                    return 0;
+                  })
+                  .map((doc) => {
                   const isMatchingTarget =
                     effectiveTargetSlotId === "all" ||
                     doc.id === effectiveTargetSlotId ||
@@ -1188,7 +1210,9 @@ export default function DigiLockerGatewayModal({
                       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
                         <div className="flex items-start gap-2.5">
                           <span className="text-2xl mt-0.5">
-                            {doc.id === "aadhaar"
+                            {doc.id === "applicant_photo" || doc.id.includes("photo")
+                              ? "📷"
+                              : doc.id === "aadhaar"
                               ? "🆔"
                               : doc.id === "income"
                               ? "📜"
@@ -1248,7 +1272,9 @@ export default function DigiLockerGatewayModal({
                       {/* Select Button */}
                       <div className="flex items-center justify-between pt-1 border-t border-slate-200/60 text-xs">
                         <span className="text-[11px] text-slate-600 font-medium">
-                          {doc.extractedData.annualIncome
+                          {doc.id === "applicant_photo" || doc.id.includes("photo")
+                            ? "રંગીન પાસપોર્ટ સાઇઝ ફોટો • UIDAI e-KYC પ્રમાણિત"
+                            : doc.extractedData.annualIncome
                             ? `વાર્ષિક આવક: ₹ ${doc.extractedData.annualIncome.toLocaleString("en-IN")}`
                             : doc.extractedData.khataNumber
                             ? `ખાતા નં: ${doc.extractedData.khataNumber} • સર્વે: ${doc.extractedData.surveyNumber}`
